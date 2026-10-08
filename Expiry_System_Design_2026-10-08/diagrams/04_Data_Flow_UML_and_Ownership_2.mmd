@@ -1,0 +1,20 @@
+flowchart TD
+ U["Inventory owner"] -->|"draft + key"| P1["1. Capture food"]
+ U -->|"filter / entry ID"| P2["2. Review and prioritise"]
+ U -->|"command + version + key"| P3["3. Resolve and reconcile"]
+ U -->|"timezone / lead"| P4["4. Manage preferences"]
+ D1[("D1 Users")] -->|"owner settings"| P2
+ P4 <-->|"read / update settings"| D1
+ P1 -->|"new entry"| D2[("D2 Food entries")]
+ D2 -->|"owned entries"| P2
+ P3 <-->|"current state / quantity update"| D2
+ P1 -->|"initial movement"| D3[("D3 Movements")]
+ P3 -->|"consume / discard / adjustment"| D3
+ D3 -->|"history"| P2
+ P1 <-->|"key / fingerprint / result"| D4[("D4 API requests")]
+ P3 <-->|"key / fingerprint / result"| D4
+ P4 <-->|"key / fingerprint / result"| D4
+ P2 -->|"inventory + reasons + history"| U
+ P1 -->|"saved entry"| U
+ P3 -->|"updated entry + movement"| U
+ P4 -->|"saved preferences"| U

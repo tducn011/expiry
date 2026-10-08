@@ -1,0 +1,5 @@
+flowchart TD
+ U["Inventory owner"] -->|"food data, commands, filters"| SYS["Expiry application"]
+ SYS -->|"inventory, attention reasons, action result"| U
+ AUTH["Auth provider or session adapter"] -->|"verified identity"| SYS
+ SYS -->|"authentication request"| AUTH

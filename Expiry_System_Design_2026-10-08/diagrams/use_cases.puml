@@ -1,0 +1,38 @@
+@startuml
+left to right direction
+actor "Inventory owner" as Owner
+actor "Identity provider / adapter" as Identity
+rectangle "Expiry application" {
+ usecase "UC-00 Continue with identity" as UC00
+ usecase "UC-01 Record food" as UC01
+ usecase "UC-02 Review inventory" as UC02
+ usecase "UC-03 Understand attention" as UC03
+ usecase "UC-04 Record consumption" as UC04
+ usecase "UC-05 Record discard" as UC05
+ usecase "UC-06 Edit metadata" as UC06
+ usecase "UC-07 Reconcile quantity" as UC07
+ usecase "UC-08 Review history" as UC08
+ usecase "UC-09 Remove record" as UC09
+ usecase "UC-10 Restore record" as UC10
+ usecase "UC-11 Set preferences" as UC11
+}
+Owner -- UC00
+Identity -- UC00
+Owner -- UC01
+Owner -- UC02
+Owner -- UC03
+Owner -- UC04
+Owner -- UC05
+Owner -- UC06
+Owner -- UC07
+Owner -- UC08
+Owner -- UC09
+Owner -- UC10
+Owner -- UC11
+note bottom of UC03
+ P1/P2/P3 are behavior models,
+ not authorization roles.
+ Authentication is a precondition
+ for owned data use cases.
+end note
+@enduml

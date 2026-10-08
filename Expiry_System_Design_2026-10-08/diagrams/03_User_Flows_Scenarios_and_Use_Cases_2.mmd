@@ -1,0 +1,10 @@
+flowchart TD
+ A["WF-01 Inventory"] -->|"Select Attention"| B["WF-01 Attention groups"]
+ B -->|"Search or filter"| C{"Matching items?"}
+ C -->|"No"| D["WF-01 Empty result"]
+ D -->|"Clear filters or Add"| A
+ C -->|"Yes; select item"| E["WF-03 Detail and reason"]
+ E -->|"Read quantity, date source, location"| F{"Next user task?"}
+ F -->|"Use or discard"| G["WF-04 Action sheet"]
+ F -->|"Correct record"| H["WF-02 Edit or WF-04 Recount"]
+ F -->|"Continue reviewing"| A

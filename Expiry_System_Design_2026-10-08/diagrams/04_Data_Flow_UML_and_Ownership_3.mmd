@@ -1,0 +1,21 @@
+sequenceDiagram
+ actor U as Owner
+ participant UI as Add form
+ participant API as HTTP adapter
+ participant S as CreateEntry service
+ participant DB as Transaction / repositories
+ U->>UI: Confirm draft
+ UI->>API: POST entry + Idempotency-Key
+ API->>API: Authenticate and validate DTO
+ API->>S: execute(principal, draft, key)
+ S->>DB: Begin; reserve key / check replay
+ alt Key already completed, same fingerprint
+  DB-->>S: Saved response
+ else New command
+  S->>S: Validate domain metadata and quantity
+  S->>DB: Insert entry + initial movement + response
+  S->>DB: Commit
+ end
+ S-->>API: EntryResponse
+ API-->>UI: 201 + Location
+ UI-->>U: Saved detail

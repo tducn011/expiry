@@ -1,0 +1,37 @@
+@startuml
+start
+:Receive principal, command, key;
+:Validate request schema;
+:Begin transaction;
+:Reserve owner + key;
+if (Existing key?) then (yes)
+ if (Same operation and fingerprint?) then (yes)
+  :Return stored original result;
+  stop
+ else (no)
+  :Rollback; 409 key reuse;
+  stop
+ endif
+endif
+:Lock owned nondeleted entry;
+if (Exists?) then (yes)
+else (no)
+ :Rollback; 404;
+ stop
+endif
+if (Version matches?) then (yes)
+else (no)
+ :Rollback; 409 version conflict;
+ stop
+endif
+if (Amount within remaining?) then (yes)
+ :Update quantity and version;
+ :Append consume/discard movement;
+ :Store response for key;
+ :Commit;
+ :Return 201;
+else (no)
+ :Rollback; 409 insufficient stock;
+endif
+stop
+@enduml

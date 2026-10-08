@@ -1,0 +1,29 @@
+classDiagram
+ class FoodEntry {
+  UUID id
+  Decimal remainingQuantity
+  Integer version
+  validateMetadata()
+ }
+ class StockMovement {
+  Decimal quantityBefore
+  Decimal quantityAfter
+  String kind
+ }
+ class AttentionPolicy {
+  classify(entry, settings, clock)
+ }
+ class InventoryService {
+  createEntry()
+  recordMovement()
+  recount()
+ }
+ class EntryRepository {
+  findOwned()
+  lockOwned()
+  saveWithinTransaction()
+ }
+ FoodEntry "1" --> "1..*" StockMovement : history
+ InventoryService --> FoodEntry : validates
+ InventoryService --> EntryRepository : persistence port
+ InventoryService --> AttentionPolicy : projection

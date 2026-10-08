@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Production builds
+dist/
+build/
+.cache/
+
+# Environment
+.env*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Vercel
+.vercel/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor & tools
+.idea/
+.vscode/
+*.tsbuildinfo
+.vite/

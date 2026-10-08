@@ -1,0 +1,30 @@
+sequenceDiagram
+ actor U as Owner
+ participant UI as Action sheet
+ participant API as HTTP adapter
+ participant S as RecordMovement service
+ participant DB as Transaction / repositories
+ U->>UI: Use / discard amount
+ UI->>API: POST movement + expected_version + key
+ API->>S: principal + command
+ S->>DB: Begin; reserve key
+ alt Replay with same fingerprint
+  DB-->>S: Original response
+ else New command
+  S->>DB: Lock owned nondeleted entry FOR UPDATE
+  DB-->>S: Current amount and version
+  S->>S: Check version, unit, amount
+  alt Invalid or conflicting
+   S->>DB: Rollback
+   S-->>API: Domain error
+   API-->>UI: 409 / 422
+   UI-->>U: Refetch/review draft
+  else Valid
+   S->>DB: Update quantity/version; insert movement; save result
+   S->>DB: Commit
+   S-->>API: Updated entry + movement
+   API-->>UI: 201
+   UI->>UI: Invalidate list/detail/history
+   UI-->>U: Updated quantity
+  end
+ end

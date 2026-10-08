@@ -1,0 +1,12 @@
+flowchart TD
+ A["WF-01 Inventory or WF-00 Demo"] -->|"Tap Add"| B["WF-02 Capture form"]
+ B -->|"Enter name, quantity, unit, optional date"| C["WF-02 Draft"]
+ C -->|"Tap Save"| D{"Identity available?"}
+ D -->|"No"| E["Auth continuation"]
+ E -->|"Authenticate; retain draft"| C
+ D -->|"Yes"| F{"Input valid?"}
+ F -->|"No"| G["WF-02 Field errors"]
+ G -->|"Correct fields"| C
+ F -->|"Yes; save succeeds"| H["WF-03 Saved detail"]
+ F -->|"Timeout"| I["WF-02 Result uncertain"]
+ I -->|"Retry unchanged command"| D

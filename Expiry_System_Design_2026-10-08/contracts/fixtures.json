@@ -1,0 +1,36 @@
+{
+  "create_known": {
+    "name": "Sữa tươi",
+    "quantity": "2.000",
+    "unit": "piece",
+    "storage_location": "Tủ lạnh",
+    "expiry_date": "2026-10-10",
+    "date_certainty": "known",
+    "date_source": "printed_label",
+    "date_label_type": "use_by",
+    "opened_on": null,
+    "note": null
+  },
+  "create_unknown": {
+    "name": "Rau",
+    "quantity": "500.000",
+    "unit": "g"
+  },
+  "consume": {
+    "kind": "consume",
+    "amount": "1.000",
+    "expected_version": 1,
+    "reason": null
+  },
+  "recount": {
+    "actual_quantity": "500.000",
+    "reason": "Kiểm tra lượng thực tế",
+    "expected_version": 3
+  },
+  "version_conflict": {
+    "type": "urn:expiry:problem:conflict",
+    "title": "Conflict",
+    "status": 409,
+    "code": "VERSION_CONFLICT"
+  }
+}

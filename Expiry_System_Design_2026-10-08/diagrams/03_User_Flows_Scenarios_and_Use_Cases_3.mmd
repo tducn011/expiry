@@ -1,0 +1,11 @@
+flowchart TD
+ A["WF-03 Detail"] -->|"Select Use, Discard or Recount"| B["WF-04 Action sheet"]
+ B -->|"Enter amount and confirm"| C{"Server result?"}
+ C -->|"Success"| D["WF-03 Updated detail"]
+ D -->|"Open History"| E["WF-05 Movement history"]
+ C -->|"Invalid input"| F["WF-04 Validation message"]
+ F -->|"Correct amount"| B
+ C -->|"Version conflict"| G["WF-04 Current state and draft"]
+ G -->|"Review then new command"| B
+ C -->|"Timeout; outcome unknown"| H["WF-04 Retry prompt"]
+ H -->|"Retry same payload and key"| C

@@ -1,0 +1,15 @@
+sequenceDiagram
+ actor U as Owner
+ participant UI as Inventory page
+ participant API as HTTP adapter
+ participant S as ReviewInventory service
+ participant DB as Repositories
+ U->>UI: Open attention / filter
+ UI->>API: GET food-entries?view=attention
+ API->>S: principal + validated query
+ S->>DB: Read owner settings + scoped entries
+ DB-->>S: Metadata and quantities
+ S->>S: Derive with clock/timezone; sort before pagination
+ S-->>API: items + reasons + as_of_date + pagination
+ API-->>UI: 200
+ UI-->>U: Groups and actionable detail links

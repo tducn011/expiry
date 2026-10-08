@@ -1,0 +1,50 @@
+erDiagram
+ USERS ||--o{ FOOD_ENTRIES : owns
+ USERS ||--o{ API_REQUESTS : deduplicates
+ FOOD_ENTRIES ||--|{ STOCK_MOVEMENTS : records
+ USERS {
+  uuid id PK
+  text identity_subject UK
+  text display_name
+  text timezone
+  int attention_lead_days
+  int version
+  timestamptz created_at
+  timestamptz updated_at
+ }
+ FOOD_ENTRIES {
+  uuid id PK
+  uuid user_id FK
+  varchar name
+  varchar storage_location
+  numeric remaining_quantity
+  varchar unit
+  date expiry_date
+  varchar date_certainty
+  varchar date_source
+  varchar date_label_type
+  date opened_on
+  text note
+  int version
+  timestamptz deleted_at
+  timestamptz created_at
+  timestamptz updated_at
+ }
+ STOCK_MOVEMENTS {
+  uuid id PK
+  uuid entry_id FK
+  varchar kind
+  numeric quantity_before
+  numeric quantity_after
+  text reason
+  timestamptz recorded_at
+ }
+ API_REQUESTS {
+  uuid user_id PK,FK
+  varchar idempotency_key PK
+  text operation
+  text request_hash
+  int response_status
+  jsonb response_body
+  timestamptz created_at
+ }
