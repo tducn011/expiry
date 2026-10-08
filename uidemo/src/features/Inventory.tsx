@@ -11,11 +11,14 @@ export type InventoryFilters = {
   query: string;
   location: string;
   lifecycle: "Còn hàng" | "Đã hết" | "Tất cả";
+  attentionFilter: Attention | "all";
 };
+
 export const defaultFilters: InventoryFilters = {
   query: "",
   location: "Tất cả vị trí",
   lifecycle: "Còn hàng",
+  attentionFilter: "all",
 };
 
 const attentionLabel: Record<Attention, string> = {
@@ -52,12 +55,19 @@ export default function Inventory({
   const set = <K extends keyof InventoryFilters>(k: K, v: InventoryFilters[K]) =>
     setFilters({ ...filters, [k]: v });
 
+  const toggleAttentionFilter = (key: Attention) => {
+    if (counts[key] === 0) return;
+    set("attentionFilter", filters.attentionFilter === key ? "all" : key);
+  };
+
   const list = (items: FoodEntry[]) =>
     items.map((f) => (
       <FoodCard key={f.id} food={f} attention={attention(f)} onOpen={() => onOpen(f)} />
     ));
 
   const urgentTotal = counts.past + counts.today + counts.soon;
+  const isFilteredByAttention =
+    !isAttention && filters.attentionFilter && filters.attentionFilter !== "all";
 
   return (
     <Grid className="page">
@@ -71,31 +81,56 @@ export default function Inventory({
         }
       />
 
-      {/* Urgency strip — physically next to the list it describes */}
+      {/* Urgency strip — interactive filters: logically grouped right above the list */}
       <div className="col-span-full">
-        <div className="urgency-strip">
-          {(["past", "today", "soon", "unknown", "later"] as Attention[]).map((key) => (
-            <span
-              key={key}
-              className={`urgency-chip ${key}${counts[key] === 0 ? " zero" : ""}`}
-            >
-              <strong>{counts[key]}</strong>
-              {attentionLabel[key]}
-            </span>
-          ))}
+        <div className="urgency-strip" role="toolbar" aria-label="Lọc theo mức độ ưu tiên">
+          {(["past", "today", "soon", "unknown", "later"] as Attention[]).map((key) => {
+            const isActive = !isAttention && filters.attentionFilter === key;
+            const isZero = counts[key] === 0;
+            return (
+              <button
+                type="button"
+                key={key}
+                disabled={isZero}
+                className={`urgency-chip ${key}${isZero ? " zero" : ""}${isActive ? " is-active" : ""}`}
+                onClick={() => toggleAttentionFilter(key)}
+                title={isZero ? "Không có món nào" : `Bấm để lọc món ${attentionLabel[key]}`}
+              >
+                <strong>{counts[key]}</strong>
+                {attentionLabel[key]}
+              </button>
+            );
+          })}
           {!isAttention && urgentTotal > 0 && (
             <button
               className="text-link"
               style={{ marginLeft: "auto" }}
               onClick={onShowAttention}
+              type="button"
             >
-              Xem cần chú ý →
+              Xem ưu tiên →
             </button>
           )}
         </div>
       </div>
 
-      {/* Filter bar — flex row: search primary, dropdowns secondary */}
+      {/* Active filter notification banner */}
+      {isFilteredByAttention && (
+        <div className="col-span-full active-filter-bar">
+          <span>
+            Đang lọc: <strong>{attentionLabel[filters.attentionFilter as Attention]}</strong> ({foods.length} món)
+          </span>
+          <button
+            type="button"
+            className="text-link"
+            onClick={() => set("attentionFilter", "all")}
+          >
+            Hiện tất cả
+          </button>
+        </div>
+      )}
+
+      {/* Filter bar — flex row: search primary with quick clear, dropdowns secondary */}
       <section className="filters col-span-full">
         <label className="search">
           <Icon name="search" />
@@ -103,8 +138,18 @@ export default function Inventory({
             aria-label="Tìm theo tên"
             value={filters.query}
             onChange={(e) => set("query", e.target.value)}
-            placeholder="Tìm món..."
+            placeholder="Tìm món trong kho..."
           />
+          {filters.query && (
+            <button
+              type="button"
+              className="clear-search"
+              aria-label="Xóa tìm kiếm"
+              onClick={() => set("query", "")}
+            >
+              ×
+            </button>
+          )}
         </label>
         <select
           aria-label="Lọc vị trí"
@@ -129,7 +174,7 @@ export default function Inventory({
         )}
       </section>
 
-      {/* Food list — full width now, no sidebar */}
+      {/* Food list — clean vertical hierarchy and alignment */}
       <div className="col-span-full list-column">
         <div className="list-head">
           <span>{foods.length} món</span>
@@ -140,7 +185,10 @@ export default function Inventory({
             title={isAttention ? "Không có món cần chú ý" : "Chưa có món phù hợp"}
             body="Thử đổi bộ lọc hoặc thêm món mới."
             action={
-              <Button variant="secondary" onClick={() => setFilters(defaultFilters)}>
+              <Button
+                variant="secondary"
+                onClick={() => setFilters(defaultFilters)}
+              >
                 Đặt lại bộ lọc
               </Button>
             }

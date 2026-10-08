@@ -72,6 +72,13 @@ function App() {
       entries.filter((f) => {
         if (view === "attention" && (attention(f) === "later" || f.remaining_quantity === 0))
           return false;
+        if (
+          view !== "attention" &&
+          filters.attentionFilter &&
+          filters.attentionFilter !== "all" &&
+          attention(f) !== filters.attentionFilter
+        )
+          return false;
         if (filters.query && !f.name.toLowerCase().includes(filters.query.toLowerCase()))
           return false;
         if (filters.location !== "Tất cả vị trí" && f.storage_location !== filters.location)
