@@ -19,21 +19,28 @@ export default function FoodCard({
   return (
     <button className={`food-card tone-${attention}`} onClick={onOpen} type="button">
       <span className="food-main">
-        <strong>{food.name}</strong>
+        <span className="food-name">{food.name}</span>
         <span className="food-meta">
+          {/* Badge is the urgency signal — first, leftmost, most prominent */}
           <Badge type={attention} />
-          {food.storage_location && <span>{food.storage_location}</span>}
+          {food.storage_location && (
+            <>
+              <i />
+              <span className="loc">{food.storage_location}</span>
+            </>
+          )}
           {dateFormatted && (
             <>
               <i />
-              <span>{dateFormatted}</span>
+              <span className="date">{dateFormatted}</span>
             </>
           )}
         </span>
       </span>
-      <span className="quantity">
-        <strong>{fmtQty(food.remaining_quantity)}</strong>
-        <small>{unitLabel[food.unit]}</small>
+      {/* Quantity: fixed-width right column, prominent number */}
+      <span className="qty-col">
+        <span className="qty-num">{fmtQty(food.remaining_quantity)}</span>
+        <span className="qty-unit">{unitLabel[food.unit]}</span>
       </span>
       <Icon name="arrow" />
     </button>

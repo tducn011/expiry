@@ -36,19 +36,16 @@ export default function Shell({
     <div className="app-shell">
       {/* Desktop Sidebar */}
       <aside className="sidebar">
-        <div className="brand" onClick={() => setView("inventory")} style={{ cursor: "pointer" }}>
-          <span>EXPIRY</span>
-          <small>Quản lý hạn dùng</small>
+        <div className="brand" onClick={() => setView("inventory")}>
+          <span className="brand-icon"><Icon name="box" /></span>
+          <span>
+            <span className="brand-name">Expiry</span>
+          </span>
         </div>
 
-        {/* Primary Add Button */}
-        <button className="sidebar-add hero-add-button" onClick={onAdd} type="button">
-          <span className="add-icon-wrap">
-            <Icon name="plus" />
-          </span>
-          <span className="add-text">
-            <strong>Thêm thực phẩm</strong>
-          </span>
+        <button className="sidebar-add" onClick={onAdd} type="button">
+          <Icon name="plus" />
+          Thêm thực phẩm
         </button>
 
         <nav aria-label="Điều hướng chính">

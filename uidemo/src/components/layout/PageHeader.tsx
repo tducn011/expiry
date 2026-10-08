@@ -16,9 +16,10 @@ export default function PageHeader({
       <div className="page-header-copy">
         <span className="eyebrow">{eyebrow}</span>
         <h1>{title}</h1>
-        {description && <p>{description}</p>}
+        {description && <p style={{ flexBasis: "100%" }}>{description}</p>}
       </div>
       {action && <div className="page-header-action">{action}</div>}
     </header>
   )
 }
+

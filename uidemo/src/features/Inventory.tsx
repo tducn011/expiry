@@ -3,7 +3,6 @@ import { attentionGroups, locations } from "../lib/format";
 import Grid from "../components/layout/Grid";
 import PageHeader from "../components/layout/PageHeader";
 import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import Icon from "../components/ui/Icon";
 import FoodCard from "./FoodCard";
@@ -17,6 +16,14 @@ export const defaultFilters: InventoryFilters = {
   query: "",
   location: "Tất cả vị trí",
   lifecycle: "Còn hàng",
+};
+
+const attentionLabel: Record<Attention, string> = {
+  past: "Hết hạn",
+  today: "Hôm nay",
+  soon: "Sắp hết",
+  unknown: "Chưa có HSD",
+  later: "Còn lâu",
 };
 
 export default function Inventory({
@@ -50,31 +57,53 @@ export default function Inventory({
       <FoodCard key={f.id} food={f} attention={attention(f)} onOpen={() => onOpen(f)} />
     ));
 
+  const urgentTotal = counts.past + counts.today + counts.soon;
+
   return (
     <Grid className="page">
       <PageHeader
-        eyebrow={isAttention ? "ƯU TIÊN XỬ LÝ" : "TỔNG KHO BẾP"}
+        eyebrow={isAttention ? "ƯU TIÊN" : "KHO"}
         title={isAttention ? "Cần chú ý" : "Kho thực phẩm"}
-        description={
-          isAttention
-            ? "Món sắp hoặc đã quá hạn cần dùng trước."
-            : "Toàn bộ đồ dùng và thực phẩm trong nhà."
-        }
         action={
           <Button onClick={onAdd} icon="plus">
-            Thêm thực phẩm
+            Thêm
           </Button>
         }
       />
 
-      <section className="filters col-span-full lg:col-span-8">
+      {/* Urgency strip — physically next to the list it describes */}
+      <div className="col-span-full">
+        <div className="urgency-strip">
+          {(["past", "today", "soon", "unknown", "later"] as Attention[]).map((key) => (
+            <span
+              key={key}
+              className={`urgency-chip ${key}${counts[key] === 0 ? " zero" : ""}`}
+            >
+              <strong>{counts[key]}</strong>
+              {attentionLabel[key]}
+            </span>
+          ))}
+          {!isAttention && urgentTotal > 0 && (
+            <button
+              className="text-link"
+              style={{ marginLeft: "auto" }}
+              onClick={onShowAttention}
+            >
+              Xem cần chú ý →
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Filter bar — flex row: search primary, dropdowns secondary */}
+      <section className="filters col-span-full">
         <label className="search">
           <Icon name="search" />
           <input
             aria-label="Tìm theo tên"
             value={filters.query}
             onChange={(e) => set("query", e.target.value)}
-            placeholder="Tìm theo tên món..."
+            placeholder="Tìm món..."
           />
         </label>
         <select
@@ -100,7 +129,8 @@ export default function Inventory({
         )}
       </section>
 
-      <div className="col-span-full lg:col-span-8 list-column">
+      {/* Food list — full width now, no sidebar */}
+      <div className="col-span-full list-column">
         <div className="list-head">
           <span>{foods.length} món</span>
         </div>
@@ -133,28 +163,6 @@ export default function Inventory({
           <div className="food-list">{list(foods)}</div>
         )}
       </div>
-
-      <aside className="rail col-span-full lg:col-span-4 lg:row-start-2 lg:col-start-9 lg:row-span-2">
-        <Card
-          title="Tình trạng hạn dùng"
-          action={
-            !isAttention ? (
-              <button className="text-link" onClick={onShowAttention}>
-                Xem
-              </button>
-            ) : undefined
-          }
-        >
-          <dl className="stat-grid">
-            {attentionGroups.map(([key, title]) => (
-              <div key={key} className={`stat ${key}`}>
-                <dt>{title}</dt>
-                <dd>{counts[key]}</dd>
-              </div>
-            ))}
-          </dl>
-        </Card>
-      </aside>
     </Grid>
   );
 }
