@@ -1,30 +1,28 @@
-import type { Attention, FoodEntry } from "../mockApi"
-import { attentionGroups, locations } from "../lib/format"
-import Grid from "../components/layout/Grid"
-import PageHeader from "../components/layout/PageHeader"
-import Button from "../components/ui/Button"
-import Card from "../components/ui/Card"
-import EmptyState from "../components/ui/EmptyState"
-import Icon from "../components/ui/Icon"
-import FoodCard from "./FoodCard"
+import type { Attention, FoodEntry } from "../mockApi";
+import { attentionGroups, locations } from "../lib/format";
+import Grid from "../components/layout/Grid";
+import PageHeader from "../components/layout/PageHeader";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import EmptyState from "../components/ui/EmptyState";
+import Icon from "../components/ui/Icon";
+import FoodCard from "./FoodCard";
 
 export type InventoryFilters = {
-  query: string
-  location: string
-  lifecycle: "Còn hàng" | "Đã hết" | "Tất cả"
-}
+  query: string;
+  location: string;
+  lifecycle: "Còn hàng" | "Đã hết" | "Tất cả";
+};
 export const defaultFilters: InventoryFilters = {
   query: "",
   location: "Tất cả vị trí",
   lifecycle: "Còn hàng",
-}
+};
 
-/** UI-01 inventory and UI-02 attention share one layout; `mode` switches grouping and copy. */
 export default function Inventory({
   mode,
   foods,
   counts,
-  leadDays,
   attention,
   filters,
   setFilters,
@@ -32,41 +30,35 @@ export default function Inventory({
   onAdd,
   onShowAttention,
 }: {
-  mode: "inventory" | "attention"
-  foods: FoodEntry[]
-  counts: Record<Attention, number>
-  leadDays: number
-  attention: (f: FoodEntry) => Attention
-  filters: InventoryFilters
-  setFilters: (f: InventoryFilters) => void
-  onOpen: (f: FoodEntry) => void
-  onAdd: () => void
-  onShowAttention: () => void
+  mode: "inventory" | "attention";
+  foods: FoodEntry[];
+  counts: Record<Attention, number>;
+  leadDays: number;
+  attention: (f: FoodEntry) => Attention;
+  filters: InventoryFilters;
+  setFilters: (f: InventoryFilters) => void;
+  onOpen: (f: FoodEntry) => void;
+  onAdd: () => void;
+  onShowAttention: () => void;
 }) {
-  const isAttention = mode === "attention"
-  const set = <K extends keyof InventoryFilters,>(
-    k: K,
-    v: InventoryFilters[K],
-  ) => setFilters({ ...filters, [k]: v })
+  const isAttention = mode === "attention";
+  const set = <K extends keyof InventoryFilters>(k: K, v: InventoryFilters[K]) =>
+    setFilters({ ...filters, [k]: v });
+
   const list = (items: FoodEntry[]) =>
     items.map((f) => (
-      <FoodCard
-        key={f.id}
-        food={f}
-        attention={attention(f)}
-        onOpen={() => onOpen(f)}
-      />
-    ))
+      <FoodCard key={f.id} food={f} attention={attention(f)} onOpen={() => onOpen(f)} />
+    ));
 
   return (
     <Grid className="page">
       <PageHeader
-        eyebrow={isAttention ? "HÔM NAY · 08/10/2026" : "08 THÁNG 10, 2026"}
+        eyebrow={isAttention ? "ƯU TIÊN XỬ LÝ" : "TỔNG KHO BẾP"}
         title={isAttention ? "Cần chú ý" : "Kho thực phẩm"}
         description={
           isAttention
-            ? "Theo ngày đã ghi và cài đặt nhắc trước của bạn."
-            : "Lượng, vị trí và ngày theo dõi của từng món."
+            ? "Món sắp hoặc đã quá hạn cần dùng trước."
+            : "Toàn bộ đồ dùng và thực phẩm trong nhà."
         }
         action={
           <Button onClick={onAdd} icon="plus">
@@ -82,7 +74,7 @@ export default function Inventory({
             aria-label="Tìm theo tên"
             value={filters.query}
             onChange={(e) => set("query", e.target.value)}
-            placeholder="Tìm theo tên thực phẩm"
+            placeholder="Tìm theo tên món..."
           />
         </label>
         <select
@@ -99,9 +91,7 @@ export default function Inventory({
           <select
             aria-label="Lọc tình trạng"
             value={filters.lifecycle}
-            onChange={(e) =>
-              set("lifecycle", e.target.value as InventoryFilters["lifecycle"])
-            }
+            onChange={(e) => set("lifecycle", e.target.value as InventoryFilters["lifecycle"])}
           >
             <option>Còn hàng</option>
             <option>Đã hết</option>
@@ -112,42 +102,32 @@ export default function Inventory({
 
       <div className="col-span-full lg:col-span-8 list-column">
         <div className="list-head">
-          <span>{foods.length} kết quả</span>
-          <span>
-            {isAttention ? "Nhóm theo mức cần chú ý" : "Mới cập nhật trước"}
-          </span>
+          <span>{foods.length} món</span>
         </div>
         {!foods.length ? (
           <EmptyState
             eyebrow="KHÔNG CÓ KẾT QUẢ"
-            title={
-              isAttention
-                ? "Không có món cần chú ý"
-                : "Chưa tìm thấy món phù hợp"
-            }
-            body="Thử xóa từ khóa hoặc thay đổi bộ lọc để xem lại kho."
+            title={isAttention ? "Không có món cần chú ý" : "Chưa có món phù hợp"}
+            body="Thử đổi bộ lọc hoặc thêm món mới."
             action={
-              <Button
-                variant="secondary"
-                onClick={() => setFilters(defaultFilters)}
-              >
-                Xóa bộ lọc
+              <Button variant="secondary" onClick={() => setFilters(defaultFilters)}>
+                Đặt lại bộ lọc
               </Button>
             }
           />
         ) : isAttention ? (
           attentionGroups.map(([key, title]) => {
-            const group = foods.filter((f) => attention(f) === key)
+            const group = foods.filter((f) => attention(f) === key);
             return group.length ? (
               <section className="attention-group" key={key}>
                 <h2>
-                  <Icon name={key === "unknown" ? "alert" : "clock"} />
+                  <Icon name={key === "unknown" || key === "past" ? "alert" : "clock"} />
                   {title}
                   <em>{group.length}</em>
                 </h2>
                 <div className="food-list">{list(group)}</div>
               </section>
-            ) : null
+            ) : null;
           })
         ) : (
           <div className="food-list">{list(foods)}</div>
@@ -156,13 +136,13 @@ export default function Inventory({
 
       <aside className="rail col-span-full lg:col-span-4 lg:row-start-2 lg:col-start-9 lg:row-span-2">
         <Card
-          title="Tổng quan hôm nay"
+          title="Tình trạng hạn dùng"
           action={
-            !isAttention && (
+            !isAttention ? (
               <button className="text-link" onClick={onShowAttention}>
                 Xem
               </button>
-            )
+            ) : undefined
           }
         >
           <dl className="stat-grid">
@@ -174,17 +154,7 @@ export default function Inventory({
             ))}
           </dl>
         </Card>
-        <Card tone="muted">
-          <p className="rail-note">
-            <Icon name="clock" />
-            <span>
-              Món vào nhóm “Trong khoảng nhắc” khi còn ≤{" "}
-              <strong>{leadDays} ngày</strong>. Đây là ngày bạn đã ghi, không
-              phải đánh giá an toàn.
-            </span>
-          </p>
-        </Card>
       </aside>
     </Grid>
-  )
+  );
 }

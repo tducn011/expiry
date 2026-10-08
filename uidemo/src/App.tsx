@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ApiError, attentionFor, mockApi } from "./mockApi";
-import type { Attention, CreatePayload, FoodEntry, QuantityMovement } from "./mockApi";
+import type { Attention, CreatePayload, FoodEntry } from "./mockApi";
 import Shell, { View } from "./components/layout/Shell";
 import Icon from "./components/ui/Icon";
 import Detail, { DetailAction } from "./features/Detail";
@@ -12,8 +12,6 @@ import Settings from "./features/Settings";
 import StatusDialog, { Dialog, StatusMode } from "./features/StatusDialog";
 import Trash from "./features/Trash";
 import Welcome from "./features/Welcome";
-import Home from "./features/Home";
-import Reviews, { ReviewTab } from "./features/Reviews";
 
 type ModalKind = "add" | "restore" | DetailAction | StatusMode | null;
 const statusModes: StatusMode[] = [
@@ -38,11 +36,7 @@ function App() {
   const [authPending, setAuthPending] = useState(false);
   const [view, setView] = useState<View>(() => {
     const v = queryParams.get("view") as View;
-    return v && ["home", "inventory", "attention", "reviews", "trash", "settings"].includes(v) ? v : "home";
-  });
-  const [reviewsTab, setReviewsTab] = useState<ReviewTab>(() => {
-    const t = queryParams.get("tab") as ReviewTab;
-    return t && ["triage", "zones", "insights"].includes(t) ? t : "triage";
+    return v && ["inventory", "attention", "trash", "settings"].includes(v) ? v : "inventory";
   });
   const [revision, setRevision] = useState(0);
   const [filters, setFilters] = useState<InventoryFilters>(defaultFilters);
@@ -54,7 +48,6 @@ function App() {
   const [notice, setNotice] = useState("");
   const [pendingCreate, setPendingCreate] = useState<CreatePayload | null>(null);
 
-  // Query snapshot re-read from the API boundary after every confirmed mutation (cache invalidation seam).
   const entries = useMemo(() => mockApi.listEntries(), [revision]);
   const trash = useMemo(() => mockApi.listTrash(), [revision]);
   const prefs = useMemo(() => mockApi.getPreferences(), [revision]);
@@ -72,25 +65,7 @@ function App() {
     return c;
   }, [entries, prefs]);
 
-  const allMovements = useMemo(() => {
-    const list: QuantityMovement[] = [];
-    entries.forEach((e) => {
-      const entryMovements = mockApi.listMovements(e.id);
-      list.push(...entryMovements);
-    });
-    return list;
-  }, [entries, revision]);
-
-  const recentActivities = useMemo(() => {
-    const activities: { movement: QuantityMovement; food: FoodEntry }[] = [];
-    entries.forEach((e) => {
-      const entryMovements = mockApi.listMovements(e.id);
-      entryMovements.forEach((m) => {
-        activities.push({ movement: m, food: e });
-      });
-    });
-    return activities.sort((a, b) => b.movement.recorded_at.localeCompare(a.movement.recorded_at));
-  }, [entries, revision]);
+  const urgentCount = counts.past + counts.today + counts.soon;
 
   const visible = useMemo(
     () =>
@@ -147,53 +122,10 @@ function App() {
           mockApi.createCommandKey("create-food-entry"),
           payload
         ).data.id;
-      }, "Đã thêm thực phẩm và ghi lịch sử ban đầu")
+      }, "Đã thêm thực phẩm vào kho")
     ) {
       setSelectedId(id);
     }
-  };
-
-  const quickFreeze = (food: FoodEntry) => {
-    const key = mockApi.createCommandKey("freeze");
-    const note = food.note ? `${food.note} · Cấp đông ngày 08/10` : "Cấp đông ngày 08/10";
-    commit(
-      () =>
-        mockApi.updateEntry(key, food.id, food.version, {
-          name: food.name,
-          storage_location: "Ngăn đông",
-          expiry_date: food.expiry_date,
-          expiry_date_certainty: food.expiry_date_certainty,
-          expiry_date_source: food.expiry_date_source,
-          expiry_date_label_type: food.expiry_date_label_type,
-          opened_on: food.opened_on,
-          note,
-        }),
-      `Đã chuyển “${food.name}” vào Ngăn đông`
-    );
-  };
-
-  const quickConsume = (food: FoodEntry, amount = food.remaining_quantity, reason = "Đã dùng hết") => {
-    const key = mockApi.createCommandKey("consume");
-    commit(
-      () => mockApi.recordMovement(key, food.id, food.version, "consume", amount, reason),
-      `Đã ghi nhận dùng hết “${food.name}”`
-    );
-  };
-
-  const quickDiscard = (food: FoodEntry, amount = food.remaining_quantity, reason = "Đã bỏ") => {
-    const key = mockApi.createCommandKey("discard");
-    commit(
-      () => mockApi.recordMovement(key, food.id, food.version, "discard", amount, reason),
-      `Đã ghi nhận bỏ “${food.name}”`
-    );
-  };
-
-  const quickRecount = (food: FoodEntry, amount: number, reason: string) => {
-    const key = mockApi.createCommandKey("recount");
-    commit(
-      () => mockApi.recount(key, food.id, food.version, amount, reason),
-      `Đã cập nhật lượng “${food.name}” thành ${amount}`
-    );
   };
 
   if (!started)
@@ -211,15 +143,10 @@ function App() {
     );
 
   const displayName = mockApi.user.display_name || "Bạn";
-  const navigate = (v: View, locationFilter?: string) => {
+  const navigate = (v: View) => {
     setView(v);
     setSelectedId(null);
-    if (locationFilter) {
-      setFilters((prev) => ({ ...prev, location: locationFilter }));
-    }
   };
-
-  const urgentCount = counts.past + counts.today + counts.soon;
 
   return (
     <Shell
@@ -227,8 +154,7 @@ function App() {
       setView={navigate}
       onAdd={() => setModal("add")}
       displayName={displayName}
-      attentionCount={counts.past + counts.today + counts.soon + counts.unknown}
-      urgentReviewCount={urgentCount}
+      urgentCount={urgentCount}
     >
       {notice && (
         <div className="toast" role="status">
@@ -245,36 +171,6 @@ function App() {
           onBack={() => setSelectedId(null)}
           onAction={setModal}
         />
-      ) : view === "home" ? (
-        <Home
-          displayName={displayName}
-          foods={entries}
-          counts={counts}
-          attention={attention}
-          onOpen={(f) => setSelectedId(f.id)}
-          onAdd={() => setModal("add")}
-          onNavigate={(targetView, location) => navigate(targetView, location)}
-          onStartReview={(tab) => {
-            if (tab) setReviewsTab(tab);
-            setView("reviews");
-          }}
-          recentActivities={recentActivities}
-          onQuickConsume={(f) => quickConsume(f)}
-          onQuickFreeze={(f) => quickFreeze(f)}
-        />
-      ) : view === "reviews" ? (
-        <Reviews
-          initialTab={reviewsTab}
-          foods={entries}
-          attention={attention}
-          movements={allMovements}
-          onOpen={(f) => setSelectedId(f.id)}
-          onConsume={(f, amount, reason) => quickConsume(f, amount, reason)}
-          onDiscard={(f, amount, reason) => quickDiscard(f, amount, reason)}
-          onFreeze={(f) => quickFreeze(f)}
-          onRecount={(f, amount, reason) => quickRecount(f, amount, reason)}
-          onAdd={() => setModal("add")}
-        />
       ) : view === "settings" ? (
         <Settings
           prefs={prefs}
@@ -287,10 +183,9 @@ function App() {
                   prefs.version,
                   patch
                 ),
-              "Đã lưu cài đặt và tính lại danh sách cần chú ý"
+              "Đã lưu cài đặt"
             )
           }
-          onRecovery={setModal}
         />
       ) : view === "trash" ? (
         <Trash
@@ -324,15 +219,9 @@ function App() {
       )}
       {authPending && (
         <Dialog
-          eyebrow="TIẾP TỤC TASK CỦA BẠN"
+          eyebrow="XÁC THỰC"
           title="Đăng nhập để lưu"
-          body="Bản nháp vẫn được giữ nguyên. Sau khi đăng nhập, bạn quay lại đúng bước đang làm. Đây là điểm tích hợp xác thực mô phỏng."
-          extra={
-            <p className="note-box">
-              <Icon name="check" />
-              <span>Dữ liệu kho được tách riêng theo từng tài khoản.</span>
-            </p>
-          }
+          body="Bản nháp được giữ nguyên. Sau khi đăng nhập, bạn tiếp tục ngay bước hiện tại."
           action="Tiếp tục với tài khoản demo"
           cancel={false}
           dismissible={false}
@@ -393,17 +282,17 @@ function App() {
                   selected.version,
                   patch
                 ),
-              "Đã cập nhật thông tin và tính lại mức cần chú ý"
+              "Đã cập nhật thông tin"
             )
           }
         />
       )}
       {selected && modal === "delete" && (
         <Dialog
-          eyebrow="XÓA BẢN GHI"
+          eyebrow="XÓA MÓN"
           title={`Xóa “${selected.name}”?`}
-          body="Thao tác này không ghi nhận đã dùng hoặc đã bỏ. Bạn có thể khôi phục từ thùng rác."
-          action="Xóa bản ghi"
+          body="Món sẽ được chuyển vào thùng rác và có thể khôi phục bất cứ lúc nào."
+          action="Xóa vào thùng rác"
           actionVariant="danger"
           onClose={() => setModal(null)}
           onAction={() => {
@@ -415,7 +304,7 @@ function App() {
                     selected.id,
                     selected.version
                   ),
-                "Đã chuyển bản ghi vào thùng rác"
+                "Đã chuyển vào thùng rác"
               )
             )
               setSelectedId(null);
@@ -426,7 +315,7 @@ function App() {
         <Dialog
           eyebrow="KHÔI PHỤC"
           title={`Khôi phục “${selected.name}”?`}
-          body="Món trở lại kho với nguyên lượng và lịch sử. Trạng thái cần chú ý sẽ được tính lại."
+          body="Món sẽ trở lại kho thực phẩm với đầy đủ thông tin ban đầu."
           action="Khôi phục"
           onClose={() => {
             setModal(null);
@@ -440,7 +329,7 @@ function App() {
                     mockApi.createCommandKey("restore"),
                     selected.id
                   ),
-                "Đã khôi phục bản ghi"
+                "Đã khôi phục thực phẩm"
               )
             )
               navigate("inventory");
