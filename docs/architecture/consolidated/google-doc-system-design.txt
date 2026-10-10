@@ -1,0 +1,2408 @@
+﻿Expiry product research and system design
+Từ ba persona đến luồng sử dụng dữ liệu API và kiến trúc triển khai
+Bộ tài liệu giúp review và triển khai ứng dụng quản lý thực phẩm theo tài khoản riêng. MVP đã chốt nhập tay và attention trong app; stack chưa chốt. Điểm trọng tâm là giảm công nhập và cập nhật, giữ số lượng chính xác, rồi giúp người dùng nhận biết và xử lý món cần chú ý.
+Ngày tổng hợp thg 10 8, 2026
+Bảng tra cứu đi kèm Expiry — Complete System Design — 2026-10-08
+Cách đọc: S0 context và quyết định; S1 S4 S5 persona và research; S2 requirements; S3 flows dữ liệu UML ERD API wireframes; S6 S7 kiến trúc; S8 S9 triển khai và kiểm chứng. Các ID trong Docs trùng với Google Sheets.
+S0 Context evidence và phạm vi quyết định
+Version: 0.1 — thg 10 8, 2026 — thiết kế để review, chưa phải specification đã phê duyệt toàn bộ.
+S0 1 Confidence
+Medium tổng thể. High cho ba cơ chế persona và ba core functions; High cho scope user vừa chọn; Medium cho suy luận tính năng; Medium cho thiết kế dữ liệu/API; chưa kiểm chứng bằng field study địa phương hoặc code hiện tại.
+Không có quyền đọc toàn bộ lịch sử chat như một bản export. Đã truy xuất các đoạn liên quan Expiry bằng context search, đọc tài liệu được tìm thấy và tra nguồn công khai. Không tuyên bố đã đọc mọi tin nhắn. Canva bị chặn khi đọc qua web search, sau đó đã đọc trực tiếp rich text qua Canva connector trong lượt tiếp tục. Persona source hiện đã đối chiếu bản thiết kế hiện tại.
+S0 2 Evidence classes
+Nhãn
+	Ý nghĩa
+	Cách dùng
+	[A-U]
+	User nói/chọn rõ trong conversation
+	Constraint của thiết kế
+	[A-R]
+	Nội dung conversation được truy xuất
+	Giữ nguồn và độ chắc chắn; không giả thành đọc nguyên bản
+	[A-F]
+	Nội dung file đã đọc
+	Evidence về nội dung file, chưa chứng minh research trong file đúng
+	[B]
+	Paper nguồn hoặc docs chính thức được tra
+	Hỗ trợ kết luận đúng phạm vi nguồn
+	[C]
+	Suy luận của bộ tài liệu này
+	Cần verify với user/test
+	[D]
+	Đề xuất thiết kế
+	Có thể thay sau review; không gọi là quyết định user
+	
+
+S0 3 Canonical context hiện tại
+ID
+	Nội dung
+	Nguồn/trạng thái
+	CTX-01
+	Một project Expiry cho HCI, Systems Engineering và Advanced Web
+	[A-U] context đã cung cấp
+	CTX-02
+	HCI: persona, UX/UI; SE: problem/requirements/flows/use cases/UML/data/ERD; Web: middleware/controller/API/business logic/repository/queries
+	[A-U]
+	CTX-03
+	CF-01 Add/Capture; CF-02 View/Prioritise & Explain; CF-03 Resolve/Act & Reconcile
+	[A-F] tracker 06/10
+	CTX-04
+	User flow theo Screen → User Action → Next Screen; decision dành cho điều kiện/validation
+	[A-F] tracker
+	CTX-05
+	Auth xuất hiện tại điểm cần dữ liệu riêng/persist, không mặc định đặt ở đầu toàn journey
+	[A-F] tracker
+	CTX-06
+	Tồn kho riêng từng tài khoản
+	[A-U] trả lời hôm nay; đã thay giả định trước đây
+	CTX-07
+	MVP nhập tay, nhắc trong app; OCR/push chưa ở MVP
+	[A-U] hôm nay
+	CTX-08
+	Stack chưa chốt
+	[A-U] hôm nay; React/Express/PostgreSQL chỉ [D]
+	CTX-09
+	Team khoảng 5 người; task tự claim, có thể đồng đảm nhiệm, review theo dependency
+	[A-U] context; chưa phân công tên mới
+	CTX-10
+	Food-first từ persona hiện tại
+	[C/D] nhất quán corpus; mở rộng medicines/cosmetics/warranty cần nghiên cứu riêng
+	
+
+S0 4 Persona mới nhất và các phần chưa biết
+Nguồn được truy xuất: Canva persona source (08/10). Link cũ Canva persona source và Canva persona source là lịch sử; không dùng ghi đè persona mới.
+ID
+	Persona
+	Profile đã truy xuất [A-R]
+	Cơ chế đã bàn
+	P1
+	Phạm Hoàng An — Occasional/Passive Forgetter
+	20, Student, TP.HCM, Single, iPhone/Laptop
+	Có thể lên kế hoạch, vẫn quên đồ khi khuất chú ý; không được diễn giải thành người hoàn toàn thiếu tổ chức
+	P2
+	Tôn Nữ Như Huyền — Busy Improviser
+	49, Household, Đà Nẵng, Married, Android/Laptop
+	Kế hoạch thực phẩm gia đình thay đổi; khó chuyển đồ đang có thành hành động
+	P3
+	Phạm Ngọc Thiên An — Conscious Maintainer
+	20, Student, Đà Nẵng, Single, iPhone/Android/Laptop
+	Muốn theo dõi chính xác nhưng cập nhật từng món tốn công
+	
+
+Đã đọc personality/quote/behavior/habits/goals/pains/challenges/opportunities trực tiếp từ Canva. Income và giờ sử dụng cụ thể không có trong rich text, không tự thêm. Canva là persona artifact, không phải raw interview transcript; quotes được ghi là quote trong slide, chưa xác minh nguồn interview. P1 trong lời user visible context: biết plan trước mua nhưng thỉnh thoảng quên, ngại sơ chế, bỏ tủ lạnh rồi quên có đồ đó.
+S0 5 Files đã đọc
+* REPORT.md (30/09): evidence audit và các BR-01…08 cũ; đọc đủ 1.163 dòng. Đây là synthesis cũ, có thể chứa inference/nguồn không tái kiểm chứng.
+* Tóm tắt (Executive Summary) (08/10): ERD/Product/InventoryBatch/API đề xuất cũ, đọc đủ. Không kế thừa mù quáng unique product name, nhận userId từ client, gộp delete với discard hoặc quantity status không nhất quán.
+* Audit backend và kế hoạch cải thiện toàn diện cho Expiry App (06/10): đọc các mục architecture, trust boundary, schema, concurrency và API; không đọc hết mọi mục của report.
+* Expiry_App_Task_Tracker_2026-10-06.xlsx: đọc ba tab và acceptance criteria.
+S0 6 Decision log và blockers
+ID
+	Quyết định/phần còn mở
+	Status
+	Artifact ảnh hưởng
+	DEC-01
+	Private inventory
+	User confirmed
+	Owner FK/API scope
+	DEC-02
+	Manual + in-app attention
+	User confirmed
+	Không cần scan/worker/push tables ở MVP
+	DEC-03
+	Food entry + movement ledger; remaining_quantity làm operational source of truth
+	Proposed
+	ERD, transaction, resolve API
+	DEC-04
+	DATE riêng với TIMESTAMPTZ; uncertainty tách khỏi opening
+	Proposed
+	Dictionary, API
+	DEC-05
+	Soft delete là quản trị bản ghi; không ghi discard
+	Proposed
+	History/trash/restore
+	DEC-06
+	Warning lead mặc định 2 ngày chỉ là cấu hình thử nghiệm; user sửa 0–30
+	Proposed, chưa validated
+	UX/priority/settings
+	DEC-07
+	Modular monolith; feature modules và service/repo boundary
+	Proposed
+	Repo
+	DEC-08
+	Auth provider/session strategy và stack
+	Open
+	Auth adapter, implementation; domain/API business có thể làm trước
+	DEC-09
+	Read-before-sign-in: public demo + draft form, auth khi đọc kho riêng hoặc lưu
+	Proposed từ CTX-05
+	UX auth continuation
+	DEC-10
+	Rich text Canva đã đọc trực tiếp; image/layout chưa inspect
+	Source retrieved
+	Persona fidelity; raw interview validation còn mở
+	DEC-11
+	Deployment, backend runtime, hosting, vận hành DB
+	Open
+	Chưa triển khai infra
+	
+
+Không có blocker cho bộ logical design này. Trước khi gọi ERD/API là final: review DEC-03…09 và thử các task với người thuộc ba cơ chế. Không yêu cầu user gửi lại quyết định DEC-01/02 hoặc chốt stack giả.
+S1 Problem và S4 S5 Research root cause
+S1 1 Problem definition
+* Symptom: thực phẩm bị quên; người dùng biết hạn nhưng không biết dùng món nào; app tồn kho dễ sai sau khi dùng/bỏ.
+* Expected: biết mình có gì, cái gì cần chú ý và cập nhật được việc đã làm với công nhỏ.
+* Actual: thông tin phân tán ở bao bì/tủ lạnh/trí nhớ; kế hoạch đổi; thao tác cập nhật chậm hơn thay đổi thực tế.
+* Impact: quyết định muộn, mua trùng, bản ghi sai và giảm tin tưởng. Chưa có số liệu baseline của nhóm để lượng hóa.
+* Scope: thực phẩm trong tồn kho cá nhân, ba core functions CTX-03, nhập tay và in-app.
+* Out of scope MVP: shared household, OCR/barcode integration, push, recipes/AI, tự suy hạn theo loại đồ, finance savings claims, medicine/warranty, offline sync và học thích nghi.
+S5 1 Phương pháp research đã làm
+1. Truy xuất conversation có persona/BR gần nhất; phân biệt user fact và assistant đề xuất.
+2. Đọc file hiện có để phát hiện khác biệt giữa persona, BR, ERD/API cũ.
+3. Tra paper gốc và docs chính thức; dùng kết quả nghiên cứu để kiểm tra cơ chế, không suy tỉ lệ thị trường từ mẫu nhỏ.
+4. Chuyển cơ chế thành hypothesis tính năng; ghi test và artifact chịu ảnh hưởng.
+5. Kiểm tra ngược mỗi entity/route có task cần nó hay không.
+Đây là research synthesis + engineering design; chưa có phỏng vấn mới, usability study hoặc competitor app walkthrough trực tiếp. Không gắn nhãn “đã validated”.
+S5 2 Source ledger
+Source
+	Nguồn và phạm vi
+	Finding dùng
+	Giới hạn
+	RES-01
+	Mesiranta et al., CozZo, conference abstract, 2024; CozZo household study
+	52 households, 3–6 tuần; stock/expiry awareness và planning có giá trị; maintenance effort, expiry estimate và perceived value là trở ngại
+	Conference abstract, không chứng minh ba persona VN là market segments; kết quả giảm waste không dùng làm KPI mặc định
+	RES-02
+	Mathisen et al., TotalCtrl/Too Good To Go, 2022; TotalCtrl study ; index Source
+	Search index nguồn paper: 6 students, nhiều manual operations gây khó duy trì
+	Full-text hôm nay bị anti-bot; chỉ dùng mức finding đã có trong index + audit cũ; chưa tái đọc full paper
+	RES-03
+	EATiT, Taiwan, Graham-Rowe trong REPORT.md
+	Visibility, disrupted plans, inconvenience là background hypotheses
+	Chưa truy lại paper gốc lần này; không dùng sample/quote từ đây làm new verified claim
+	DOC-01
+	PostgreSQL constraints PostgreSQL documentation
+	PK/FK/UNIQUE/CHECK giữ integrity
+	Không thay validation/ownership nghiệp vụ
+	DOC-02
+	PostgreSQL locking PostgreSQL documentation
+	FOR UPDATE hỗ trợ serialize cập nhật cùng hàng
+	Vẫn phải có transaction; thứ tự lock ổn định
+	DOC-03
+	Date/time PostgreSQL documentation
+	DATE khác timestamp/timezone
+	Cách ưu tiên hôm nay là rule project
+	DOC-04
+	Numeric PostgreSQL documentation
+	numeric là exact decimal
+	Không tự quyết định unit/conversion
+	DOC-05
+	React React state ownership
+	Shared UI state ở common parent gần nhất
+	Không phải mọi state lên App
+	DOC-06
+	OpenAPI 3.1.1 OpenAPI specification
+	Contract operations, schema, request/response
+	Không quy định phải map route 1:1 table
+	DOC-07
+	RFC 9457 RFC 9457
+	Problem details cho lỗi HTTP
+	code/request_id là extension project
+	DOC-08
+	OWASP OWASP REST security
+	Endpoint access control, input validation, server workflow enforcement
+	Cần kiểm tra thực thi trên code sau
+	DOC-09
+	OMG UML 2.5.1 OMG UML specification
+	Use case, activity, sequence, class/state thuộc UML
+	Mermaid flowchart và ERD không tự trở thành UML chuẩn
+	DOC-10
+	UK official label guide UK food label guide
+	Use-by và best-before có nghĩa khác; storage/opening quan trọng
+	Không dùng như pháp luật nhãn VN; không suy shelf-life hay an toàn từ app
+	
+
+Sources truy cập thg 10 8, 2026. Không tìm thấy tài liệu chính thức xác nhận warning 2 ngày là phù hợp cho mọi thực phẩm; đó là policy thử nghiệm DEC-06. Không tìm thấy evidence trong nguồn đã đọc chứng minh chỉ bật reminder là đủ giải quyết P2.
+S4 1 Root cause theo persona
+Persona
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	P1
+	Symptom: Có đồ nhưng quên sử dụng
+Immediate cause: Đồ khuất không tạo tín hiệu nhớ
+	System cause: Phải tự nhớ toàn bộ inventory, không có điểm review nhẹ
+Root mechanism: Visibility/attention failure dù có khả năng plan
+	P2
+	Symptom: Có đồ gần hạn nhưng kế hoạch không thực hiện
+Immediate cause: Lịch/sở thích/nhu cầu thay đổi
+	System cause: Thông tin hạn không nối với quyết định hiện tại
+Root mechanism: Decision/action gap
+	P3
+	Symptom: Theo dõi một thời gian rồi số lượng app sai
+Immediate cause: Dùng/bỏ không được cập nhật
+	System cause: Cost của maintenance cao hơn giá trị nhận ở thời điểm đó
+Root mechanism: Maintenance burden và reconciliation failure
+	
+
+[C] Feedback loop nguy hiểm: cập nhật chậm → stock sai → attention sai → giảm tin tưởng → ít cập nhật hơn. Vì vậy data accuracy là điều kiện upstream của reminder quality.
+S1 2 Persona pain challenge opportunity feature
+Pain point = điều gây khó chịu/thiệt hại hiện có; challenge = trở ngại khi muốn đạt goal; opportunity = chỗ sản phẩm có thể can thiệp. Opportunity chưa phải bằng chứng cần feature.
+ID
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	PP-11
+	Context/behavior nguồn: P1 mua có plan, cất tủ rồi quên
+Pain point [C trừ phần user nói]: Không nhớ đang có món gì
+Challenge: Review phải nhanh, không đòi nhớ từng món
+	Opportunity: Hiển thị food cần chú ý theo vị trí/ngày
+Candidate feature: F-02 attention list, F-03 detail
+Cần research thêm: Có mở app trước nấu/mua không?
+	PP-12
+	Context/behavior nguồn: P1 ngại sơ chế, quên thỉnh thoảng
+Pain point [C trừ phần user nói]: Biết có đồ nhưng chưa xử lý
+Challenge: Notification không tạo thời gian/động lực chế biến
+	Opportunity: Đi thẳng từ attention đến hành động ngắn
+Candidate feature: F-04 record used/discarded; recipes để sau
+Cần research thêm: Cản trở do thiếu thời gian hay không muốn ăn?
+	PP-13
+	Context/behavior nguồn: P1 ít muốn quản trị
+Pain point [C trừ phần user nói]: Nhập dữ liệu thành việc mới
+Challenge: Capture không được dài hơn khả năng duy trì
+	Opportunity: Chỉ bắt buộc name/quantity/unit
+Candidate feature: F-01 quick manual add, optional date
+Cần research thêm: Thời gian nhập chấp nhận thực tế?
+	PP-21
+	Context/behavior nguồn: P2 đồ mua cho dự định gia đình nhưng plan đổi
+Pain point [C trừ phần user nói]: Không biết món nào ưu tiên
+Challenge: Quyết định cần lượng/vị trí/date context
+	Opportunity: Ranking có reason dễ hiểu, lọc nhanh
+Candidate feature: F-02/F-03
+Cần research thêm: Có giúp chọn hành động hay chỉ xem cảnh báo?
+	PP-22
+	Context/behavior nguồn: P2 lựa chọn chưa rõ với đồ không nhãn
+Pain point [C trừ phần user nói]: Thiếu thông tin đáng tin
+Challenge: Không phải món nào có date chắc chắn
+	Opportunity: Tách unknown/estimated và source
+Candidate feature: F-01/F-03/F-05 edit metadata
+Cần research thêm: User hiểu nhãn uncertainty ra sao?
+	PP-23
+	Context/behavior nguồn: P2 có household context
+Pain point [C trừ phần user nói]: Người khác có thể thay đổi đồ vật thật
+Challenge: Private app không tự đồng bộ việc người khác làm
+	Opportunity: Quick recount cho owner; sharing phase sau
+Candidate feature: F-05 recount
+Cần research thêm: Private scope đáp ứng học phần nhưng coordination vẫn là gap
+	PP-31
+	Context/behavior nguồn: P3 thường kiểm tra tồn kho
+Pain point [C trừ phần user nói]: Chỉnh nhiều bản ghi phiền
+Challenge: Accuracy cần nhiều thao tác lặp
+	Opportunity: Action rõ quantity, edit nhanh, history
+Candidate feature: F-04/F-05/F-06
+Cần research thêm: Tần suất cập nhật và kiểu sai phổ biến?
+	PP-32
+	Context/behavior nguồn: P3 muốn số liệu đúng
+Pain point [C trừ phần user nói]: Double tap/retry hoặc tab cũ làm sai lượng
+Challenge: Không thể dựa UI disable button
+	Opportunity: Version + idempotency + atomic movement
+Candidate feature: F-04 server guarantees
+Cần research thêm: Mobile network/retry là giả thuyết cần thử
+	PP-33
+	Context/behavior nguồn: P3 sửa nhầm/xóa nhầm
+Pain point [C trừ phần user nói]: Mất dữ liệu đã quản lý
+Challenge: Restore không được tạo fake stock movement
+	Opportunity: Soft-delete, trash/restore, correction có history
+Candidate feature: F-06/F-07
+Cần research thêm: Có cần batch edit ngay không?
+	
+
+Không suy “married → shared household feature bắt buộc”: user đã chọn private scope. Không suy độ tuổi quyết định tech skill. Các persona cùng dùng một hệ thống; không có role P1/P2/P3 trong DB và không dựng ba dashboard khác nhau trước validation.
+S1 3 Feature relevance và priority
+Feature
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	F-01 Quick manual capture
+	P1: Cao
+P2: Cao
+	P3: Cao
+MVP: Core
+	F-02 Inventory + attention reason + search/location/date filter
+	P1: Cao
+P2: Cao
+	P3: Cao
+MVP: Core
+	F-03 Detail: amount/date type/source/opening note
+	P1: Vừa
+P2: Cao
+	P3: Cao
+MVP: Core
+	F-04 Consume/discard phần hoặc hết
+	P1: Cao
+P2: Cao
+	P3: Cao
+MVP: Core
+	F-05 Edit metadata + recount actual amount
+	P1: Vừa
+P2: Vừa
+	P3: Cao
+MVP: Core
+	F-06 History
+	P1: Thấp
+P2: Vừa
+	P3: Cao
+MVP: Core, phục vụ reconcile
+	F-07 Trash/restore
+	P1: Vừa
+P2: Vừa
+	P3: Cao
+MVP: Core support
+	F-08 Attention lead/timezone settings
+	P1: Vừa
+P2: Vừa
+	P3: Vừa
+MVP: Core support
+	OCR/barcode/push
+	P1: Hypothesis
+P2: Hypothesis
+	P3: Hypothesis
+MVP: Deferred theo user
+	Recipes/meal plans/bulk maintenance
+	P1: Chưa chứng minh
+P2: Potential cao
+	P3: Potential
+MVP: Research backlog
+	
+
+“In-app reminder” MVP = attention list được tính khi mở/refetch app; không phải notification gửi khi app đóng. Nếu user kỳ vọng thông báo ngoài app thì scope cần đổi; không cần worker/scheduler cho định nghĩa này.
+S5 3 Validation research tiếp theo
+* Phỏng vấn dựa incident gần nhất, không hỏi dẫn “bạn có muốn OCR không?”. Mỗi persona mechanism tìm 3–5 người phù hợp cho exploratory study; đây là kế hoạch, không đảm bảo đại diện dân số.
+* P1: lần gần nhất đồ bị quên ở đâu, khi nào phát hiện, có plan trước không, cue nào làm nhớ.
+* P2: kể lần đổi kế hoạch; tại sao không dùng đồ, thông tin nào thiếu; task chọn món ưu tiên có thực sự giúp quyết định.
+* P3: quan sát thêm 5 món và ghi dùng/bỏ/sửa; count taps, time, wrong amounts, bỏ dở, stale records sau vài ngày.
+* Task usability: thêm món không biết hạn; chọn món cần chú ý; dùng một phần; recount; xóa rồi restore; mạng chập chờn.
+* Metrics: completion, median task time, error/correction rate, stale-record rate (digital active records sai physical state / records audited), relevant-action rate. Report denominator/sample và cách đo.
+* Chưa đặt universal thresholds. Baseline trước; nhóm chốt acceptance targets trước test. Không dùng % giảm waste của CozZo làm lời hứa sản phẩm.
+S2 Definitions và requirement model
+S2 1 Các khái niệm dùng trong bộ tài liệu
+Term
+	Định nghĩa đơn giản
+	Vai trò/ví dụ Expiry
+	Proto-persona
+	Mô hình hành vi tổng hợp còn cần kiểm chứng
+	P1 visibility; không phải một participant thật được interview hôm nay
+	Goal
+	Kết quả người dùng muốn đạt
+	Biết món nào cần xem trước khi nấu
+	Task
+	Việc cụ thể làm để đạt goal
+	Mở attention list, chọn món, ghi dùng 1 hộp
+	User flow
+	Đường đi qua screen/action/decision
+	WF-01 → chọn món → WF-03
+	Scenario
+	Một tình huống cụ thể có bối cảnh và outcome
+	Huyền đổi bữa tối, xem món nào gần ngày theo dõi
+	Use case
+	Hợp đồng hành vi hệ thống phục vụ goal
+	UC-04 ghi sử dụng; gồm normal/alternate/error flow
+	Business requirement (BR)
+	Kết quả/giá trị business cần đạt
+	Giảm công cập nhật để inventory hữu ích
+	Functional requirement (FR)
+	Hệ thống phải làm gì
+	Save món với date nullable
+	Nonfunctional requirement (NFR)
+	Chất lượng/ràng buộc cách vận hành
+	Không ghi số lượng âm khi hai request đồng thời
+	Business rule (RULE)
+	Điều kiện/giới hạn quyết định nghiệp vụ
+	Không dùng nhiều hơn lượng còn
+	Entity
+	Khái niệm có identity và dữ liệu cần lưu
+	FoodEntry E-A khác E-B dù cùng tên
+	Data dictionary
+	Định nghĩa chính xác field trước schema
+	expiry_date là calendar date nullable
+	ERD
+	Sơ đồ entity và quan hệ/cardinality
+	Một user sở hữu 0…N entries
+	DTO
+	Định dạng truyền vào/ra API, không phải DB row
+	EntryResponse gồm attention dẫn xuất
+	Repository
+	Bộ hàm truy cập persistence có scope
+	findOwnedEntry(id,userId)
+	Use-case service
+	Điều phối rule, transaction và repo
+	RecordMovement kiểm tra lượng và commit cả history
+	Transaction
+	Nhóm thay đổi cùng commit hoặc rollback
+	Giảm quantity và thêm movement cùng thành công
+	Optimistic concurrency
+	Phát hiện request dùng version cũ
+	expected_version 3 nhưng hiện 4 → 409
+	Idempotency
+	Retry cùng command không thực hiện lần hai
+	Replay movement dùng 1 hộp không trừ thêm
+	Modular monolith
+	Một backend deploy, bên trong chia module
+	inventory/accounts, chưa có microservices
+	Composition root
+	Nơi nối dependencies
+	server startup inject service/repo, không chứa toàn rule
+	Ledger
+	Lịch sử các thay đổi
+	Movements; MVP không event-sourcing
+	Source of truth
+	Giá trị chính được dùng để quyết định
+	DB remaining_quantity, không React copy
+	
+
+S2 2 BR mới tách namespace để tránh xung đột
+Ngày 30/09 dùng BR-01…08 cho hỗn hợp capability. Ngày 08/10 assistant đề xuất BR-01…03 cho outcome. Bộ này dùng BR-V1-xx cho outcome, FR-xx cho capability, RULE-xx cho business rules; không âm thầm đổi nghĩa ID cũ.
+ID
+	Outcome [D]
+	Persona
+	Indicators
+	BR-V1-01
+	Người dùng nhận biết thực phẩm đang có và cần chú ý với công thấp
+	P1, P2
+	Task chọn món; missed/stale records
+	BR-V1-02
+	Người dùng có đủ context để quyết định bước tiếp khi kế hoạch đổi
+	P2
+	Task decision completion + explanation; không tự claim recipes đã giải quyết
+	BR-V1-03
+	Tồn kho số phản ánh thay đổi thực tế mà không tạo gánh nặng quản trị lớn
+	P3, P1
+	Update time, amount errors, stale-record rate
+	
+
+FR
+	Hệ thống cần làm
+	UC/feature
+	Outcome
+	FR-01
+	Capture name, amount, unit; date optional và source rõ
+	UC-01/F-01
+	BR-V1-01/03
+	FR-02
+	List/search/filter kho của owner; stable pagination
+	UC-02/F-02
+	BR-V1-01
+	FR-03
+	Attention classification + reason + calculated local date
+	UC-03/F-02/03
+	BR-V1-01/02
+	FR-04
+	Ghi consume/discard một phần/toàn bộ, atomic và retry-safe
+	UC-04/05/F-04
+	BR-V1-03
+	FR-05
+	Sửa metadata có version, không sửa quantity qua generic PATCH
+	UC-06/F-05
+	BR-V1-02/03
+	FR-06
+	Recount lượng thực tế, lưu correction history
+	UC-07/F-05
+	BR-V1-03
+	FR-07
+	History đọc được của owner
+	UC-08/F-06
+	BR-V1-03
+	FR-08
+	Soft delete/trash/restore, tách physical disposal
+	UC-09/10/F-07
+	BR-V1-03
+	FR-09
+	Setting timezone và attention lead, recompute
+	UC-11/F-08
+	BR-V1-01/02
+	FR-10
+	Auth continuation giữ draft và gate kho riêng/persist
+	UC-00/support
+	CTX-05
+	
+
+S2 3 Business logic inventory
+Rule
+	Chính xác cần enforce [D]
+	Owner
+	RULE-01
+	Owner lấy từ principal authenticated; không nhận user_id trong business DTO
+	Service + scoped repo
+	RULE-02
+	Một FoodEntry = food quantity có cùng unit/date/location/opening context. Cùng tên không phải cùng identity
+	Capture service
+	RULE-03
+	Create quantity >0; remaining ≥0; max 999999999.999; piece số nguyên; g/ml 3 decimal; không convert unit ở MVP
+	Service + DB CHECK
+	RULE-04
+	Create lưu initial movement trước 0 → quantity; operational remaining là nguồn đọc, ledger cập nhật cùng transaction
+	Create service + DB
+	RULE-05
+	Consume/discard amount >0 và ≤remaining; deleted/depleted không cho movement giảm
+	RecordMovement
+	RULE-06
+	Recount nhập actual_quantity ≥0, reason bắt buộc; cùng lượng hiện có thì 200 no-op, không thêm movement/version
+	Recount service
+	RULE-07
+	Không mutate remaining, version, user_id, deleted_at hoặc attention bằng generic metadata PATCH
+	DTO/schema + service
+	RULE-08
+	unit không đổi sau create; muốn đổi phải quyết định migration/conversion riêng
+	Service
+	RULE-09
+	Date unknown → expiry_date null; known/estimated → cần ngày; nguồn printed_label/user_estimate/user_entered/unknown nhất quán
+	Metadata domain
+	RULE-10
+	date_label_type use_by/best_before/unspecified là nghĩa nhãn, không certainty. estimated chỉ với user_estimate; unknown đi cùng source unknown và label unspecified
+	Metadata + DB
+	RULE-11
+	opened_on là field riêng nullable; không tự tính hạn mới, không tự kéo dài date khi freezer
+	Metadata/attention policy
+	RULE-12
+	Attention khi còn quantity và chưa deleted: unknown nếu chưa date; past_date nếu date<today; due_today nếu bằng; soon nếu 0<delta≤lead; later nếu delta>lead
+	AttentionPolicy
+	RULE-13
+	Today là calendar date theo user timezone; response có as_of_date; lead 0…30, default thử 2
+	AttentionPolicy
+	RULE-14
+	Attention không chứng minh safe/fresh; explain source, label, uncertainty. Không tự kết luận nên ăn khi quá use-by
+	AttentionPolicy/presenter
+	RULE-15
+	Soft-delete giữ quantity/history, không tạo discard movement; restore chỉ bỏ deleted_at, recompute attention
+	Delete/restore service
+	RULE-16
+	Lifecycle active nếu remaining>0, depleted nếu 0; không ép một trạng thái consumed/discarded cho batch đã vừa dùng vừa bỏ
+	Derived presenter
+	RULE-17
+	expected_version phải khớp current cho update/action/delete/restore; successful mutation tăng version đúng một lần; no-op không tăng
+	Services
+	RULE-18
+	Mọi write yêu cầu Idempotency-Key; cùng owner+key+operation+payload replay saved response, khác payload/operation →409; replay trước version check
+	Mutation executor + api_requests
+	RULE-19
+	Idempotency reservation/result và entry/history commit cùng transaction; thất bại rollback; MVP không tự expire keys
+	Transaction adapter
+	RULE-20
+	Sort priority past_date,due_today,soon,unknown,later; trong nhóm date asc NULLS LAST rồi created_at,id; unknown nhóm riêng visible
+	Query/AttentionPolicy
+	RULE-21
+	Past-date capture được phép, kèm reason; không reject vì quá ngày hôm nay
+	Create/UX
+	RULE-22
+	Unknown không silently suy date; opening/date edit chỉ metadata cả entry; mở một phần batch cần ghi tách ngay khi capture, split sau này phải atomic
+	Service/UX
+	RULE-23
+	History không có public edit/delete endpoint; sửa sai bằng recount có reason, không rewrite historical consumption
+	Repo/service
+	RULE-24
+	Owner-only not-found hoặc foreign-owned ID →404; auth thiếu →401; lỗi input→422; conflict→409
+	Error mapper
+	
+
+S2 4 Attention decision table
+Deleted
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	Có
+	Quantity: Bất kỳ
+Date: Bất kỳ
+	Relationship với today: Bất kỳ
+Output: Không trong active list; trash riêng
+	Không
+	Quantity: 0
+Date: Bất kỳ
+	Relationship với today: Bất kỳ
+Output: depleted, không trong attention list
+	Không
+	Quantity: >0
+Date: null
+	Relationship với today: Không biết
+Output: unknown; yêu cầu xem/xác nhận, không gọi later
+	Không
+	Quantity: >0
+Date: Có
+	Relationship với today: <today
+Output: past_date; reason theo label/source
+	Không
+	Quantity: >0
+Date: Có
+	Relationship với today: =today
+Output: due_today
+	Không
+	Quantity: >0
+Date: Có
+	Relationship với today: 1…lead days
+Output: soon
+	Không
+	Quantity: >0
+Date: Có
+	Relationship với today: >lead days
+Output: later
+	
+
+opened_on không thay đổi bảng này tự động. Cần hướng dẫn sau mở từ nhãn/người dùng trước khi model thêm effective deadline.
+S2 5 NFR và acceptance
+NFR
+	Yêu cầu
+	Verification
+	NFR-01 Privacy
+	Không cross-user read/write ở mọi endpoint và history
+	A/B user tests
+	NFR-02 Integrity
+	Atomic entry/movement/idempotency; không âm; conflict không overwrite
+	Concurrent transactions + rollback test
+	NFR-03 Contract
+	FE mock và BE trả đúng OpenAPI; stable error shape
+	Contract validation
+	NFR-04 UX recovery
+	401 giữ draft; timeout retry cùng key; conflict refetch không silent replace
+	UI scenarios
+	NFR-05 Accessibility
+	Label/input rõ, keyboard usable, trạng thái không chỉ màu, focus/dialog/error đúng
+	Keyboard + screen reader review
+	NFR-06 Date accuracy
+	Date-only không bị lệch do UTC conversion; clock injection
+	Boundary timezone tests
+	NFR-07 Operations
+	Migration versioned, backup/restore baseline, generic errors, no secret logging
+	Staging acceptance
+	NFR-08 Performance
+	Chốt latency/volume sau biết hosting và dataset; chưa bịa SLA
+	Baseline measurements
+	
+
+S3 User flows scenarios và use cases
+S3 1 Screen inventory
+Screen
+	Nội dung
+	Actions/next
+	WF-00 Intro/demo + auth continuation
+	Preview không dùng dữ liệu riêng
+	Try add →WF-02; view own stock/auth→WF-01
+	WF-01 Inventory/attention
+	Attention groups, reasons, search/location, all/depleted tab
+	Add→WF-02; item→WF-03; settings→WF-06
+	WF-02 Add/edit
+	Name, amount/unit khi create, location, optional date/certainty/label/source/opened note
+	Save→WF-03; validation giữ form; cancel→trước đó
+	WF-03 Detail
+	Current amount/version/date context/attention reason
+	Use/discard/recount→WF-04; edit→WF-02; history→WF-05; remove record→dialog
+	WF-04 Action sheet
+	Action, amount/actual amount, reason khi recount; current quantity
+	Confirm→WF-03 updated; cancel→WF-03
+	WF-05 History/trash
+	Read-only movement history; trash là view riêng cùng layout list
+	Restore→WF-03; back→WF-01
+	WF-06 Settings
+	Timezone, attention lead
+	Save→WF-01 recompute; cancel→WF-01
+	
+
+S3 2 Goal và các flow hoàn thành task
+Flow
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	UF-01 Capture
+	Persona chính: P1/P3
+Goal: Ghi đồ mới trước khi quên
+	Straight task path: WF-01→Add→WF-02→Save→WF-03
+Outcome kiểm chứng được: Entry đã lưu, initial movement, xuất hiện trong inventory
+	UF-02 Capture unknown date
+	Persona chính: P1/P2
+Goal: Không bỏ việc theo dõi chỉ vì thiếu nhãn
+	Straight task path: WF-02→chọn Không biết hạn→Save→WF-03
+Outcome kiểm chứng được: Date null, unknown visible; không fake date
+	UF-03 Notice hidden food
+	Persona chính: P1
+Goal: Nhớ được món cần xem
+	Straight task path: WF-01→attention group→item→WF-03
+Outcome kiểm chứng được: User thấy amount/location/reason; chưa claim food used
+	UF-04 Decide after plan change
+	Persona chính: P2
+Goal: Chọn món đáng chú ý từ đồ đang có
+	Straight task path: WF-01→location/filter→item→WF-03→action→WF-04→confirm
+Outcome kiểm chứng được: User tự chọn action; hệ thống ghi kết quả
+	UF-05 Partial consumption
+	Persona chính: All
+Goal: Số lượng app đúng sau dùng
+	Straight task path: WF-03→Use→WF-04 amount→confirm→WF-03
+Outcome kiểm chứng được: Remaining giảm đúng; history tạo 1 lần
+	UF-06 Partial/full discard
+	Persona chính: All
+Goal: Phản ánh đồ thật đã bỏ
+	Straight task path: WF-03→Discard→WF-04 amount→confirm→WF-03
+Outcome kiểm chứng được: Remaining giảm; discard history; zero→depleted
+	UF-07 Reconcile physical stock
+	Persona chính: P3/P2
+Goal: Sửa số lượng lệch nhanh
+	Straight task path: WF-03→Recount→WF-04 actual+reason→confirm→WF-03→history
+Outcome kiểm chứng được: Amount đúng và correction traceable
+	UF-08 Correct metadata
+	Persona chính: P3/P2
+Goal: Sửa ngày/vị trí nguồn nhập sai
+	Straight task path: WF-03→Edit→WF-02→Save→WF-03
+Outcome kiểm chứng được: Version tăng; attention recomputed
+	UF-09 Remove/restore record
+	Persona chính: P3
+Goal: Dọn bản ghi nhầm, lấy lại khi xóa sai
+	Straight task path: WF-03→Remove record→confirm→WF-05 trash→Restore→WF-03
+Outcome kiểm chứng được: Quantity/history không đổi bởi delete/restore
+	UF-10 Change attention settings
+	Persona chính: All
+Goal: Điều chỉnh cách chú ý
+	Straight task path: WF-01→Settings→WF-06→Save→WF-01
+Outcome kiểm chứng được: Lead/timezone cập nhật; list có as_of_date mới
+	UF-11 Session expiry continuation
+	Persona chính: All
+Goal: Không mất draft khi auth hết hạn
+	Straight task path: WF-02/04→Save→401→auth→resume cùng draft→Save
+Outcome kiểm chứng được: Không trừ quantity trước khi server success
+	
+
+Mỗi flow có thể có nhiều task path; không ép mỗi persona chỉ dùng một core function. UF-04 chưa có recipe generation, meal plan persistence hoặc freeze-expiry automation. Nó đạt goal “chọn từ đồ cần chú ý”, chưa chứng minh đã giải quyết toàn bộ decision gap.
+S3 3 Scenario catalogue
+Các tình huống dưới đây là [C/D] test scenarios, không phải trích lời user research.
+Scenario
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	SC-01
+	Context/trigger: An cất 2 hộp sữa cùng hạn, muốn ghi trước khi quên
+Persona goal: Capture nhanh
+	Flow/UC: UF-01/UC-01
+Expected result: Một entry quantity 2 piece
+	SC-02
+	Context/trigger: An có rau không thấy nhãn ngày
+Persona goal: Vẫn theo dõi được
+	Flow/UC: UF-02/UC-01
+Expected result: unknown date; không bị chặn
+	SC-03
+	Context/trigger: Trước bữa tối An mở app, món ở sau tủ đã gần ngày theo dõi
+Persona goal: Nhớ món đang có
+	Flow/UC: UF-03/UC-02/03
+Expected result: Soon group + reason/date/location
+	SC-04
+	Context/trigger: Huyền đổi món ăn tối sau thay đổi lịch gia đình
+Persona goal: Chọn đồ cần chú ý
+	Flow/UC: UF-04/UC-03/04
+Expected result: Filter/detail trước action; không chỉ bật alert
+	SC-05
+	Context/trigger: Thiên An dùng 250g từ entry 1000g
+Persona goal: Cập nhật chính xác
+	Flow/UC: UF-05/UC-04
+Expected result: Remaining 750g; movement -250g
+	SC-06
+	Context/trigger: Bỏ 200g trong phần 750g còn
+Persona goal: Ghi waste riêng với use
+	Flow/UC: UF-06/UC-05
+Expected result: Remaining 550g; discard 200g
+	SC-07
+	Context/trigger: Kiểm tra thực tế chỉ còn 500g
+Persona goal: Reconcile mismatch
+	Flow/UC: UF-07/UC-07
+Expected result: Adjustment -50g có reason
+	SC-08
+	Context/trigger: Dùng mobile, server commit nhưng response mất
+Persona goal: Không ghi lặp
+	Flow/UC: UF-05/UC-04
+Expected result: Retry cùng key/payload replay, chỉ 1 movement
+	SC-09
+	Context/trigger: Hai tab cùng version, mỗi tab yêu cầu dùng 400g từ 500g
+Persona goal: Không negative/lost update
+	Flow/UC: UC-04
+Expected result: Một success; tab còn lại 409, refetch
+	SC-10
+	Context/trigger: Lỡ xóa bản ghi còn 500g
+Persona goal: Khôi phục record
+	Flow/UC: UF-09/UC-09/10
+Expected result: Restore vẫn 500g, không giả đã dùng/bỏ
+	SC-11
+	Context/trigger: Sửa date khi tab khác đã cập nhật entry
+Persona goal: Không overwrite silently
+	Flow/UC: UF-08/UC-06
+Expected result: 409, hiển thị dữ liệu hiện tại/draft khác biệt
+	SC-12
+	Context/trigger: Entry vừa dùng hết vừa bỏ phần cuối
+Persona goal: History đúng nghĩa
+	Flow/UC: UC-04/05/08
+Expected result: lifecycle depleted; totals theo movement, không “all consumed”
+	SC-13
+	Context/trigger: User A thử ID của user B
+Persona goal: Bảo vệ kho riêng
+	Flow/UC: Tất cả owned UCs
+Expected result: 404; không data leak
+	SC-14
+	Context/trigger: Date=ngày hiện tại user, máy client ở timezone khác
+Persona goal: Nhắc đúng calendar date
+	Flow/UC: UC-03/11
+Expected result: due_today theo timezone owner
+	SC-15
+	Context/trigger: Món quá date nhưng best_before hoặc date estimate
+Persona goal: Không biến attention thành safety claim
+	Flow/UC: UC-03
+Expected result: past_date + label/source explanation
+	
+
+S3 4 Use case specification conventions
+Actor chính: authenticated inventory owner (trừ UC-00/support demo). P1/P2/P3 là behavior models, không phải actor roles hay quyền. System boundary = Expiry application gồm UI/API/domain/persistence. Auth provider là supporting external actor chưa chốt. Clock được inject làm dependency cho test, không phải người dùng.
+Precondition chung: principal valid, object thuộc owner và chưa deleted với operations thường. Auth/security gate là precondition/support flow; không tạo “business UC validate form” chỉ vì middleware tồn tại.
+UC 00 Continue with identity
+* Requirement: FR-10; UI: WF-00/02/04.
+* Trigger: Chạm private inventory hoặc lưu draft.
+* Preconditions: Có draft/demo chưa persist.
+* Main success flow: Giữ draft; xác thực qua auth adapter; resume task.
+* Alternate/error flow: Cancel auth → giữ draft, không save; auth fail → retry.
+* Success guarantee: Identity principal hợp lệ, chưa tự tạo food.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: Không password/token trong food DTO.
+UC 01 Record food entry
+* Requirement: FR-01; UI: WF-02.
+* Trigger: User chọn Add rồi Save.
+* Preconditions: Draft có name/quantity/unit.
+* Main success flow: Validate DTO; resolve owner; create entry+initial movement+request result một transaction; trả entry.
+* Alternate/error flow: Date unknown hợp lệ; past date hợp lệ; 422 giữ draft; timeout retry key cũ.
+* Success guarantee: Entry và initial movement hoặc không có cả hai.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-01…04/09…11/18/19/21.
+UC 02 Review own inventory
+* Requirement: FR-02; UI: WF-01.
+* Trigger: Mở inventory/search/filter.
+* Preconditions: Principal valid.
+* Main success flow: Validate filters/page; read owner-scoped rows; project DTO; return items+pagination.
+* Alternate/error flow: Empty→empty state/Add CTA; network error→retry; foreign scope không được nhận.
+* Success guarantee: Không mutate data.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-01/20/24.
+UC 03 Identify and understand attention
+* Requirement: FR-03; UI: WF-01/03.
+* Trigger: Mở attention hoặc detail.
+* Preconditions: Clock/timezone/lead có giá trị.
+* Main success flow: Read active owned entries; derive date state/reason; stable sort; show date/source/location/amount.
+* Alternate/error flow: Unknown→nhóm riêng; depleted/deleted excluded; estimated→explain uncertainty.
+* Success guarantee: User có thông tin chọn action; chưa mutate food.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-09…14/20.
+UC 04 Record consumption
+* Requirement: FR-04; UI: WF-04.
+* Trigger: User confirm Use amount.
+* Preconditions: Owned nondeleted entry với quantity>0; key/version.
+* Main success flow: Idempotency lookup; lock owned entry; verify version/unit/amount; update quantity+version; insert consume movement; store response; commit.
+* Alternate/error flow: Stale version/over amount→409; invalid amount→422; replay→saved response; all used→depleted.
+* Success guarantee: Remaining đúng, 1 history event cho 1 command.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-03/05/17…19.
+UC 05 Record discard
+* Requirement: FR-04; UI: WF-04.
+* Trigger: User confirm Discard amount.
+* Preconditions: Như UC-04.
+* Main success flow: Như UC-04 nhưng movement kind=discard; optional reason.
+* Alternate/error flow: Partial waste vẫn active; hết lượng depleted; deleted→404.
+* Success guarantee: History waste riêng, không soft-delete record.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-05/15/16/18/19.
+UC 06 Correct entry metadata
+* Requirement: FR-05; UI: WF-02.
+* Trigger: Save edit name/location/date context.
+* Preconditions: Owned nondeleted entry; version/key; patch không quantity/unit.
+* Main success flow: Replay check; lock; validate patch + full merged object; update metadata/version; response attention mới.
+* Alternate/error flow: Null reset date phải đổi certainty/source đồng bộ; empty patch→422; conflict→409; depleted metadata vẫn được sửa.
+* Success guarantee: Quantity/ledger không đổi; attention updated.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-07…14/17…19.
+UC 07 Reconcile actual quantity
+* Requirement: FR-06; UI: WF-04.
+* Trigger: Confirm Recount actual_quantity+reason.
+* Preconditions: Owned nondeleted entry; version/key; quantity>=0.
+* Main success flow: Replay; lock+version; compare actual vs remaining; delta adjustment; update+ledger+result transaction.
+* Alternate/error flow: Same amount→200 no-op; actual>0 từ depleted→active; 0→depleted; invalid/missing reason→422.
+* Success guarantee: Digital amount đúng reported reality; correction traceable.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-03/06/16…19/23.
+UC 08 Review entry movement history
+* Requirement: FR-07; UI: WF-05.
+* Trigger: Chọn History.
+* Preconditions: Owned entry kể cả deleted nếu biết ID qua trash.
+* Main success flow: Read owner-scoped entry+paginated movements stable by recorded_at,id; show before/after/kind/reason.
+* Alternate/error flow: No events không hợp lệ với entry đã create; server invariant alert; foreign ID→404.
+* Success guarantee: Read-only, không sửa lịch sử.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-04/23/24.
+UC 09 Remove erroneous record
+* Requirement: FR-08; UI: WF-03/05.
+* Trigger: Confirm Remove record.
+* Preconditions: Owned entry, version/key.
+* Main success flow: Replay; lock+version; set deleted_at/version; store result transaction.
+* Alternate/error flow: Đã deleted với command mới→409; retry cùng key replay; cancel không change.
+* Success guarantee: Không trong active list; quantity/history giữ nguyên.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-15/17…19.
+UC 10 Restore removed record
+* Requirement: FR-08; UI: WF-05/03.
+* Trigger: Chọn Restore trong trash.
+* Preconditions: Owned deleted entry, version/key.
+* Main success flow: Replay; lock+version; clear deleted_at; version++; compute derived attention; commit result.
+* Alternate/error flow: Chưa deleted với command mới→409; depleted restore vẫn depleted.
+* Success guarantee: Record hiện lại đúng lifecycle; no stock movement.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-15…19.
+UC 11 Set attention preferences
+* Requirement: FR-09; UI: WF-06.
+* Trigger: Save settings.
+* Preconditions: Principal valid; user version/key.
+* Main success flow: Validate timezone IANA/lead integer; lock user/version; update settings/version+result transaction; refresh derived list.
+* Alternate/error flow: Timezone invalid/lead out-of-range→422; conflict→409; clock not controlled by body.
+* Success guarantee: Không rewrite food rows; next read dùng setting mới.
+* Failure guarantee: không partial mutation; draft giữ ở UI; rollback trước commit. Với read không phát sinh write.
+* Rules: RULE-12/13/17…19.
+S3 4a UX flow CF 01 Capture
+Source Mermaid có thể chỉnh sửa
+flowchart TD
+ A["WF-01 Inventory or WF-00 Demo"] -->|"Tap Add"| B["WF-02 Capture form"]
+ B -->|"Enter name, quantity, unit, optional date"| C["WF-02 Draft"]
+ C -->|"Tap Save"| D{"Identity available?"}
+ D -->|"No"| E["Auth continuation"]
+ E -->|"Authenticate; retain draft"| C
+ D -->|"Yes"| F{"Input valid?"}
+ F -->|"No"| G["WF-02 Field errors"]
+ G -->|"Correct fields"| C
+ F -->|"Yes; save succeeds"| H["WF-03 Saved detail"]
+ F -->|"Timeout"| I["WF-02 Result uncertain"]
+ I -->|"Retry unchanged command"| D
+S3 4b UX flow CF 02 Review
+Source Mermaid có thể chỉnh sửa
+flowchart TD
+ A["WF-01 Inventory"] -->|"Select Attention"| B["WF-01 Attention groups"]
+ B -->|"Search or filter"| C{"Matching items?"}
+ C -->|"No"| D["WF-01 Empty result"]
+ D -->|"Clear filters or Add"| A
+ C -->|"Yes; select item"| E["WF-03 Detail and reason"]
+ E -->|"Read quantity, date source, location"| F{"Next user task?"}
+ F -->|"Use or discard"| G["WF-04 Action sheet"]
+ F -->|"Correct record"| H["WF-02 Edit or WF-04 Recount"]
+ F -->|"Continue reviewing"| A
+S3 4c UX flow CF 03 Resolve
+Source Mermaid có thể chỉnh sửa
+flowchart TD
+ A["WF-03 Detail"] -->|"Select Use, Discard or Recount"| B["WF-04 Action sheet"]
+ B -->|"Enter amount and confirm"| C{"Server result?"}
+ C -->|"Success"| D["WF-03 Updated detail"]
+ D -->|"Open History"| E["WF-05 Movement history"]
+ C -->|"Invalid input"| F["WF-04 Validation message"]
+ F -->|"Correct amount"| B
+ C -->|"Version conflict"| G["WF-04 Current state and draft"]
+ G -->|"Review then new command"| B
+ C -->|"Timeout; outcome unknown"| H["WF-04 Retry prompt"]
+ H -->|"Retry same payload and key"| C
+S3 Data flow system map và ownership
+S3 5 INPUT PROCESS STATE SIDE EFFECT OUTPUT FEEDBACK
+Stage
+	Capture
+	Review/prioritise
+	Resolve/reconcile
+	Input
+	EntryCreate DTO + principal + key
+	Query + principal + injected clock
+	Command amount/actual + expected_version + key
+	Process
+	Schema/business validate + tx
+	Owner scope + derive attention
+	Replay/lock/version/business check + tx
+	State
+	food_entries + initial movement + api_requests
+	Không ghi status theo ngày
+	quantity/version + movement + api_requests
+	Side effect
+	Không scan/push trong MVP
+	Không lịch gửi hoặc DB update theo clock
+	FE invalidate list/detail/history sau success
+	Output
+	EntryResponse, 201
+	Items/meta/reason/as_of_date, 200
+	Entry+movement, 201; recount no-op 200
+	Feedback
+	User sửa draft hoặc edit sau save
+	User chọn action từ reason/context
+	Ledger giúp audit/recount; UX feedback cập nhật
+	
+
+S3 6 State lifecycle owners
+State/lifecycle
+	Owner
+	Ai mutate
+	Dependencies
+	Durable current quantity
+	Database row thông qua use-case service
+	Create/RecordMovement/Recount
+	Transaction + domain rules
+	Movement history
+	Database immutable qua public API
+	Services append
+	Same transaction với current amount
+	Attention state
+	AttentionPolicy backend
+	Không persist; compute theo clock/settings
+	Entry metadata + owner timezone
+	Form/action draft
+	Form hoặc ActionSheet
+	User input/form reducer
+	DTO validation for UX
+	List/detail remote data
+	Feature query cache (nếu FE dùng cache)
+	API response + invalidation
+	Contract, auth identity
+	Search/filter
+	Page/URL
+	User/navigation
+	Serialized query params
+	Identity/session
+	Auth adapter/provider
+	Auth flow
+	Chưa chốt implementation
+	In-flight command/key
+	Feature mutation coordinator
+	User start/retry
+	Giữ key qua retry; command mới key mới
+	Startup wiring
+	Composition root
+	Server boot
+	Inject repo, tx, clock, auth
+	
+
+Không có component/controller nào “control mọi thứ”. App/root chỉ wiring/navigation. Service sở hữu transaction use case; repo sở hữu query; domain policy sở hữu rule; DB giữ integrity. Cache không là authority nghiệp vụ.
+S3 7 DFD context
+Source Mermaid có thể chỉnh sửa
+flowchart TD
+ U["Inventory owner"] -->|"food data, commands, filters"| SYS["Expiry application"]
+ SYS -->|"inventory, attention reasons, action result"| U
+ AUTH["Auth provider or session adapter"] -->|"verified identity"| SYS
+ SYS -->|"authentication request"| AUTH
+DFD mô tả dữ liệu qua process, không phải click path. Context diagram không hiển thị internal stores.
+S3 8 DFD level 1
+Sơ đồ 5 tương ứng với source dưới đây
+  
+
+Source Mermaid có thể chỉnh sửa
+flowchart TD
+ U["Inventory owner"] -->|"draft + key"| P1["1. Capture food"]
+ U -->|"filter / entry ID"| P2["2. Review and prioritise"]
+ U -->|"command + version + key"| P3["3. Resolve and reconcile"]
+ U -->|"timezone / lead"| P4["4. Manage preferences"]
+ D1[("D1 Users")] -->|"owner settings"| P2
+ P4 <-->|"read / update settings"| D1
+ P1 -->|"new entry"| D2[("D2 Food entries")]
+ D2 -->|"owned entries"| P2
+ P3 <-->|"current state / quantity update"| D2
+ P1 -->|"initial movement"| D3[("D3 Movements")]
+ P3 -->|"consume / discard / adjustment"| D3
+ D3 -->|"history"| P2
+ P1 <-->|"key / fingerprint / result"| D4[("D4 API requests")]
+ P3 <-->|"key / fingerprint / result"| D4
+ P4 <-->|"key / fingerprint / result"| D4
+ P2 -->|"inventory + reasons + history"| U
+ P1 -->|"saved entry"| U
+ P3 -->|"updated entry + movement"| U
+ P4 -->|"saved preferences"| U
+Logical transaction: P1/P3/P4 writes D4 cùng với durable domain writes. Generic metadata/delete/restore thuộc P3, không có new data store bị thiếu. Auth boundary chung cấp principal trước owned processes, không vẽ password trong D1 flow.
+S3 9 Sequence core capture
+Sơ đồ 6 tương ứng với source dưới đây
+  
+
+Bước
+	Từ đến
+	Thông điệp
+	1
+	Owner → Add form
+	Confirm draft
+	2
+	Add form → HTTP adapter
+	POST entry + Idempotency-Key
+	3
+	HTTP adapter → HTTP adapter
+	Authenticate and validate DTO
+	4
+	HTTP adapter → CreateEntry service
+	execute(principal, draft, key)
+	5
+	CreateEntry service → Transaction / repositories
+	Begin; reserve key / check replay
+	6
+	Transaction / repositories → CreateEntry service
+	Saved response
+	7
+	CreateEntry service → CreateEntry service
+	Validate domain metadata and quantity
+	8
+	CreateEntry service → Transaction / repositories
+	Insert entry + initial movement + response
+	9
+	CreateEntry service → Transaction / repositories
+	Commit
+	10
+	CreateEntry service → HTTP adapter
+	EntryResponse
+	11
+	HTTP adapter → Add form
+	201 + Location
+	12
+	Add form → Owner
+	Saved detail
+	
+
+Source Mermaid có thể chỉnh sửa
+Source đầy đủ trong diagrams/04_Data_Flow_UML_and_Ownership_3.mmd và tab Diagrams của Google Sheets.
+S3 10 Sequence core read
+Sơ đồ 7 tương ứng với source dưới đây
+  
+
+Bước
+	Từ đến
+	Thông điệp
+	1
+	Owner → Inventory page
+	Open attention / filter
+	2
+	Inventory page → HTTP adapter
+	GET food-entries?view=attention
+	3
+	HTTP adapter → ReviewInventory service
+	principal + validated query
+	4
+	ReviewInventory service → Repositories
+	Read owner settings + scoped entries
+	5
+	Repositories → ReviewInventory service
+	Metadata and quantities
+	6
+	ReviewInventory service → ReviewInventory service
+	Derive with clock/timezone; sort before pagination
+	7
+	ReviewInventory service → HTTP adapter
+	items + reasons + as_of_date + pagination
+	8
+	HTTP adapter → Inventory page
+	200
+	9
+	Inventory page → Owner
+	Groups and actionable detail links
+	
+
+Source Mermaid có thể chỉnh sửa
+Source đầy đủ trong diagrams/04_Data_Flow_UML_and_Ownership_4.mmd và tab Diagrams của Google Sheets.
+Query must apply classification/order over the eligible set before pagination, không paginate rồi sort trong FE. Nếu SQL derive để scale, parity-test với pure AttentionPolicy cùng timezone/clock; không có hai rule tự lệch nhau.
+S3 11 Sequence core mutation
+Sơ đồ 8 tương ứng với source dưới đây
+  
+
+Bước
+	Từ đến
+	Thông điệp
+	1
+	Owner → Action sheet
+	Use / discard amount
+	2
+	Action sheet → HTTP adapter
+	POST movement + expected_version + key
+	3
+	HTTP adapter → RecordMovement service
+	principal + command
+	4
+	RecordMovement service → Transaction / repositories
+	Begin; reserve key
+	5
+	Transaction / repositories → RecordMovement service
+	Original response
+	6
+	RecordMovement service → Transaction / repositories
+	Lock owned nondeleted entry FOR UPDATE
+	7
+	Transaction / repositories → RecordMovement service
+	Current amount and version
+	8
+	RecordMovement service → RecordMovement service
+	Check version, unit, amount
+	9
+	RecordMovement service → Transaction / repositories
+	Rollback
+	10
+	RecordMovement service → HTTP adapter
+	Domain error
+	11
+	HTTP adapter → Action sheet
+	409 / 422
+	12
+	Action sheet → Owner
+	Refetch/review draft
+	13
+	RecordMovement service → Transaction / repositories
+	Update quantity/version; insert movement; save result
+	14
+	RecordMovement service → Transaction / repositories
+	Commit
+	15
+	RecordMovement service → HTTP adapter
+	Updated entry + movement
+	16
+	HTTP adapter → Action sheet
+	201
+	17
+	Action sheet → Action sheet
+	Invalidate list/detail/history
+	18
+	Action sheet → Owner
+	Updated quantity
+	
+
+Source Mermaid có thể chỉnh sửa
+Source đầy đủ trong diagrams/04_Data_Flow_UML_and_Ownership_5.mmd và tab Diagrams của Google Sheets.
+S3 12 State UML quantity và visibility là hai trục
+Source Mermaid có thể chỉnh sửa
+stateDiagram-v2
+ [*] --> Active: Create quantity greater than zero
+ Active --> Active: Partial consume or discard / metadata edit
+ Active --> Depleted: Movement leaves zero
+ Depleted --> Active: Recount actual quantity greater than zero
+ Depleted --> Depleted: Metadata edit / recount zero no-op
+Delete/restore không là consume/discard hoặc state transition tăng stock. Dùng deleted_at độc lập với quantity lifecycle. Attention là derived projection riêng.
+S3 13 UML class responsibilities
+Source Mermaid có thể chỉnh sửa
+classDiagram
+ class FoodEntry {
+  UUID id
+  Decimal remainingQuantity
+  Integer version
+  validateMetadata()
+ }
+ class StockMovement {
+  Decimal quantityBefore
+  Decimal quantityAfter
+  String kind
+ }
+ class AttentionPolicy {
+  classify(entry, settings, clock)
+ }
+ class InventoryService {
+  createEntry()
+  recordMovement()
+  recount()
+ }
+ class EntryRepository {
+  findOwned()
+  lockOwned()
+  saveWithinTransaction()
+ }
+ FoodEntry "1" --> "1..*" StockMovement : history
+ InventoryService --> FoodEntry : validates
+ InventoryService --> EntryRepository : persistence port
+ InventoryService --> AttentionPolicy : projection
+Đây là responsibility model, không bắt buộc implement mọi entity thành OOP class.
+S3 14 UML notation và files
+UML use case actor và system boundary
+  
+
+* diagrams/*.mmd: source Mermaid thuần; code fence đúng mermaid, không gpt-mermaid.
+* diagrams/use_cases.puml: UML use-case source thật bằng PlantUML. Mermaid không có native use-case diagram; không giả flowchart là UML use case.
+* diagrams/activity_record_movement.puml: activity với branches success/conflict/replay.
+* ERD ở S3.15 trong file data model. UML không thay ERD; UX wireframe không thay data flow.
+S3 Data definition trước ERD và relational mapping
+S3 15 Thứ tự định nghĩa data
+1. Thu thập nouns và dữ liệu từ scenario/use case.
+2. Định nghĩa identity/grain: một entry nghĩa là gì, khác entry khác ở đâu.
+3. Định nghĩa field semantics, owner, source, required/null, unit, precision, allowed values.
+4. Phân biệt persisted state, derived projection, transport DTO và UI-only draft.
+5. Viết invariants, event/command shape, lifecycle và transaction boundary.
+6. Xác định functional dependencies và cardinality; sau đó ERD logical.
+7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án PostgreSQL, không khóa stack user.
+Data dictionary không chỉ ghi `date: string`. Phải ghi đây là calendar date, null khi nào, ai nhập, ai dùng, có tự derive không và timezone nào dùng so sánh.
+S3 16 Grain entity decisions
+Entity
+	Một row đại diện
+	Identity
+	Vì sao cần từ flow
+	users
+	Một owner đã xác thực cùng settings
+	UUID, identity_subject unique
+	Mọi private UC + UC-11
+	food_entries
+	Một nhóm lượng thực phẩm cùng điều kiện theo dõi
+	UUID; tên/date không unique
+	UC-01/02/03; không auto merge chỉ vì cùng tên
+	stock_movements
+	Một thay đổi quantity được commit
+	UUID
+	UC-04/05/07/08; create luôn initial event
+	api_requests
+	Một command write có key trong scope owner
+	Composite (user_id,idempotency_key)
+	Retry SC-08, toàn writes
+	
+
+Không có products/catalog ở MVP: chưa có use case catalog, hai món tên giống không chắc cùng product. Không có household/membership theo DEC-01. Không có notifications/jobs/outbox theo DEC-02. Movement bắt buộc khi quantity thay đổi, không “optional history” gây hai đường ghi mâu thuẫn.
+S3 17 ERD
+Sơ đồ 11 tương ứng với source dưới đây
+  
+
+Source Mermaid có thể chỉnh sửa
+erDiagram
+ USERS ||--o{ FOOD_ENTRIES : owns
+ USERS ||--o{ API_REQUESTS : deduplicates
+ FOOD_ENTRIES ||--|{ STOCK_MOVEMENTS : records
+ USERS {
+  uuid id PK
+  text identity_subject UK
+  text display_name
+  text timezone
+  int attention_lead_days
+  int version
+  timestamptz created_at
+  timestamptz updated_at
+ }
+ FOOD_ENTRIES {
+  uuid id PK
+  uuid user_id FK
+  varchar name
+  varchar storage_location
+  numeric remaining_quantity
+  varchar unit
+  date expiry_date
+  varchar date_certainty
+  varchar date_source
+  varchar date_label_type
+  date opened_on
+  text note
+  int version
+  timestamptz deleted_at
+  timestamptz created_at
+  timestamptz updated_at
+ }
+ STOCK_MOVEMENTS {
+  uuid id PK
+  uuid entry_id FK
+  varchar kind
+  numeric quantity_before
+  numeric quantity_after
+  text reason
+  timestamptz recorded_at
+ }
+ API_REQUESTS {
+  uuid user_id PK,FK
+  varchar idempotency_key PK
+  text operation
+  text request_hash
+  int response_status
+  jsonb response_body
+  timestamptz created_at
+ }
+Relation
+	Cardinality
+	FK
+	Evidence và invariant
+	users → food_entries
+	User 0…N; entry đúng 1 owner
+	food_entries.user_id NOT NULL
+	Private ownership; user có thể chưa add
+	food_entries → stock_movements
+	Entry 1…N sau create commit; movement đúng 1 entry
+	stock_movements.entry_id NOT NULL
+	UC-01 initial event và action history
+	users → api_requests
+	User 0…N; request đúng 1 owner
+	api_requests.user_id NOT NULL
+	Commands replay theo owner
+	
+
+DB FK không enforce parent bắt buộc có child initial movement. Service transaction + invariant tests enforce “entry có ≥1 movement”. Không có N:N trong MVP; không thêm junction table chỉ để minh họa N:N. Nếu sharing được scope-in sau, users↔households mới N:N qua memberships với role và composite owner invariants.
+S3 18 Dictionary đủ field
+Table.field
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	users.id
+	API type: UUID string
+SQL type [D]: uuid PK
+	Null/default: Required
+Semantics/validation: Internal stable owner
+Source/owner: Identity bootstrap
+	users.identity_subject
+	API type: Không trả vào business DTO
+SQL type [D]: text UNIQUE
+	Null/default: Required
+Semantics/validation: Provider + subject namespace, không email mutable làm ID
+Source/owner: Auth adapter
+	users.display_name
+	API type: string
+SQL type [D]: text
+	Null/default: Required
+Semantics/validation: 1…100 trimmed
+Source/owner: Profile
+	users.timezone
+	API type: string
+SQL type [D]: text
+	Null/default: Asia/Ho_Chi_Minh
+Semantics/validation: IANA timezone hợp lệ qua runtime timezone library
+Source/owner: UC-11
+	users.attention_lead_days
+	API type: integer
+SQL type [D]: integer
+	Null/default: 2
+Semantics/validation: 0…30; config thử nghiệm
+Source/owner: UC-11
+	users.version
+	API type: integer
+SQL type [D]: integer
+	Null/default: 1
+Semantics/validation: Optimistic version ≥1
+Source/owner: Service
+	users.created_at/updated_at
+	API type: date-time string
+SQL type [D]: timestamptz
+	Null/default: server now
+Semantics/validation: Instant UTC output ISO8601
+Source/owner: Persistence
+	food_entries.id
+	API type: UUID string
+SQL type [D]: uuid PK
+	Null/default: Required
+Semantics/validation: Not product ID
+Source/owner: Server
+	food_entries.user_id
+	API type: Không nhận ở input
+SQL type [D]: uuid FK
+	Null/default: Required
+Semantics/validation: From verified principal
+Source/owner: Service
+	food_entries.name
+	API type: string
+SQL type [D]: varchar(200)
+	Null/default: Required
+Semantics/validation: Trimmed 1…200; không UNIQUE
+Source/owner: User
+	food_entries.storage_location
+	API type: string
+SQL type [D]: varchar(100)
+	Null/default: Required default unspecified
+Semantics/validation: Value free text trimmed 1…100; không table location chưa có CRUD requirement
+Source/owner: User
+	food_entries.remaining_quantity
+	API type: decimal string
+SQL type [D]: numeric(12,3)
+	Null/default: Required
+Semantics/validation: 0…999999999.999; piece whole; operational source of truth
+Source/owner: Quantity services
+	food_entries.unit
+	API type: enum string
+SQL type [D]: varchar(10)
+	Null/default: Required
+Semantics/validation: piece/g/ml; fixed after create
+Source/owner: User/create
+	food_entries.expiry_date
+	API type: YYYY-MM-DD hoặc null
+SQL type [D]: date
+	Null/default: null
+Semantics/validation: Calendar date; no timezone/UTC conversion; past date allowed
+Source/owner: User
+	food_entries.date_certainty
+	API type: enum
+SQL type [D]: varchar(12)
+	Null/default: unknown
+Semantics/validation: known/estimated/unknown; known=reported source known, không safe guarantee
+Source/owner: User
+	food_entries.date_source
+	API type: enum
+SQL type [D]: varchar(20)
+	Null/default: unknown
+Semantics/validation: printed_label/user_entered/user_estimate/unknown
+Source/owner: User
+	food_entries.date_label_type
+	API type: enum
+SQL type [D]: varchar(15)
+	Null/default: unspecified
+Semantics/validation: use_by/best_before/unspecified; độc lập certainty
+Source/owner: User label
+	food_entries.opened_on
+	API type: YYYY-MM-DD/null
+SQL type [D]: date
+	Null/default: null
+Semantics/validation: Đã mở khi nào, applies entire entry; không tự derive shelf-life
+Source/owner: User
+	food_entries.note
+	API type: string/null
+SQL type [D]: text
+	Null/default: null
+Semantics/validation: Max 1000; plain text
+Source/owner: User
+	food_entries.version
+	API type: integer
+SQL type [D]: integer
+	Null/default: 1
+Semantics/validation: Increment once per real mutation
+Source/owner: Service
+	food_entries.deleted_at
+	API type: date-time/null
+SQL type [D]: timestamptz
+	Null/default: null
+Semantics/validation: Record visibility; không spoil/discard
+Source/owner: Delete/restore
+	food_entries.created_at/updated_at
+	API type: date-time
+SQL type [D]: timestamptz
+	Null/default: server now
+Semantics/validation: Audit instant
+Source/owner: Persistence
+	stock_movements.id
+	API type: UUID
+SQL type [D]: uuid PK
+	Null/default: Required
+Semantics/validation: Stable event identity
+Source/owner: Service
+	stock_movements.entry_id
+	API type: UUID
+SQL type [D]: uuid FK
+	Null/default: Required
+Semantics/validation: Entry immutable owner relation
+Source/owner: Service
+	stock_movements.kind
+	API type: enum
+SQL type [D]: varchar(12)
+	Null/default: Required
+Semantics/validation: initial/consume/discard/adjustment
+Source/owner: Command
+	stock_movements.quantity_before/after
+	API type: decimal string
+SQL type [D]: numeric(12,3)
+	Null/default: Required
+Semantics/validation: Nonnegative; delta derived after-before
+Source/owner: Locked entry + command
+	stock_movements.reason
+	API type: string/null
+SQL type [D]: text
+	Null/default: null
+Semantics/validation: Required nonblank for adjustment, max 500
+Source/owner: User correction
+	stock_movements.recorded_at
+	API type: date-time
+SQL type [D]: timestamptz
+	Null/default: server now
+Semantics/validation: Thời điểm app ghi nhận; không tự nhận là time physical use happened
+Source/owner: Persistence
+	api_requests.user_id
+	API type: Internal
+SQL type [D]: uuid FK/PK part
+	Null/default: Required
+Semantics/validation: Dedup scope
+Source/owner: Principal
+	api_requests.idempotency_key
+	API type: Header string
+SQL type [D]: varchar(100) PK part
+	Null/default: Required
+Semantics/validation: 8…100 allowed chars; new key/new command
+Source/owner: FE command coordinator
+	api_requests.operation
+	API type: Internal string
+SQL type [D]: text
+	Null/default: Required
+Semantics/validation: HTTP operation + normalized target, không chỉ method
+Source/owner: Service executor
+	api_requests.request_hash
+	API type: Internal string
+SQL type [D]: text
+	Null/default: Required
+Semantics/validation: Canonical command payload fingerprint; validate same key+same input
+Source/owner: Service executor
+	api_requests.response_status/body
+	API type: Internal
+SQL type [D]: int/jsonb
+	Null/default: null while reserved, both nonnull completed
+Semantics/validation: Original command result; owner privacy/retention applies
+Source/owner: Tx executor
+	api_requests.created_at
+	API type: Internal instant
+SQL type [D]: timestamptz
+	Null/default: server now
+Semantics/validation: Key lifetime; MVP không automatic prune
+Source/owner: Persistence
+	
+
+Lượng dùng decimal string để tránh floating point/truncation giữa DB/JSON/JS. Unit piece cần số nguyên; "1.500" là invalid piece, valid g/ml. FE dùng decimal lib hoặc parse integer milliunits, không parseFloat rồi cộng/trừ nghiệp vụ.
+S3 19 Data shape ví dụ
+{
+  "name": "Sữa tươi",
+  "quantity": "2.000",
+  "unit": "piece",
+  "storage_location": "Tủ lạnh",
+  "expiry_date": "2026-10-10",
+  "date_certainty": "known",
+  "date_source": "printed_label",
+  "date_label_type": "use_by",
+  "opened_on": null,
+  "note": null
+}
+Entry response thêm id, remaining_quantity, version, timestamps, lifecycle, attention gồm status/reason_code/as_of_date. DTO không expose identity_subject/api_requests hoặc nhận owner từ client.
+S3 20 Normalization và trade off
+* Mỗi field mô tả entry tại grain đã định; product name snapshot không reference global catalog chưa tồn tại.
+* Không lưu attention vì thay đổi khi clock trôi. Không lưu lifecycle vì suy được từ remaining. Không copy username/settings vào entry.
+* remaining và ledger cùng diễn tả quantity; đây là deliberate operational denormalization. Đọc nhanh, phải atomic và audit sum(delta)=remaining. Không quảng cáo “strict 3NF giải quyết hết consistency”.
+* api_requests.response_body là cache kết quả command cho replay. Không dùng body cache làm latest inventory; sau retry FE refetch để tránh dùng snapshot cũ.
+* Không UNIQUE(user_id,name,expiry_date): cùng tên/hạn vẫn có vị trí/opening khác; null date và label không đủ identity.
+S3 21 UC table CRUD
+UC
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	UC-01 create
+	users: R
+food_entries: C
+	stock_movements: C initial
+api_requests: C/R/U
+	UC-02/03 review
+	users: R
+food_entries: R
+	stock_movements: —
+api_requests: —
+	UC-04/05
+	users: R principal
+food_entries: R/U
+	stock_movements: C
+api_requests: C/R/U
+	UC-06 edit
+	users: R
+food_entries: R/U metadata
+	stock_movements: —
+api_requests: C/R/U
+	UC-07 recount
+	users: R
+food_entries: R/U qty
+	stock_movements: C nếu delta≠0
+api_requests: C/R/U
+	UC-08 history
+	users: R
+food_entries: R owner check
+	stock_movements: R
+api_requests: —
+	UC-09/10
+	users: R
+food_entries: R/U deleted/version
+	stock_movements: —
+api_requests: C/R/U
+	UC-11 settings
+	users: R/U
+food_entries: —
+	stock_movements: —
+api_requests: C/R/U
+	
+
+C=create, R=read, U=update; không public DELETE history/request table. Hard-delete/account erase chưa nằm MVP nhưng phải có policy trước public production.
+S3 Route API contract và mapping
+S3 22 Route không map 1 1 với bảng
+Routes theo resource/task của user. UC có thể gọi nhiều routes; một route có thể đọc/ghi nhiều tables. stock_movements có API tạo business event; api_requests là infrastructure không public CRUD. Không tạo endpoints “mọi bảng” bằng generic controller.
+Prefix thống nhất /api/v1; JSON snake_case; UUID path ID. Schema machine-readable ở contracts/openapi.json (OpenAPI 3.1.1). Đây là contract draft cho scope hiện tại, auth scheme bearer là adapter example chưa phải stack chốt.
+Route ID
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	API-01
+	Method/path: POST /api/v1/food-entries
+UC: UC-01
+Input: EntryCreate + key
+	Success: 201 Entry, Location
+Service: CreateEntry
+Tables: entries C, movements C, requests C/U
+	API-02
+	Method/path: GET /api/v1/food-entries
+UC: UC-02/03
+Input: q/location/view/lifecycle/attention/page/limit
+	Success: 200 EntryList
+Service: ReviewInventory
+Tables: users/entries R
+	API-03
+	Method/path: GET /api/v1/food-entries/{id}
+UC: UC-03
+Input: UUID
+	Success: 200 Entry
+Service: GetEntry
+Tables: users/entries R
+	API-04
+	Method/path: PATCH /api/v1/food-entries/{id}
+UC: UC-06
+Input: MetadataPatch + expected_version + key
+	Success: 200 Entry
+Service: EditEntry
+Tables: entries U, requests C/U
+	API-05
+	Method/path: POST /api/v1/food-entries/{id}/movements
+UC: UC-04/05
+Input: consume/discard, amount, expected_version, reason? + key
+	Success: 201 MutationResult
+Service: RecordMovement
+Tables: entries U, movements C, requests C/U
+	API-06
+	Method/path: POST /api/v1/food-entries/{id}/recounts
+UC: UC-07
+Input: actual_quantity, reason, expected_version + key
+	Success: 201 MutationResult; 200 no-op
+Service: RecountEntry
+Tables: entries U, movements C or no-op, requests C/U
+	API-07
+	Method/path: GET /api/v1/food-entries/{id}/movements
+UC: UC-08
+Input: page/limit
+	Success: 200 MovementList
+Service: ReadHistory
+Tables: entries owner check/movements R
+	API-08
+	Method/path: DELETE /api/v1/food-entries/{id}
+UC: UC-09
+Input: expected_version in query + key
+	Success: 204
+Service: RemoveEntry
+Tables: entries U, requests C/U
+	API-09
+	Method/path: GET /api/v1/trash/food-entries
+UC: UC-09/10
+Input: page/limit
+	Success: 200 EntryList (deleted entries)
+Service: ReviewTrash
+Tables: entries/users R
+	API-10
+	Method/path: POST /api/v1/food-entries/{id}/restore
+UC: UC-10
+Input: expected_version + key
+	Success: 200 Entry
+Service: RestoreEntry
+Tables: entries U, requests C/U
+	API-11
+	Method/path: GET /api/v1/me/preferences
+UC: UC-11
+Input: none
+	Success: 200 Preferences
+Service: ReadPreferences
+Tables: users R
+	API-12
+	Method/path: PATCH /api/v1/me/preferences
+UC: UC-11
+Input: expected_version, timezone?/attention_lead_days? + key
+	Success: 200 Preferences
+Service: EditPreferences
+Tables: users U, requests C/U
+	
+
+S3 23 Gate chain mỗi request
+Request ID/body-size/content-type → authentication khi private → schema validation → controller DTO → service object ownership + business rule → scoped repo/transaction → DB constraints → response/error mapper.
+Auth thiếu/invalid→401. Ownership phải kiểm tra cho từng object operation; không chỉ middleware thấy logged in rồi cho GET/PATCH mọi ID. GET history vẫn check entry owner, kể cả deleted.
+S3 24 Query contract
+* page ≥1 default 1; limit 1…100 default 20. Stable offset pagination với total/page/limit. Concurrent modifications có thể dịch trang; MVP không snapshot pagination.
+* q là case-insensitive substring name, max200; location exact normalized value max100; parameterized SQL.
+* view inventory (default) hoặc attention. Inventory mặc định lifecycle active; có thể chọn depleted/all. Attention bắt buộc active/nondeleted.
+* attention optional unknown/past_date/due_today/soon/later; trong view attention, không cho lifecycle depleted/all. Invalid combination→422.
+* Sort fixed RULE-20; tổng classification/filter được áp dụng trước limit/offset. Không cho arbitrary SQL sort column từ client.
+* Trash sort deleted_at DESC,id; history recorded_at DESC,id.
+S3 25 Write contract và concurrency
+* All writes có Idempotency-Key 8…100 chars [A-Za-z0-9_-]. Key mới cho command mới. FE giữ nguyên key/body khi timeout retry.
+* Update/actions/delete/restore/preferences có expected_version ≥1. Create không có version input.
+* Same key trong owner, cùng operation/target/payload → replay original status/body, Idempotency-Replayed: true. Không hash include volatile timestamp/request_id.
+* Same key với payload/target khác →409 IDEMPOTENCY_KEY_REUSED.
+* Replay lookup trước object version/delete checks; retry lệnh đã xóa vẫn trả original204.
+* New command stale version →409 VERSION_CONFLICT; thiếu lượng →409 INSUFFICIENT_QUANTITY; deleted normal operations →404.
+* Nếu response lost mà user đổi payload trước retry, đó là command mới; refetch current state trước.
+* Delete dùng expected_version query để tránh body DELETE interoperability; controller validate query, không blind delete.
+S3 26 Schema và errors
+Create fields theo S3.19. Không nhận id/user_id/status/remaining_quantity/version/deleted_at. PATCH allowlist name/location/expiry_date/date_certainty/date_source/date_label_type/opened_on/note + expected_version; ít nhất một editable field. Validate merged object để không tạo date state nửa cập nhật.
+Movement input ví dụ:
+{"kind":"consume","amount":"1.000","expected_version":1,"reason":null}
+Mutation output: {entry: EntryResponse, movement: MovementResponse|null, changed: boolean}. Recount same amount returns200 changed=false, movement=null. Consume/discard luôn changed=true.
+HTTP
+	Meaning/code
+	400
+	MALFORMED_JSON
+	401
+	AUTH_REQUIRED
+	404
+	ENTRY_NOT_FOUND (bao gồm foreign-owned)
+	409
+	VERSION_CONFLICT / INSUFFICIENT_QUANTITY / ENTRY_NOT_DELETED / ENTRY_ALREADY_DELETED / IDEMPOTENCY_KEY_REUSED
+	413
+	BODY_TOO_LARGE
+	415
+	UNSUPPORTED_CONTENT_TYPE
+	422
+	VALIDATION_ERROR, query combination/schema/domain field invalid
+	429
+	RATE_LIMITED
+	500
+	INTERNAL_ERROR, no SQL/stack/secret
+	
+
+application/problem+json RFC9457: type/title/status/detail/instance optional; project extensions code/request_id/errors. FE branch theo code, không parse human title.
+S3 27 Transaction pseudocode
+executeMutation(principal, operation, key, normalizedCommand):
+  validate identity + command schema
+  begin transaction
+  INSERT api_requests(owner,key,operation,hash) ON CONFLICT DO NOTHING
+  if not inserted:
+    read existing completed row (concurrent insert waits until commit/rollback)
+    compare operation + hash; mismatch => conflict
+    replay saved status/body; end transaction
+  lock target row scoped to owner (FOR UPDATE)
+  check exists/current version/domain invariants
+  apply domain mutation; append movement if quantity changed
+  store result in reserved api_requests row
+  commit
+  return saved result
+A reserved null-response row must not commit as success. Error rollback removes reservation; DB outage before commit means retry-safe. Response snapshot có thể cũ hơn latest state, nên FE refetch sau replay. Không gọi external network trong transaction MVP.
+S3 28 Examples FE BE song song
+* FE dùng OpenAPI DTO + fixture unknown/date known, partial consume, no-op, conflict, auth expiry.
+* BE implement services theo same schema và acceptance scenarios SC-01…15.
+* Mock không dựng business truth trong UI; server là authority khi integrated. FE vẫn validate input cho UX.
+* Contract version/change log review chung trước khi đổi field/date meaning/status.
+S6 Alternatives S7 recommendation và ownership FE BE
+S6 1 Alternatives có lý do
+Option
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	Layered modular monolith
+	Giải quyết gì: Team 5 người cần ranh giới và tx đơn giản
+Benefits: Một deploy, atomic writes, features tự claim
+	Trade-off/complexity/performance/maintainability: Phải enforce module boundaries; chưa có throughput evidence cần split
+Khi dùng/không dùng: Recommended cho MVP; không tự tạo microservices
+	Global MVC folders routes/controllers/models
+	Giải quyết gì: Dễ khởi đầu môn Web
+Benefits: Low setup
+	Trade-off/complexity/performance/maintainability: Logic dễ dồn controller/model; change1 feature đụng nhiều global folders; maintainability giảm
+Khi dùng/không dùng: App rất nhỏ hoặc dùng convention khóa bởi môn; vẫn thêm service boundary
+	Microservices
+	Giải quyết gì: Scale/team/deploy độc lập
+Benefits: Independent deployment
+	Trade-off/complexity/performance/maintainability: Network failures, distributed consistency, auth/observability/ops cost; chưa có bottleneck chứng minh
+Khi dùng/không dùng: Chưa dùng trong scope này
+	Entry snapshot + movement ledger
+	Giải quyết gì: Quantity chính xác + audit
+Benefits: Fast read, tx đơn giản, correction traceable
+	Trade-off/complexity/performance/maintainability: Dup quantity state đòi atomic invariant; low–medium complexity
+Khi dùng/không dùng: Recommended cho current scope
+	Event sourcing
+	Giải quyết gì: Rebuild state từ events làm authority
+Benefits: Full replay/history model
+	Trade-off/complexity/performance/maintainability: Event schema version/rebuild/order phức tạp, reads projection lag; không cần ở đây
+Khi dùng/không dùng: Audit/domain replay sâu sau này; chưa MVP
+	Entry only, no history
+	Giải quyết gì: CRUD tối giản
+Benefits: Ít tables
+	Trade-off/complexity/performance/maintainability: Không giải thích corrections, retry và waste/use mix khó audit
+Khi dùng/không dùng: Prototype bỏ history có thể; không đáp ứng UC-08/P3 hiện tại
+	Personal inventory
+	Giải quyết gì: Scope nhỏ, owner đơn
+Benefits: Simple authorization
+	Trade-off/complexity/performance/maintainability: Không giải quyết đầy đủ household coordination P2
+Khi dùng/không dùng: User confirmed MVP
+	Shared households
+	Giải quyết gì: Multi-actor coordination
+Benefits: Data cùng kho
+	Trade-off/complexity/performance/maintainability: Membership/roles/invite/last actor/concurrency mới
+Khi dùng/không dùng: Khi user scope-in và field study cần
+	
+
+S6 2 Stack chưa chốt
+Candidate
+	Fit
+	Trade-off
+	React + Express + PostgreSQL
+	Khớp học React/MVC/relational tx; explicit layers dễ học
+	Express phải tự giữ convention/schema/error/DI; vận hành PostgreSQL
+	React + NestJS + PostgreSQL
+	Modules/DI/guards rõ nếu team quen
+	Decorators/framework learning thêm; chưa có evidence team cần
+	React + Express + MySQL/InnoDB
+	Relational+transactions khả thi khi môn/team có kinh nghiệm
+	SQL/index differences; DDL tham chiếu cần port
+	
+
+Recommended approach [D]: modular monolith theo feature + use-case service + repository, independent domain rules/DTO. React/Express/PostgreSQL là reference stack, không gọi chốt. Why: quantity/history/keys cần cùng tx; group chia task theo feature/contract; ba môn dùng cùng traceability. Do not: central controller chứa mọi rule, microservices vì “chuẩn”, một repository generic bypass owner scope, hoặc route theo từng table.
+S3 29 Repo structure đề xuất monorepo nếu cùng workspace
+apps/web/src/app/              router, providers, auth wiring
+apps/web/src/features/inventory/
+  pages/                      InventoryPage, EntryDetailPage, TrashPage
+  components/                 EntryCard, AttentionBadge, Filters, EntryForm, ActionSheet, HistoryList
+  hooks/                      query/mutation orchestration, draft continuation
+  api/                        typed inventory client
+apps/web/src/features/preferences/
+packages/contracts/           OpenAPI, generated DTOs/fixtures; không DB model
+apps/api/src/modules/inventory/
+  http/                       routes, controllers, request schemas, presenters
+  application/                CreateEntry, RecordMovement, Recount, Edit, Remove, Restore, queries
+  domain/                     quantity validation, metadata/date rules, AttentionPolicy
+  ports/                      EntryRepository, MovementRepository, MutationStore, UnitOfWork
+  infrastructure/             SQL repository implementation
+apps/api/src/modules/accounts/ identity mapping + preferences
+apps/api/src/shared/           error types, clock interface, request context
+apps/api/src/bootstrap/        dependency wiring, server startup
+apps/api/db/migrations/        versioned schema changes
+Monorepo = chứa FE/BE/contracts trong một repo; alternative hai repos thì shared contract publish/version riêng. Không copy business rule vào FE và BE như hai nguồn canonical.
+S3 30 FE components có giống BE modules không
+Cùng vocabulary nghiệp vụ để trace; không cùng cấu trúc 1:1. Một detail page gọi GET Entry, POST Movement, GET History. Một service chạy qua nhiều repos. Một table có thể phục vụ nhiều screens.
+FE part
+	Owns
+	API
+	Không sở hữu
+	AppRouter/Providers
+	Navigation, auth/query provider lifecycle
+	auth adapter
+	Inventory truth hoặc expiry rule
+	InventoryPage
+	Query filters URL, selected tab, render list
+	API-02
+	Mutate qty local như authority
+	EntryCard/AttentionBadge
+	Display props, click callbacks
+	Không fetch riêng mỗi badge
+	Business classification
+	EntryForm
+	Draft, field UX validation, submit intent
+	API-01/04 qua feature hook
+	SQL, owner ID, final date rule
+	EntryDetailPage
+	Selected resource/query orchestration
+	API-03/07
+	All app global state
+	ActionSheet
+	Chosen kind/amount/reason; pending/cancel
+	API-05/06 via mutation hook
+	Adjust database without command
+	useEntryMutation
+	Key+payload stable through retry; success invalidation; error mapping
+	API-04…10
+	Domain authority/automatic retry modified command
+	HistoryList/TrashPage
+	Read-only rows/restore intent
+	API-07/09/10
+	Rewrite movements
+	PreferencesForm
+	Local settings draft
+	API-11/12
+	User clock/timezone recompute food locally as canonical
+	
+
+UI state ở common parent gần nhất khi nhiều child cần cùng state (React DOC-05). Server state cache theo owner+query key; clear/invalidate khi identity đổi. Không put hết vào global Context rồi gọi đó là single source of truth.
+S3 31 Backend responsibilities
+Layer
+	Owns
+	Dependency direction
+	Không làm
+	Route
+	method/path/middleware/handler
+	→controller
+	SQL/lifecycle
+	Middleware
+	identity, limits, JSON schema
+	→request context
+	Consume quantity rules
+	Controller
+	HTTP↔DTO/error status
+	→application service
+	Direct DB updates
+	Application/use-case service
+	owner authorization, tx orchestration
+	→domain policies + ports
+	HTTP parsing hoặc external network trong qty tx
+	Domain
+	pure quantity/date/attention invariants
+	no HTTP/DB dependency
+	SQL/runtime framework decorators
+	Repository adapter
+	scoped parameterized SQL, row locking
+	implements domain/application ports
+	HTTP status hoặc UX copy
+	UnitOfWork adapter
+	begin/commit/rollback, same DB connection
+	infrastructure
+	Chọn consume vs discard
+	DB
+	durable rows, constraints, locking
+	persistence
+	UX goal/food safe inference
+	Composition root
+	Inject adapters/services/clock/auth
+	wiring only
+	Control all user task logic
+	
+
+Ports/interfaces không bắt buộc overengineer một file cho từng hàm. Đặt khi giúp test/persistence boundary; plain functions đủ cho pure policies. “Repo architecture” gồm cả cấu trúc source repo và repository data-access boundary; hai khái niệm khác nhau.
+S3 32 What controls a task
+UF-05 bắt đầu ở ActionSheet, feature mutation hook điều phối HTTP, RecordMovement service điều phối business tx. FoodEntryRepository khóa/update đúng row, MovementRepository append, UnitOfWork giữ connection. Composition root nối dependencies. Mỗi phần control phạm vi của mình; không một god object control mọi thứ.
+S3 Low fidelity wireframes và interaction contract
+Wireframes cặp 1 trong bộ WF 01 đến WF 06
+  
+
+Wireframes cặp 2 trong bộ WF 01 đến WF 06
+  
+
+Wireframes cặp 3 trong bộ WF 01 đến WF 06
+  
+
+wireframes/expiry_wireframes.png có 6 màn hình mobile: inventory, add, detail, action, history, settings. Đây là wireframe để review task/field/navigation, chưa phải final Figma UI. Diagram/source được đưa vào Sheets tab Diagrams; screen/interaction spec vào Wireframes. Sheet không render Mermaid/PlantUML tự động.
+Screen
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	WF-01
+	Primary information order: Attention summary → filters → cards amount/date/reason/location → Add
+Primary action: Xem món hoặc Add
+	States phải thiết kế: Loading, empty kho, empty filter, read error, unknown/date groups, depleted tab
+UC/route: UC-02/03; API-02
+	WF-02
+	Primary information order: Name → quantity/unit(create) → location → known/unknown date → label/source → optional opened/note
+Primary action: Save
+	States phải thiết kế: Field invalid, unknown-date no blocker, auth continuation, pending, network retry, version conflict(edit)
+UC/route: UC-01/06; API-01/04
+	WF-03
+	Primary information order: Name/current amount → attention reason/source/date → location/opened/note → actions → history
+Primary action: Use; discard/recount rõ label
+	States phải thiết kế: Deleted, depleted, load error, conflict/refetch; metadata edit vẫn cho depleted
+UC/route: UC-03/04…09; API-03…08
+	WF-04
+	Primary information order: Action name → current amount → amount hoặc actual_quantity → reason → confirm
+Primary action: Confirm command
+	States phải thiết kế: Quantity >remaining, zero/negative, pending, timeout retry same key, stale version, no-op recount
+UC/route: UC-04/05/07; API-05/06
+	WF-05
+	Primary information order: Event kind/time → before/after/delta/reason; trash list riêng
+Primary action: Back hoặc Restore ở trash
+	States phải thiết kế: Empty, pagination, foreign ID safe404; history no public edits
+UC/route: UC-08/10; API-07/09/10
+	WF-06
+	Primary information order: Timezone → attention lead days → explanation scope in-app
+Primary action: Save settings
+	States phải thiết kế: Input invalid, pending, conflict; list refresh sau success
+UC/route: UC-11; API-11/12
+	
+
+S3 33 Interaction details
+* EntryCard hiển thị amount/unit và reason bằng text, không chỉ màu. Unknown date có copy “Chưa có ngày theo dõi” và edit action.
+* Không dùng “Fresh/Safe” cho later. Past date copy phân biệt recorded date đã qua; detail có meaning label/certainty.
+* Buttons Use/Discard disabled khi depleted/deleted; API vẫn enforce independent. Recount cho phép reopen depleted bằng actual amount thực tế.
+* ActionSheet amount mặc định không tự submit hết. User chọn số lượng; có explicit “Dùng hết/Bỏ hết” prefill cần confirm để tránh trừ nhầm.
+* Remove record dialog: “Xóa bản ghi này khỏi danh sách? Số lượng thực phẩm không được ghi là đã dùng/bỏ.” Đây là meaningful distinction user cần biết.
+* 401: preserve draft trước auth. Không show dữ liệu thật trong public demo. Refresh identity cache trước private query.
+* 409: refetch current entry và hiện current amount/version với draft để user quyết định; không auto-submit amount cũ như command mới.
+* Timeout: trạng thái kết quả chưa rõ, retry cùng key+payload; khi server replay snapshot, refetch latest.
+* Mobile touch targets và labels cần accessibility review, low-tech P2 phải đọc được amount/date/action không cần biết API jargon.
+* Desktop: inventory list bên trái/detail bên phải là candidate, chưa high-fidelity; cùng use cases/API, không tạo nghiệp vụ riêng.
+S3 34 Wireframe field mapping
+WF-02 name→food_entries.name; date controls→expiry_date+date_certainty+date_source+date_label_type; location→storage_location; quantity create→remaining_quantity+initial movement; WF-04 Use/Discard→movement kind/before/after; Recount→adjustment+reason; WF-06→users settings. Attention badge là DTO derived, không input field persisted.
+S8 Implementation order và S9 Risks verify
+S3 35 End to end traceability
+Trace
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	TR-01
+	Persona/pain: P1 PP-11/13
+Outcome/FR: BR-V1-01 FR-01
+Feature: F-01
+Flow/scenario: UF-01 SC-01
+	UC: UC-01
+UI: WF-02
+Data: entry+initial movement+request
+Route: API-01
+Verification: Saved or rollback all
+	TR-02
+	Persona/pain: P1/P2 PP-22
+Outcome/FR: BR-V1-02 FR-01/03
+Feature: F-01/03
+Flow/scenario: UF-02 SC-02
+	UC: UC-01/03
+UI: WF-02/03
+Data: date nullable/source/certainty
+Route: API-01/03
+Verification: Unknown visible, no guessed date
+	TR-03
+	Persona/pain: P1 PP-11
+Outcome/FR: BR-V1-01 FR-02/03
+Feature: F-02
+Flow/scenario: UF-03 SC-03
+	UC: UC-02/03
+UI: WF-01/03
+Data: owner settings+entry read
+Route: API-02/03
+Verification: Correct reason, stable priority
+	TR-04
+	Persona/pain: P2 PP-21
+Outcome/FR: BR-V1-02 FR-03/04
+Feature: F-02/03/04
+Flow/scenario: UF-04 SC-04
+	UC: UC-03/04
+UI: WF-01/03/04
+Data: entry+movement
+Route: API-02/03/05
+Verification: User chooses next action; test decision gap
+	TR-05
+	Persona/pain: P3 PP-31/32
+Outcome/FR: BR-V1-03 FR-04
+Feature: F-04
+Flow/scenario: UF-05 SC-05/08/09
+	UC: UC-04
+UI: WF-04
+Data: quantity+consume+key
+Route: API-05
+Verification: Partial amount, replay, concurrent409
+	TR-06
+	Persona/pain: All
+Outcome/FR: BR-V1-03 FR-04
+Feature: F-04
+Flow/scenario: UF-06 SC-06/12
+	UC: UC-05
+UI: WF-04
+Data: discard movement, depleted
+Route: API-05
+Verification: Waste/use separate; no soft delete
+	TR-07
+	Persona/pain: P3 PP-31/33
+Outcome/FR: BR-V1-03 FR-06/07
+Feature: F-05/06
+Flow/scenario: UF-07 SC-07
+	UC: UC-07/08
+UI: WF-04/05
+Data: adjustment+reason+entry
+Route: API-06/07
+Verification: Ledger delta matches current quantity
+	TR-08
+	Persona/pain: P2/P3 PP-22/33
+Outcome/FR: BR-V1-02/03 FR-05
+Feature: F-05
+Flow/scenario: UF-08 SC-11
+	UC: UC-06
+UI: WF-02
+Data: metadata/version, no qty
+Route: API-04
+Verification: Conflict safe, merged data valid
+	TR-09
+	Persona/pain: P3 PP-33
+Outcome/FR: BR-V1-03 FR-08
+Feature: F-07
+Flow/scenario: UF-09 SC-10
+	UC: UC-09/10
+UI: WF-03/05
+Data: deleted_at/version, no movement
+Route: API-08/09/10
+Verification: Restore exact amount/history
+	TR-10
+	Persona/pain: All
+Outcome/FR: BR-V1-01 FR-09
+Feature: F-08
+Flow/scenario: UF-10 SC-14
+	UC: UC-11
+UI: WF-06
+Data: user timezone/lead
+Route: API-11/12
+Verification: Calendar boundary, no food rewrite
+	TR-11
+	Persona/pain: All
+Outcome/FR: FR-10 NFR-01/04
+Feature: Auth support
+Flow/scenario: UF-11 SC-13
+	UC: UC-00 + owned UCs
+UI: WF-00/02/04
+Data: principal identity
+Route: All owned routes
+Verification: 401 draft retained, foreign404
+	
+
+S8 1 Order architecture ownership flow modules migration code
+Gate
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	G0 Context
+	Work: Đối chiếu Canva/DEC-01/02, review assumptions
+Deliverable: Context/decision ledger
+	Acceptance: Không thay persona; scope rõ
+Có thể chạy song song: Research interviews chuẩn bị
+	G1 Domain backbone
+	Work: Grain, data dictionary, date/unit/state/quantity rules
+Deliverable: Rule spec + flow/scenario
+	Acceptance: Mỗi field/transition có reason/task
+Có thể chạy song song: UX screen/task review
+	G2 Contract
+	Work: Routes/DTO/errors/version/idempotency
+Deliverable: OpenAPI+fixtures+traceability
+	Acceptance: FE/BE cùng contract
+Có thể chạy song song: FE mock + BE domain
+	G3 Ownership/architecture
+	Work: Chốt module ports/auth adapter/tx source
+Deliverable: Repo skeleton + DI wiring
+	Acceptance: Không global god controller; owner from identity
+Có thể chạy song song: FE components vs BE services
+	G4 Persistence
+	Work: Chọn DB, physical schema/constraints/migrations
+Deliverable: Migrations + integration DB
+	Acceptance: Create fresh DB; rollback integrity
+Có thể chạy song song: BE repos; FE mocks tiếp tục
+	G5 Core tasks
+	Work: Capture→review→movement/recount, history
+Deliverable: Integrated three core functions
+	Acceptance: SC-01…09 pass
+Có thể chạy song song: Chia theo features, không một người ôm mọi layer
+	G6 Support/recovery
+	Work: Edit/trash/restore/preferences/auth continuation
+Deliverable: Complete MVP flows
+	Acceptance: SC-10…15 pass
+Có thể chạy song song: UX accessible/error views
+	G7 Review
+	Work: Contract/security/concurrency/date/usability
+Deliverable: Test report + decisions
+	Acceptance: Không gọi validated nếu chưa user study
+Có thể chạy song song: Ba môn reuse cùng IDs
+	
+
+S8 2 Task decomposition cho 5 người chưa tự gán tên
+Task
+	Đặc điểm và định nghĩa
+	Liên kết và kiểm tra
+	TASK-01
+	Scope: Persona evidence và usability protocol
+Output: Questions/incidents/source ledger
+	Dependencies: G0
+Đồng đảm nhiệm/review: HCI + SE reviewer
+	TASK-02
+	Scope: Flows/use cases/wireframe
+Output: Screen action/spec states
+	Dependencies: G1
+Đồng đảm nhiệm/review: UX + FE
+	TASK-03
+	Scope: Data model/rules/ERD
+Output: Dictionary/cardinality/migration plan
+	Dependencies: G1
+Đồng đảm nhiệm/review: SE + BE + DB reviewer
+	TASK-04
+	Scope: Contract/BE services/repos
+Output: Routes/DTO/tx/integration tests
+	Dependencies: G2/G3/G4
+Đồng đảm nhiệm/review: BE owners theo use case
+	TASK-05
+	Scope: FE feature components/mock/integration
+Output: UI tasks + error recovery
+	Dependencies: G2
+Đồng đảm nhiệm/review: FE + UX + BE contract reviewer
+	
+
+Nhiều người có thể cùng task với primary owner/reviewer; người tự claim theo quy trình user. Chưa thêm deadlines hoặc tên vào assignment khi không được cung cấp.
+S9 1 Verification matrix
+Test
+	Setup/action
+	Expected
+	Layer
+	VT-01
+	Create known/unknown date
+	Shape đúng, initial event, unknown visible
+	Contract+DB
+	VT-02
+	Create rollback trước movement/request result
+	Không orphan entry hoặc reserved key commit
+	Integration
+	VT-03
+	Consume 250g từ 1000g
+	750g; delta -250; version+1
+	Domain+DB
+	VT-04
+	Consume quá lượng/negative/piece fractional
+	409 hoặc422; không write
+	Domain+contract
+	VT-05
+	Hai requests cùng version
+	1 success, 1 conflict; quantity>=0
+	Real concurrent DB
+	VT-06
+	Same key+payload concurrent/retry
+	1 mutation/event; original result replay
+	Real concurrent DB
+	VT-07
+	Same key different target/body
+	409 key reuse
+	Integration
+	VT-08
+	Recount to same amount
+	200 no-op; no movement/version increment
+	Domain+DB
+	VT-09
+	Recount depleted to positive
+	Active derived, adjustment reason
+	Domain+DB
+	VT-10
+	Consume then discard remainder
+	Depleted; totals distinguish use/waste
+	Ledger audit
+	VT-11
+	Soft delete then restore
+	Amount/history unchanged, visibility restored
+	Integration+UI
+	VT-12
+	GET/PATCH/action/history foreign ID
+	404, no exposure
+	Auth regression
+	VT-13
+	Clock around UTC/local midnight
+	Correct today/soon/past_date
+	Injected clock tests
+	VT-14
+	Metadata patch date→null malformed combination
+	422; no partial invalid certainty
+	Contract+domain
+	VT-15
+	Timeout/401/409 UI
+	Draft and stable key; refetch conflict
+	UI task tests
+	VT-16
+	Migration fresh + backup restore
+	Constraints/data recovered
+	Staging
+	VT-17
+	Keyboard/labels/no color-only
+	Task usable
+	UX/accessibility
+	
+
+S9 2 Material limitations risk register
+* Exact Canva text đã đọc qua connector trong lượt tiếp tục; tên/quotes dùng nguyên nội dung nguồn, sửa spelling chỉ khi authoring mới. Persona vẫn proto-persona; việc đọc slide không chứng minh đã interview thật.
+* P2 decision gap còn rộng hơn MVP attention list; recipes/action guidance cần research, không tự tạo AI recommendations.
+* Private inventory không giải quyết multi-member coordination đầy đủ; scope đã user chọn.
+* Date/opening/freezing không đủ xác định safety. Không tự derive duration hoặc safe label.
+* Quantity fractional/unit/split behavior là proposed. Mixed opening batch cần tách capture ban đầu; automatic split/transfer deferred.
+* Stack/auth/deploy chưa chốt; logical design đủ FE mock/domain work, chưa deployment specification.
+* No database runtime/app hiện có ở workspace để verify SQL transactions end-to-end. Tài liệu/test matrix không phải tests đã pass.
+* Diagram sources valid by review; tool rendering validation trạng thái ghi trong delivery notes, không gọi rendered nếu chưa chạy.
+S9 3 Definition of Ready và Done
+Ready for implementation: approved grain/owner/date/state, OpenAPI coherent, representative mock fixtures, tx boundary và auth adapter quyết định đủ để coding.
+Done for MVP: integrated task paths, contract/owner/concurrency/date tests thực chạy, usability findings ghi rõ, migration/backup readiness và demo review. Bộ tài liệu hôm nay là design draft hoàn chỉnh để review, không tuyên bố app đã hoàn thành.
+Canva persona text đọc trực tiếp thg 10 8, 2026
+Source: Canva persona source
+Rich text qua Canva connector; không sửa thiết kế. Trích nội dung relevant, spelling nguồn được giữ trong quotes.
+P1 Pham Hoang An
+Profile: Student, 20, Ho Chi Minh City, Single, iPhone/Laptop.
+Personality: extrovert, hi-tech, Organized, Occasionally forgetful, Practical.
+Behavior: Plan well → Buy intentionally → Store → Delay preparation → Lose attention → Forget occasionally.
+Habits: Uses smartphone regularly; buys food for 2–3 days; doesn't prepare food after shopping.
+Goals: Remember food is available; use food before expiry; know which should be used first; avoid unnecessary waste.
+Motivation: Already planned/bought/paid; wants to actually use it.
+Frustrations: Too much manual input; repetitive inventory updates.
+Quote nguồn: “lâu lâu đi mua đồ ở bhx để ở tủ lạnh rồi quên mất tới khi lấy ra nó hết hạn r”.
+Pains: Stored food easy to forget; delay preparation; notices only close to expiry; planned purchases still waste.
+Challenges: Remember out-of-sight food; know attention priority; track without constant refrigerator checks; avoid another daily admin task.
+Opportunities: Improve visibility, bring forgotten items to attention, prioritise soon-use items, timely low-effort reminders.
+P2 Ton Nu Nhu Huyen
+Profile: Households, 49, Da Nang, Married, Android/Laptop.
+Personality: low-tech, Practical, Family-oriented, Flexible, Responsible, Convenience-oriented.
+Behavior: Plan → Buy intentionally → Store → Plans change → Delay use → Food remains unused.
+Habits: Household shopping; stores ingredients; checks available food before cooking; changes meals by schedule; partly relies on memory.
+Goals: Use before expiry; know priority; decide quickly; adapt plans; avoid waste.
+Motivation: Food already bought, original plan changed, still wants use; needs easy next decision.
+Frustrations: Expiry-only notifications, manual input, complicated tracking, browsing many items, too many steps for simple decisions.
+Quote nguồn: “Cứ mỗi lần đi ăn ngoài thì lại cứ theo thói quen đi chợ mà quên mất có đồ ăn vẫn còn ở tủ lạnh xong để đấy nghĩ là bữa sau ăn rồi cũng quên mất”.
+Pains: Unexpected plan changes; food unused; ingredients don't fit new schedule; date info not next action.
+Challenges: Decide priority; adapt existing food; turn ingredients into useful action without much planning.
+Opportunities: Prioritize attention; Use Now/Use Soon/Later; actionable guidance; quick next-use decisions.
+P3 Pham Ngoc Thien An
+Profile: Student, 20, Da Nang, Single, iPhone/Android/Laptop.
+Personality: hi-tech, Detail-oriented, Systematic, Accuracy-focused, Organized.
+Behavior: Track → Organize → Check → Update → Repeat → Maintenance becomes tedious.
+Habits: Regular review; organize by type; check before buying; update after use; prefer accurate info.
+Goals: Accurate inventory; know exactly available stock; attention priority; up-to-date state; efficient management.
+Motivation: Organization + accuracy used for decisions; reliable inventory.
+Frustrations: Repetitive updates, re-enter information, too many update steps, outdated status, item-by-item management.
+Quote nguồn: “t muốn cái gì mà tùy chỉnh được nhưng mà nó phải tiện với đỡ tốn thời gian của t nữa”.
+Pains: Repeated updates needed; physical changes faster than records; skipped updates reduce trust; per-item admin tedious.
+Challenges (semantic interpretation of slide columns): Synchronize digital/physical; accuracy without excessive effort; fast status updates; manage many items efficiently.
+Opportunities: One-tap updates, fast editing, batch updates, easy correction, low-friction maintenance.
+P3 rich-text reading order places Opportunities/Challenges headings out of semantic order. This file assigns meanings by wording, marks interpretation rather than claiming slide spatial layout was inspected. Source quotes are persona-card quotes, not independently verified participant statements.

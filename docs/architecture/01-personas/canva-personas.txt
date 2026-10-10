@@ -1,0 +1,195 @@
+
+EXPIRY APP
+User Persona Insight 
+tducn
+2026
+Project Objectives
+Clear objectives ensure that all research and insights are aligned with business goals and lead to actionable outcomes.
+
+
+01
+02
+
+03
+
+04
+Identify target audience segments
+Understand customer behavior
+Define key motivations and challenges
+Enhance overall customer experience
+Research Approach
+Using qualitative methods ensures a more complete understanding of customer needs and behaviors.
+Surveys & Questionnaires
+Customer interviews
+Market Observation
+Surveys are used to collect structured data from a larger audience, allowing businesses to identify patterns, preferences, and general behaviors.
+Customer interviews provide in-depth qualitative insights by engaging directly with users to understand their experiences, expectations, and challenges.
+Market observation involves analyzing trends, competitor activities, and customer behavior within the broader market.
+
+
+
+01
+02
+03
+
+
+Persona 
+Customers can be grouped into distinct segments based on demographics, behaviors, and needs, allowing for more targeted and effective strategies.
+Passive Forgetter
+Busy Improviser
+Consious Maintainer
+
+Pham Hoang An
+Occupation: StudentsAge: 20Location: Ho Chi Minh City Marriage status: Single Devices: Iphone, Laptop
+Personality: extrovert hi-tech OrganizedOcassionally forgetfulPractical
+
+Plan well→ Buy intentionally→ Store→ Delay preparation→ Lose attention→ Forget occasionally
+
+Remember food is availableuse food before it expires know which food should be used firstAvoid unnecessary food waste 
+
+“ lâu lâu đi mua đồ ở bhx để ở tủ lạnh rồi quên mất tới khi lấy ra nó hết hạn r “ 
+PERSONA 
+Behaviors
+Habits
+
+⟶ Uses smartphone regularly ⟶ Buys food for 2-3 days ⟶ Doesnt prepare food after shopping 
+Goals
+Motivations 
+
+Already planned it+Already bought it+Already paid for it↓Want to actually use it
+
+FrustrationsToo much manual input Repetitive invetory updates
+
+PAINT POINTS, CHALLENGES, OPPORTUNITIES  ⟶ 
+
+Pham Hoang An
+Occupation: StudentsAge: 20Location: Ho Chi Minh City Marriage status: Single Devices: Iphone, Laptop
+Personality: extrovert hi-tech OrganizedOcassionally forgetfulPractical
+
+PERSONA 
+Pain Points
+Challenges 
+
+
+Food becomes easy to forget once it is stored in the refrigerator.Delayed preparation increases the chance of forgetting it.Food may only be noticed again when it is close to expiring.Planned purchases can still become food waste
+
+Remember stored food after it is out of sight.Know which food needs attention first.Keep track of food without constantly checking the refrigerator.Avoid adding another daily management task.
+Improve visibility of stored food.Bring forgotten items back to attention.Prioritize food that should be used soon.Provide timely, low-effort reminders.
+Opportunities
+
+Ton Nu Nhu Huyen 
+Occupation: Households Age: 49Location: Da Nang city  Marriage status: Married  Devices: Android, Laptop
+Personality:  low-tech PracticalFamily-orientedFlexibleRessponsible Conveience-Oriented
+
+
+
+
+
+
+PERSONA 
+Behaviors
+Habits
+
+
+Goals
+Motivations 
+
+
+
+
+
+PAINT POINTS, CHALLENGES, OPPORTUNITIES  ⟶ 
+Plan→ Buy intentionally→ Store→ Plans change→ Delay use→ Food remains unused
+Shops for household food regularlyStores ingredients for later useChecks available food before cookingChanges meals based on daily scheduleRelies partly on memory
+Use food before it expiresKnow which food should be used firstDecide what to prepare quicklyAdapt when meal plans changeAvoid unnecessary food waste
+Already bought it+Original plan changed+Still wants to use it↓Needs an easy next decision
+Expiry-only notificationsToo much manual inputComplicated food trackingBrowsing many items to decide what to useToo many steps for simple decisions
+“ Cứ mỗi lần đi ăn ngoài thì lại cứ theo thói quen đi chợ mà quên mất có đồ ăn vẫn còn ở tủ lạnh xong để đấy nghĩ là bữa sau ăn rồi cũng quên mất “
+
+Ton Nu Nhu Huyen 
+Occupation: Households Age: 49Location: Da Nang city  Marriage status: Married  Devices: Android, Laptop
+Personality:  low-tech PracticalFamily-orientedFlexibleRessponsible Conveience-Oriented
+
+
+
+
+PERSONA 
+Pains
+
+
+Challenges
+
+
+
+Meal plans often change unexpectedly.Food bought for one plan may remain unused.Available ingredients may no longer fit the new schedule.Expiry information alone does not tell the user what to do next.
+Decide which food should be used first.Adapt existing food when plans change.Turn available ingredients into a useful next action.Avoid wasting food without spending too much time planning.
+Prioritize food that needs attention.Show Use Now / Use Soon / Later.Turn expiry information into actionable guidance.Help users quickly decide what to use next.
+Opportunities
+
+Pham Ngoc Thien An
+Occupation: StudentsAge: 20Location: Da Nang City Marriage status: Single Devices: Iphone, Android Laptop
+Personality: hi-tech Detail-orientedSystematicAccuracy-focusedOrganized
+
+Track→ Organize→ Check→ Update→ Repeat→ Maintenance becomes tedious
+
+Keep inventory accurateKnow exactly what is availableKnow which items need attentionKeep item status up to dateManage items efficiently
+
+“t muốn cái gì mà tùy chỉnh được nhưng mà nó phải tiện với đỡ tốn thời gian của t nữa “
+PERSONA 
+Behaviors
+Habits
+
+Reviews stored items regularlyKeeps items organized by typeChecks what is available before buyingUpdates items after using themPrefers accurate information
+Goals
+Motivations 
+
+Wants organization+Wants accurate information+Uses information to make decisions↓Wants a reliable inventory
+
+FrustrationsRepetitive inventory updatesRe-entering the same informationToo many steps to update an itemOutdated item statusManaging items one by one
+
+PAINT POINTS, CHALLENGES, OPPORTUNITIES  ⟶ 
+
+Pham Ngoc Thien An
+Occupation: StudentsAge: 20Location: Da Nang City Marriage status: Single Devices: Iphone, Android Laptop
+Personality: hi-tech Detail-orientedSystematicAccuracy-focusedOrganized
+PERSONA 
+Pain Points
+
+Accurate tracking requires repeated updates.Physical items change faster than digital records.Skipped updates make inventory unreliable.Managing items one by one becomes tedious.
+Opportunities
+
+Keep digital inventory synchronized with real items.Maintain accuracy without excessive effort.Update item status quickly after changes.Manage many items efficiently.
+
+
+One-tap status updates.Fast item editing.Batch updates.Easy correction.Low-friction inventory maintenance.
+Challenges 
+Core User Needs
+Occasional Forgetter — Keep stored food visible with minimal effort
+Busy Improviser — Know what to use first and what action to take next
+
+
+01
+02
+Conscious Maintainer — Keep inventory accurate without repeated administration
+
+03
+
+The product should reduce memory burden, support next-step decisions, and keep inventory accurate with minimal maintenance.
+
+Frustrations & Pain Points
+
+
+Each persona has a distinct frustration and pain point that explains the product need.
+Occasional Forgetter — Frustration: too much manual input and constant checking. Pain: stored food is forgotten and noticed too late.
+Busy Improviser — Frustration: expiry-only information does not guide action. Pain: plans change and purchased food remains unused.
+
+
+01
+02
+Conscious Maintainer — Frustration: repetitive updates are tedious. Pain: accurate tracking requires continuous manual work.
+
+03
+
+Thank you
+
+Understanding user personas and customer journeys enables businesses to create more meaningful, relevant, and effective strategies.

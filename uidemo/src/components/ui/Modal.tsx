@@ -1,24 +1,141 @@
-import { ReactNode } from "react";
-import Icon from "./Icon";
+import { useEffect, useRef, useState } from "react"
+import type { ReactNode } from "react"
+import Icon from "./Icon"
 
-/**
- * Single dialog primitive. `size` picks width; `layout="form"` locks the body height
- * so forms never scroll. Header/footer are built in so every dialog shares them.
- */
-export default function Modal({ eyebrow, title, description, onClose, footer, children, size = "regular", layout = "flow", dismissible = true }: {
-  eyebrow?: string; title: string; description?: string; onClose: () => void; footer?: ReactNode; children?: ReactNode;
-  size?: "compact" | "regular" | "wide"; layout?: "flow" | "form" | "list"; dismissible?: boolean;
+/** Shared dialog with fixed chrome, contained scrolling, and focus restoration. */
+export default function Modal({
+  eyebrow,
+  title,
+  description,
+  onClose,
+  footer,
+  children,
+  size = "regular",
+  layout = "flow",
+  dismissible = true,
+}: {
+  eyebrow?: string
+  title: string
+  description?: string
+  onClose: () => void
+  footer?: ReactNode
+  children?: ReactNode
+  size?: "compact" | "regular" | "wide"
+  layout?: "flow" | "form" | "list"
+  dismissible?: boolean
 }) {
-  return <div className="modal-backdrop" role="presentation" onMouseDown={dismissible ? onClose : undefined}>
-    <section className={`modal ${size} layout-${layout}`} role="dialog" aria-modal="true" aria-label={title} onMouseDown={e => e.stopPropagation()}>
-      <header className="modal-header"><div>{eyebrow && <span className="eyebrow">{eyebrow}</span>}<h2>{title}</h2>{description && <p>{description}</p>}</div>{dismissible && <button type="button" className="icon-button" aria-label="Đóng" onClick={onClose}><Icon name="close" /></button>}</header>
-      {children}
-      {footer && <footer className="modal-footer">{footer}</footer>}
-    </section>
-  </div>;
+  const dialogRef = useRef<HTMLElement>(null)
+  // Capture before child autoFocus runs during the commit.
+  const [opener] = useState(() =>
+    document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null,
+  )
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    const focusable = () =>
+      Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex="0"]',
+        ),
+      ).filter((element) => element.getClientRects().length > 0)
+    if (!dialog.contains(document.activeElement))
+      (focusable()[0] ?? dialog).focus({ preventScroll: true })
+
+    const handleKey = (event: KeyboardEvent) => {
+      // Portaled controls consume Escape and manage their own keyboard navigation.
+      if (
+        event.defaultPrevented ||
+        document.querySelector('[data-ui-popover="true"]')
+      )
+        return
+      if (event.key === "Escape" && dismissible) {
+        event.preventDefault()
+        closeRef.current()
+      }
+      if (event.key !== "Tab") return
+      const controls = focusable()
+      const first = controls[0]
+      const last = controls[controls.length - 1]
+      if (!first || !last) {
+        event.preventDefault()
+        dialog.focus()
+      } else if (
+        event.shiftKey &&
+        (document.activeElement === first || document.activeElement === dialog)
+      ) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener("keydown", handleKey)
+    return () => {
+      document.removeEventListener("keydown", handleKey)
+      document.body.style.overflow = previousOverflow
+      if (opener?.isConnected) opener.focus({ preventScroll: true })
+    }
+  }, [dismissible, opener])
+
+  return (
+    <div
+      className="modal-backdrop"
+      role="presentation"
+      onMouseDown={dismissible ? () => closeRef.current() : undefined}
+    >
+      <section
+        ref={dialogRef}
+        tabIndex={-1}
+        className={`modal ${size} layout-${layout}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header className="modal-header">
+          <div>
+            {eyebrow && <span className="eyebrow">{eyebrow}</span>}
+            <h2>{title}</h2>
+            {description && <p>{description}</p>}
+          </div>
+          {dismissible && (
+            <button
+              type="button"
+              className="icon-button"
+              aria-label="Đóng"
+              onClick={onClose}
+            >
+              <Icon name="close" />
+            </button>
+          )}
+        </header>
+        {children}
+        {footer && <footer className="modal-footer">{footer}</footer>}
+      </section>
+    </div>
+  )
 }
 
-/** Footer convention: secondary actions left, primary action last on the right. */
-export function ModalActions({ start, end }: { start?: ReactNode; end: ReactNode }) {
-  return <>{start}<span className="footer-spacer" />{end}</>;
+export function ModalActions({
+  start,
+  end,
+}: {
+  start?: ReactNode
+  end: ReactNode
+}) {
+  return (
+    <>
+      {start}
+      <span className="footer-spacer" />
+      {end}
+    </>
+  )
 }

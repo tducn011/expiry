@@ -1,0 +1,86 @@
+[
+  {
+    "name": "easyocr",
+    "version": "1.7.2",
+    "requires_python": null,
+    "license": "Apache License 2.0",
+    "license_expression": null,
+    "requires_dist": [
+      "torch",
+      "torchvision>=0.5",
+      "opencv-python-headless",
+      "scipy",
+      "numpy",
+      "Pillow",
+      "scikit-image",
+      "python-bidi",
+      "PyYAML",
+      "Shapely",
+      "pyclipper",
+      "ninja"
+    ],
+    "project_urls": {
+      "Download": "https://github.com/jaidedai/easyocr.git",
+      "Homepage": "https://github.com/jaidedai/easyocr"
+    }
+  },
+  {
+    "name": "paddleocr",
+    "version": "3.7.0",
+    "requires_python": ">=3.8",
+    "license": "Apache License 2.0",
+    "license_expression": null,
+    "requires_dist": [
+      "paddlex[ocr-core]<3.8.0,>=3.7.0",
+      "PyYAML>=6",
+      "requests",
+      "aiohttp>=3.8.0",
+      "typing-extensions>=4.12",
+      "paddlex[genai-client,ie,ocr,trans]<3.8.0,>=3.7.0; extra == \"all\"",
+      "python-docx>=0.8.11; extra == \"all\"",
+      "python-pptx>=0.6.21; extra == \"all\"",
+      "openpyxl>=3.0.0; extra == \"all\"",
+      "paddlex[genai-client,ocr]<3.8.0,>=3.7.0; extra == \"doc-parser\"",
+      "python-docx>=0.8.11; extra == \"doc2md\"",
+      "python-pptx>=0.6.21; extra == \"doc2md\"",
+      "openpyxl>=3.0.0; extra == \"doc2md\"",
+      "pylatexenc<3,>=2.10; extra == \"doc2md\"",
+      "paddlex[ie]<3.8.0,>=3.7.0; extra == \"ie\"",
+      "paddlex[trans]<3.8.0,>=3.7.0; extra == \"trans\""
+    ],
+    "project_urls": {
+      "documentation": "https://github.com/PaddlePaddle/PaddleOCR/blob/main/README.md",
+      "homepage": "https://github.com/PaddlePaddle/PaddleOCR",
+      "issues": "https://github.com/PaddlePaddle/PaddleOCR/issues",
+      "repository": "https://github.com/PaddlePaddle/PaddleOCR.git"
+    }
+  },
+  {
+    "name": "opencv-python-headless",
+    "version": "5.0.0.93",
+    "requires_python": ">=3.6",
+    "license": "Apache 2.0",
+    "license_expression": null,
+    "requires_dist": [
+      "numpy<2.0; python_version < \"3.9\"",
+      "numpy>=2; python_version >= \"3.9\""
+    ],
+    "project_urls": {
+      "Homepage": "https://github.com/opencv/opencv-python"
+    }
+  },
+  {
+    "name": "pytesseract",
+    "version": "0.3.13",
+    "requires_python": ">=3.8",
+    "license": "Apache License 2.0",
+    "license_expression": null,
+    "requires_dist": [
+      "packaging>=21.3",
+      "Pillow>=8.0.0"
+    ],
+    "project_urls": {
+      "Homepage": "https://github.com/madmaze/pytesseract"
+    }
+  }
+]

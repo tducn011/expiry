@@ -1,14 +1,14 @@
-import { ReactNode } from "react";
-import Icon from "../ui/Icon";
+import { ReactNode } from "react"
+import Icon from "../ui/Icon"
 
-export type View = "inventory" | "attention" | "trash" | "settings";
+export type View = "inventory" | "attention" | "trash" | "settings"
 
 type NavItem = {
-  id: View;
-  label: string;
-  icon: string;
-  badge?: number;
-};
+  id: View
+  label: string
+  icon: string
+  badge?: number
+}
 
 export default function Shell({
   view,
@@ -18,30 +18,37 @@ export default function Shell({
   displayName,
   urgentCount = 0,
 }: {
-  view: View;
-  setView: (v: View) => void;
-  children: ReactNode;
-  onAdd: () => void;
-  displayName: string;
-  urgentCount?: number;
+  view: View
+  setView: (v: View) => void
+  children: ReactNode
+  onAdd: () => void
+  displayName: string
+  urgentCount?: number
 }) {
   const sidebarNav: NavItem[] = [
     { id: "inventory", label: "Kho thực phẩm", icon: "box" },
     { id: "attention", label: "Cần chú ý", icon: "clock", badge: urgentCount },
     { id: "trash", label: "Thùng rác", icon: "trash" },
     { id: "settings", label: "Cài đặt", icon: "settings" },
-  ];
+  ]
 
   return (
     <div className="app-shell">
       {/* Desktop Sidebar */}
       <aside className="sidebar">
-        <div className="brand" onClick={() => setView("inventory")}>
-          <span className="brand-icon"><Icon name="box" /></span>
+        <button
+          type="button"
+          className="brand"
+          onClick={() => setView("inventory")}
+          aria-label="Expiry — Kho thực phẩm"
+        >
+          <span className="brand-icon">
+            <Icon name="box" />
+          </span>
           <span>
             <span className="brand-name">Expiry</span>
           </span>
-        </div>
+        </button>
 
         <button className="sidebar-add" onClick={onAdd} type="button">
           <Icon name="plus" />
@@ -66,6 +73,9 @@ export default function Shell({
           ))}
         </nav>
 
+        <p className="sidebar-note">
+          Theo ngày bạn đã ghi, không phải đánh giá an toàn thực phẩm.
+        </p>
         <div className="profile">
           <span className="avatar">{displayName.split(" ").pop()?.[0]}</span>
           <span>
@@ -73,6 +83,23 @@ export default function Shell({
           </span>
         </div>
       </aside>
+
+      <header className="mobile-app-header">
+        <button
+          className="brand"
+          type="button"
+          onClick={() => setView("inventory")}
+          aria-label="Expiry — Kho thực phẩm"
+        >
+          <span className="brand-icon">
+            <Icon name="box" />
+          </span>
+          <span className="brand-name">Expiry</span>
+        </button>
+        <span className="mobile-account" title={displayName}>
+          {displayName}
+        </span>
+      </header>
 
       {/* Main Content Area */}
       <main className="shell-main">{children}</main>
@@ -136,5 +163,5 @@ export default function Shell({
         </button>
       </nav>
     </div>
-  );
+  )
 }

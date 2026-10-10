@@ -1,0 +1,4210 @@
+{
+  "schema_version": 1,
+  "updated": "2026-10-10",
+  "openapi": "../../Expiry_System_Design_2026-10-08/contracts/openapi.json",
+  "documents": [
+    {
+      "id": "DOC-AUDIT",
+      "path": "00-context/audit.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-SOURCES",
+      "path": "00-context/source-register.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-DEFINITION",
+      "path": "00-context/system-definition.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-SCOPE",
+      "path": "00-context/scope.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-GLOSSARY",
+      "path": "00-context/glossary.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-DECISIONS",
+      "path": "00-context/decisions-and-questions.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-P01",
+      "path": "01-personas/P01-persona.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-P02",
+      "path": "01-personas/P02-persona.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-P03",
+      "path": "01-personas/P03-persona.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-P-COMPARE",
+      "path": "01-personas/persona-comparison.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-P-GAPS",
+      "path": "01-personas/persona-evidence-gaps.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-NEEDS",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-BR",
+      "path": "03-requirements-features/business-requirements.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-ST",
+      "path": "03-requirements-features/stakeholder-requirements.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-FR",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-NFR",
+      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-RULES",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-FEATURES",
+      "path": "03-requirements-features/features.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-UNSUPPORTED",
+      "path": "03-requirements-features/unsupported-proposals.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-UC",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-UML",
+      "path": "05-use-cases-uml/diagrams.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-NAV",
+      "path": "06-navigation/navigation.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-SCREEN-STATES",
+      "path": "06-navigation/screen-state-matrix.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-SCENARIOS",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-IMPACTS",
+      "path": "08-consequences/impact-analysis.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-UF",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-DFD",
+      "path": "06-data-model/data-flows.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-OWNERS",
+      "path": "06-data-model/ownership.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-DICTIONARY",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-SCHEMA",
+      "path": "12-database-schema/entities-and-migrations.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-ERD",
+      "path": "06-data-model/erd.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-COMPONENTS",
+      "path": "08-architecture/components.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-SEQUENCES",
+      "path": "08-architecture/sequences.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-API",
+      "path": "07-api/endpoints.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-PROTOCOL",
+      "path": "07-api/protocol-and-compatibility.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-OFFICIAL",
+      "path": "04-technology-research/official-references.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-OCR-RESEARCH",
+      "path": "04-technology-research/ocr-research.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-UI-LAYOUT",
+      "path": "09-advanced-web/LAYOUT.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-FE-STATE",
+      "path": "09-advanced-web/state-and-integration.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-OCR-CONTRACT",
+      "path": "17-python-ocr/integration-contract.md",
+      "status": "Draft"
+    },
+    {
+      "id": "DOC-AUTH",
+      "path": "07-api/authentication.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-OBSERVABILITY",
+      "path": "19-analytics-observability/analytics-monitoring.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-TESTS",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-USER-VALIDATION",
+      "path": "10-testing/research-validation.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-DEPLOY",
+      "path": "08-architecture/deployment.md",
+      "status": "Draft"
+    },
+    {
+      "id": "DOC-EXTENSION",
+      "path": "22-feature-extension/extension-process.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-TMB",
+      "path": "00-context/tmb-skills.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-ADR-001",
+      "path": "adr/ADR-001-modular-monolith.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-ADR-002",
+      "path": "adr/ADR-002-storage-orm.md",
+      "status": "Blocked"
+    },
+    {
+      "id": "DOC-ADR-003",
+      "path": "adr/ADR-003-authentication.md",
+      "status": "Blocked"
+    },
+    {
+      "id": "DOC-ADR-004",
+      "path": "adr/ADR-004-ocr-boundary.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-ADR-005",
+      "path": "adr/ADR-005-observability.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-WORKSTREAMS",
+      "path": "12-process/workstreams.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-COVERAGE",
+      "path": "11-traceability/coverage.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-GATES",
+      "path": "11-traceability/gates.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-IDS",
+      "path": "11-traceability/id-register.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-VALIDATOR",
+      "path": "scripts/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-00",
+      "path": "00-context/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-01",
+      "path": "01-personas/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-02",
+      "path": "02-challenges/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-03",
+      "path": "03-requirements-features/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-04",
+      "path": "04-technology-research/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-05",
+      "path": "05-use-cases-uml/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-06",
+      "path": "06-navigation/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-07",
+      "path": "04-user-flows/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-08",
+      "path": "08-consequences/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-09",
+      "path": "04-user-flows/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-10",
+      "path": "06-data-model/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-11",
+      "path": "06-data-model/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-12",
+      "path": "12-database-schema/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-13",
+      "path": "06-data-model/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-14",
+      "path": "08-architecture/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-15",
+      "path": "07-api/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-16",
+      "path": "09-advanced-web/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-17",
+      "path": "17-python-ocr/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-18",
+      "path": "07-api/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-19",
+      "path": "19-analytics-observability/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-20",
+      "path": "10-testing/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-21",
+      "path": "08-architecture/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-22",
+      "path": "22-feature-extension/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-23",
+      "path": "12-process/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-ADR",
+      "path": "adr/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-TRACEABILITY",
+      "path": "11-traceability/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-00-CONTEXT-SOURCES",
+      "path": "00-context/sources/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-VERIFY",
+      "path": "11-traceability/verification-report.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-ARCH-ROOT",
+      "path": "README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-FINAL-CHECK-PERSONA",
+      "path": "03-requirements-features/final-check-persona-alignment.md",
+      "status": "Review"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "P1",
+      "kind": "persona",
+      "path": "01-personas/P01-persona.md",
+      "status": "Review",
+      "mechanism": "Visibility / occasional attention loss"
+    },
+    {
+      "id": "P2",
+      "kind": "persona",
+      "path": "01-personas/P02-persona.md",
+      "status": "Review",
+      "mechanism": "Changed plans / next-action gap"
+    },
+    {
+      "id": "P3",
+      "kind": "persona",
+      "path": "01-personas/P03-persona.md",
+      "status": "Review",
+      "mechanism": "Maintenance burden / digital-physical drift"
+    },
+    {
+      "id": "CH-01",
+      "kind": "challenge",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "NEED-01",
+      "kind": "need",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "OPP-01",
+      "kind": "opportunity",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "CH-02",
+      "kind": "challenge",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "NEED-02",
+      "kind": "need",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "OPP-02",
+      "kind": "opportunity",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "CH-03",
+      "kind": "challenge",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "NEED-03",
+      "kind": "need",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "OPP-03",
+      "kind": "opportunity",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "BR-V1-01",
+      "kind": "business-requirement",
+      "path": "03-requirements-features/business-requirements.md",
+      "status": "Review",
+      "definition": "Người dùng nhận biết thực phẩm đang có và cần chú ý với công thấp"
+    },
+    {
+      "id": "BR-V1-02",
+      "kind": "business-requirement",
+      "path": "03-requirements-features/business-requirements.md",
+      "status": "Review",
+      "definition": "Người dùng có đủ context để quyết định bước tiếp khi kế hoạch đổi"
+    },
+    {
+      "id": "BR-V1-03",
+      "kind": "business-requirement",
+      "path": "03-requirements-features/business-requirements.md",
+      "status": "Review",
+      "definition": "Tồn kho số phản ánh thay đổi thực tế mà không tạo gánh nặng quản trị lớn"
+    },
+    {
+      "id": "ST-V1-01",
+      "kind": "stakeholder-requirement",
+      "path": "03-requirements-features/stakeholder-requirements.md",
+      "status": "Review",
+      "definition": "See food records and remaining quantities without relying on memory"
+    },
+    {
+      "id": "ST-V1-02",
+      "kind": "stakeholder-requirement",
+      "path": "03-requirements-features/stakeholder-requirements.md",
+      "status": "Review",
+      "definition": "Understand attention reason and choose an appropriate next action"
+    },
+    {
+      "id": "ST-V1-03",
+      "kind": "stakeholder-requirement",
+      "path": "03-requirements-features/stakeholder-requirements.md",
+      "status": "Review",
+      "definition": "Record use/discard/corrections and recover errors with visible history"
+    },
+    {
+      "id": "ST-V1-04",
+      "kind": "stakeholder-requirement",
+      "path": "03-requirements-features/stakeholder-requirements.md",
+      "status": "Review",
+      "definition": "Keep private records isolated and recover drafts during session loss"
+    },
+    {
+      "id": "ST-V1-05",
+      "kind": "stakeholder-requirement",
+      "path": "03-requirements-features/stakeholder-requirements.md",
+      "status": "Review",
+      "definition": "Integrate stable contracts and preserve data on deploy/recovery"
+    },
+    {
+      "id": "FR-01",
+      "kind": "functional-requirement",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review",
+      "definition": "Capture name, amount, unit; date optional và source rõ",
+      "tests": [
+        "VT-01",
+        "VT-02",
+        "VT-14"
+      ]
+    },
+    {
+      "id": "FR-02",
+      "kind": "functional-requirement",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review",
+      "definition": "List/search/filter kho của owner; stable pagination",
+      "tests": [
+        "VT-12",
+        "TC-18"
+      ]
+    },
+    {
+      "id": "FR-03",
+      "kind": "functional-requirement",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review",
+      "definition": "Attention classification + reason + calculated local date",
+      "tests": [
+        "VT-13",
+        "TC-19"
+      ]
+    },
+    {
+      "id": "FR-04",
+      "kind": "functional-requirement",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review",
+      "definition": "Ghi consume/discard một phần/toàn bộ, atomic và retry-safe",
+      "tests": [
+        "VT-03",
+        "VT-04",
+        "VT-05",
+        "VT-06",
+        "VT-07",
+        "VT-10"
+      ]
+    },
+    {
+      "id": "FR-05",
+      "kind": "functional-requirement",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review",
+      "definition": "Sửa metadata có version, không sửa quantity qua generic PATCH",
+      "tests": [
+        "VT-14",
+        "VT-15"
+      ]
+    },
+    {
+      "id": "FR-06",
+      "kind": "functional-requirement",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review",
+      "definition": "Recount lượng thực tế, lưu correction history",
+      "tests": [
+        "VT-08",
+        "VT-09"
+      ]
+    },
+    {
+      "id": "FR-07",
+      "kind": "functional-requirement",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review",
+      "definition": "History đọc được của owner",
+      "tests": [
+        "VT-10",
+        "VT-12"
+      ]
+    },
+    {
+      "id": "FR-08",
+      "kind": "functional-requirement",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review",
+      "definition": "Soft delete/trash/restore, tách physical disposal",
+      "tests": [
+        "VT-11"
+      ]
+    },
+    {
+      "id": "FR-09",
+      "kind": "functional-requirement",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review",
+      "definition": "Setting timezone và attention lead, recompute",
+      "tests": [
+        "VT-13",
+        "TC-20"
+      ]
+    },
+    {
+      "id": "FR-10",
+      "kind": "functional-requirement",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review",
+      "definition": "Auth continuation giữ draft và gate kho riêng/persist",
+      "tests": [
+        "VT-12",
+        "VT-15"
+      ]
+    },
+    {
+      "id": "NFR-01",
+      "kind": "nonfunctional-requirement",
+      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "status": "Review",
+      "definition": "Không cross-user read/write ở mọi endpoint và history",
+      "tests": [
+        "VT-12"
+      ]
+    },
+    {
+      "id": "NFR-02",
+      "kind": "nonfunctional-requirement",
+      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "status": "Review",
+      "definition": "Atomic entry/movement/idempotency; không âm; conflict không overwrite",
+      "tests": [
+        "VT-02",
+        "VT-05",
+        "VT-06"
+      ]
+    },
+    {
+      "id": "NFR-03",
+      "kind": "nonfunctional-requirement",
+      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "status": "Review",
+      "definition": "FE mock và BE trả đúng OpenAPI; stable error shape",
+      "tests": [
+        "VT-01",
+        "VT-14",
+        "TC-21"
+      ]
+    },
+    {
+      "id": "NFR-04",
+      "kind": "nonfunctional-requirement",
+      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "status": "Review",
+      "definition": "401 giữ draft; timeout retry cùng key; conflict refetch không silent replace",
+      "tests": [
+        "VT-15"
+      ]
+    },
+    {
+      "id": "NFR-05",
+      "kind": "nonfunctional-requirement",
+      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "status": "Review",
+      "definition": "Label/input rõ, keyboard usable, trạng thái không chỉ màu, focus/dialog/error đúng",
+      "tests": [
+        "VT-17"
+      ]
+    },
+    {
+      "id": "NFR-06",
+      "kind": "nonfunctional-requirement",
+      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "status": "Review",
+      "definition": "Date-only không bị lệch do UTC conversion; clock injection",
+      "tests": [
+        "VT-13"
+      ]
+    },
+    {
+      "id": "NFR-07",
+      "kind": "nonfunctional-requirement",
+      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "status": "Review",
+      "definition": "Migration versioned, backup/restore baseline, generic errors, no secret logging",
+      "tests": [
+        "VT-16"
+      ]
+    },
+    {
+      "id": "NFR-08",
+      "kind": "nonfunctional-requirement",
+      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "status": "Review",
+      "definition": "Chốt latency/volume sau biết hosting và dataset; chưa bịa SLA",
+      "tests": [
+        "TC-22"
+      ]
+    },
+    {
+      "id": "RULE-01",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Owner lấy từ principal authenticated; không nhận user_id trong business DTO",
+      "owner": "Service + scoped repo"
+    },
+    {
+      "id": "RULE-02",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Một FoodEntry = food quantity có cùng unit/date/location/opening context. Cùng tên không phải cùng identity",
+      "owner": "Capture service"
+    },
+    {
+      "id": "RULE-03",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Create quantity >0; remaining ≥0; max 999999999.999; piece số nguyên; g/ml 3 decimal; không convert unit ở MVP",
+      "owner": "Service + DB CHECK"
+    },
+    {
+      "id": "RULE-04",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Create lưu initial movement trước 0 → quantity; operational remaining là nguồn đọc, ledger cập nhật cùng transaction",
+      "owner": "Create service + DB"
+    },
+    {
+      "id": "RULE-05",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Consume/discard amount >0 và ≤remaining; deleted/depleted không cho movement giảm",
+      "owner": "RecordMovement"
+    },
+    {
+      "id": "RULE-06",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Recount nhập actual_quantity ≥0, reason bắt buộc; cùng lượng hiện có thì 200 no-op, không thêm movement/version",
+      "owner": "Recount service"
+    },
+    {
+      "id": "RULE-07",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Không mutate remaining, version, user_id, deleted_at hoặc attention bằng generic metadata PATCH",
+      "owner": "DTO/schema + service"
+    },
+    {
+      "id": "RULE-08",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "unit không đổi sau create; muốn đổi phải quyết định migration/conversion riêng",
+      "owner": "Service"
+    },
+    {
+      "id": "RULE-09",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Date unknown → expiry_date null; known/estimated → cần ngày; nguồn printed_label/user_estimate/user_entered/unknown nhất quán",
+      "owner": "Metadata domain"
+    },
+    {
+      "id": "RULE-10",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "date_label_type use_by/best_before/unspecified là nghĩa nhãn, không certainty. estimated chỉ với user_estimate; unknown đi cùng source unknown và label unspecified",
+      "owner": "Metadata + DB"
+    },
+    {
+      "id": "RULE-11",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "opened_on là field riêng nullable; không tự tính hạn mới, không tự kéo dài date khi freezer",
+      "owner": "Metadata/attention policy"
+    },
+    {
+      "id": "RULE-12",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Attention khi còn quantity và chưa deleted: unknown nếu chưa date; past_date nếu date<today; due_today nếu bằng; soon nếu 0<delta≤lead; later nếu delta>lead",
+      "owner": "AttentionPolicy"
+    },
+    {
+      "id": "RULE-13",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Today là calendar date theo user timezone; response có as_of_date; lead 0…30, default thử 2",
+      "owner": "AttentionPolicy"
+    },
+    {
+      "id": "RULE-14",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Attention không chứng minh safe/fresh; explain source, label, uncertainty. Không tự kết luận nên ăn khi quá use-by",
+      "owner": "AttentionPolicy/presenter"
+    },
+    {
+      "id": "RULE-15",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Soft-delete giữ quantity/history, không tạo discard movement; restore chỉ bỏ deleted_at, recompute attention",
+      "owner": "Delete/restore service"
+    },
+    {
+      "id": "RULE-16",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Lifecycle active nếu remaining>0, depleted nếu 0; không ép một trạng thái consumed/discarded cho batch đã vừa dùng vừa bỏ",
+      "owner": "Derived presenter"
+    },
+    {
+      "id": "RULE-17",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "expected_version phải khớp current cho update/action/delete/restore; successful mutation tăng version đúng một lần; no-op không tăng",
+      "owner": "Services"
+    },
+    {
+      "id": "RULE-18",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Mọi write yêu cầu Idempotency-Key; cùng owner+key+operation+payload replay saved response, khác payload/operation →409; replay trước version check",
+      "owner": "Mutation executor + api_requests"
+    },
+    {
+      "id": "RULE-19",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Idempotency reservation/result và entry/history commit cùng transaction; thất bại rollback; MVP không tự expire keys",
+      "owner": "Transaction adapter"
+    },
+    {
+      "id": "RULE-20",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Sort priority past_date,due_today,soon,unknown,later; trong nhóm date asc NULLS LAST rồi created_at,id; unknown nhóm riêng visible",
+      "owner": "Query/AttentionPolicy"
+    },
+    {
+      "id": "RULE-21",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Past-date capture được phép, kèm reason; không reject vì quá ngày hôm nay",
+      "owner": "Create/UX"
+    },
+    {
+      "id": "RULE-22",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Unknown không silently suy date; opening/date edit chỉ metadata cả entry; mở một phần batch cần ghi tách ngay khi capture, split sau này phải atomic",
+      "owner": "Service/UX"
+    },
+    {
+      "id": "RULE-23",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "History không có public edit/delete endpoint; sửa sai bằng recount có reason, không rewrite historical consumption",
+      "owner": "Repo/service"
+    },
+    {
+      "id": "RULE-24",
+      "kind": "business-rule",
+      "path": "03-requirements-features/business-rules.md",
+      "status": "Review",
+      "definition": "Owner-only not-found hoặc foreign-owned ID →404; auth thiếu →401; lỗi input→422; conflict→409",
+      "owner": "Error mapper"
+    },
+    {
+      "id": "F-01",
+      "kind": "feature",
+      "path": "03-requirements-features/features.md",
+      "status": "Review",
+      "requirements": [
+        "FR-01"
+      ],
+      "needs": [
+        "NEED-01",
+        "NEED-03"
+      ],
+      "use_cases": [
+        "UC-01"
+      ]
+    },
+    {
+      "id": "F-02",
+      "kind": "feature",
+      "path": "03-requirements-features/features.md",
+      "status": "Review",
+      "requirements": [
+        "FR-02",
+        "FR-03"
+      ],
+      "needs": [
+        "NEED-01",
+        "NEED-02"
+      ],
+      "use_cases": [
+        "UC-02",
+        "UC-03"
+      ]
+    },
+    {
+      "id": "F-03",
+      "kind": "feature",
+      "path": "03-requirements-features/features.md",
+      "status": "Review",
+      "requirements": [
+        "FR-03"
+      ],
+      "needs": [
+        "NEED-02"
+      ],
+      "use_cases": [
+        "UC-03"
+      ]
+    },
+    {
+      "id": "F-04",
+      "kind": "feature",
+      "path": "03-requirements-features/features.md",
+      "status": "Review",
+      "requirements": [
+        "FR-04"
+      ],
+      "needs": [
+        "NEED-03"
+      ],
+      "use_cases": [
+        "UC-04",
+        "UC-05"
+      ]
+    },
+    {
+      "id": "F-05",
+      "kind": "feature",
+      "path": "03-requirements-features/features.md",
+      "status": "Review",
+      "requirements": [
+        "FR-05",
+        "FR-06"
+      ],
+      "needs": [
+        "NEED-02",
+        "NEED-03"
+      ],
+      "use_cases": [
+        "UC-06",
+        "UC-07"
+      ]
+    },
+    {
+      "id": "F-06",
+      "kind": "feature",
+      "path": "03-requirements-features/features.md",
+      "status": "Review",
+      "requirements": [
+        "FR-07"
+      ],
+      "needs": [
+        "NEED-03"
+      ],
+      "use_cases": [
+        "UC-08"
+      ]
+    },
+    {
+      "id": "F-07",
+      "kind": "feature",
+      "path": "03-requirements-features/features.md",
+      "status": "Review",
+      "requirements": [
+        "FR-08"
+      ],
+      "needs": [
+        "NEED-03"
+      ],
+      "use_cases": [
+        "UC-09",
+        "UC-10"
+      ]
+    },
+    {
+      "id": "F-08",
+      "kind": "feature",
+      "path": "03-requirements-features/features.md",
+      "status": "Review",
+      "requirements": [
+        "FR-09"
+      ],
+      "needs": [
+        "NEED-01",
+        "NEED-02"
+      ],
+      "use_cases": [
+        "UC-11"
+      ]
+    },
+    {
+      "id": "UC-00",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-10"
+      ],
+      "apis": []
+    },
+    {
+      "id": "UC-01",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-01"
+      ],
+      "apis": [
+        "API-01"
+      ]
+    },
+    {
+      "id": "UC-02",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-02"
+      ],
+      "apis": [
+        "API-02"
+      ]
+    },
+    {
+      "id": "UC-03",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-03"
+      ],
+      "apis": [
+        "API-02",
+        "API-03"
+      ]
+    },
+    {
+      "id": "UC-04",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-04"
+      ],
+      "apis": [
+        "API-05"
+      ]
+    },
+    {
+      "id": "UC-05",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-04"
+      ],
+      "apis": [
+        "API-05"
+      ]
+    },
+    {
+      "id": "UC-06",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-05"
+      ],
+      "apis": [
+        "API-04"
+      ]
+    },
+    {
+      "id": "UC-07",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-06"
+      ],
+      "apis": [
+        "API-06"
+      ]
+    },
+    {
+      "id": "UC-08",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-07"
+      ],
+      "apis": [
+        "API-07"
+      ]
+    },
+    {
+      "id": "UC-09",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-08"
+      ],
+      "apis": [
+        "API-08",
+        "API-09"
+      ]
+    },
+    {
+      "id": "UC-10",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-08"
+      ],
+      "apis": [
+        "API-09",
+        "API-10"
+      ]
+    },
+    {
+      "id": "UC-11",
+      "kind": "use-case",
+      "path": "05-use-cases-uml/use-cases.md",
+      "status": "Review",
+      "requirements": [
+        "FR-09"
+      ],
+      "apis": [
+        "API-11",
+        "API-12"
+      ]
+    },
+    {
+      "id": "SC-01",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-01"
+      ],
+      "flows": [
+        "UF-01"
+      ]
+    },
+    {
+      "id": "SC-02",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-01"
+      ],
+      "flows": [
+        "UF-02"
+      ]
+    },
+    {
+      "id": "SC-03",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-02",
+        "UC-03"
+      ],
+      "flows": [
+        "UF-03"
+      ]
+    },
+    {
+      "id": "SC-04",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-03",
+        "UC-04"
+      ],
+      "flows": [
+        "UF-04"
+      ]
+    },
+    {
+      "id": "SC-05",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-04"
+      ],
+      "flows": [
+        "UF-05"
+      ]
+    },
+    {
+      "id": "SC-06",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-05"
+      ],
+      "flows": [
+        "UF-06"
+      ]
+    },
+    {
+      "id": "SC-07",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-07"
+      ],
+      "flows": [
+        "UF-07"
+      ]
+    },
+    {
+      "id": "SC-08",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-04"
+      ],
+      "flows": [
+        "UF-05"
+      ]
+    },
+    {
+      "id": "SC-09",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-04"
+      ],
+      "flows": []
+    },
+    {
+      "id": "SC-10",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-09",
+        "UC-10"
+      ],
+      "flows": [
+        "UF-09"
+      ]
+    },
+    {
+      "id": "SC-11",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-06"
+      ],
+      "flows": [
+        "UF-08"
+      ]
+    },
+    {
+      "id": "SC-12",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-04",
+        "UC-05",
+        "UC-08"
+      ],
+      "flows": []
+    },
+    {
+      "id": "SC-13",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [],
+      "flows": []
+    },
+    {
+      "id": "SC-14",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-03",
+        "UC-11"
+      ],
+      "flows": []
+    },
+    {
+      "id": "SC-15",
+      "kind": "scenario",
+      "path": "04-user-flows/scenarios.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-03"
+      ],
+      "flows": []
+    },
+    {
+      "id": "UF-01",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-01"
+      ],
+      "goal": "Ghi đồ mới trước khi quên"
+    },
+    {
+      "id": "UF-02",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-01"
+      ],
+      "goal": "Không bỏ việc theo dõi chỉ vì thiếu nhãn"
+    },
+    {
+      "id": "UF-03",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-02",
+        "UC-03"
+      ],
+      "goal": "Nhớ được món cần xem"
+    },
+    {
+      "id": "UF-04",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-03",
+        "UC-04"
+      ],
+      "goal": "Chọn món đáng chú ý từ đồ đang có"
+    },
+    {
+      "id": "UF-05",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-04"
+      ],
+      "goal": "Số lượng app đúng sau dùng"
+    },
+    {
+      "id": "UF-06",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-05"
+      ],
+      "goal": "Phản ánh đồ thật đã bỏ"
+    },
+    {
+      "id": "UF-07",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-07",
+        "UC-08"
+      ],
+      "goal": "Sửa số lượng lệch nhanh"
+    },
+    {
+      "id": "UF-08",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-06"
+      ],
+      "goal": "Sửa ngày/vị trí nguồn nhập sai"
+    },
+    {
+      "id": "UF-09",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-09",
+        "UC-10"
+      ],
+      "goal": "Dọn bản ghi nhầm, lấy lại khi xóa sai"
+    },
+    {
+      "id": "UF-10",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-11"
+      ],
+      "goal": "Điều chỉnh cách chú ý"
+    },
+    {
+      "id": "UF-11",
+      "kind": "user-flow",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-00"
+      ],
+      "goal": "Không mất draft khi auth hết hạn"
+    },
+    {
+      "id": "ENT-01",
+      "kind": "entity",
+      "path": "12-database-schema/entities-and-migrations.md",
+      "status": "Review",
+      "name": "users",
+      "purpose": "Authenticated owner identity/settings",
+      "owner": "Accounts service/auth adapter"
+    },
+    {
+      "id": "ENT-02",
+      "kind": "entity",
+      "path": "12-database-schema/entities-and-migrations.md",
+      "status": "Review",
+      "name": "food_entries",
+      "purpose": "Quantity with common unit/date/location/opening context",
+      "owner": "Inventory service"
+    },
+    {
+      "id": "ENT-03",
+      "kind": "entity",
+      "path": "12-database-schema/entities-and-migrations.md",
+      "status": "Review",
+      "name": "stock_movements",
+      "purpose": "One committed quantity change",
+      "owner": "Inventory services, append-only public interface"
+    },
+    {
+      "id": "ENT-04",
+      "kind": "entity",
+      "path": "12-database-schema/entities-and-migrations.md",
+      "status": "Review",
+      "name": "api_requests",
+      "purpose": "One write command replay scope per owner/key",
+      "owner": "Mutation executor in same transaction"
+    },
+    {
+      "id": "FIELD::users.id",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "users.id",
+      "owner": "Identity bootstrap",
+      "definition": "Internal stable owner",
+      "entity": "ENT-01"
+    },
+    {
+      "id": "FIELD::users.identity_subject",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "users.identity_subject",
+      "owner": "Auth adapter",
+      "definition": "Provider + subject namespace, không email mutable làm ID",
+      "entity": "ENT-01"
+    },
+    {
+      "id": "FIELD::users.display_name",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "users.display_name",
+      "owner": "Profile",
+      "definition": "1…100 trimmed",
+      "entity": "ENT-01"
+    },
+    {
+      "id": "FIELD::users.timezone",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "users.timezone",
+      "owner": "UC-11",
+      "definition": "IANA timezone hợp lệ qua runtime timezone library",
+      "entity": "ENT-01"
+    },
+    {
+      "id": "FIELD::users.attention_lead_days",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "users.attention_lead_days",
+      "owner": "UC-11",
+      "definition": "0…30; config thử nghiệm",
+      "entity": "ENT-01"
+    },
+    {
+      "id": "FIELD::users.version",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "users.version",
+      "owner": "Service",
+      "definition": "Optimistic version ≥1",
+      "entity": "ENT-01"
+    },
+    {
+      "id": "FIELD::users.created_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "users.created_at",
+      "owner": "Persistence",
+      "definition": "Instant UTC output ISO8601",
+      "entity": "ENT-01"
+    },
+    {
+      "id": "FIELD::users.updated_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "users.updated_at",
+      "owner": "Persistence",
+      "definition": "Instant UTC output ISO8601",
+      "entity": "ENT-01"
+    },
+    {
+      "id": "FIELD::food_entries.id",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.id",
+      "owner": "Server",
+      "definition": "Not product ID",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.user_id",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.user_id",
+      "owner": "Service",
+      "definition": "From verified principal",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.name",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.name",
+      "owner": "User",
+      "definition": "Trimmed 1…200; không UNIQUE",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.storage_location",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.storage_location",
+      "owner": "User",
+      "definition": "Value free text trimmed 1…100; không table location chưa có CRUD requirement",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.remaining_quantity",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.remaining_quantity",
+      "owner": "Quantity services",
+      "definition": "0…999999999.999; piece whole; operational source of truth",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.unit",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.unit",
+      "owner": "User/create",
+      "definition": "piece/g/ml; fixed after create",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.expiry_date",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.expiry_date",
+      "owner": "User",
+      "definition": "Calendar date; no timezone/UTC conversion; past date allowed",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.date_certainty",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.date_certainty",
+      "owner": "User",
+      "definition": "known/estimated/unknown; known=reported source known, không safe guarantee",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.date_source",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.date_source",
+      "owner": "User",
+      "definition": "printed_label/user_entered/user_estimate/unknown",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.date_label_type",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.date_label_type",
+      "owner": "User label",
+      "definition": "use_by/best_before/unspecified; độc lập certainty",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.opened_on",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.opened_on",
+      "owner": "User",
+      "definition": "Đã mở khi nào, applies entire entry; không tự derive shelf-life",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.note",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.note",
+      "owner": "User",
+      "definition": "Max 1000; plain text",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.version",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.version",
+      "owner": "Service",
+      "definition": "Increment once per real mutation",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.deleted_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.deleted_at",
+      "owner": "Delete/restore",
+      "definition": "Record visibility; không spoil/discard",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.created_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.created_at",
+      "owner": "Persistence",
+      "definition": "Audit instant",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::food_entries.updated_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "food_entries.updated_at",
+      "owner": "Persistence",
+      "definition": "Audit instant",
+      "entity": "ENT-02"
+    },
+    {
+      "id": "FIELD::stock_movements.id",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "stock_movements.id",
+      "owner": "Service",
+      "definition": "Stable event identity",
+      "entity": "ENT-03"
+    },
+    {
+      "id": "FIELD::stock_movements.entry_id",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "stock_movements.entry_id",
+      "owner": "Service",
+      "definition": "Entry immutable owner relation",
+      "entity": "ENT-03"
+    },
+    {
+      "id": "FIELD::stock_movements.kind",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "stock_movements.kind",
+      "owner": "Command",
+      "definition": "initial/consume/discard/adjustment",
+      "entity": "ENT-03"
+    },
+    {
+      "id": "FIELD::stock_movements.quantity_before",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "stock_movements.quantity_before",
+      "owner": "Locked entry + command",
+      "definition": "Nonnegative; delta derived after-before",
+      "entity": "ENT-03"
+    },
+    {
+      "id": "FIELD::stock_movements.after",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "stock_movements.after",
+      "owner": "Locked entry + command",
+      "definition": "Nonnegative; delta derived after-before",
+      "entity": "ENT-03"
+    },
+    {
+      "id": "FIELD::stock_movements.reason",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "stock_movements.reason",
+      "owner": "User correction",
+      "definition": "Required nonblank for adjustment, max 500",
+      "entity": "ENT-03"
+    },
+    {
+      "id": "FIELD::stock_movements.recorded_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "stock_movements.recorded_at",
+      "owner": "Persistence",
+      "definition": "Thời điểm app ghi nhận; không tự nhận là time physical use happened",
+      "entity": "ENT-03"
+    },
+    {
+      "id": "FIELD::api_requests.user_id",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "api_requests.user_id",
+      "owner": "Principal",
+      "definition": "Dedup scope",
+      "entity": "ENT-04"
+    },
+    {
+      "id": "FIELD::api_requests.idempotency_key",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "api_requests.idempotency_key",
+      "owner": "FE command coordinator",
+      "definition": "8…100 allowed chars; new key/new command",
+      "entity": "ENT-04"
+    },
+    {
+      "id": "FIELD::api_requests.operation",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "api_requests.operation",
+      "owner": "Service executor",
+      "definition": "HTTP operation + normalized target, không chỉ method",
+      "entity": "ENT-04"
+    },
+    {
+      "id": "FIELD::api_requests.request_hash",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "api_requests.request_hash",
+      "owner": "Service executor",
+      "definition": "Canonical command payload fingerprint; validate same key+same input",
+      "entity": "ENT-04"
+    },
+    {
+      "id": "FIELD::api_requests.response_status",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "api_requests.response_status",
+      "owner": "Tx executor",
+      "definition": "Original command result; owner privacy/retention applies",
+      "entity": "ENT-04"
+    },
+    {
+      "id": "FIELD::api_requests.body",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "api_requests.body",
+      "owner": "Tx executor",
+      "definition": "Original command result; owner privacy/retention applies",
+      "entity": "ENT-04"
+    },
+    {
+      "id": "FIELD::api_requests.created_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "api_requests.created_at",
+      "owner": "Persistence",
+      "definition": "Key lifetime; MVP không automatic prune",
+      "entity": "ENT-04"
+    },
+    {
+      "id": "API-01",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-01"
+      ],
+      "tests": [
+        "VT-01",
+        "VT-02",
+        "VT-14"
+      ],
+      "operation": "POST /api/v1/food-entries"
+    },
+    {
+      "id": "API-02",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-02",
+        "UC-03"
+      ],
+      "tests": [
+        "TC-18",
+        "TC-19",
+        "VT-12"
+      ],
+      "operation": "GET /api/v1/food-entries"
+    },
+    {
+      "id": "API-03",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-03"
+      ],
+      "tests": [
+        "TC-19",
+        "VT-12"
+      ],
+      "operation": "GET /api/v1/food-entries/{id}"
+    },
+    {
+      "id": "API-04",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-06"
+      ],
+      "tests": [
+        "VT-14",
+        "VT-15",
+        "VT-12"
+      ],
+      "operation": "PATCH /api/v1/food-entries/{id}"
+    },
+    {
+      "id": "API-05",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-04",
+        "UC-05"
+      ],
+      "tests": [
+        "VT-03",
+        "VT-04",
+        "VT-05",
+        "VT-06",
+        "VT-07",
+        "VT-10",
+        "VT-12"
+      ],
+      "operation": "POST /api/v1/food-entries/{id}/movements"
+    },
+    {
+      "id": "API-06",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-07"
+      ],
+      "tests": [
+        "VT-08",
+        "VT-09",
+        "VT-12"
+      ],
+      "operation": "POST /api/v1/food-entries/{id}/recounts"
+    },
+    {
+      "id": "API-07",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-08"
+      ],
+      "tests": [
+        "VT-10",
+        "VT-12"
+      ],
+      "operation": "GET /api/v1/food-entries/{id}/movements"
+    },
+    {
+      "id": "API-08",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-09"
+      ],
+      "tests": [
+        "VT-11",
+        "VT-12"
+      ],
+      "operation": "DELETE /api/v1/food-entries/{id}"
+    },
+    {
+      "id": "API-09",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-09",
+        "UC-10"
+      ],
+      "tests": [
+        "VT-11",
+        "VT-12"
+      ],
+      "operation": "GET /api/v1/trash/food-entries"
+    },
+    {
+      "id": "API-10",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-10"
+      ],
+      "tests": [
+        "VT-11",
+        "VT-12"
+      ],
+      "operation": "POST /api/v1/food-entries/{id}/restore"
+    },
+    {
+      "id": "API-11",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-11"
+      ],
+      "tests": [
+        "TC-20",
+        "VT-12"
+      ],
+      "operation": "GET /api/v1/me/preferences"
+    },
+    {
+      "id": "API-12",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "use_cases": [
+        "UC-11"
+      ],
+      "tests": [
+        "VT-13",
+        "TC-20",
+        "VT-12"
+      ],
+      "operation": "PATCH /api/v1/me/preferences"
+    },
+    {
+      "id": "VT-01",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Create known/unknown date",
+      "expected": "Shape đúng, initial event, unknown visible",
+      "layer": "Contract+DB"
+    },
+    {
+      "id": "VT-02",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Create rollback trước movement/request result",
+      "expected": "Không orphan entry hoặc reserved key commit",
+      "layer": "Integration"
+    },
+    {
+      "id": "VT-03",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Consume 250g từ 1000g",
+      "expected": "750g; delta -250; version+1",
+      "layer": "Domain+DB"
+    },
+    {
+      "id": "VT-04",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Consume quá lượng/negative/piece fractional",
+      "expected": "409 hoặc422; không write",
+      "layer": "Domain+contract"
+    },
+    {
+      "id": "VT-05",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Hai requests cùng version",
+      "expected": "1 success, 1 conflict; quantity>=0",
+      "layer": "Real concurrent DB"
+    },
+    {
+      "id": "VT-06",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Same key+payload concurrent/retry",
+      "expected": "1 mutation/event; original result replay",
+      "layer": "Real concurrent DB"
+    },
+    {
+      "id": "VT-07",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Same key different target/body",
+      "expected": "409 key reuse",
+      "layer": "Integration"
+    },
+    {
+      "id": "VT-08",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Recount to same amount",
+      "expected": "200 no-op; no movement/version increment",
+      "layer": "Domain+DB"
+    },
+    {
+      "id": "VT-09",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Recount depleted to positive",
+      "expected": "Active derived, adjustment reason",
+      "layer": "Domain+DB"
+    },
+    {
+      "id": "VT-10",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Consume then discard remainder",
+      "expected": "Depleted; totals distinguish use/waste",
+      "layer": "Ledger audit"
+    },
+    {
+      "id": "VT-11",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Soft delete then restore",
+      "expected": "Amount/history unchanged, visibility restored",
+      "layer": "Integration+UI"
+    },
+    {
+      "id": "VT-12",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "GET/PATCH/action/history foreign ID",
+      "expected": "404, no exposure",
+      "layer": "Auth regression"
+    },
+    {
+      "id": "VT-13",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Clock around UTC/local midnight",
+      "expected": "Correct today/soon/past_date",
+      "layer": "Injected clock tests"
+    },
+    {
+      "id": "VT-14",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Metadata patch date→null malformed combination",
+      "expected": "422; no partial invalid certainty",
+      "layer": "Contract+domain"
+    },
+    {
+      "id": "VT-15",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Timeout/401/409 UI",
+      "expected": "Draft and stable key; refetch conflict",
+      "layer": "UI task tests"
+    },
+    {
+      "id": "VT-16",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Migration fresh + backup restore",
+      "expected": "Constraints/data recovered",
+      "layer": "Staging"
+    },
+    {
+      "id": "VT-17",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Keyboard/labels/no color-only",
+      "expected": "Task usable",
+      "layer": "UX/accessibility"
+    },
+    {
+      "id": "TC-18",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Owner list filters/offset/order applied before pagination; distinct empty states",
+      "expected": "Stable order + count/filter semantics across pages",
+      "layer": "API/query integration"
+    },
+    {
+      "id": "TC-19",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Known/unknown/estimated/past/depleted/deleted attention + detail",
+      "expected": "Reason/date source and safety caveat; eligible set correct",
+      "layer": "Domain + FE interaction"
+    },
+    {
+      "id": "TC-20",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Read/edit preferences + stale version/local date changes",
+      "expected": "Valid preferences or422/409; attention recomputed",
+      "layer": "Contract + integration"
+    },
+    {
+      "id": "TC-21",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Compare demo adapter DTOs to OpenAPI on every operation",
+      "expected": "Schema parity; explicit enum/decimal/error mapping",
+      "layer": "Contract regression"
+    },
+    {
+      "id": "TC-22",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Measure representative dataset/host under controlled load",
+      "expected": "Record p50/p95/volume/hardware; approve target after baseline",
+      "layer": "Performance baseline"
+    },
+    {
+      "id": "TC-23",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Session rotate/logout/revoke/expire and cookie/CSRF requests",
+      "expected": "Old credential invalid; unauthorized write rejected; draft/cache owner-safe",
+      "layer": "Auth integration"
+    },
+    {
+      "id": "TC-24",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Analytics disabled/consent and redacted error telemetry",
+      "expected": "No forbidden payload; no failed domain command from emitter error",
+      "layer": "Adapter integration"
+    },
+    {
+      "id": "TC-25",
+      "kind": "test",
+      "path": "10-testing/test-catalog.md",
+      "status": "Review",
+      "execution": "Not run",
+      "setup": "Future OCR invalid/ambiguous image/timeout/cancel/cleanup",
+      "expected": "No automatic persistence; manual fallback; bounded resources",
+      "layer": "Conditional OCR contract"
+    },
+    {
+      "id": "ADR-001",
+      "kind": "adr",
+      "path": "adr/ADR-001-modular-monolith.md",
+      "status": "Review",
+      "status_reason": "Review"
+    },
+    {
+      "id": "ADR-002",
+      "kind": "adr",
+      "path": "adr/ADR-002-storage-orm.md",
+      "status": "Review",
+      "status_reason": "Blocked"
+    },
+    {
+      "id": "ADR-003",
+      "kind": "adr",
+      "path": "adr/ADR-003-authentication.md",
+      "status": "Review",
+      "status_reason": "Blocked"
+    },
+    {
+      "id": "ADR-004",
+      "kind": "adr",
+      "path": "adr/ADR-004-ocr-boundary.md",
+      "status": "Review",
+      "status_reason": "Review"
+    },
+    {
+      "id": "ADR-005",
+      "kind": "adr",
+      "path": "adr/ADR-005-observability.md",
+      "status": "Review",
+      "status_reason": "Review"
+    },
+    {
+      "id": "WF-00",
+      "kind": "screen",
+      "path": "06-navigation/navigation.md",
+      "status": "Review",
+      "purpose": "Preview không dùng dữ liệu riêng"
+    },
+    {
+      "id": "WF-01",
+      "kind": "screen",
+      "path": "06-navigation/navigation.md",
+      "status": "Review",
+      "purpose": "Attention groups, reasons, search/location, all/depleted tab"
+    },
+    {
+      "id": "WF-02",
+      "kind": "screen",
+      "path": "06-navigation/navigation.md",
+      "status": "Review",
+      "purpose": "Name, amount/unit khi create, location, optional date/certainty/label/source/opened note"
+    },
+    {
+      "id": "WF-03",
+      "kind": "screen",
+      "path": "06-navigation/navigation.md",
+      "status": "Review",
+      "purpose": "Current amount/version/date context/attention reason"
+    },
+    {
+      "id": "WF-04",
+      "kind": "screen",
+      "path": "06-navigation/navigation.md",
+      "status": "Review",
+      "purpose": "Action, amount/actual amount, reason khi recount; current quantity"
+    },
+    {
+      "id": "WF-05",
+      "kind": "screen",
+      "path": "06-navigation/navigation.md",
+      "status": "Review",
+      "purpose": "Read-only movement history; trash là view riêng cùng layout list"
+    },
+    {
+      "id": "WF-06",
+      "kind": "screen",
+      "path": "06-navigation/navigation.md",
+      "status": "Review",
+      "purpose": "Timezone, attention lead"
+    },
+    {
+      "id": "DF-01",
+      "kind": "data-flow",
+      "path": "06-data-model/data-flows.md",
+      "status": "Review",
+      "purpose": "Capture"
+    },
+    {
+      "id": "DF-02",
+      "kind": "data-flow",
+      "path": "06-data-model/data-flows.md",
+      "status": "Review",
+      "purpose": "Review"
+    },
+    {
+      "id": "DF-03",
+      "kind": "data-flow",
+      "path": "06-data-model/data-flows.md",
+      "status": "Review",
+      "purpose": "Resolve/reconcile"
+    },
+    {
+      "id": "DF-04",
+      "kind": "data-flow",
+      "path": "06-data-model/data-flows.md",
+      "status": "Review",
+      "purpose": "Preferences/identity continuation"
+    }
+  ],
+  "edges": [
+    {
+      "from": "P1",
+      "to": "CH-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "CH-01",
+      "to": "NEED-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "NEED-01",
+      "to": "OPP-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "P2",
+      "to": "CH-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "CH-02",
+      "to": "NEED-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "NEED-02",
+      "to": "OPP-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "P3",
+      "to": "CH-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "CH-03",
+      "to": "NEED-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "NEED-03",
+      "to": "OPP-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "NEED-01",
+      "to": "ST-V1-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-01",
+      "to": "FR-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-01",
+      "to": "FR-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-01",
+      "to": "FR-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "NEED-02",
+      "to": "ST-V1-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-02",
+      "to": "FR-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-02",
+      "to": "FR-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-02",
+      "to": "FR-05",
+      "relation": "traces-to"
+    },
+    {
+      "from": "NEED-03",
+      "to": "ST-V1-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-03",
+      "to": "FR-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-03",
+      "to": "FR-06",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-03",
+      "to": "FR-07",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-03",
+      "to": "FR-08",
+      "relation": "traces-to"
+    },
+    {
+      "from": "NEED-03",
+      "to": "ST-V1-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-04",
+      "to": "FR-10",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-04",
+      "to": "NFR-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-04",
+      "to": "NFR-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "NEED-03",
+      "to": "ST-V1-05",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-05",
+      "to": "NFR-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-05",
+      "to": "NFR-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ST-V1-05",
+      "to": "NFR-07",
+      "relation": "traces-to"
+    },
+    {
+      "from": "NEED-01",
+      "to": "F-01",
+      "relation": "justifies"
+    },
+    {
+      "from": "NEED-03",
+      "to": "F-01",
+      "relation": "justifies"
+    },
+    {
+      "from": "FR-01",
+      "to": "F-01",
+      "relation": "realized-by"
+    },
+    {
+      "from": "F-01",
+      "to": "UC-01",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "NEED-01",
+      "to": "F-02",
+      "relation": "justifies"
+    },
+    {
+      "from": "NEED-02",
+      "to": "F-02",
+      "relation": "justifies"
+    },
+    {
+      "from": "FR-02",
+      "to": "F-02",
+      "relation": "realized-by"
+    },
+    {
+      "from": "FR-03",
+      "to": "F-02",
+      "relation": "realized-by"
+    },
+    {
+      "from": "F-02",
+      "to": "UC-02",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "F-02",
+      "to": "UC-03",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "NEED-02",
+      "to": "F-03",
+      "relation": "justifies"
+    },
+    {
+      "from": "FR-03",
+      "to": "F-03",
+      "relation": "realized-by"
+    },
+    {
+      "from": "F-03",
+      "to": "UC-03",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "NEED-03",
+      "to": "F-04",
+      "relation": "justifies"
+    },
+    {
+      "from": "FR-04",
+      "to": "F-04",
+      "relation": "realized-by"
+    },
+    {
+      "from": "F-04",
+      "to": "UC-04",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "F-04",
+      "to": "UC-05",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "NEED-02",
+      "to": "F-05",
+      "relation": "justifies"
+    },
+    {
+      "from": "NEED-03",
+      "to": "F-05",
+      "relation": "justifies"
+    },
+    {
+      "from": "FR-05",
+      "to": "F-05",
+      "relation": "realized-by"
+    },
+    {
+      "from": "FR-06",
+      "to": "F-05",
+      "relation": "realized-by"
+    },
+    {
+      "from": "F-05",
+      "to": "UC-06",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "F-05",
+      "to": "UC-07",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "NEED-03",
+      "to": "F-06",
+      "relation": "justifies"
+    },
+    {
+      "from": "FR-07",
+      "to": "F-06",
+      "relation": "realized-by"
+    },
+    {
+      "from": "F-06",
+      "to": "UC-08",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "NEED-03",
+      "to": "F-07",
+      "relation": "justifies"
+    },
+    {
+      "from": "FR-08",
+      "to": "F-07",
+      "relation": "realized-by"
+    },
+    {
+      "from": "F-07",
+      "to": "UC-09",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "F-07",
+      "to": "UC-10",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "NEED-01",
+      "to": "F-08",
+      "relation": "justifies"
+    },
+    {
+      "from": "NEED-02",
+      "to": "F-08",
+      "relation": "justifies"
+    },
+    {
+      "from": "FR-09",
+      "to": "F-08",
+      "relation": "realized-by"
+    },
+    {
+      "from": "F-08",
+      "to": "UC-11",
+      "relation": "exercised-by"
+    },
+    {
+      "from": "FR-10",
+      "to": "UC-00",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-01",
+      "to": "UC-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-01",
+      "to": "API-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-02",
+      "to": "UC-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-02",
+      "to": "API-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-03",
+      "to": "UC-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-03",
+      "to": "API-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-03",
+      "to": "API-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-04",
+      "to": "UC-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-04",
+      "to": "API-05",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-04",
+      "to": "UC-05",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-05",
+      "to": "API-05",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-05",
+      "to": "UC-06",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-06",
+      "to": "API-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-06",
+      "to": "UC-07",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-07",
+      "to": "API-06",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-07",
+      "to": "UC-08",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-08",
+      "to": "API-07",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-08",
+      "to": "UC-09",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-09",
+      "to": "API-08",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-09",
+      "to": "API-09",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-08",
+      "to": "UC-10",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-10",
+      "to": "API-09",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-10",
+      "to": "API-10",
+      "relation": "traces-to"
+    },
+    {
+      "from": "FR-09",
+      "to": "UC-11",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-11",
+      "to": "API-11",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-11",
+      "to": "API-12",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-01",
+      "to": "SC-01",
+      "relation": "scenario"
+    },
+    {
+      "from": "SC-01",
+      "to": "UF-01",
+      "relation": "interaction"
+    },
+    {
+      "from": "UC-01",
+      "to": "SC-02",
+      "relation": "scenario"
+    },
+    {
+      "from": "SC-02",
+      "to": "UF-02",
+      "relation": "interaction"
+    },
+    {
+      "from": "UC-02",
+      "to": "SC-03",
+      "relation": "scenario"
+    },
+    {
+      "from": "UC-03",
+      "to": "SC-03",
+      "relation": "scenario"
+    },
+    {
+      "from": "SC-03",
+      "to": "UF-03",
+      "relation": "interaction"
+    },
+    {
+      "from": "UC-03",
+      "to": "SC-04",
+      "relation": "scenario"
+    },
+    {
+      "from": "UC-04",
+      "to": "SC-04",
+      "relation": "scenario"
+    },
+    {
+      "from": "SC-04",
+      "to": "UF-04",
+      "relation": "interaction"
+    },
+    {
+      "from": "UC-04",
+      "to": "SC-05",
+      "relation": "scenario"
+    },
+    {
+      "from": "SC-05",
+      "to": "UF-05",
+      "relation": "interaction"
+    },
+    {
+      "from": "UC-05",
+      "to": "SC-06",
+      "relation": "scenario"
+    },
+    {
+      "from": "SC-06",
+      "to": "UF-06",
+      "relation": "interaction"
+    },
+    {
+      "from": "UC-07",
+      "to": "SC-07",
+      "relation": "scenario"
+    },
+    {
+      "from": "SC-07",
+      "to": "UF-07",
+      "relation": "interaction"
+    },
+    {
+      "from": "UC-04",
+      "to": "SC-08",
+      "relation": "scenario"
+    },
+    {
+      "from": "SC-08",
+      "to": "UF-05",
+      "relation": "interaction"
+    },
+    {
+      "from": "UC-04",
+      "to": "SC-09",
+      "relation": "scenario"
+    },
+    {
+      "from": "UC-09",
+      "to": "SC-10",
+      "relation": "scenario"
+    },
+    {
+      "from": "UC-10",
+      "to": "SC-10",
+      "relation": "scenario"
+    },
+    {
+      "from": "SC-10",
+      "to": "UF-09",
+      "relation": "interaction"
+    },
+    {
+      "from": "UC-06",
+      "to": "SC-11",
+      "relation": "scenario"
+    },
+    {
+      "from": "SC-11",
+      "to": "UF-08",
+      "relation": "interaction"
+    },
+    {
+      "from": "UC-04",
+      "to": "SC-12",
+      "relation": "scenario"
+    },
+    {
+      "from": "UC-05",
+      "to": "SC-12",
+      "relation": "scenario"
+    },
+    {
+      "from": "UC-08",
+      "to": "SC-12",
+      "relation": "scenario"
+    },
+    {
+      "from": "UC-03",
+      "to": "SC-14",
+      "relation": "scenario"
+    },
+    {
+      "from": "UC-11",
+      "to": "SC-14",
+      "relation": "scenario"
+    },
+    {
+      "from": "UC-03",
+      "to": "SC-15",
+      "relation": "scenario"
+    },
+    {
+      "from": "UC-01",
+      "to": "UF-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-01",
+      "to": "UF-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-02",
+      "to": "UF-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-03",
+      "to": "UF-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-03",
+      "to": "UF-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-04",
+      "to": "UF-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-04",
+      "to": "UF-05",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-05",
+      "to": "UF-06",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-07",
+      "to": "UF-07",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-08",
+      "to": "UF-07",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-06",
+      "to": "UF-08",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-09",
+      "to": "UF-09",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-10",
+      "to": "UF-09",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-11",
+      "to": "UF-10",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UC-00",
+      "to": "UF-11",
+      "relation": "traces-to"
+    },
+    {
+      "from": "ENT-01",
+      "to": "FIELD::users.id",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-01",
+      "to": "FIELD::users.identity_subject",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-01",
+      "to": "FIELD::users.display_name",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-01",
+      "to": "FIELD::users.timezone",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-01",
+      "to": "FIELD::users.attention_lead_days",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-01",
+      "to": "FIELD::users.version",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-01",
+      "to": "FIELD::users.created_at",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-01",
+      "to": "FIELD::users.updated_at",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.id",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.user_id",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.name",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.storage_location",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.remaining_quantity",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.unit",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.expiry_date",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.date_certainty",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.date_source",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.date_label_type",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.opened_on",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.note",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.version",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.deleted_at",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.created_at",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-02",
+      "to": "FIELD::food_entries.updated_at",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-03",
+      "to": "FIELD::stock_movements.id",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-03",
+      "to": "FIELD::stock_movements.entry_id",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-03",
+      "to": "FIELD::stock_movements.kind",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-03",
+      "to": "FIELD::stock_movements.quantity_before",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-03",
+      "to": "FIELD::stock_movements.after",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-03",
+      "to": "FIELD::stock_movements.reason",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-03",
+      "to": "FIELD::stock_movements.recorded_at",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-04",
+      "to": "FIELD::api_requests.user_id",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-04",
+      "to": "FIELD::api_requests.idempotency_key",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-04",
+      "to": "FIELD::api_requests.operation",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-04",
+      "to": "FIELD::api_requests.request_hash",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-04",
+      "to": "FIELD::api_requests.response_status",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-04",
+      "to": "FIELD::api_requests.body",
+      "relation": "owns-field"
+    },
+    {
+      "from": "ENT-04",
+      "to": "FIELD::api_requests.created_at",
+      "relation": "owns-field"
+    },
+    {
+      "from": "UC-00",
+      "to": "ENT-01",
+      "relation": "uses"
+    },
+    {
+      "from": "UC-11",
+      "to": "ENT-01",
+      "relation": "uses"
+    },
+    {
+      "from": "UC-01",
+      "to": "ENT-02",
+      "relation": "uses"
+    },
+    {
+      "from": "UC-09",
+      "to": "ENT-02",
+      "relation": "uses"
+    },
+    {
+      "from": "UC-01",
+      "to": "ENT-03",
+      "relation": "uses"
+    },
+    {
+      "from": "UC-04",
+      "to": "ENT-03",
+      "relation": "uses"
+    },
+    {
+      "from": "API-01",
+      "to": "VT-01",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-01",
+      "to": "VT-02",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-01",
+      "to": "VT-14",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-02",
+      "to": "TC-18",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-02",
+      "to": "TC-19",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-02",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-03",
+      "to": "TC-19",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-03",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-04",
+      "to": "VT-14",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-04",
+      "to": "VT-15",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-04",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-05",
+      "to": "VT-03",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-05",
+      "to": "VT-04",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-05",
+      "to": "VT-05",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-05",
+      "to": "VT-06",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-05",
+      "to": "VT-07",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-05",
+      "to": "VT-10",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-05",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-06",
+      "to": "VT-08",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-06",
+      "to": "VT-09",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-06",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-07",
+      "to": "VT-10",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-07",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-08",
+      "to": "VT-11",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-08",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-09",
+      "to": "VT-11",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-09",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-10",
+      "to": "VT-11",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-10",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-11",
+      "to": "TC-20",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-11",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-12",
+      "to": "VT-13",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-12",
+      "to": "TC-20",
+      "relation": "tested-by"
+    },
+    {
+      "from": "API-12",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-01",
+      "to": "VT-01",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-01",
+      "to": "VT-02",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-01",
+      "to": "VT-14",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-02",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-02",
+      "to": "TC-18",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-03",
+      "to": "VT-13",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-03",
+      "to": "TC-19",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-04",
+      "to": "VT-03",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-04",
+      "to": "VT-04",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-04",
+      "to": "VT-05",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-04",
+      "to": "VT-06",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-04",
+      "to": "VT-07",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-04",
+      "to": "VT-10",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-05",
+      "to": "VT-14",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-05",
+      "to": "VT-15",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-06",
+      "to": "VT-08",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-06",
+      "to": "VT-09",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-07",
+      "to": "VT-10",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-07",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-08",
+      "to": "VT-11",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-09",
+      "to": "VT-13",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-09",
+      "to": "TC-20",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-10",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-10",
+      "to": "VT-15",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-01",
+      "to": "VT-12",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-02",
+      "to": "VT-02",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-02",
+      "to": "VT-05",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-02",
+      "to": "VT-06",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-03",
+      "to": "VT-01",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-03",
+      "to": "VT-14",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-03",
+      "to": "TC-21",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-04",
+      "to": "VT-15",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-05",
+      "to": "VT-17",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-06",
+      "to": "VT-13",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-07",
+      "to": "VT-16",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-08",
+      "to": "TC-22",
+      "relation": "tested-by"
+    },
+    {
+      "from": "NFR-01",
+      "to": "TC-23",
+      "relation": "tested-by"
+    },
+    {
+      "from": "FR-10",
+      "to": "TC-23",
+      "relation": "tested-by"
+    },
+    {
+      "from": "UC-00",
+      "to": "WF-00",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-00",
+      "to": "WF-02",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-00",
+      "to": "WF-04",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-01",
+      "to": "WF-02",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-02",
+      "to": "WF-01",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-03",
+      "to": "WF-01",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-03",
+      "to": "WF-03",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-04",
+      "to": "WF-04",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-05",
+      "to": "WF-04",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-06",
+      "to": "WF-02",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-07",
+      "to": "WF-04",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-08",
+      "to": "WF-05",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-09",
+      "to": "WF-03",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-09",
+      "to": "WF-05",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-10",
+      "to": "WF-05",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-10",
+      "to": "WF-03",
+      "relation": "presented-by"
+    },
+    {
+      "from": "UC-11",
+      "to": "WF-06",
+      "relation": "presented-by"
+    },
+    {
+      "from": "ENT-01",
+      "to": "API-01",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-02",
+      "to": "API-01",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-03",
+      "to": "API-01",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-04",
+      "to": "API-01",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-01",
+      "to": "API-02",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-02",
+      "to": "API-02",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-01",
+      "to": "API-03",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-02",
+      "to": "API-03",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-02",
+      "to": "API-04",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-04",
+      "to": "API-04",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-02",
+      "to": "API-05",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-03",
+      "to": "API-05",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-04",
+      "to": "API-05",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-02",
+      "to": "API-06",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-03",
+      "to": "API-06",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-04",
+      "to": "API-06",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-02",
+      "to": "API-07",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-03",
+      "to": "API-07",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-02",
+      "to": "API-08",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-04",
+      "to": "API-08",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-01",
+      "to": "API-09",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-02",
+      "to": "API-09",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-02",
+      "to": "API-10",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-04",
+      "to": "API-10",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-01",
+      "to": "API-11",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-01",
+      "to": "API-12",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "ENT-04",
+      "to": "API-12",
+      "relation": "accessed-through"
+    },
+    {
+      "from": "UF-01",
+      "to": "DF-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UF-02",
+      "to": "DF-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-01",
+      "to": "ENT-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-01",
+      "to": "ENT-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-01",
+      "to": "ENT-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UF-03",
+      "to": "DF-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UF-04",
+      "to": "DF-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-02",
+      "to": "ENT-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-02",
+      "to": "ENT-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-02",
+      "to": "ENT-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UF-05",
+      "to": "DF-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UF-06",
+      "to": "DF-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UF-07",
+      "to": "DF-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UF-08",
+      "to": "DF-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UF-09",
+      "to": "DF-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-03",
+      "to": "ENT-02",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-03",
+      "to": "ENT-03",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-03",
+      "to": "ENT-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UF-10",
+      "to": "DF-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "UF-11",
+      "to": "DF-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-04",
+      "to": "ENT-01",
+      "relation": "traces-to"
+    },
+    {
+      "from": "DF-04",
+      "to": "ENT-04",
+      "relation": "traces-to"
+    },
+    {
+      "from": "API-01",
+      "to": "WF-02",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-02",
+      "to": "WF-01",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-02",
+      "to": "WF-03",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-03",
+      "to": "WF-01",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-03",
+      "to": "WF-03",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-05",
+      "to": "WF-04",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-04",
+      "to": "WF-02",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-06",
+      "to": "WF-04",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-07",
+      "to": "WF-05",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-08",
+      "to": "WF-03",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-08",
+      "to": "WF-05",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-09",
+      "to": "WF-03",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-09",
+      "to": "WF-05",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-10",
+      "to": "WF-05",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-10",
+      "to": "WF-03",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-11",
+      "to": "WF-06",
+      "relation": "consumed-by"
+    },
+    {
+      "from": "API-12",
+      "to": "WF-06",
+      "relation": "consumed-by"
+    }
+  ],
+  "gate_statuses": [
+    [
+      "Gate1 Evidence",
+      "Review",
+      "Live Canva/Docs read; original interview/Figma evidence incomplete",
+      "Persona/needs provenance + missing source registry"
+    ],
+    [
+      "Gate2 Requirements",
+      "Review",
+      "FR/NFR/features linked; stakeholder acceptance + performance targets open",
+      "Testable baseline and scope approval"
+    ],
+    [
+      "Gate3 Interaction",
+      "Review",
+      "12 UC/15SC/11UF with navigation/recovery; browser/user study not run",
+      "Task consistency + keyboard/back/draft evidence"
+    ],
+    [
+      "Gate4 Data",
+      "Review",
+      "Dictionary/schema/ERD linked; real DB/ORM invariants untested",
+      "Chosen mappings + migration/concurrency tests"
+    ],
+    [
+      "Gate5 Architecture",
+      "Review",
+      "Explicit owners/components/contract; auth/ORM ADR Blocked",
+      "Stable reviewed interfaces + trust/transaction boundaries"
+    ],
+    [
+      "Gate6 Readiness",
+      "Blocked",
+      "Demo DTO/auth/clock mismatch and production choices unresolved",
+      "Contract parity + decisions; OCR only if promoted"
+    ],
+    [
+      "Gate7 Quality",
+      "Blocked",
+      "Plans exist; production/DB/browser/usability tests not run",
+      "Executed affected checks + stage task/restore evidence"
+    ]
+  ],
+  "limits": "Structural coverage is not empirical user validation or executed acceptance tests."
+}

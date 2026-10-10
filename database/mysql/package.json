@@ -1,0 +1,7 @@
+{
+  "name": "expiry-mysql-verification",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node tests/run.mjs", "verify:static": "node tests/static.mjs"},
+  "dependencies": {"mysql2": "^3.15.3"}
+}

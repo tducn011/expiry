@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-10-10T04:31:15.988Z",
+  "identity": {
+    "db": "expiry_dev",
+    "version": "8.4.11",
+    "time_zone": "+00:00",
+    "isolation": "REPEATABLE-READ",
+    "engine": "InnoDB",
+    "authenticated_account": "expiry_app@%"
+  },
+  "tableNames": [
+    "api_requests",
+    "food_entries",
+    "schema_migrations",
+    "stock_movements",
+    "users"
+  ],
+  "counts": [
+    {
+      "t": "users",
+      "n": "2"
+    },
+    {
+      "t": "food_entries",
+      "n": "4"
+    },
+    {
+      "t": "stock_movements",
+      "n": "8"
+    },
+    {
+      "t": "api_requests",
+      "n": "0"
+    }
+  ],
+  "migration": {
+    "applied": false,
+    "hash": "32f2806e6bc4a2b271e3b93a8978352df6910334d3217501647b0729567b32cc"
+  },
+  "seed_fingerprint_before": "f4ccbab03ee484bd097a8f5a48a8f8bfd9adf416f692c69ebabae4ea962dc08b",
+  "seed_fingerprint_after": "f4ccbab03ee484bd097a8f5a48a8f8bfd9adf416f692c69ebabae4ea962dc08b",
+  "health": "healthy",
+  "binding": [
+    {
+      "HostIp": "127.0.0.1",
+      "HostPort": "3307"
+    }
+  ],
+  "image": [
+    "mysql@sha256:6ea90827b1100f8f2ae306a539f86d2c264a26ed435a2a9f75551dd5c3aeb242"
+  ],
+  "dockerVersion": "29.1.3"
+}

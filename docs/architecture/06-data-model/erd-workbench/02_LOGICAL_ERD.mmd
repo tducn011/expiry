@@ -1,0 +1,50 @@
+erDiagram
+  USERS ||--o{ FOOD_ENTRIES : owns
+  USERS ||--o{ API_REQUESTS : deduplicates
+  FOOD_ENTRIES ||--|{ STOCK_MOVEMENTS : records_after_commit
+  USERS {
+    UUID id PK
+    string identity_subject UK
+    string display_name
+    IANA_timezone timezone
+    integer attention_lead_days
+    integer version
+    UTC_instant created_at
+    UTC_instant updated_at
+  }
+  FOOD_ENTRIES {
+    UUID id PK
+    UUID user_id FK
+    string name
+    string storage_location
+    decimal remaining_quantity
+    enum unit
+    calendar_date expiry_date "nullable"
+    enum date_certainty
+    enum date_source
+    enum date_label_type
+    calendar_date opened_on "nullable"
+    string note "nullable"
+    integer version
+    UTC_instant deleted_at "nullable"
+    UTC_instant created_at
+    UTC_instant updated_at
+  }
+  STOCK_MOVEMENTS {
+    UUID id PK
+    UUID entry_id FK
+    enum kind
+    decimal quantity_before
+    decimal quantity_after
+    string reason "nullable; required adjustment"
+    UTC_instant recorded_at
+  }
+  API_REQUESTS {
+    UUID user_id PK,FK
+    string idempotency_key PK
+    string operation "includes normalized target"
+    SHA256 request_hash
+    integer response_status "nullable reservation"
+    JSON response_body "SQL NULL reservation; JSON null 204"
+    UTC_instant created_at
+  }

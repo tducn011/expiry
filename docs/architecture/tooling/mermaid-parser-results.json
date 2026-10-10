@@ -1,0 +1,131 @@
+{
+  "version": "11.17.2",
+  "total": 24,
+  "passed": 21,
+  "results": [
+    {
+      "file": "docs/architecture/06-navigation/navigation.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/08-consequences/impact-analysis.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/10-data-flows/data-flows.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/10-data-flows/data-flows.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/13-erd/erd.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/14-system-architecture/components.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/14-system-architecture/sequences.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/14-system-architecture/sequences.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/14-system-architecture/sequences.md",
+      "index": 3,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/14-system-architecture/sequences.md",
+      "index": 4,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/18-auth-security/authentication.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/18-auth-security/authentication.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/21-deployment/deployment.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_1.mmd",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_2.mmd",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_3.mmd",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_1.mmd",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_2.mmd",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_3.mmd",
+      "index": 1,
+      "status": "FAIL",
+      "error": "Error: Parse error on line 11:\n...e key / check replay alt Key already co\n-----------------------^\nExpecting '()', 'SOLID_OPEN_ARROW', 'DOTTED_OPEN_ARROW', 'SOLID_ARROW', 'SOLID_ARROW_TOP', 'SOLID_ARROW_BOTTOM', 'STICK_ARROW_TOP', 'STICK_ARROW_BOTTOM', 'SOLID_ARROW_TOP_DOTTED', 'SOLID_ARROW_BOTTOM_DOTTED', 'STICK_ARROW_TOP_DOTTED', 'STICK_ARROW_BOTTOM_DOTTED', 'SOLID_ARROW_TOP_REVERSE', 'SOLID_ARROW_BOTTOM_REVERSE', 'STICK_ARROW_TOP_REVERSE', 'STICK_ARROW_BOTTOM_REVERSE', 'SOLID_ARROW_TOP_REVERSE_DOTTED', 'SOLID_ARROW_BOTTOM_REVERSE_DOTTED', 'STICK_ARROW_TOP_REVERSE_DOTTED', 'STICK_ARROW_BOTTOM_REVERSE_DOTTED', 'BIDIRECTIONAL_SOLID_ARROW', 'DOTTED_ARROW', 'BIDIRECTIONAL_DOTTED_ARROW', 'SOLID_CROSS', 'DOTTED_CROSS', 'SOLID_POINT', 'DOTTED_POINT', got 'NEWLINE'"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_4.mmd",
+      "index": 1,
+      "status": "FAIL",
+      "error": "Error: Parse error on line 12:\n...rt before pagination S-->>API: items + \n-----------------------^\nExpecting '()', 'SOLID_OPEN_ARROW', 'DOTTED_OPEN_ARROW', 'SOLID_ARROW', 'SOLID_ARROW_TOP', 'SOLID_ARROW_BOTTOM', 'STICK_ARROW_TOP', 'STICK_ARROW_BOTTOM', 'SOLID_ARROW_TOP_DOTTED', 'SOLID_ARROW_BOTTOM_DOTTED', 'STICK_ARROW_TOP_DOTTED', 'STICK_ARROW_BOTTOM_DOTTED', 'SOLID_ARROW_TOP_REVERSE', 'SOLID_ARROW_BOTTOM_REVERSE', 'STICK_ARROW_TOP_REVERSE', 'STICK_ARROW_BOTTOM_REVERSE', 'SOLID_ARROW_TOP_REVERSE_DOTTED', 'SOLID_ARROW_BOTTOM_REVERSE_DOTTED', 'STICK_ARROW_TOP_REVERSE_DOTTED', 'STICK_ARROW_BOTTOM_REVERSE_DOTTED', 'BIDIRECTIONAL_SOLID_ARROW', 'DOTTED_ARROW', 'BIDIRECTIONAL_DOTTED_ARROW', 'SOLID_CROSS', 'DOTTED_CROSS', 'SOLID_POINT', 'DOTTED_POINT', got 'NEWLINE'"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_5.mmd",
+      "index": 1,
+      "status": "FAIL",
+      "error": "Error: Parse error on line 10:\n...: Begin; reserve key alt Replay with sa\n-----------------------^\nExpecting '()', 'SOLID_OPEN_ARROW', 'DOTTED_OPEN_ARROW', 'SOLID_ARROW', 'SOLID_ARROW_TOP', 'SOLID_ARROW_BOTTOM', 'STICK_ARROW_TOP', 'STICK_ARROW_BOTTOM', 'SOLID_ARROW_TOP_DOTTED', 'SOLID_ARROW_BOTTOM_DOTTED', 'STICK_ARROW_TOP_DOTTED', 'STICK_ARROW_BOTTOM_DOTTED', 'SOLID_ARROW_TOP_REVERSE', 'SOLID_ARROW_BOTTOM_REVERSE', 'STICK_ARROW_TOP_REVERSE', 'STICK_ARROW_BOTTOM_REVERSE', 'SOLID_ARROW_TOP_REVERSE_DOTTED', 'SOLID_ARROW_BOTTOM_REVERSE_DOTTED', 'STICK_ARROW_TOP_REVERSE_DOTTED', 'STICK_ARROW_BOTTOM_REVERSE_DOTTED', 'BIDIRECTIONAL_SOLID_ARROW', 'DOTTED_ARROW', 'BIDIRECTIONAL_DOTTED_ARROW', 'SOLID_CROSS', 'DOTTED_CROSS', 'SOLID_POINT', 'DOTTED_POINT', got 'NEWLINE'"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_6.mmd",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_7.mmd",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "Expiry_System_Design_2026-10-08/diagrams/05_Data_Definitions_and_ERD_1.mmd",
+      "index": 1,
+      "status": "PASS"
+    }
+  ],
+  "limits": "Syntax parse only; no visual rendering, full UML/DFD semantics or PlantUML grammar validation."
+}

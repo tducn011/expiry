@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "timestamp_utc": "2026-10-10T04:20:48.810484+00:00",
+  "connection_name": "Expiry Local Docker",
+  "connection_saved": true,
+  "password_saved": false,
+  "db": "expiry_dev",
+  "version": "8.4.11",
+  "gui_button_clicked": false,
+  "model_open_command": "--model docs/erd/expiry_mysql.mwb",
+  "open_model_tables": [],
+  "model_load_at_script_time": "pending startup model load"
+}

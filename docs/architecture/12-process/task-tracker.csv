@@ -1,0 +1,92 @@
+,Date,Track,Priority,Task ID,Task,Deliverable,Lead,Co-owner 1,Co-owner 2,Reviewer,Status,Target Deadline,Deadline Type,Acceptance Criteria,Dependency,Evidence / Link,Notes
+0,06/10/2026,System Engineering,P0,SE-01,Chốt scope User Flow theo 3 chức năng chính,1 scope note + flow backbone,Nguyễn Tâm Đức,Tiến Đạt,Member 5 (rename),Tuấn Kiệt,In progress,11/10/2026,Planning target,Flow phải đi Start → Goal → Task/Screen/Decision và phủ đủ 3 chức năng chính,-,,
+1,06/10/2026,Advanced Web Design,P1,AWD-01,"Đọc cấu trúc backend hiện tại, xác định module và trách nhiệm",Backend structure map,Huy Hoàng,Tuấn Kiệt,,Nguyễn Tâm Đức,In progress,11/10/2026,End-of-week target,Chỉ ra route/middleware/controller/service/model hoặc lớp tương đương; không chỉ kể tên folder,-,,
+2,06/10/2026,Research,P0,RES-01,Research: vì sao authentication không nhất thiết đặt ngay đầu flow; liệt kê app auth-first và feature-triggered auth,Research note + examples + conclusion,Huy Hoàng,Tuấn Kiệt,,Nguyễn Tâm Đức,In progress,06/10/2026,Explicit: today,"Có ví dụ 2 nhóm app, lý do UX/data/state, và kết luận áp dụng cho Expiry",Ưu tiên hoàn thành trước RES-02,,
+3,07/10/2026,System Engineering,P0,SE-02,Vẽ User Flow v1: Start → goals → tasks → screens/decisions,User Flow v1,Tiến Đạt,Nguyễn Tâm Đức,Member 5 (rename),Tuấn Kiệt,Not started,11/10/2026,Planning target,Không bọc toàn flow bằng auth; mỗi nhánh phải có goal rõ và đường quay lại hợp lý,SE-01,,
+4,07/10/2026,Advanced Web Design,P1,AWD-02,Trace 1 API request đi qua các gate,API gate sequence,Tuấn Kiệt,Huy Hoàng,,Nguyễn Tâm Đức,Not started,11/10/2026,End-of-week target,"Trace được request → route → middleware/auth/validation → controller/service → data access → response, hoặc map đúng theo code thực tế",AWD-01,,
+5,07/10/2026,Research,P0,RES-01B,Chốt evidence và recommendation cho vị trí authentication trong Expiry,1-page conclusion,Huy Hoàng,Tuấn Kiệt,,Nguyễn Tâm Đức,Not started,07/10/2026,Follow-up,Phân biệt auth gate với app-entry; nêu khi nào bắt buộc login và khi nào guest flow hợp lý,RES-01,,
+6,08/10/2026,System Engineering,P0,SE-03,Gắn authentication vào đúng action cần identity/persistence/sync,Auth points trên User Flow,Member 5 (rename),Nguyễn Tâm Đức,Tiến Đạt,Huy Hoàng,Not started,11/10/2026,Planning target,Mỗi auth point phải giải thích vì sao cần auth tại đó; không đặt theo thói quen,"SE-02, RES-01B",,
+7,08/10/2026,Advanced Web Design,P1,AWD-03,Map MVC và ownership của validation/business logic/data access,MVC responsibility map,Huy Hoàng,Tuấn Kiệt,,Nguyễn Tâm Đức,Not started,11/10/2026,End-of-week target,"Không duplicate business rule; chỉ rõ layer nào validate input, xử lý rule, query DB",AWD-02,,
+8,09/10/2026,System Engineering,P0,SE-04,Review notation + connections + decision branches của User Flow,Reviewed flow v1.1,Tiến Đạt,Member 5 (rename),Nguyễn Tâm Đức,Tuấn Kiệt,Not started,11/10/2026,Planning target,"Không có nhánh cụt, connector mơ hồ, screen/action lẫn ký hiệu","SE-02, SE-03",,
+9,09/10/2026,Advanced Web Design,P1,AWD-04,DB warm-up từ data flow: tìm entity và relation candidates,Entity/relation draft,Tuấn Kiệt,Huy Hoàng,Tiến Đạt,Nguyễn Tâm Đức,Not started,27/10/2026,2–3 week readiness target,Mỗi entity/relation phải trace ngược được về data flow/use case,AWD-03,,
+10,10/10/2026,System Engineering,P0,SE-05,Review User Flow theo 3 chức năng chính và goal coverage,User Flow v2,Nguyễn Tâm Đức,Tiến Đạt,Member 5 (rename),Huy Hoàng,Not started,11/10/2026,Planning target,Mỗi core function có complete path Start → Goal; auth chỉ xuất hiện nơi cần,SE-04,,
+11,10/10/2026,Advanced Web Design,P1,AWD-05,Mỗi người tự giải thích API gates + MVC bằng 1 request thật,Walkthrough + diagram,Huy Hoàng,Tuấn Kiệt,,Nguyễn Tâm Đức,Not started,11/10/2026,End-of-week target,"Huy và Kiệt tự trace độc lập được request, nêu input/state/side effect/output","AWD-02, AWD-03",,
+12,11/10/2026,System Engineering,P0,SE-06,Finalize User Flow package,Final User Flow + notes,Nguyễn Tâm Đức,Tiến Đạt,Member 5 (rename),Tuấn Kiệt,Not started,11/10/2026,Planning target,"Final clean flow, 3 functions, auth rationale, no broken connections",SE-05,,
+13,11/10/2026,Advanced Web Design,P1,AWD-06,Checkpoint cuối tuần: backend/API gate understanding,Backend checkpoint,Tuấn Kiệt,Huy Hoàng,,Nguyễn Tâm Đức,Not started,11/10/2026,Explicit: end of week,Cả Huy và Kiệt đều giải thích được request lifecycle và nơi từng gate nằm trong code,AWD-05,,
+14,12/10/2026,Research,P1,RES-02,"Chọn 1 app tương tự Expiry, tải và lập observation checklist",Chosen app + checklist,Huy Hoàng,Tuấn Kiệt,,Tiến Đạt,Not started,18/10/2026,Next-week target,Chỉ chọn app có flow đủ gần để quan sát item tracking/reminder/status/action,RES-01 hoàn tất trước,,
+15,13/10/2026,Research,P1,RES-03,Inventory toàn bộ screen nhìn thấy từ launch đến key goals,Screen inventory,Huy Hoàng,Member 5 (rename),,Tuấn Kiệt,Not started,18/10/2026,Next-week target,"Tên screen, entry point, UI elements, visible actions; không suy đoán screen chưa mở",RES-02,,
+16,14/10/2026,Research,P1,RES-04,Bấm từng nút và trace screen-to-screen navigation,Navigation trace,Tuấn Kiệt,Huy Hoàng,Member 5 (rename),Nguyễn Tâm Đức,Not started,18/10/2026,Next-week target,"Mỗi button/action có source screen, action, destination/state change",RES-03,,
+17,15/10/2026,Research,P1,RES-05,Ghi chức năng từng screen + auth trigger quan sát được,Function/auth observation table,Huy Hoàng,Tuấn Kiệt,,Tiến Đạt,Not started,18/10/2026,Next-week target,Tách observed fact khỏi inference; note auth xảy ra lúc nào và vì sao có thể xảy ra,RES-04,,
+18,16/10/2026,Research,P1,RES-06,Chuyển observation thành User Flow v1 của app tương tự,Comparable app User Flow v1,Tuấn Kiệt,Huy Hoàng,,Nguyễn Tâm Đức,Not started,18/10/2026,Next-week target,"Flow chỉ dùng screen/action đã observe, có goal và decision rõ",RES-05,,
+19,17/10/2026,Research,P1,RES-07,Peer review flow so với app thật,Review findings,Tiến Đạt,Huy Hoàng,Tuấn Kiệt,Nguyễn Tâm Đức,Not started,18/10/2026,Next-week target,"Không có guessed screen, missing button, sai destination hoặc missing back path",RES-06,,
+20,18/10/2026,Research,P1,RES-08,Finalize User Flow app tương tự + comparison note với Expiry,Final comparable flow,Huy Hoàng,Tuấn Kiệt,,Nguyễn Tâm Đức,Not started,18/10/2026,Next-week target,Final flow + 3–5 lessons có thể áp dụng/không áp dụng cho Expiry,RES-07,,
+21,19/10/2026,Database Prep,P2,DB-01,Lập data inventory từ User Flow + API data flow,Data inventory,Tuấn Kiệt,Huy Hoàng,,Nguyễn Tâm Đức,Not started,27/10/2026,2–3 week readiness target,"Mỗi data object có source, consumer, lifecycle, persistence need","SE-06, AWD-06",,
+22,20/10/2026,Database Prep,P2,DB-02,Đề xuất entity/attribute/key từ data inventory,Entity dictionary v1,Huy Hoàng,Tuấn Kiệt,Tiến Đạt,Nguyễn Tâm Đức,Not started,27/10/2026,2–3 week readiness target,Phân biệt entity vs attribute; xác định candidate PK/FK hợp lý,DB-01,,
+23,21/10/2026,Database Prep,P2,DB-03,"Map quan hệ 1-N, N-N, 0-N bằng dữ liệu Expiry thật",Cardinality map,Tiến Đạt,Tuấn Kiệt,Huy Hoàng,Nguyễn Tâm Đức,Not started,27/10/2026,2–3 week readiness target,Mỗi cardinality có business rule và ví dụ data flow tương ứng,DB-02,,
+24,22/10/2026,Database Prep,P2,DB-04,Thiết kế junction table/constraints cho N-N và optional relation,Relation design,Tuấn Kiệt,Huy Hoàng,,Nguyễn Tâm Đức,Not started,27/10/2026,2–3 week readiness target,N-N được resolve hợp lý; optionality/uniqueness/foreign key có lý do,DB-03,,
+25,23/10/2026,Database Prep,P2,DB-05,Vẽ ERD v1,ERD v1,Huy Hoàng,Tuấn Kiệt,Tiến Đạt,Nguyễn Tâm Đức,Not started,27/10/2026,2–3 week readiness target,"ERD thể hiện key, cardinality, optionality và junction entities",DB-04,,
+26,26/10/2026,Database Prep,P2,DB-06,Validate ERD với User Flow + API data flow,ERD validation report,Nguyễn Tâm Đức,Huy Hoàng,Tuấn Kiệt,Tiến Đạt,Not started,27/10/2026,2–3 week readiness target,Không có field/relation vô nguồn; mọi write/read chính trace được API ↔ DB,DB-05,,
+27,27/10/2026,Database Prep,P2,DB-07,ERD v2 + checkpoint hiểu database,ERD v2 + walkthrough,Tuấn Kiệt,Huy Hoàng,,Nguyễn Tâm Đức,Not started,27/10/2026,2–3 week readiness target,"Team giải thích được entity, 1-N/N-N/0-N, key, relation từ data flow thay vì học thuộc ERD",DB-06,,
+,Date,Priority,Task ID,Task,Nguyễn Tâm Đức,Huy Hoàng,Tuấn Kiệt,Tiến Đạt,Member 5 (rename),Status,Deadline
+0,06/10/2026,P0,SE-01,Chốt scope User Flow theo 3 chức năng chính,L,-,R,C,C,In progress,11/10/2026
+1,06/10/2026,P1,AWD-01,"Đọc cấu trúc backend hiện tại, xác định module và trách nhiệm",R,L,C,-,-,In progress,11/10/2026
+2,06/10/2026,P0,RES-01,Research: vì sao authentication không nhất thiết đặt ngay đầu flow; liệt kê app auth-first và feature-triggered auth,R,L,C,-,-,In progress,06/10/2026
+3,07/10/2026,P0,SE-02,Vẽ User Flow v1: Start → goals → tasks → screens/decisions,C,-,R,L,C,Not started,11/10/2026
+4,07/10/2026,P1,AWD-02,Trace 1 API request đi qua các gate,R,C,L,-,-,Not started,11/10/2026
+5,07/10/2026,P0,RES-01B,Chốt evidence và recommendation cho vị trí authentication trong Expiry,R,L,C,-,-,Not started,07/10/2026
+6,08/10/2026,P0,SE-03,Gắn authentication vào đúng action cần identity/persistence/sync,C,R,-,C,L,Not started,11/10/2026
+7,08/10/2026,P1,AWD-03,Map MVC và ownership của validation/business logic/data access,R,L,C,-,-,Not started,11/10/2026
+8,09/10/2026,P0,SE-04,Review notation + connections + decision branches của User Flow,C,-,R,L,C,Not started,11/10/2026
+9,09/10/2026,P1,AWD-04,DB warm-up từ data flow: tìm entity và relation candidates,R,C,L,C,-,Not started,27/10/2026
+10,10/10/2026,P0,SE-05,Review User Flow theo 3 chức năng chính và goal coverage,L,R,-,C,C,Not started,11/10/2026
+11,10/10/2026,P1,AWD-05,Mỗi người tự giải thích API gates + MVC bằng 1 request thật,R,L,C,-,-,Not started,11/10/2026
+12,11/10/2026,P0,SE-06,Finalize User Flow package,L,-,R,C,C,Not started,11/10/2026
+13,11/10/2026,P1,AWD-06,Checkpoint cuối tuần: backend/API gate understanding,R,C,L,-,-,Not started,11/10/2026
+14,12/10/2026,P1,RES-02,"Chọn 1 app tương tự Expiry, tải và lập observation checklist",-,L,C,R,-,Not started,18/10/2026
+15,13/10/2026,P1,RES-03,Inventory toàn bộ screen nhìn thấy từ launch đến key goals,-,L,R,-,C,Not started,18/10/2026
+16,14/10/2026,P1,RES-04,Bấm từng nút và trace screen-to-screen navigation,R,C,L,-,C,Not started,18/10/2026
+17,15/10/2026,P1,RES-05,Ghi chức năng từng screen + auth trigger quan sát được,-,L,C,R,-,Not started,18/10/2026
+18,16/10/2026,P1,RES-06,Chuyển observation thành User Flow v1 của app tương tự,R,C,L,-,-,Not started,18/10/2026
+19,17/10/2026,P1,RES-07,Peer review flow so với app thật,R,C,C,L,-,Not started,18/10/2026
+20,18/10/2026,P1,RES-08,Finalize User Flow app tương tự + comparison note với Expiry,R,L,C,-,-,Not started,18/10/2026
+21,19/10/2026,P2,DB-01,Lập data inventory từ User Flow + API data flow,R,C,L,-,-,Not started,27/10/2026
+22,20/10/2026,P2,DB-02,Đề xuất entity/attribute/key từ data inventory,R,L,C,C,-,Not started,27/10/2026
+23,21/10/2026,P2,DB-03,"Map quan hệ 1-N, N-N, 0-N bằng dữ liệu Expiry thật",R,C,C,L,-,Not started,27/10/2026
+24,22/10/2026,P2,DB-04,Thiết kế junction table/constraints cho N-N và optional relation,R,C,L,-,-,Not started,27/10/2026
+25,23/10/2026,P2,DB-05,Vẽ ERD v1,R,L,C,C,-,Not started,27/10/2026
+26,26/10/2026,P2,DB-06,Validate ERD với User Flow + API data flow,L,C,C,R,-,Not started,27/10/2026
+27,27/10/2026,P2,DB-07,ERD v2 + checkpoint hiểu database,R,C,L,-,-,Not started,27/10/2026
+,SECTION,KEY,VALUE,DETAIL
+0,Roster,Member 1,Nguyễn Tâm Đức,Current known member
+1,Roster,Member 2,Huy Hoàng,Current known member
+2,Roster,Member 3,Tuấn Kiệt,Current known member
+3,Roster,Member 4,Tiến Đạt,Current known member
+4,Roster,Member 5,Member 5 (rename),Placeholder because the fifth name is not grounded in current context
+5,,,,
+6,Role,L,Lead,Chịu trách nhiệm chốt output cuối của task
+7,Role,C,Co-owner,Cùng trực tiếp thực hiện task
+8,Role,R,Reviewer,Review logic/quality trước khi Done
+9,Role,S,Support,"Hỗ trợ khi cần, không sở hữu output cuối"
+10,Role,-,Not assigned,Không tham gia task đó
+11,,,,
+12,Priority,P0,Do first,Task chặn task sau hoặc có deadline ngay
+13,Priority,P1,This week / next target,Quan trọng nhưng không chặn P0
+14,Priority,P2,Preparation,Chuẩn bị phase DB sau 2–3 tuần
+15,,,,
+16,Status,Not started,,Chưa bắt đầu
+17,Status,In progress,,Đang làm
+18,Status,Blocked,,Có blocker cần xử lý
+19,Status,Review,,"Đã có output, đang review"
+20,Status,Done,,Pass acceptance criteria
+21,,,,
+22,System scope,Core function 1,Add / Capture item,Người dùng tạo hoặc capture item cần theo dõi expiry
+23,System scope,Core function 2,View / Prioritise / Explain,"Xem trạng thái, ưu tiên, giải thích expiry/status"
+24,System scope,Core function 3,Resolve / Act / Reconcile,Thực hiện action và reconcile/update trạng thái item
+25,,,,
+26,Rule,Auth placement,Feature-triggered where justified,Không mặc định bọc toàn bộ app bằng authentication; auth phải gắn với identity/persistence/sync/security requirement
+27,Rule,Research ordering,RES-01 before RES-02,Ưu tiên research authentication trước rồi mới làm comparable-app user flow
+28,Rule,Deadline 06/10,Explicit,Research authentication được yêu cầu gửi trong hôm nay
+29,Rule,Deadline 11/10,Planning target,Dùng để operationalize cụm 'cuối tuần này'; không phải ngày user phát biểu trực tiếp
+30,Rule,Deadline 18/10,Planning target,Dùng để operationalize 'tuần sau'
+31,Rule,Deadline 27/10,Planning target,Mốc readiness DB sau khoảng 2–3 tuần
+32,Rule,Concurrent ownership,1 Lead + multiple C/R/S,Cho phép nhiều người cùng đảm nhiệm nhưng vẫn có single accountable owner

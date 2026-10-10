@@ -1,0 +1,1566 @@
+{
+  "started_at": "2026-10-10T04:26:42.335Z",
+  "database": "expiry_test_20261010042642335_31a1fe",
+  "results": [
+    {
+      "test_id": "SCHEMA-STRUCTURE",
+      "requirements": "VT-01/16; RULE-01/03/04/09/10/18",
+      "setup": "Fresh isolated schema",
+      "command": "INFORMATION_SCHEMA tables/columns/constraints/statistics",
+      "expected": "Exactly four domain tables + one migration table; all expected columns/keys/checks",
+      "actual": {
+        "table_count": 5,
+        "column_count": 42,
+        "fk_count": 3,
+        "check_count": 25
+      },
+      "status": "PASS",
+      "duration_ms": 18.01
+    },
+    {
+      "test_id": "MIGRATION-REPLAY",
+      "requirements": "VT-16; NFR-07",
+      "setup": "Applied version001",
+      "command": "migrate(database) again; sha256 comparison",
+      "expected": "No DDL replay or duplicate metadata record",
+      "actual": {
+        "applied": false,
+        "hash": "32f2806e6bc4a2b271e3b93a8978352df6910334d3217501647b0729567b32cc"
+      },
+      "status": "PASS",
+      "duration_ms": 134.42
+    },
+    {
+      "test_id": "FK-ORPHANS",
+      "requirements": "RULE-01/04; VT-01",
+      "setup": "Existing owner; random nonexistent owner/entry",
+      "command": "Direct INSERT orphan entries, movements, api_requests; administrator DELETE owner",
+      "expected": "FK rejects all orphans and RESTRICT rejects parent delete",
+      "actual": {
+        "orphan_rejections": 3,
+        "parent_delete_rejected": true,
+        "entry": "338393c5-02c6-417f-be87-b88f8266d960"
+      },
+      "status": "PASS",
+      "duration_ms": 87.39
+    },
+    {
+      "test_id": "DB-ROW-GUARDS",
+      "requirements": "RULE-03/09/10/17/18; VT-04/14",
+      "setup": "Valid owner and entry",
+      "command": "Direct invalid INSERT/UPDATE CHECK writes",
+      "expected": "Negative/fractional piece/version0/date conflicts/invalid key/hash/result rejected by DB",
+      "actual": {
+        "rejected": [
+          "remaining_quantity:-1",
+          "remaining_quantity:1.5",
+          "unit:kg",
+          "version:0",
+          "name: ",
+          "date_source:printed_label",
+          "date_certainty:known"
+        ],
+        "additional_rejections": 4
+      },
+      "status": "PASS",
+      "duration_ms": 21.93
+    },
+    {
+      "test_id": "DB-CREATE",
+      "requirements": "SC-01/02; VT-01; FR-01; RULE-02/04",
+      "setup": "Same-name captures with known, unknown and estimated date",
+      "command": "repository.create; SELECT initial and entry rows",
+      "expected": "Separate IDs; one initial each; correct nullable dates/trimmed input",
+      "actual": {
+        "ids": [
+          "5fc6f66d-45c6-4438-9682-e9c36f48ffa6",
+          "e817a328-26c6-4a1e-9c2d-e5a5598b40df",
+          "0227cfd5-bf79-4ae4-bb4f-42cec24fbf1f"
+        ],
+        "dates": [
+          "2026-10-10",
+          null,
+          "2026-10-09"
+        ],
+        "initial_each": 1
+      },
+      "status": "PASS",
+      "duration_ms": 29.68
+    },
+    {
+      "test_id": "INITIAL-CARDINALITY",
+      "requirements": "RULE-04; VT-01/02",
+      "setup": "Created entry and transaction-local raw parent",
+      "command": "INSERT second initial; low-level parent with no movement then rollback",
+      "expected": "DB limits max1 initial; workflow enforces min1; FK alone does not enforce min1",
+      "actual": {
+        "second_initial": "ER_DUP_ENTRY",
+        "minimum_child": "service transaction; low-level zero child accepted only in rolled-back probe"
+      },
+      "status": "PASS",
+      "duration_ms": 20.78
+    },
+    {
+      "test_id": "QUANTITY-VALIDATION",
+      "requirements": "SC-05/06; VT-04; RULE-03/05",
+      "setup": "Input validation before any SQL write",
+      "command": "Capture negative/zero/overflow/4decimal/fractional piece; overspend",
+      "expected": "422 invalid; 409 overspend; no mutation",
+      "actual": {
+        "invalid_capture_count": 6,
+        "overspend": "409",
+        "remaining": "500.000"
+      },
+      "status": "PASS",
+      "duration_ms": 28.35
+    },
+    {
+      "test_id": "DECIMAL-COERCION",
+      "requirements": "RULE-03; VT-04",
+      "setup": "Transaction-local raw insert versus domain string validation",
+      "command": "INSERT g quantity1.0004; SHOW WARNINGS; ROLLBACK",
+      "expected": "MySQL stores1.000 with warning; domain rejects extra scale before SQL",
+      "actual": {
+        "raw_storage": {
+          "remaining_quantity": "1.000"
+        },
+        "warnings": [
+          {
+            "Level": "Note",
+            "Code": 1265,
+            "Message": "Data truncated for column 'remaining_quantity' at row 1"
+          }
+        ],
+        "max_exact": "999999999.999"
+      },
+      "status": "PASS",
+      "duration_ms": 16.88
+    },
+    {
+      "test_id": "DATE-STATES",
+      "requirements": "SC-02/11; VT-01/14; RULE-09/10/11/21/22",
+      "setup": "Known, unknown, estimated, past and opened inputs",
+      "command": "repository.create with contradictory metadata and invalid dates",
+      "expected": "Valid past allowed; conflicts/null location/invalid dates rejected; opened_on does not derive expiry",
+      "actual": {
+        "rejected": 5,
+        "past_date": "2020-01-01",
+        "opened_unknown_expiry": null
+      },
+      "status": "PASS",
+      "duration_ms": 15.76
+    },
+    {
+      "test_id": "LEDGER-KINDS",
+      "requirements": "SC-05/06/12; VT-03/10; FR-04/07; RULE-05/16",
+      "setup": "1000g entry",
+      "command": "consume250 then discard750; query ledger",
+      "expected": "750 then0; consume/discard separate; depleted derived",
+      "actual": {
+        "remaining": "0.000",
+        "kinds": [
+          "initial",
+          "consume",
+          "discard"
+        ],
+        "version": 3,
+        "lifecycle": "depleted"
+      },
+      "status": "PASS",
+      "duration_ms": 44.91
+    },
+    {
+      "test_id": "RECOUNT",
+      "requirements": "SC-07; VT-08/09; FR-06; RULE-06",
+      "setup": "Same amount; then depleted→positive",
+      "command": "recount same; consume all; recount with reason",
+      "expected": "No-op preserves version/event; adjustment reactivates with reason",
+      "actual": {
+        "noop_version": 1,
+        "increased": {
+          "id": "6ac58826-6aaa-43f8-8d23-65642335182b",
+          "entry_id": "5c087d84-5414-4ef7-8f7d-31a551de59a3",
+          "kind": "adjustment",
+          "quantity_before": "0.000",
+          "quantity_after": "200.125",
+          "reason": "Actual physical count",
+          "recorded_at": "2026-10-10 04:26:43.370196"
+        },
+        "downward": {
+          "id": "1d92b459-1b69-44dd-819b-4910aa03c344",
+          "entry_id": "5c087d84-5414-4ef7-8f7d-31a551de59a3",
+          "kind": "adjustment",
+          "quantity_before": "200.125",
+          "quantity_after": "150.125",
+          "reason": "Recount found 50g less",
+          "recorded_at": "2026-10-10 04:26:43.376070"
+        },
+        "remaining": "150.125"
+      },
+      "status": "PASS",
+      "duration_ms": 51.38
+    },
+    {
+      "test_id": "DELETE-RESTORE",
+      "requirements": "SC-10; VT-11; FR-08; RULE-15/17/18",
+      "setup": "Active entry",
+      "command": "remove; replay same key with old version; restore current version; query JSON null",
+      "expected": "Quantity/history unchanged; 204 JSON null complete; restore version3",
+      "actual": {
+        "quantity": "500.000",
+        "movement_count": 1,
+        "version": 3,
+        "stored_204": "JSON null (not SQL NULL)"
+      },
+      "status": "PASS",
+      "duration_ms": 46.62
+    },
+    {
+      "test_id": "METADATA",
+      "requirements": "SC-11; VT-14; FR-05; RULE-07/08/09/17",
+      "setup": "Known-date entry",
+      "command": "Merged PATCH validation and forbidden fields",
+      "expected": "Malformed date or quantity/unit/owner patch422; valid metadata changes no history",
+      "actual": {
+        "version": 2,
+        "expiry": null,
+        "movement_count": 1
+      },
+      "status": "PASS",
+      "duration_ms": 20.88
+    },
+    {
+      "test_id": "TX-CREATE-after_reserve",
+      "requirements": "SC-01; VT-02; RULE-04/19",
+      "setup": "Fault injection after_reserve",
+      "command": "Throw before commit; SELECT owned entries and request key",
+      "expected": "Entry, initial and reservation/result all rolled back",
+      "actual": {
+        "entries": "0",
+        "requests": "0"
+      },
+      "status": "PASS",
+      "duration_ms": 16.28
+    },
+    {
+      "test_id": "TX-CREATE-after_entry",
+      "requirements": "SC-01; VT-02; RULE-04/19",
+      "setup": "Fault injection after_entry",
+      "command": "Throw before commit; SELECT owned entries and request key",
+      "expected": "Entry, initial and reservation/result all rolled back",
+      "actual": {
+        "entries": "0",
+        "requests": "0"
+      },
+      "status": "PASS",
+      "duration_ms": 9.11
+    },
+    {
+      "test_id": "TX-CREATE-after_movement",
+      "requirements": "SC-01; VT-02; RULE-04/19",
+      "setup": "Fault injection after_movement",
+      "command": "Throw before commit; SELECT owned entries and request key",
+      "expected": "Entry, initial and reservation/result all rolled back",
+      "actual": {
+        "entries": "0",
+        "requests": "0"
+      },
+      "status": "PASS",
+      "duration_ms": 11.17
+    },
+    {
+      "test_id": "TX-CREATE-after_domain",
+      "requirements": "SC-01; VT-02; RULE-04/19",
+      "setup": "Fault injection after_domain",
+      "command": "Throw before commit; SELECT owned entries and request key",
+      "expected": "Entry, initial and reservation/result all rolled back",
+      "actual": {
+        "entries": "0",
+        "requests": "0"
+      },
+      "status": "PASS",
+      "duration_ms": 11.58
+    },
+    {
+      "test_id": "TX-CREATE-after_result",
+      "requirements": "SC-01; VT-02; RULE-04/19",
+      "setup": "Fault injection after_result",
+      "command": "Throw before commit; SELECT owned entries and request key",
+      "expected": "Entry, initial and reservation/result all rolled back",
+      "actual": {
+        "entries": "0",
+        "requests": "0"
+      },
+      "status": "PASS",
+      "duration_ms": 8.55
+    },
+    {
+      "test_id": "TX-MOVEMENT-after_quantity",
+      "requirements": "SC-05; VT-02/03; RULE-05/19",
+      "setup": "500g entry; fault after_quantity",
+      "command": "Throw before commit; compare full entry/ledger snapshot and key",
+      "expected": "Quantity/version/history unchanged; reservation absent",
+      "actual": {
+        "remaining": "500.000",
+        "version": 1,
+        "movements": 1,
+        "reservation": 0
+      },
+      "status": "PASS",
+      "duration_ms": 18.34
+    },
+    {
+      "test_id": "TX-MOVEMENT-after_movement",
+      "requirements": "SC-05; VT-02/03; RULE-05/19",
+      "setup": "500g entry; fault after_movement",
+      "command": "Throw before commit; compare full entry/ledger snapshot and key",
+      "expected": "Quantity/version/history unchanged; reservation absent",
+      "actual": {
+        "remaining": "500.000",
+        "version": 1,
+        "movements": 1,
+        "reservation": 0
+      },
+      "status": "PASS",
+      "duration_ms": 19.31
+    },
+    {
+      "test_id": "TX-MOVEMENT-after_domain",
+      "requirements": "SC-05; VT-02/03; RULE-05/19",
+      "setup": "500g entry; fault after_domain",
+      "command": "Throw before commit; compare full entry/ledger snapshot and key",
+      "expected": "Quantity/version/history unchanged; reservation absent",
+      "actual": {
+        "remaining": "500.000",
+        "version": 1,
+        "movements": 1,
+        "reservation": 0
+      },
+      "status": "PASS",
+      "duration_ms": 21.37
+    },
+    {
+      "test_id": "TX-MOVEMENT-after_result",
+      "requirements": "SC-05; VT-02/03; RULE-05/19",
+      "setup": "500g entry; fault after_result",
+      "command": "Throw before commit; compare full entry/ledger snapshot and key",
+      "expected": "Quantity/version/history unchanged; reservation absent",
+      "actual": {
+        "remaining": "500.000",
+        "version": 1,
+        "movements": 1,
+        "reservation": 0
+      },
+      "status": "PASS",
+      "duration_ms": 28.4
+    },
+    {
+      "test_id": "CONCURRENT-VERSION",
+      "requirements": "SC-09; VT-05; NFR-02; RULE-05/17",
+      "setup": "Two live transactions;500g;expected1;use350 each",
+      "command": "Barrier before reservation; Promise.allSettled two connections",
+      "expected": "Exactly1 success and1 VERSION_CONFLICT; remaining150;one new event",
+      "actual": {
+        "connection_ids": [
+          "1044",
+          "1045"
+        ],
+        "outcomes": [
+          "201",
+          "VERSION_CONFLICT"
+        ],
+        "remaining": "150.000",
+        "events": 2
+      },
+      "status": "PASS",
+      "duration_ms": 18.26
+    },
+    {
+      "test_id": "CONCURRENT-REPLAY",
+      "requirements": "SC-08; VT-06; RULE-18/19",
+      "setup": "Three simultaneous identical commands;500g",
+      "command": "Barrier on3 live transactions;same key/operation/payload",
+      "expected": "One mutation;two replays;all identical saved bodies",
+      "actual": {
+        "connection_ids": [
+          "1050",
+          "1049",
+          "1051"
+        ],
+        "replays": 2,
+        "remaining": "300.000",
+        "events": 2
+      },
+      "status": "PASS",
+      "duration_ms": 17.31
+    },
+    {
+      "test_id": "PREFERENCES-CONCURRENCY",
+      "requirements": "SC-14; VT-05/13; RULE-13/17",
+      "setup": "Two reserved keys take owner FK shared locks then upgrade owner row",
+      "command": "Barrier after_reserve;two settings commands expected1",
+      "expected": "One settings mutation;one VERSION_CONFLICT;deadlock retries stay atomic",
+      "actual": {
+        "connection_ids": [
+          "1054",
+          "1055",
+          "1056"
+        ],
+        "user": {
+          "version": 2,
+          "attention_lead_days": 1
+        },
+        "completed_requests": 1
+      },
+      "status": "PASS",
+      "duration_ms": 26.22
+    },
+    {
+      "test_id": "REPLAY-KEY-CONFLICT",
+      "requirements": "SC-08; VT-07; RULE-18",
+      "setup": "Lost response after commit;new target/payload/key case/owner",
+      "command": "Retry old version then reuse key with changed amount/target",
+      "expected": "Original result replay;changed input409;case-sensitive and owner-scoped keys",
+      "actual": {
+        "original_status": 201,
+        "lost_response_replayed": true,
+        "payload_target_conflicts": 2,
+        "case_and_owner_separate": true
+      },
+      "status": "PASS",
+      "duration_ms": 40.99
+    },
+    {
+      "test_id": "OWNER-SCOPE",
+      "requirements": "SC-13; VT-12 repository layer; RULE-01/24",
+      "setup": "UserA entry;UserB principal",
+      "command": "get/history/edit/consume/remove/restore foreign IDs;DTO owner injection",
+      "expected": "All foreign entry operations404;missing principal401;no foreign changes",
+      "actual": {
+        "foreign_rejections": 6,
+        "missing_principal": 401,
+        "owner_dto": 422,
+        "http_auth": "NOT TESTED"
+      },
+      "status": "PASS",
+      "duration_ms": 31.87
+    },
+    {
+      "test_id": "LEDGER-APPEND-PRIVILEGES",
+      "requirements": "RULE-23; FR-07",
+      "setup": "Application SQL account",
+      "command": "Direct UPDATE/DELETE stock_movements;CREATE TABLE;DELETE entry",
+      "expected": "Privileges prevent rewriting history/DDL/hard-delete",
+      "actual": {
+        "denied_operations": 4,
+        "history": "append-only application grant"
+      },
+      "status": "PASS",
+      "duration_ms": 8.83
+    },
+    {
+      "test_id": "LOCAL-MIDNIGHT",
+      "requirements": "SC-14; VT-13; RULE-12/13",
+      "setup": "OwnerHoChiMinh;UTC16:59:59→17:00:00;expiry10Oct",
+      "command": "Injected clock;SQL classification plus JS projection",
+      "expected": "Local9Oct soon→local10Oct due_today;single frozen instant per response",
+      "actual": {
+        "east": [
+          "2026-10-09",
+          "soon",
+          "2026-10-10",
+          "due_today"
+        ],
+        "west": [
+          "2026-10-09",
+          "due_today"
+        ],
+        "clock_calls": 1
+      },
+      "status": "PASS",
+      "duration_ms": 32.45
+    },
+    {
+      "test_id": "PREFERENCES-BOUNDARY",
+      "requirements": "SC-14; VT-13; FR-09; RULE-13",
+      "setup": "Owned entry and preferences",
+      "command": "lead0/30;invalid timezone;31;-1;fractional;food snapshot",
+      "expected": "Valid changes versioned;invalid rejected;food rows unchanged",
+      "actual": {
+        "valid_leads": [
+          0,
+          30
+        ],
+        "invalid_rejections": 4,
+        "food_unchanged": true
+      },
+      "status": "PASS",
+      "duration_ms": 28.64
+    },
+    {
+      "test_id": "QUERY-PRIORITY",
+      "requirements": "SC-03/04/15; FR-02/03; RULE-12/20",
+      "setup": "Groups later/unknown/soon/today/past;two owners",
+      "command": "list attention then page limit2;filter;trash/depleted;escaped q",
+      "expected": "Priority before pages;stable IDs;owner-scoped;derived policy parity",
+      "actual": {
+        "priority": [
+          "past_date",
+          "past_date",
+          "due_today",
+          "soon",
+          "unknown",
+          "later"
+        ],
+        "pagination_ids": [
+          "851e82a8-3fe4-46d3-92ae-a7c8dbb2cd62",
+          "ae2ab822-7d4f-4bd4-8df2-2cbb19a46e3f",
+          "1d832180-a699-4a8e-bec5-775b457a697e",
+          "bf3b5f1e-2594-43a7-8f01-906b520b3517",
+          "014a6812-c091-4937-81b0-55f1d36c4257",
+          "3bc4d2e0-82f1-4f73-8750-c9d096da03da"
+        ],
+        "unknown_visible": true
+      },
+      "status": "PASS",
+      "duration_ms": 62.79
+    },
+    {
+      "test_id": "QUERY-EXPLAIN",
+      "requirements": "FR-02; NFR-08 measured baseline only",
+      "setup": "400 representative owner entries plus other existing owners",
+      "command": "ANALYZE TABLE;EXPLAIN FORMAT=JSON;real list latency",
+      "expected": "Valid scoped plan;classification/sort before limit;report filesort without SLA",
+      "actual": {
+        "sql": "WITH classified AS (SELECT *,CASE WHEN expiry_date IS NULL THEN 'unknown' WHEN expiry_date<? THEN 'past_date' WHEN expiry_date=? THEN 'due_today' WHEN DATEDIFF(expiry_date,?)<=? THEN 'soon' ELSE 'later' END AS attention_status FROM food_entries WHERE user_id=? AND deleted_at IS NULL AND remaining_quantity > 0) SELECT * FROM classified ORDER BY CASE attention_status WHEN 'past_date' THEN 0 WHEN 'due_today' THEN 1 WHEN 'soon' THEN 2 WHEN 'unknown' THEN 3 ELSE 4 END,expiry_date IS NULL,expiry_date,created_at,id LIMIT ? OFFSET ?",
+        "parameters": [
+          "2026-10-10",
+          "2026-10-10",
+          "2026-10-10",
+          2,
+          "58b9a9f5-5585-4926-ac5e-38a8f0f69c0c",
+          20,
+          0
+        ],
+        "plan": [
+          {
+            "EXPLAIN": "{\n  \"query_block\": {\n    \"select_id\": 1,\n    \"cost_info\": {\n      \"query_cost\": \"45.85\"\n    },\n    \"ordering_operation\": {\n      \"using_filesort\": true,\n      \"table\": {\n        \"table_name\": \"food_entries\",\n        \"access_type\": \"ALL\",\n        \"possible_keys\": [\n          \"entries_owner_visible\",\n          \"entries_owner_quantity\",\n          \"entries_owner_trash\"\n        ],\n        \"rows_examined_per_scan\": 436,\n        \"rows_produced_per_join\": 133,\n        \"filtered\": \"30.58\",\n        \"cost_info\": {\n          \"read_cost\": \"32.52\",\n          \"eval_cost\": \"13.33\",\n          \"prefix_cost\": \"45.85\",\n          \"data_read_per_join\": \"181K\"\n        },\n        \"used_columns\": [\n          \"id\",\n          \"user_id\",\n          \"name\",\n          \"storage_location\",\n          \"remaining_quantity\",\n          \"unit\",\n          \"expiry_date\",\n          \"date_certainty\",\n          \"date_source\",\n          \"date_label_type\",\n          \"opened_on\",\n          \"note\",\n          \"version\",\n          \"deleted_at\",\n          \"created_at\",\n          \"updated_at\"\n        ],\n        \"attached_condition\": \"((`expiry_test_20261010042642335_31a1fe`.`food_entries`.`user_id` = '58b9a9f5-5585-4926-ac5e-38a8f0f69c0c') and (`expiry_test_20261010042642335_31a1fe`.`food_entries`.`deleted_at` is null) and (`expiry_test_20261010042642335_31a1fe`.`food_entries`.`remaining_quantity` > 0.000))\"\n      }\n    }\n  }\n}"
+          }
+        ],
+        "measured_ms": 3.99,
+        "representative_owner_rows": 400,
+        "benchmark": "Single local warm query; not production SLA/throughput"
+      },
+      "status": "PASS",
+      "duration_ms": 190.03
+    },
+    {
+      "test_id": "LEDGER-SUM",
+      "requirements": "RULE-04/19; VT-03/09/10",
+      "setup": "All committed test fixtures",
+      "command": "GROUP BY entry;sum(after-before);pending reservations",
+      "expected": "Every entry has initial and ledger sum=current;no incomplete request commits",
+      "actual": {
+        "entries": 436,
+        "requests": 53,
+        "incomplete": 0,
+        "ledger_violations": 0
+      },
+      "status": "PASS",
+      "duration_ms": 3.34
+    },
+    {
+      "test_id": "API-FE-PARITY-AUDIT",
+      "requirements": "NFR-03; VT-01/14; FR-01/04/08",
+      "setup": "Actual draft OpenAPI/fixtures and observed mock source",
+      "command": "Parse JSON;inspect enums/decimal/UUID/restore/date/table names",
+      "expected": "Known discrepancies recorded;no claim mock/HTTP adapter integrated",
+      "actual": {
+        "contract_version": "3.1.1",
+        "mismatches": [
+          "known versus exact; date_* versus expiry_date_*",
+          "stock_movements/adjustment versus quantity_movements/recount",
+          "UUID/decimal-string versus ent_/numbers",
+          "SQL composite owner/key versus mock synthetic id",
+          "OpenAPI restore VersionCommand requires expected_version; mock restoreEntry(key,id) omits it",
+          "mock saved response_status always200; DB create/movement201, delete204, recount no-op200",
+          "mock key reuse422 IDEMPOTENCY_PAYLOAD_MISMATCH; contract/repository409 IDEMPOTENCY_KEY_REUSED",
+          "mock JSON.stringify payload fingerprint versus canonical normalized SHA256",
+          "fixed DEMO_DATE versus injected owner-local day"
+        ],
+        "required_adapter": "Explicit DTO/enum/decimal/UUID/date and error mapping; history pagination; no UI changes in this task"
+      },
+      "status": "PASS",
+      "duration_ms": 0.79
+    },
+    {
+      "test_id": "BACKUP-RESTORE",
+      "requirements": "VT-16 sandbox scope; NFR-07",
+      "setup": "Fresh test DB with fixtures;new distinct restore DB",
+      "command": "mysqldump single transaction then rootSQL import;counts/ledger/FKs",
+      "expected": "Full fixture/schema restore matches;original dev preserved",
+      "actual": {
+        "restored_database": "expiry_test_20261010042642335_31a1fe_restore",
+        "dump_bytes": 226201,
+        "table_counts_equal": true,
+        "ledger_equal": true,
+        "fk_count": 3,
+        "staging_production": "NOT TESTED"
+      },
+      "status": "PASS",
+      "duration_ms": 476.41
+    },
+    {
+      "test_id": "HTTP-AUTH-INTEGRATION",
+      "requirements": "SC-13; VT-12; FR-10; NFR-01",
+      "setup": "External integration or stakeholder boundary",
+      "command": null,
+      "expected": "Independent acceptance evidence",
+      "actual": "No HTTP API/auth provider exists in repository; trusted-principal sandbox tests do not verify identity establishment.",
+      "status": "NOT TESTED"
+    },
+    {
+      "test_id": "UI-RECOVERY-INTEGRATION",
+      "requirements": "SC-08/09/15; VT-15; NFR-04",
+      "setup": "External integration or stakeholder boundary",
+      "command": null,
+      "expected": "Independent acceptance evidence",
+      "actual": "New repository is not wired into uidemo; draft/401/timeout/refetch behavior requires FE/API integration.",
+      "status": "NOT TESTED"
+    },
+    {
+      "test_id": "UX-ACCESSIBILITY",
+      "requirements": "VT-17; NFR-05",
+      "setup": "External integration or stakeholder boundary",
+      "command": null,
+      "expected": "Independent acceptance evidence",
+      "actual": "No UI change or keyboard/screen-reader/device acceptance performed in this DB task.",
+      "status": "NOT TESTED"
+    },
+    {
+      "test_id": "BUSINESS-MODEL-APPROVAL",
+      "requirements": "BR-V1-01/02/03; DEC-03…09",
+      "setup": "External integration or stakeholder boundary",
+      "command": null,
+      "expected": "Independent acceptance evidence",
+      "actual": "Stakeholder/user research approval is separate from database constraints and SQL tests.",
+      "status": "NOT TESTED"
+    },
+    {
+      "test_id": "PRODUCTION-PERFORMANCE",
+      "requirements": "NFR-08",
+      "setup": "External integration or stakeholder boundary",
+      "command": null,
+      "expected": "Independent acceptance evidence",
+      "actual": "Representative local EXPLAIN is recorded; no hosting/volume/SLA approved or benchmarked.",
+      "status": "NOT TESTED"
+    }
+  ],
+  "notes": [],
+  "commands": [
+    "node database/mysql/tests/run.mjs"
+  ],
+  "schema": {
+    "tables": [
+      {
+        "TABLE_NAME": "api_requests",
+        "ENGINE": "InnoDB"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "ENGINE": "InnoDB"
+      },
+      {
+        "TABLE_NAME": "schema_migrations",
+        "ENGINE": "InnoDB"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "ENGINE": "InnoDB"
+      },
+      {
+        "TABLE_NAME": "users",
+        "ENGINE": "InnoDB"
+      }
+    ],
+    "columns": [
+      {
+        "TABLE_NAME": "api_requests",
+        "COLUMN_NAME": "user_id",
+        "COLUMN_TYPE": "char(36)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "COLUMN_NAME": "idempotency_key",
+        "COLUMN_TYPE": "varchar(100)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "COLUMN_NAME": "operation",
+        "COLUMN_TYPE": "varchar(255)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "COLUMN_NAME": "request_hash",
+        "COLUMN_TYPE": "char(64)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "COLUMN_NAME": "response_status",
+        "COLUMN_TYPE": "int",
+        "IS_NULLABLE": "YES",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "COLUMN_NAME": "response_body",
+        "COLUMN_TYPE": "json",
+        "IS_NULLABLE": "YES",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "COLUMN_NAME": "created_at",
+        "COLUMN_TYPE": "datetime(6)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "CURRENT_TIMESTAMP(6)",
+        "COLLATION_NAME": null,
+        "EXTRA": "DEFAULT_GENERATED",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "id",
+        "COLUMN_TYPE": "char(36)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "user_id",
+        "COLUMN_TYPE": "char(36)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "name",
+        "COLUMN_TYPE": "varchar(200)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "utf8mb4_0900_ai_ci",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "storage_location",
+        "COLUMN_TYPE": "varchar(100)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "unspecified",
+        "COLLATION_NAME": "utf8mb4_0900_ai_ci",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "remaining_quantity",
+        "COLUMN_TYPE": "decimal(12,3)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "unit",
+        "COLUMN_TYPE": "varchar(10)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "expiry_date",
+        "COLUMN_TYPE": "date",
+        "IS_NULLABLE": "YES",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "date_certainty",
+        "COLUMN_TYPE": "varchar(12)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "unknown",
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "date_source",
+        "COLUMN_TYPE": "varchar(20)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "unknown",
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "date_label_type",
+        "COLUMN_TYPE": "varchar(15)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "unspecified",
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "opened_on",
+        "COLUMN_TYPE": "date",
+        "IS_NULLABLE": "YES",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "note",
+        "COLUMN_TYPE": "text",
+        "IS_NULLABLE": "YES",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "utf8mb4_0900_ai_ci",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "version",
+        "COLUMN_TYPE": "int",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "1",
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "deleted_at",
+        "COLUMN_TYPE": "datetime(6)",
+        "IS_NULLABLE": "YES",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "created_at",
+        "COLUMN_TYPE": "datetime(6)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "CURRENT_TIMESTAMP(6)",
+        "COLLATION_NAME": null,
+        "EXTRA": "DEFAULT_GENERATED",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "COLUMN_NAME": "updated_at",
+        "COLUMN_TYPE": "datetime(6)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "CURRENT_TIMESTAMP(6)",
+        "COLLATION_NAME": null,
+        "EXTRA": "DEFAULT_GENERATED",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "schema_migrations",
+        "COLUMN_NAME": "version",
+        "COLUMN_TYPE": "int",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "schema_migrations",
+        "COLUMN_NAME": "sha256",
+        "COLUMN_TYPE": "char(64)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "schema_migrations",
+        "COLUMN_NAME": "applied_at",
+        "COLUMN_TYPE": "datetime(6)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "CURRENT_TIMESTAMP(6)",
+        "COLLATION_NAME": null,
+        "EXTRA": "DEFAULT_GENERATED",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "COLUMN_NAME": "id",
+        "COLUMN_TYPE": "char(36)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "COLUMN_NAME": "entry_id",
+        "COLUMN_TYPE": "char(36)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "COLUMN_NAME": "kind",
+        "COLUMN_TYPE": "varchar(12)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "COLUMN_NAME": "quantity_before",
+        "COLUMN_TYPE": "decimal(12,3)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "COLUMN_NAME": "quantity_after",
+        "COLUMN_TYPE": "decimal(12,3)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "COLUMN_NAME": "reason",
+        "COLUMN_TYPE": "text",
+        "IS_NULLABLE": "YES",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "utf8mb4_0900_ai_ci",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "COLUMN_NAME": "recorded_at",
+        "COLUMN_TYPE": "datetime(6)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "CURRENT_TIMESTAMP(6)",
+        "COLLATION_NAME": null,
+        "EXTRA": "DEFAULT_GENERATED",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "COLUMN_NAME": "initial_entry_id",
+        "COLUMN_TYPE": "char(36)",
+        "IS_NULLABLE": "YES",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "STORED GENERATED",
+        "GENERATION_EXPRESSION": "(case when (`kind` = _latin1\\'initial\\') then `entry_id` else NULL end)"
+      },
+      {
+        "TABLE_NAME": "users",
+        "COLUMN_NAME": "id",
+        "COLUMN_TYPE": "char(36)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "users",
+        "COLUMN_NAME": "identity_subject",
+        "COLUMN_TYPE": "varchar(255)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "utf8mb4_0900_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "users",
+        "COLUMN_NAME": "display_name",
+        "COLUMN_TYPE": "varchar(100)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": null,
+        "COLLATION_NAME": "utf8mb4_0900_ai_ci",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "users",
+        "COLUMN_NAME": "timezone",
+        "COLUMN_TYPE": "varchar(100)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "Asia/Ho_Chi_Minh",
+        "COLLATION_NAME": "ascii_bin",
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "users",
+        "COLUMN_NAME": "attention_lead_days",
+        "COLUMN_TYPE": "int",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "2",
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "users",
+        "COLUMN_NAME": "version",
+        "COLUMN_TYPE": "int",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "1",
+        "COLLATION_NAME": null,
+        "EXTRA": "",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "users",
+        "COLUMN_NAME": "created_at",
+        "COLUMN_TYPE": "datetime(6)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "CURRENT_TIMESTAMP(6)",
+        "COLLATION_NAME": null,
+        "EXTRA": "DEFAULT_GENERATED",
+        "GENERATION_EXPRESSION": ""
+      },
+      {
+        "TABLE_NAME": "users",
+        "COLUMN_NAME": "updated_at",
+        "COLUMN_TYPE": "datetime(6)",
+        "IS_NULLABLE": "NO",
+        "COLUMN_DEFAULT": "CURRENT_TIMESTAMP(6)",
+        "COLLATION_NAME": null,
+        "EXTRA": "DEFAULT_GENERATED",
+        "GENERATION_EXPRESSION": ""
+      }
+    ],
+    "fks": [
+      {
+        "CONSTRAINT_NAME": "entries_owner",
+        "TABLE_NAME": "food_entries",
+        "REFERENCED_TABLE_NAME": "users",
+        "UPDATE_RULE": "RESTRICT",
+        "DELETE_RULE": "RESTRICT"
+      },
+      {
+        "CONSTRAINT_NAME": "movements_entry",
+        "TABLE_NAME": "stock_movements",
+        "REFERENCED_TABLE_NAME": "food_entries",
+        "UPDATE_RULE": "RESTRICT",
+        "DELETE_RULE": "RESTRICT"
+      },
+      {
+        "CONSTRAINT_NAME": "requests_owner",
+        "TABLE_NAME": "api_requests",
+        "REFERENCED_TABLE_NAME": "users",
+        "UPDATE_RULE": "RESTRICT",
+        "DELETE_RULE": "RESTRICT"
+      }
+    ],
+    "constraints": [
+      {
+        "TABLE_NAME": "api_requests",
+        "CONSTRAINT_NAME": "PRIMARY",
+        "CONSTRAINT_TYPE": "PRIMARY KEY",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "CONSTRAINT_NAME": "requests_completion",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "CONSTRAINT_NAME": "requests_hash",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "CONSTRAINT_NAME": "requests_key",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "CONSTRAINT_NAME": "requests_operation",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "CONSTRAINT_NAME": "requests_owner",
+        "CONSTRAINT_TYPE": "FOREIGN KEY",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "CONSTRAINT_NAME": "requests_status",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_certainty",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_date_state",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_label",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_location",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_name",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_note",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_owner",
+        "CONSTRAINT_TYPE": "FOREIGN KEY",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_piece",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_quantity",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_source",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_unit",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "entries_version",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "CONSTRAINT_NAME": "PRIMARY",
+        "CONSTRAINT_TYPE": "PRIMARY KEY",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "schema_migrations",
+        "CONSTRAINT_NAME": "PRIMARY",
+        "CONSTRAINT_TYPE": "PRIMARY KEY",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "CONSTRAINT_NAME": "movements_after",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "CONSTRAINT_NAME": "movements_before",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "CONSTRAINT_NAME": "movements_entry",
+        "CONSTRAINT_TYPE": "FOREIGN KEY",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "CONSTRAINT_NAME": "movements_kind",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "CONSTRAINT_NAME": "movements_reason",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "CONSTRAINT_NAME": "movements_shape",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "CONSTRAINT_NAME": "one_initial_per_entry",
+        "CONSTRAINT_TYPE": "UNIQUE",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "CONSTRAINT_NAME": "PRIMARY",
+        "CONSTRAINT_TYPE": "PRIMARY KEY",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "users",
+        "CONSTRAINT_NAME": "PRIMARY",
+        "CONSTRAINT_TYPE": "PRIMARY KEY",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "users",
+        "CONSTRAINT_NAME": "users_display",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "users",
+        "CONSTRAINT_NAME": "users_identity",
+        "CONSTRAINT_TYPE": "UNIQUE",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "users",
+        "CONSTRAINT_NAME": "users_lead",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "users",
+        "CONSTRAINT_NAME": "users_timezone",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      },
+      {
+        "TABLE_NAME": "users",
+        "CONSTRAINT_NAME": "users_version",
+        "CONSTRAINT_TYPE": "CHECK",
+        "ENFORCED": "YES"
+      }
+    ],
+    "indexes": [
+      {
+        "TABLE_NAME": "api_requests",
+        "INDEX_NAME": "PRIMARY",
+        "COLUMN_NAME": "user_id",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 0,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "api_requests",
+        "INDEX_NAME": "PRIMARY",
+        "COLUMN_NAME": "idempotency_key",
+        "SEQ_IN_INDEX": 2,
+        "NON_UNIQUE": 0,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_quantity",
+        "COLUMN_NAME": "user_id",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_quantity",
+        "COLUMN_NAME": "deleted_at",
+        "SEQ_IN_INDEX": 2,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_quantity",
+        "COLUMN_NAME": "remaining_quantity",
+        "SEQ_IN_INDEX": 3,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_quantity",
+        "COLUMN_NAME": "id",
+        "SEQ_IN_INDEX": 4,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_trash",
+        "COLUMN_NAME": "user_id",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_trash",
+        "COLUMN_NAME": "deleted_at",
+        "SEQ_IN_INDEX": 2,
+        "NON_UNIQUE": 1,
+        "COLLATION": "D"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_trash",
+        "COLUMN_NAME": "id",
+        "SEQ_IN_INDEX": 3,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_visible",
+        "COLUMN_NAME": "user_id",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_visible",
+        "COLUMN_NAME": "deleted_at",
+        "SEQ_IN_INDEX": 2,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_visible",
+        "COLUMN_NAME": "expiry_date",
+        "SEQ_IN_INDEX": 3,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "entries_owner_visible",
+        "COLUMN_NAME": "id",
+        "SEQ_IN_INDEX": 4,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "food_entries",
+        "INDEX_NAME": "PRIMARY",
+        "COLUMN_NAME": "id",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 0,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "schema_migrations",
+        "INDEX_NAME": "PRIMARY",
+        "COLUMN_NAME": "version",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 0,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "INDEX_NAME": "movements_entry_history",
+        "COLUMN_NAME": "entry_id",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "INDEX_NAME": "movements_entry_history",
+        "COLUMN_NAME": "recorded_at",
+        "SEQ_IN_INDEX": 2,
+        "NON_UNIQUE": 1,
+        "COLLATION": "D"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "INDEX_NAME": "movements_entry_history",
+        "COLUMN_NAME": "id",
+        "SEQ_IN_INDEX": 3,
+        "NON_UNIQUE": 1,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "INDEX_NAME": "one_initial_per_entry",
+        "COLUMN_NAME": "initial_entry_id",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 0,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "stock_movements",
+        "INDEX_NAME": "PRIMARY",
+        "COLUMN_NAME": "id",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 0,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "users",
+        "INDEX_NAME": "PRIMARY",
+        "COLUMN_NAME": "id",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 0,
+        "COLLATION": "A"
+      },
+      {
+        "TABLE_NAME": "users",
+        "INDEX_NAME": "users_identity",
+        "COLUMN_NAME": "identity_subject",
+        "SEQ_IN_INDEX": 1,
+        "NON_UNIQUE": 0,
+        "COLLATION": "A"
+      }
+    ],
+    "check_count": 25
+  },
+  "query_plan": {
+    "sql": "WITH classified AS (SELECT *,CASE WHEN expiry_date IS NULL THEN 'unknown' WHEN expiry_date<? THEN 'past_date' WHEN expiry_date=? THEN 'due_today' WHEN DATEDIFF(expiry_date,?)<=? THEN 'soon' ELSE 'later' END AS attention_status FROM food_entries WHERE user_id=? AND deleted_at IS NULL AND remaining_quantity > 0) SELECT * FROM classified ORDER BY CASE attention_status WHEN 'past_date' THEN 0 WHEN 'due_today' THEN 1 WHEN 'soon' THEN 2 WHEN 'unknown' THEN 3 ELSE 4 END,expiry_date IS NULL,expiry_date,created_at,id LIMIT ? OFFSET ?",
+    "parameters": [
+      "2026-10-10",
+      "2026-10-10",
+      "2026-10-10",
+      2,
+      "58b9a9f5-5585-4926-ac5e-38a8f0f69c0c",
+      20,
+      0
+    ],
+    "plan": [
+      {
+        "EXPLAIN": "{\n  \"query_block\": {\n    \"select_id\": 1,\n    \"cost_info\": {\n      \"query_cost\": \"45.85\"\n    },\n    \"ordering_operation\": {\n      \"using_filesort\": true,\n      \"table\": {\n        \"table_name\": \"food_entries\",\n        \"access_type\": \"ALL\",\n        \"possible_keys\": [\n          \"entries_owner_visible\",\n          \"entries_owner_quantity\",\n          \"entries_owner_trash\"\n        ],\n        \"rows_examined_per_scan\": 436,\n        \"rows_produced_per_join\": 133,\n        \"filtered\": \"30.58\",\n        \"cost_info\": {\n          \"read_cost\": \"32.52\",\n          \"eval_cost\": \"13.33\",\n          \"prefix_cost\": \"45.85\",\n          \"data_read_per_join\": \"181K\"\n        },\n        \"used_columns\": [\n          \"id\",\n          \"user_id\",\n          \"name\",\n          \"storage_location\",\n          \"remaining_quantity\",\n          \"unit\",\n          \"expiry_date\",\n          \"date_certainty\",\n          \"date_source\",\n          \"date_label_type\",\n          \"opened_on\",\n          \"note\",\n          \"version\",\n          \"deleted_at\",\n          \"created_at\",\n          \"updated_at\"\n        ],\n        \"attached_condition\": \"((`expiry_test_20261010042642335_31a1fe`.`food_entries`.`user_id` = '58b9a9f5-5585-4926-ac5e-38a8f0f69c0c') and (`expiry_test_20261010042642335_31a1fe`.`food_entries`.`deleted_at` is null) and (`expiry_test_20261010042642335_31a1fe`.`food_entries`.`remaining_quantity` > 0.000))\"\n      }\n    }\n  }\n}"
+      }
+    ],
+    "measured_ms": 3.99,
+    "representative_owner_rows": 400,
+    "benchmark": "Single local warm query; not production SLA/throughput"
+  },
+  "parity": {
+    "contract_version": "3.1.1",
+    "mismatches": [
+      "known versus exact; date_* versus expiry_date_*",
+      "stock_movements/adjustment versus quantity_movements/recount",
+      "UUID/decimal-string versus ent_/numbers",
+      "SQL composite owner/key versus mock synthetic id",
+      "OpenAPI restore VersionCommand requires expected_version; mock restoreEntry(key,id) omits it",
+      "mock saved response_status always200; DB create/movement201, delete204, recount no-op200",
+      "mock key reuse422 IDEMPOTENCY_PAYLOAD_MISMATCH; contract/repository409 IDEMPOTENCY_KEY_REUSED",
+      "mock JSON.stringify payload fingerprint versus canonical normalized SHA256",
+      "fixed DEMO_DATE versus injected owner-local day"
+    ],
+    "required_adapter": "Explicit DTO/enum/decimal/UUID/date and error mapping; history pagination; no UI changes in this task"
+  },
+  "restore_database": "expiry_test_20261010042642335_31a1fe_restore",
+  "completed_at": "2026-10-10T04:26:44.529Z",
+  "summary": {
+    "PASS": 35,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT TESTED": 5
+  }
+}

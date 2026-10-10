@@ -1,12 +1,21 @@
-import type { Attention, FoodEntry, QuantityMovement } from "../mockApi";
-import { fmtDate, fmtQty, fmtTime, labelTypeLabel, movementLabel, sourceLabel, unitLabel } from "../lib/format";
-import Grid from "../components/layout/Grid";
-import Badge from "../components/ui/Badge";
-import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
-import Icon from "../components/ui/Icon";
+import type { Attention, FoodEntry, QuantityMovement } from "../mockApi"
+import {
+  attentionGuidance,
+  fmtDate,
+  fmtQty,
+  fmtTime,
+  labelTypeLabel,
+  movementLabel,
+  sourceLabel,
+  unitLabel,
+} from "../lib/format"
+import Grid from "../components/layout/Grid"
+import Badge from "../components/ui/Badge"
+import Button from "../components/ui/Button"
+import Card from "../components/ui/Card"
+import Icon from "../components/ui/Icon"
 
-export type DetailAction = "consume" | "discard" | "recount" | "history" | "edit" | "delete";
+export type DetailAction = "consume" | "discard" | "recount" | "history" | "edit" | "date" | "delete"
 
 export default function Detail({
   food,
@@ -15,30 +24,47 @@ export default function Detail({
   onBack,
   onAction,
 }: {
-  food: FoodEntry;
-  attention: Attention;
-  movements: QuantityMovement[];
-  onBack: () => void;
-  onAction: (a: DetailAction) => void;
+  food: FoodEntry
+  attention: Attention
+  movements: QuantityMovement[]
+  onBack: () => void
+  onAction: (a: DetailAction) => void
 }) {
-  const unit = unitLabel[food.unit];
-  const empty = food.remaining_quantity === 0;
+  const unit = unitLabel[food.unit]
+  const empty = food.remaining_quantity === 0
+  const guidance = attentionGuidance[attention]
 
   const facts: [string, string, string?][] = [
     ["Vị trí lưu trữ", food.storage_location || "Chưa chọn vị trí"],
-    ...(food.opened_on ? [["Ngày mở bao bì", fmtDate(food.opened_on)] as [string, string]] : []),
-    ...(food.expiry_date_label_type && food.expiry_date_label_type !== "unknown"
-      ? [["Loại nhãn NSX", labelTypeLabel[food.expiry_date_label_type]] as [string, string]]
+    ...(food.opened_on
+      ? [["Ngày mở bao bì", fmtDate(food.opened_on)] as [string, string]]
       : []),
-    ...(food.expiry_date_source && food.expiry_date_source !== "package_label"
-      ? [["Nguồn ngày", sourceLabel[food.expiry_date_source]] as [string, string]]
+    ...(food.expiry_date_label_type && food.expiry_date_label_type !== "unknown"
+      ? [
+          [
+            "Loại nhãn ngày",
+            labelTypeLabel[food.expiry_date_label_type],
+          ] as [string, string],
+        ]
+      : []),
+    ...(food.expiry_date_source
+      ? [
+          [
+            "Nguồn ngày",
+            sourceLabel[food.expiry_date_source],
+          ] as [string, string],
+        ]
       : []),
     ...(food.note ? [["Ghi chú", food.note] as [string, string]] : []),
-  ];
+  ]
 
   return (
     <Grid className="page">
-      <button className="back-link col-span-full" onClick={onBack} type="button">
+      <button
+        className="back-link col-span-full"
+        onClick={onBack}
+        type="button"
+      >
         <Icon name="back" />
         Quay lại kho
       </button>
@@ -67,6 +93,7 @@ export default function Detail({
               onClick={() => onAction("delete")}
               type="button"
               title="Xóa vào thùng rác"
+              aria-label="Xóa vào thùng rác"
             >
               <Icon name="trash" />
             </button>
@@ -76,18 +103,20 @@ export default function Detail({
         {/* Hero Metrics: Quantity + Urgency & Expiry placed side-by-side */}
         <div className="detail-hero-grid">
           <div className="metric-box">
-            <span className="metric-label">LƯỢNG HIỆN CÓ</span>
+            <span className="metric-label">LƯỢNG GHI NHẬN</span>
             <div className="metric-val">
               <strong>{fmtQty(food.remaining_quantity)}</strong>
               <small>{unit}</small>
             </div>
             <span className="metric-sub">
-              {empty ? "Hết trong kho" : "Sẵn sàng sử dụng"}
+              {empty
+                ? "Đã hết theo bản ghi"
+                : "Kiểm lại nếu lượng thực tế đã thay đổi"}
             </span>
           </div>
 
           <div className="metric-box">
-            <span className="metric-label">HẠN SỬ DỤNG</span>
+            <span className="metric-label">NGÀY THEO DÕI</span>
             <div className="metric-val">
               <Badge type={attention} />
             </div>
@@ -100,17 +129,54 @@ export default function Detail({
           </div>
         </div>
 
+        <section className="next-step" aria-label="Việc tiếp theo">
+          <span className="section-label">VIỆC TIẾP THEO</span>
+          <h2>{empty ? "Vẫn còn thực phẩm ngoài thực tế?" : guidance.title}</h2>
+          <p>
+            {empty
+              ? "Kiểm lại và nhập lượng thực tế để đưa món trở lại danh sách còn hàng."
+              : guidance.body}
+          </p>
+          {attention === "unknown" && !empty && (
+            <Button
+              variant="secondary"
+              icon="edit"
+              onClick={() => onAction("date")}
+            >
+              Bổ sung ngày theo dõi
+            </Button>
+          )}
+          <p className="safety-note">
+            <Icon name="alert" />
+            Theo ngày bạn đã ghi, không phải đánh giá an toàn.
+          </p>
+        </section>
+
         {/* Action row directly underneath the quantity it modifies */}
         <div className="detail-actions-section">
           <span className="section-label">GHI NHẬN THAO TÁC</span>
           <div className="action-row">
-            <Button disabled={empty} onClick={() => onAction("consume")}>
+            <Button
+              variant="primary"
+              icon="check"
+              disabled={empty}
+              onClick={() => onAction("consume")}
+            >
               Đã dùng
             </Button>
-            <Button disabled={empty} variant="secondary" onClick={() => onAction("discard")}>
+            <Button
+              disabled={empty}
+              variant="secondary"
+              onClick={() => onAction("discard")}
+              icon="trash"
+            >
               Đã bỏ
             </Button>
-            <Button variant="ghost" onClick={() => onAction("recount")}>
+            <Button
+              variant="outline"
+              icon="review"
+              onClick={() => onAction("recount")}
+            >
               Kiểm lại
             </Button>
           </div>
@@ -137,14 +203,17 @@ export default function Detail({
           title="Lịch sử thay đổi"
           action={
             movements.length > 0 && (
-              <button className="text-link" onClick={() => onAction("history")} type="button">
+              <button
+                className="text-link"
+                onClick={() => onAction("history")}
+                type="button"
+              >
                 Tất cả ({movements.length})
               </button>
             )
           }
         >
-          {movements.length ? (
-            movements.slice(0, 3).map((m) => (
+          {movements.length ? movements.slice(0, 3).map((m) => (
               <div className="history-row" key={m.id}>
                 <span>
                   <Icon name="history" />
@@ -154,15 +223,15 @@ export default function Detail({
                   <small>{fmtTime(m.recorded_at)}</small>
                 </p>
                 <em>
-                  {fmtQty(m.quantity_before)} → {fmtQty(m.quantity_after)} {unit}
+                  {fmtQty(m.quantity_before)} → {fmtQty(m.quantity_after)}{" "}
+                  {unit}
                 </em>
               </div>
-            ))
-          ) : (
-            <p className="inline-hint">Chưa có thay đổi nào được ghi nhận.</p>
-          )}
+            )) : <p className="inline-hint">
+              Chưa có thay đổi nào được ghi nhận.
+            </p>}
         </Card>
       </div>
     </Grid>
-  );
+  )
 }

@@ -1,25 +1,32 @@
-import { useState } from "react";
-import Grid from "../components/layout/Grid";
-import PageHeader from "../components/layout/PageHeader";
-import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
-import Field from "../components/ui/Field";
+import { useState } from "react"
+import Grid from "../components/layout/Grid"
+import PageHeader from "../components/layout/PageHeader"
+import Button from "../components/ui/Button"
+import Card from "../components/ui/Card"
+import Field from "../components/ui/Field"
+import Select from "../components/ui/Select"
 
-type Prefs = { timezone: string; attention_lead_days: number };
+type Prefs = {
+  timezone: string
+  attention_lead_days: number
+}
 
 export default function Settings({
   prefs,
   displayName,
   onSave,
 }: {
-  prefs: Prefs;
-  displayName: string;
-  onSave: (p: Prefs) => void;
+  prefs: Prefs
+  displayName: string
+  onSave: (p: Prefs) => void
 }) {
-  const [days, setDays] = useState(String(prefs.attention_lead_days));
-  const [timezone, setTimezone] = useState(prefs.timezone);
-  const n = Number(days);
-  const error = days === "" || !Number.isInteger(n) || n < 0 || n > 30 ? "Nhập số từ 0 đến 30." : "";
+  const [days, setDays] = useState(String(prefs.attention_lead_days))
+  const [timezone, setTimezone] = useState(prefs.timezone)
+  const n = Number(days)
+  const error =
+    days === "" || !Number.isInteger(n) || n < 0 || n > 30
+      ? "Nhập số từ 0 đến 30."
+      : ""
 
   return (
     <Grid className="page">
@@ -44,12 +51,16 @@ export default function Settings({
             noValidate
             className="settings-form"
             onSubmit={(e) => {
-              e.preventDefault();
-              if (!error) onSave({ timezone, attention_lead_days: n });
+              e.preventDefault()
+              if (!error) onSave({ timezone, attention_lead_days: n })
             }}
           >
             <div className="form-grid">
-              <Field label="Nhắc trước (ngày)" error={error} hint="Báo trước bao nhiêu ngày khi món sắp hết">
+              <Field
+                label="Nhắc trước (ngày)"
+                error={error}
+                hint="Báo trước bao nhiêu ngày khi món sắp hết"
+              >
                 <input
                   type="number"
                   inputMode="numeric"
@@ -60,19 +71,26 @@ export default function Settings({
                 />
               </Field>
               <Field label="Múi giờ">
-                <select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
-                  <option value="Asia/Ho_Chi_Minh">Việt Nam (GMT+7)</option>
-                  <option value="Asia/Singapore">Singapore (GMT+8)</option>
-                  <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
-                </select>
+                <Select
+                  aria-label="Múi giờ"
+                  value={timezone}
+                  onChange={setTimezone}
+                  options={[
+                    { value: "Asia/Ho_Chi_Minh", label: "Việt Nam (GMT+7)" },
+                    { value: "Asia/Singapore", label: "Singapore (GMT+8)" },
+                    { value: "Asia/Tokyo", label: "Tokyo (GMT+9)" },
+                  ]}
+                />
               </Field>
             </div>
             <div className="form-actions">
-              <Button type="submit">Lưu thay đổi</Button>
+              <Button type="submit" variant="primary">
+                Lưu thay đổi
+              </Button>
             </div>
           </form>
         </Card>
       </div>
     </Grid>
-  );
+  )
 }

@@ -1,0 +1,680 @@
+﻿UserFlow
+Userflow thực tế của app tham khảo:
+      
+
+
+Requirements
+Nhóm 2: 
+Đề tài: Xây dựng Hệ thống Quản lý và Cảnh báo Vòng đời Sản phẩm Cá nhân dựa trên Dữ liệu Hạn dùng và Phản hồi từ Người dùng. 
+
+
+Business Requirements:
+
+
+1.High level need -WHAT :
+*  Quản lý vòng đời sản phẩm tự động: Theo dõi và tự động cập nhật trạng thái sản phẩm: Fresh → Warning → Expired dựa trên dữ liệu hạn sử dụng.
+* Tự động hóa dữ liệu đầu vào: Giảm tối đa việc nhập dữ liệu thủ công, dữ liệu mặc định và tự động tính ngày hết hạn.
+* Cảnh báo đúng thời điểm: Gửi thông báo khi sản phẩm sắp hết hạn và hạn chế các thông báo không cần thiết.
+* Tích hợp Feedback Loop: Ghi nhận phản hồi và hành vi của người dùng để hệ thống có thể điều chỉnh cách nhắc nhở trong tương lai.
+2. Measurable Objectives:
+* Cắt giảm lãng phí: Giảm ít nhất 40% lượng thực phẩm và mỹ phẩm bị bỏ phí do để quên quá hạn trong 3 tháng đầu sử dụng.
+* Tận dụng quyền lợi: Đạt tỷ lệ 100% thiết bị công nghệ bị hỏng được đưa đi bảo hành trước khi hết hạn hỗ trợ miễn phí.
+* Độ chính xác dữ liệu: Đạt tỷ lệ phản hồi trạng thái trên 80% qua thông báo tương tác nhanh 1 chạm, giữ cho dữ liệu đồ dùng trong nhà luôn sạch và chính xác.
+3. Benefits - WHY:
+* Bảo vệ tài chính & Tối ưu nguồn lực: Giúp cá nhân/hộ gia đình tiết kiệm chi phí mua sắm lặp lại do bỏ quên đồ dùng cũ, đo lường được giá trị tiền tệ tiết kiệm được theo từng tháng. 
+* Bảo vệ sức khỏe người dùng: Ngăn chặn rủi ro ngộ độc thực phẩm hoặc kích ứng da do vô tình sử dụng sản phẩm đã quá hạn bảo quản hoặc quá hạn mở nắp an toàn.
+* Trải nghiệm đơn giản hơn nhờ tự động hóa: Thay thế mô hình lưu trữ dữ liệu tĩnh và nhắc nhở một chiều bằng cơ chế tương tác hai chiều 
+
+
+
+
+
+
+
+
+
+
+
+
+2. User / Stakeholder Requirements
+2.1. Nhóm 1: Người trẻ thích công nghệ (high tech)
+- Mục tiêu: Tiện lợi, không thích gõ tay nhiều.
+* UR-1.1: Người dùng muốn chụp ảnh bao bì/mã vạch để app tự đọc tên và hạn sử dụng, đỡ phải gõ từng chữ.
+* UR-1.2:Người dùng muốn có thể đánh dấu nhanh "Đã dùng xong" hoặc "Đã bỏ đi" chỉ bằng một thao tác quẹt/chạm ngay tại danh sách để dọn tủ nhanh mà không cần mở chi tiết từng món đồ. 
+2.2. Nhóm 2: Người lớn tuổi / Nội trợ (Low-tech)
+- Mục tiêu: Rõ ràng, dễ nhìn, vào app là thấy ngay.
+* UR-2.1: Người dùng muốn mở app ra là thấy ngay danh sách đồ nào sắp hết hạn qua màu sắc cảnh báo trực quan (có thể là theo màu sắc vdu như đỏ/vàng/xanh).
+* UR-2.2: Người dùng muốn nhận thông báo nhắc nhở ngắn gọn, dễ hiểu trước vài ngày để kịp mang đồ ra nấu hoặc sử dụng.
+2.3. Nhóm 3: Người thích kiểm soát chi tiết (Detailed/Manual User)
+- Mục tiêu: Nhập tay đầy đủ, lưu trữ rõ ràng.
+* UR-3.1: Người dùng muốn có form nhập tay đơn giản nhưng đủ các trường: tên đồ, hạn dùng, vị trí để (tủ lạnh/bàn phấn/ngăn kéo) và ảnh hóa đơn/phiếu bảo hành.
+* UR-3.2: Người dùng muốn xem lại danh sách tất cả đồ dùng đã lưu cùng hình ảnh chứng từ khi cần mang đi bảo hành hoặc kiểm tra lại hạn.
+3. Functional (Solution) Requirements 
+- FR1: Nhập liệu bằng camera (OCR bóc tách hạn dùng)
+* Hệ thống cho phép chụp ảnh bao bì/nhãn sản phẩm hoặc quét mã vạch để tự động trích xuất Tên và Ngày hết hạn vào form tạo mới mà không cần gõ chữ. 
+*  Phục vụ yêu cầu: UR-1.1. 
+- FR-2 (Form nhập tay cơ bản - Manual Input):
+* Hệ thống cung cấp biểu mẫu nhập tay gồm 4 trường tối thiểu: Tên đồ vật, Hạn sử dụng (hoặc số ngày), Vị trí lưu trữ (Ngăn mát, Ngăn đông, Kệ đồ), và Danh mục.
+* Phục vụ yêu cầu: UR-2.2, UR-3.1.
+- FR-3 (Lưu trữ ảnh chứng từ bảo hành):
+* Hệ thống cho phép người dùng chụp trực tiếp hoặc tải lên từ thư viện tối đa 2 hình ảnh (Hóa đơn mua hàng hoặc Phiếu bảo hành) gắn kèm theo món đồ công nghệ.
+* Phục vụ yêu cầu: UR-3.1, UR-3.2.
+- FR-4 (Bảng điều khiển phân loại trạng thái trực quan):
+* Màn hình chính phân loại đồ dùng thành 3 nhóm trạng thái theo mã màu: Đỏ (Hết hạn hôm nay / Đã quá hạn), Vàng (Hết hạn trong 3 ngày tới), Xanh (Còn hạn an toàn).
+* Phục vụ yêu cầu: UR-2.1.
+- FR-5 (Lập lịch thông báo nhắc nhở trước hạn):
+* Hệ thống tự động kích hoạt thông báo đẩy (Push Notification) lên thiết bị theo mốc thời gian: trước 3 ngày đối với thực phẩm, trước 7 ngày đối với đồ bảo hành và nhắc lại vào đúng ngày hết hạn.
+* Phục vụ yêu cầu: UR-2.2.
+4. Non-functional (Quality of Service) Requirements (Yêu cầu phi chức năng)
+- NFR-1 (Hiệu năng tải trang - Performance):
+* Thời gian tải và hiển thị danh sách màn hình chính (Dashboard) không được vượt quá 1.5 giây trong điều kiện kết nối mạng thông thường, đảm bảo người lớn tuổi thao tác mượt mà không phải chờ đợi.
+- NFR-2 (Tốc độ xử lý ảnh - OCR Response Time):
+* Thời gian bóc tách chữ từ ảnh chụp đến khi hiển thị kết quả điền vào form không được vượt quá 3 giây, phục vụ nhu cầu thao tác nhanh của nhóm người dùng trẻ.
+- NFR-3 (Tính khả dụng & Thao tác - Usability):
+* Giao diện cơ bản phải có kích thước vùng chạm nút bấm tối thiểu 48x48 dp, font chữ hiển thị tên món đồ tối thiểu 16pt với độ tương phản màu sắc rõ ràng để người nội trợ, lớn tuổi dễ đọc.
+- FR-4 (Độ tin cậy thông báo - Reliability):
+* Bộ dịch vụ lập lịch thông báo (Notification Service) phải gửi thông báo chính xác trong khoảng thời gian đã hẹn với độ lệch tối đa không quá ±5 phút, giúp người dùng không bỏ lỡ hạn bảo hành hay hạn dùng
+5. Implementation (Transition) Requirements (Yêu cầu triển khai / Chuyển giao)
+- TR-1 (Khởi tạo dữ liệu danh mục mẫu - Seed Data):
+* Hệ thống cần nạp sẵn tập dữ liệu danh mục cơ bản khi cài đặt: 3 vị trí lưu trữ mặc định (Ngăn mát, Ngăn đông, Tủ đồ) và các nhóm mặt hàng phổ biến (Thực phẩm tươi, Thực phẩm khô, Đồ gia dụng/Công nghệ) để người dùng có thể sử dụng ngay mà không cần tự cấu hình.
+- TR-2 (Cấp quyền hệ thống khi khởi động lần đầu - Onboarding Permission):
+* Màn hình mở đầu tiên sau khi cài app phải hiển thị hộp thoại xin cấp quyền truy cập Camera (để quét ảnh) và quyền gửi Thông báo đẩy (Push Notification) kèm thông điệp giải thích ngắn gọn, rõ ràng.
+- TR-3 (Tương thích nền tảng thiết bị - Device Compatibility):
+* Ứng dụng phải được đóng gói hoạt động ổn định trên các hệ điều hành di động phổ thông (Android phiên bản từ 10 trở lên hoặc iOS phiên bản từ 15 trở lên) mà không đòi hỏi phần cứng đặc thù.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Bottleneck
+1.Thao tác cập nhật rườm rà
+* Thực trạng: Muốn cập nhật phải mở app, tìm món đồ, bấm xóa. Người dùng lười nên bỏ qua, khiến hệ thống ngập rác và thông báo sai.
+2. Cài đặt cảnh báo 
+* Mỗi lần thêm sản phẩm, người dùng phải tự tay chọn từng trường: Lịch nhắc nhở và Thời gian nhắc nhở (mấy giờ, trước bao nhiêu ngày).
+* Nếu mua một giỏ hàng 10 món, việc lặp lại thao tác chọn giờ nhắc sẽ khiến người dùng nản lòng và bỏ dở việc nhập liệu.
+3. Không có cơ chế xử lý hàng loạt 
+* Trong danh sách all items , người dùng chỉ có thể thao tác bấm vào từng món đồ một để cập nhật hoặc xóa.
+* Khi dọn tủ lạnh hoặc tủ đồ định kỳ, việc phải bấm mở từng món để xóa gây tốn rất nhiều thời gian.
+
+
+
+
+1 – Nhập dữ liệu
+1 – Nhập dữ liệu
+Vấn đề:
+Người dùng phải nhập thủ công nhiều thông tin như:
+Name → Category → Date → Quantity...
+Việc này gây mất thời gian và có thể dẫn đến sai sót.
+Giải pháp:
+Cho phép người dùng quét hình ảnh/OCR để tự động nhận diện tên sản phẩm, ngày hết hạn và các thông tin liên quan.
+2 – Người dùng không muốn mở app thường xuyên
+Vấn đề:
+Nếu hệ thống yêu cầu người dùng thường xuyên mở ứng dụng để kiểm tra sản phẩm, người dùng vẫn có thể quên hạn sử dụng.
+Giải pháp:
+Sử dụng Push Notification + Widget để chủ động nhắc người dùng.
+3 – Cảnh báo quá nhiều
+Vấn đề:
+Nếu người dùng có 50 sản phẩm và hệ thống gửi thông báo cho từng sản phẩm, điều này có thể gây notification fatigue và khiến người dùng bỏ qua thông báo.
+Giải pháp:
+Hệ thống có thể gom nhóm các sản phẩm theo thời gian hết hạn.
+4 – Không biết nên làm gì với sản phẩm sắp hết hạn
+Vấn đề:
+Cảnh báo chỉ có giá trị khi giúp người dùng thực hiện một hành động cụ thể. Người dùng có thể biết sản phẩm sắp hết hạn nhưng không biết nên sử dụng như thế nào.
+Giải pháp:
+Sử dụng AI Recommendation để đưa ra đề xuất dựa trên sản phẩm và dữ liệu người dùng
+
+
+Phạm Vi hệ thống
+Cross-Domain Household Expiry and Lifecycle Management: Evidence, Personas, and Business Requirements
+Executive summary
+Published primary-user research does exist beyond food, but the evidence is uneven across domains. Food has the strongest combination of behavioral interviews and real-world app deployments: qualitative studies with household food managers, the TotalCtrl app evaluation, the 52-household CozZo field intervention, and the EATiT! deployment all converge on visibility loss, planning difficulty, maintenance burden, and physical-versus-digital inventory drift. [1] Cosmetics now has unusually relevant direct evidence: a 2025 peer-reviewed study used 33 semi-structured interviews in the UK and China specifically to investigate why consumers continue using cosmetics beyond expiry guidance. [2] Medicine has strong household evidence: an Australian study conducted semi-structured interviews with 166 experienced medicine users/households and identified 2,301 medicines, while newer Finnish and 2026 mixed-method work further documents unnecessary and expired medicines retained in homes. [3] Warranty and generic consumable-replacement research is materially weaker: strong repair-behavior research exists, including a Norwegian study with 1,196 consumers plus 15 repair-industry interviews, but I did not find comparably strong primary research specifically showing consumers need a generic “warranty expiry tracker.” [4] The evidence therefore does not justify one generic model such as product → expiry date → warning → expired. It does justify testing a broader household lifecycle-management architecture whose shared layer tracks ownership, lifecycle events, attention and actions, while food, cosmetics, medicines and warranty remain separate domain policies. For an MVP, the evidence supports food first, with cosmetics as the strongest second vertical; medicine should come later behind safety/content governance, and warranty should remain exploratory until direct user validation.
+Research questions and evidence standard
+The research problem should not be framed as “Do users want an expiry app?” That already assumes both the problem and the solution. The governing question is:
+Do users across multiple household-product domains experience sufficiently similar lifecycle-management failures that one shared product can solve them without erasing domain-specific meaning, safety rules, and actions?
+The deep-research questions should therefore be:
+Research question
+	Why it matters
+	RQ — Prevalence: How often do households actually retain food, cosmetics or medicines beyond relevant lifecycle dates, or miss warranty/replacement events?
+	Determines whether this is a meaningful recurring problem rather than an attractive app concept.
+	RQ — Measurement: Is prevalence measured through household audits, observed inventory, diary records, or retrospective self-report?
+	Interview recall can reveal why behavior occurs but is weak for estimating actual quantities/frequency.
+	RQ — Lifecycle: What event actually starts or changes the lifecycle clock: manufacture, purchase, opening, storage change, dispensing, first use, product failure, or elapsed usage?
+	A single expiryDate field cannot represent all domains correctly.
+	RQ — Visibility: At what stage does the product stop being actively remembered or understood by its owner?
+	Tests whether “forgetting expiry” is actually an attention/inventory-visibility problem.
+	RQ — Capture: Where can lifecycle data come from: printed date, PAO symbol, barcode, receipt, email invoice, manufacturer data, photo/OCR, or user entry?
+	Determines onboarding and recurring-maintenance burden.
+	RQ — State drift: What happens after users consume, open, move, discard, finish, repair or replace an item?
+	Digital records become unreliable when physical state changes without corresponding digital updates.
+	RQ — Action: What does the user actually need at a lifecycle event: consume, freeze, inspect, discard, replace, return medicine, repair, or file a warranty claim?
+	“Expiry notification” is information; user value usually requires an action.
+	RQ — Commonality: Which behaviors repeat across food, cosmetics, medicine and warranties?
+	Defines what belongs in a shared platform core.
+	RQ — Difference: Which lifecycle semantics cannot safely be generalized?
+	Defines domain-specific policy modules.
+	RQ — Risk/legal: Which recommendations depend on health regulation, labeling rules, disposal rules or consumer law?
+	Especially important for medicine, cosmetics and warranties.
+	RQ — Household coordination: Are multiple household members purchasing, opening, consuming or disposing of the same products?
+	Determines whether lifecycle state needs shared ownership and history.
+	RQ — Value versus burden: Does maintaining the tracker require more effort than the problem is worth to the user?
+	The food-app field evidence identifies this as a major adoption risk. [5]
+	RQ — Outcome: Are we measuring notification clicks, better awareness, correct lifecycle decisions, actual waste reduction, or avoided missed claims?
+	These are different levels of outcome and should not be conflated.
+	RQ — Product strategy: Does adding multiple domains increase retained value, or only increase cognitive and regulatory complexity?
+	This is the actual cross-domain MVP decision.
+	Evidence grading
+I used four grades rather than treating every Google result as equivalent.
+A — backbone evidence: peer-reviewed primary research with reasonably transparent sampling/method, high direct relevance and/or strong real-life observation.
+B — supporting evidence: credible academic/university/large funded field work, but with small samples, incomplete peer-reviewed reporting, limited transferability, or only adjacent relevance.
+C — hypothesis-generation evidence: public UX portfolios, design case studies or smaller studies whose methods are insufficiently transparent for strong claims.
+D — exclude from substantive claims: promotional material, unclear methodology, secondary summaries presented as primary research, or evidence too distant from the problem.
+The grade evaluates fitness for this product question, not whether the underlying research is “good science” in general. For example, a rigorous appliance-repair paper can still receive only B for a warranty-expiry-app requirement because its construct is repair behavior, not forgotten warranty deadlines.
+The intended reasoning chain is therefore:
+ Rendered Mermaid diagram 1 
+
+
+
+	What is actually established
+The strongest repeated food finding is not merely “people forget dates.” It is that household food management consists of planning, purchasing, storage, awareness, use and leftover management, and software that asks users to continuously reproduce that changing physical system can become another chore. Teng and Graham-Rowe establish the behavioral-management side; TotalCtrl and CozZo show the same problem emerging during actual digital interventions. [14]
+That convergence is important because it produces triangulation:
+Qualitative household research
+    convenience / planning / food-management capability matter
+                          +
+Real app deployments
+    manual capture / updates / spoilage estimation create friction
+                          ↓
+HIGH-CONFIDENCE PRODUCT MECHANISM
+A useful digital inventory must cost less effort to maintain
+than the value users receive from it.
+The cosmetics evidence demonstrates that this is not a food-only problem, but the mechanism changes. Wang et al.'s 33 interviews directly studied why users ignore cosmetics expiry guidance and found that behavior reflects competing risk judgments rather than a simple knowledge deficit. [2] In European cosmetic labeling, an additional complication is Period After Opening (PAO): the meaningful lifecycle can depend on the event “opened” rather than solely on purchase or an absolute calendar expiry; EU guidance represents PAO with an open-jar symbol and a time period. [15]
+Medicine evidence is even stronger for the existence of household-state problems. Kelly et al. used 166 semi-structured interviews with experienced Australian medicine users and found 2,301 medicines, 1,424 of which were not in everyday use; inappropriate retention, storage and disposal were sufficiently material for the authors to frame them as public-health concerns. [11] The Finnish 5,004-respondent study provides broader prevalence-oriented evidence and explicitly studies expired/unnecessary household medicines and associated factors. [16] Medicine is therefore a highly real lifecycle-management problem—but that does not make it a low-risk app vertical. FDA currently maintains dedicated guidance for disposing of unused or expired medication, demonstrating that lifecycle actions here are health-related and must be sourced from authoritative jurisdiction-specific guidance rather than generated as generic app advice. [17]
+Warranty is different. The research base supports a broader repair/ownership-lifecycle problem, but I did not find an equivalent peer-reviewed interview study whose central finding is “households repeatedly lose money because they forget warranty expiry dates.” Laitala et al. is strong research—1,196 Norwegian consumers plus 15 repair-industry interviews—but it studies repair drivers and barriers rather than a warranty-tracking behavior. [4] This is a crucial evidence gap, not something that should be concealed by combining “warranty” with the better-established expiry domains.
+Evidence quality versus measurement type
+The sources also answer the question “where should our numbers come from?”
+What you are trying to know
+	Best evidence type
+	Why
+	Why a user retained/forgot/discarded an item
+	Contextual or semi-structured interview
+	Reveals reasoning, routines and trade-offs.
+	How often products are really expired/unwanted at home
+	Household inventory audit / item enumeration
+	Does not rely solely on memory. Kelly's medicine study is strong partly because participants identified actual household medicines. [18]
+	Actual food waste reduction
+	Waste audit / weighed diary, before versus after
+	Notification engagement is not a waste outcome. CozZo used field intervention data rather than only hypothetical intent. [5]
+	Whether opening dates are forgotten
+	Longitudinal diary / event logging
+	Retrospective recall of “when did I open this mascara?” is itself the behavior under investigation.
+	Whether reminders change action
+	Instrumented field test
+	Measures reminder → action, not stated preference.
+	Missed warranty opportunities
+	Eligible product failures × active coverage × whether a claim was possible but not made
+	Simply asking “do you forget warranties?” provides no reliable denominator.
+	Population prevalence
+	Representative survey / audit, not five UX interviews
+	Small qualitative samples explain mechanisms; they cannot establish population percentages.
+	This distinction is why the CozZo 43% result is interesting but cannot defensibly become “our app will reduce waste by 40%.” The intervention and population are specific, while the smaller TotalCtrl study did not find a corresponding measurable reduction in its sample. [19] Evidence disagreement here is useful: awareness improvement is easier to demonstrate than durable outcome improvement.
+Cross-domain synthesis and lifecycle model
+The domains share a mechanism, not one definition of “expiry”
+The cross-domain comparison is the central product decision.
+Domain
+	Real lifecycle signal
+	Typical behavior seen in research
+	Main failure mode
+	Evidence strength
+	Shared mechanism?
+	Can generic expiryDate represent it?
+	Food
+	Printed date, storage, opening, visible quality, estimated perishability
+	Buy → store → forget/plan poorly → rediscover; inventory updates are skipped when cumbersome
+	Item becomes invisible; date or condition uncertain; digital inventory becomes stale
+	Very strong
+	Yes: attention + state + action
+	No
+	Cosmetics
+	Unopened durability and/or PAO after first opening, plus product condition
+	Open → intermittently use → lose track of opening/lifetime → trade safety/performance risk against value
+	Opening event forgotten; PAO not operationalized; deliberate continued use after guidance
+	Strong qualitative evidence
+	Yes: event → timer → attention → decision
+	No
+	Medicine
+	Manufacturer expiration plus active-treatment/PRN/unwanted state, storage and disposal status
+	Store in multiple places → treatment changes/ends → retain unused stock → expiry may be discovered later
+	Unwanted/expired stock persists; inappropriate reuse/storage/disposal risk
+	Very strong
+	Yes: visibility + status + action
+	No
+	Warranty / repair
+	Purchase date, contractual/legal coverage, proof of purchase, failure event, claim eligibility
+	Product remains passive until failure; user then decides repair/replace/claim
+	Proof or entitlement may be unclear; repair may be abandoned for cost/convenience reasons
+	Moderate adjacent evidence; weak direct expiry-tracking evidence
+	Partly: latent state + event + deadline
+	No
+	Generic consumable replacement
+	Installation/opening date, elapsed time, usage count, condition or manufacturer interval
+	Evidence varies heavily by product type
+	User misses replacement interval or replaces unnecessarily
+	Sparse as one generic research domain
+	Potentially
+	No
+	The answer to “Is expiry too general?” is therefore:
+Yes, if “expiry” is treated as one business object. No, if it is reframed as a family of time- and event-dependent household lifecycles.
+The actual lifecycle models look more like this:
+ Rendered Mermaid diagram 2 
+
+
+
+	These differences have direct architecture consequences.
+A naïve domain model:
+Item
+- name
+- expiryDate
+- status = FRESH | WARNING | EXPIRED
+is unsupported.
+A cross-domain model closer to the evidence is:
+LifecycleItem
+- identity
+- domain
+- ownership / location
+- evidenceSource
+- events[]
+- lifecyclePolicy
+- nextMeaningfulEvent
+- attentionState
+- confidence
+- availableActions[]
+Then domain policies interpret events differently:
+FoodPolicy
+    best_before / use_by / storage / opened / frozen
+
+CosmeticsPolicy
+    minimum_durability / opened_at / PAO
+
+MedicinePolicy
+    manufacturer_expiry / active-use state /
+    unwanted state / disposal pathway
+
+WarrantyPolicy
+    purchase / coverage terms / proof /
+    failure / claim eligibility
+
+ReplacementPolicy
+    installed_at / elapsed_time /
+    usage / condition threshold
+This is a design inference, not a finding claimed verbatim by any paper. It follows from the fact that the underlying studies document materially different lifecycle clocks and actions while repeatedly showing problems of attention, state and action. [20]
+What can genuinely be shared
+Across the strongest evidence, four common mechanisms are credible.
+Lifecycle state becomes cognitively invisible. Food disappears behind other items; unused medicine remains in household storage; cosmetics can continue being used without active awareness of opening/expiry state. [21]
+The user has incomplete state information. Food users may not know remaining perishability; cosmetics need an opening event to operationalize PAO; medicines can become “unwanted” before the printed date; warranty eligibility does not even exist until terms, proof and failure state are combined. [22]
+The lifecycle event is valuable only if it leads to an action. In food the action may be eat/freeze/cook; in cosmetics it may be continue/replace/discard; in medicine it may be follow treatment or use an authorized disposal path; in warranty it is claim/repair/replace. [23]
+Maintaining state has a cost. This is directly strong in food-app studies and should be treated as a hypothesis to validate—not automatically assumed—when extending to the other domains. TotalCtrl and CozZo both show that software can create enough data-maintenance work to undermine its own value. [24]
+Thus the common product should not be:
+“Everything has an expiry date.”
+It should be:
+“Things you own pass through meaningful lifecycle events; the system helps capture enough state to surface what needs attention and the domain-appropriate action.”
+That is a considerably more defensible foundation for a cross-domain product.
+Proto-personas and business requirements
+Literature-grounded proto-personas
+These are proto-personas, not validated demographic segments. They synthesize recurring behaviors across studies. No source proves that exactly four population clusters exist.
+Proto-persona
+	Behavior summary
+	JTBD
+	Primary pain
+	Domains
+	Evidence trace
+	The Out-of-Sight Owner
+	Relies mainly on physical visibility and memory. Once an item moves out of attention, lifecycle state is rarely checked proactively.
+	“When something I own is becoming relevant again, bring it back into my attention without making me continuously manage it.”
+	Forgotten stock; distributed storage; low motivation to maintain records
+	Food, medicine, cosmetics; warranty as hypothesis
+	EATiT visibility mechanism; Kelly household medicines; Wang cosmetics behavior. [21]
+	The Busy Improviser
+	Has intentions/plans but everyday schedules and usage change; a date alone does not answer what to do next.
+	“When my original plan no longer fits, tell me which item matters and what useful action I can take now.”
+	Competing priorities; uncertain next action; planning mismatch
+	Especially food; partially cosmetics/medicine
+	Graham-Rowe, Teng, CozZo. [25]
+	The Conscientious Maintainer
+	Willing to track belongings, but abandons systems whose upkeep becomes repetitive administrative work.
+	“Help me keep lifecycle information trustworthy without forcing me to re-enter every physical change.”
+	Manual capture; repeated updates; stale digital records
+	Food strongly; likely cosmetics/warranty; medicine inventory with caution
+	TotalCtrl + CozZo direct field evidence. [24]
+	The Risk-and-Value Steward
+	Makes lifecycle decisions by balancing safety, performance, cost and household responsibility rather than blindly obeying a date.
+	“When a product reaches a meaningful lifecycle point, tell me what the signal means and what action is appropriate in this domain.”
+	Ambiguous meaning; fear of waste versus fear of harm/loss; jurisdiction-dependent rules
+	Cosmetics, medicine, food; warranty for economic entitlement
+	Wang cosmetics risk findings; Kelly medicine retention; food decision studies; repair research. [26]
+	The persona distinction is behavioral, not demographic:
+ Rendered Mermaid diagram 3 
+
+
+
+	Pilot decision criteria
+Measure four layers separately.
+Capture quality
+
+Track median capture time, manual fields required, corrections and abandonment.
+State quality
+
+This is arguably more important than raw notification engagement.
+Action quality
+
+“Opened notification” should not count as product success.
+Outcome quality
+For food:
+
+Use the same measurement protocol before and during the intervention. Do not set “40%” as a validated target merely because one CozZo intervention reported 43%; TotalCtrl illustrates that outcome effects are not automatically reproducible. [19]
+For a cross-domain product decision, I would use the following project decision gates, explicitly as design thresholds rather than literature-derived truths:
+* At least 80% critical-task completion in the prototype without moderator rescue.
+* Median assisted capture under roughly 30 seconds for a normal item, or clear evidence users accept longer capture for high-value/safety-critical items.
+* A materially lower stale-record rate than a manual-list baseline.
+* The same shared Needs Attention → Meaning → Action → Resolve model is understood without redesign in at least food + cosmetics.
+* Participants can correctly distinguish that food, cosmetics, medicine and warranty do not share the same meaning of “expired.”
+* No audited safety-critical medicine recommendation is generated without an authoritative source.
+The most important cross-domain success criterion is qualitative:
+Does the common abstraction reduce cognitive effort, or force users to learn an abstract lifecycle-management system they never asked for?
+________________
+
+
+MVP recommendation
+Recommended strategy: build a cross-domain architecture, ship a food-first product.
+Specifically:
+ARCHITECTURE
+Lifecycle Core
+    ↓
+events
+provenance
+attention
+actions
+state reconciliation
+household ownership
+
+SHIPPED MVP
+    ↓
+FoodPolicy only
+
+NEXT VALIDATION
+    ↓
+CosmeticsPolicy
+
+GUARDED EXPANSION
+    ↓
+MedicinePolicy
+
+EVIDENCE-GATED EXPANSION
+    ↓
+WarrantyPolicy
+Food should be first because it has the strongest combination of qualitative evidence, digital field studies, frequent lifecycle events and rapid feedback loops. 
+Cosmetics is the strongest second domain because Wang et al. directly establishes an expiry-management behavior and PAO creates an unusually clear opening event → lifecycle timer → later decision use case. 
+Medicine has a stronger problem evidence base than cosmetics, but is a poorer early product vertical because errors involve medication safety and regulated disposal guidance. 
+Warranty should not be sold as validated yet. The evidence supports repair/lifecycle friction but does not yet demonstrate a large, recurrent household “warranty-expiry tracking” job. 
+So the product positioning should evolve from:
+“One app for all your expiry dates.”
+to:
+“A household lifecycle assistant that keeps important products visible and tells you what needs attention next.”
+The former is date-centric. The latter is user-centric.
+
+
+Scope
+EXPIRY THINGS — SYSTEM SCOPE AND DEFINITION
+1. System definition
+Expiry Things is a domain-aware household lifecycle-management system. It maintains a digital representation of products owned or managed by a household, records lifecycle events, surfaces items that require attention, supports the next user action, and reconciles the digital record with the physical state.
+The system is not defined as “an app that sends expiry notifications.” Notifications are only one capability in the larger loop: capture → understand → prioritise → act → reconcile.
+The shared product hypothesis is valid only at the lifecycle-management layer. Food, cosmetics, medicine and warranty do not share one universal meaning of expiry, one clock, one status model or one safe action.
+
+
+2. Scope decision and product strategy
+The system uses a shared lifecycle core with domain-specific policy modules. This preserves common interaction patterns without erasing domain-specific meaning, safety rules or user actions.
+* Food is the evidence-supported MVP domain because the current research has the strongest combination of household interviews, real-world app evaluations and field deployments.
+* Cosmetics is a candidate second vertical, with a separate first-open / Period After Opening policy rather than a food-style expiry rule.
+* Medicine is deferred until authoritative safety, disposal and content governance are available; it must not be treated as a generic discard-after-expiry flow.
+* Warranty and technology-device tracking remain exploratory until direct research validates a recurring household need for this product.
+* Generic consumables, documents and every other type of expiration are not automatically included in the MVP.
+
+
+3. Shared lifecycle core
+* Ownership and household context: who owns, adds, uses or manages an item.
+* Item identity: the digital record needed to recognise and retrieve the item.
+* Lifecycle events: purchase, opening, use, movement, storage change, repair, replacement or disposal when relevant.
+* Attention state: what requires attention now, soon or later, without assuming that every domain uses the same status labels.
+* User action: the concrete next step available to the user.
+* Reconciliation: a low-friction way to update the digital record after the physical state changes.
+* Feedback and preferences: user-controlled timing, frequency and correction signals that may improve prioritisation.
+The shared core must not own domain-specific truth. Each domain policy defines its lifecycle clock, date meaning, evidence/provenance, state transitions, allowed actions and safety constraints.
+
+
+4. Food MVP definition
+For the MVP, Expiry Things manages household food and other food-related consumables with a printed, confirmed or estimated usable-until / best-before signal.
+* Capture a minimum actionable record with a manual fallback.
+* Preserve whether lifecycle information is printed, user-confirmed or estimated.
+* Surface Needs attention, Soon and Later using food-specific prioritisation rules.
+* Support validated actions such as use, cook, freeze, keep, share, discard or edit.
+* Allow one-tap or low-friction reconciliation when physical food state changes.
+* Group reminders by useful action to reduce notification fatigue.
+* Measure whether the system creates retained value without making inventory maintenance too costly.
+
+
+5. System boundary
+Inside the Expiry Things boundary:
+* Digital item records and lifecycle events.
+* Domain policy modules and status evaluation.
+* Attention prioritisation and user-controlled reminders.
+* Action flows and physical-to-digital reconciliation.
+* Persistent records, history and feedback needed for the product.
+Outside the Expiry Things boundary:
+* The physical product, packaging condition, temperature, freshness, spoilage or sensory quality.
+* The user’s final decision to eat, use, keep, share, repair, replace or discard.
+* Device operating-system services, system clock and third-party notification infrastructure.
+* External barcode/catalogue/OCR services; these may assist capture but are not the system’s core responsibility.
+* Medical, pharmaceutical, food-safety or legal authority. The system must not make unsupported safety guarantees.
+
+
+6. High-level system flow
+Physical product / source signal → Capture minimum record → Apply domain policy → Evaluate lifecycle state → Prioritise attention → Present an actionable next step → Reconcile physical and digital state → Learn only from sufficiently trustworthy data.
+A failed barcode, OCR result or external catalogue lookup must fall back to a small manual path. The core system must remain usable without automation.
+
+
+7. Business-requirement mapping
+* BR-01 — Useful visibility: help users maintain awareness of items requiring attention.
+* BR-02 — Low-friction capture: minimise the recurring work needed to create an actionable record.
+* BR-03 — Actionable prioritisation: surface the item and moment where user action is useful.
+* BR-04 — Low-friction reconciliation: reflect physical-to-digital changes with minimal interaction.
+* BR-05 — Action/use support: connect an attention state to a concrete, domain-appropriate next step.
+* BR-06 — Honest lifecycle uncertainty: distinguish source, certainty, estimate and domain meaning.
+* BR-07 — Notification control: preserve user control over timing, grouping, frequency and disablement.
+* BR-08 — Domain separation and household coordination: keep policy modules separate and add shared state only when validated.
+
+
+8. Solution do / don’t
+Do:
+* Define the product around lifecycle visibility and action, not reminders alone.
+* Use one shared interaction core with explicit domain policy boundaries.
+* Keep manual fallback and correction cheaper than abandoning the record.
+* Measure mechanism quality first: capture time, stale-record rate, relevant-action rate and disable/ignore rate.
+* Treat Food as the current MVP and validate extensions separately.
+Don’t:
+* Do not use one universal Product → Expiry Date → Warning → Expired model for every domain.
+* Do not claim that a date alone proves physical freshness, safety or usability.
+* Do not make barcode/OCR, AI/GPT or adaptive reminders prerequisites for core value.
+* Do not carry the Food MVP’s actions or safety assumptions into Medicine, Cosmetics or Warranty.
+* Do not treat 40% waste reduction, 100% warranty capture or 80% response as validated user requirements without local measurement.
+
+
+9. Definition of scope completion
+* The shared lifecycle core and each domain policy have separate responsibilities.
+* Food MVP has a defined object, lifecycle signal, attention model, action set and reconciliation path.
+* Cosmetics, Medicine and Warranty are represented as explicitly deferred policy modules, not silently mixed into Food logic.
+* Every requirement can be traced to a user need, evidence mechanism, candidate capability and validation metric.
+* Local validation is still required before treating cross-domain behaviour, persona clusters, notification tolerance or outcome KPIs as confirmed.
+[A] The System Engineering material supplies the analysis structure and requirement taxonomy. The research report supplies domain evidence and limitations. [D] The architecture above is a product recommendation derived from those sources, not a claim that the cross-domain product hypothesis has already been validated.
+
+
+
+
+
+
+Định nghĩa hệ thống
+ĐỊNH NGHĨA HỆ THỐNG EXPIRY THINGS
+1. System identity – Hệ thống là gì?
+Expiry Things là một hệ thống phần mềm biến các sản phẩm mà người dùng đang sở hữu hoặc quản lý thành những digital representations có thể được theo dõi trong suốt vòng đời. Hệ thống kết nối user, product record, lifecycle information, time, state evaluation, attention và user action thành một whole có mục đích.
+System definition: Expiry Things is a software system that represents managed products digitally, records lifecycle information and events, evaluates their current state, exposes relevant attention and supports user actions that update the record.
+Định nghĩa này mô tả bản chất và cách hệ thống hoạt động; nó không quyết định domain nào được triển khai ở MVP. Các quyết định Food, Cosmetics, Medicine, Warranty và phase triển khai thuộc tab Scope.
+
+
+2. System purpose – Mục đích hệ thống
+* Giảm khoảng cách giữa physical reality và digital record.
+* Giảm việc user phải ghi nhớ hoặc kiểm tra thủ công toàn bộ sản phẩm.
+* Chuyển lifecycle information thành attention và action có thể sử dụng.
+* Cho phép user cập nhật record sau mỗi thay đổi quan trọng trong physical lifecycle.
+* Giữ dữ liệu đủ rõ về nguồn, độ chắc chắn và thời điểm cập nhật để user có thể tin và sửa.
+
+
+3. System problem – Vấn đề mà hệ thống giải quyết
+Trong đời sống, sản phẩm được mua, mở, di chuyển, sử dụng, chia sẻ, sửa chữa hoặc loại bỏ ở những thời điểm khác nhau. Thông tin về những thay đổi này thường phân tán giữa physical label, trí nhớ, không gian lưu trữ và nhiều thành viên trong household.
+Nếu không có một representation tập trung, user không biết record nào còn đúng, trạng thái nào cần chú ý hoặc hành động nào nên thực hiện. Nếu việc cập nhật record quá tốn công, user sẽ bỏ qua cập nhật và hệ thống lại trở nên stale.
+System-level problem: hệ thống cần vừa tạo ra visibility, vừa duy trì state accuracy, nhưng không được làm chi phí quản lý cao hơn giá trị mà nó cung cấp.
+
+
+4. System boundary – Ranh giới trách nhiệm
+4.1. Bên trong boundary – Expiry Things sở hữu:
+* Digital product records và các thuộc tính cần thiết để nhận diện/truy xuất.
+* Lifecycle information, lifecycle events và lịch sử thay đổi.
+* State evaluation và attention representation.
+* Action flow để user xác nhận hoặc thay đổi record.
+* Notification/preference orchestration khi có capability tương ứng.
+* Persistence, retrieval, correction và feedback của digital state.
+4.2. Bên ngoài boundary – Expiry Things không sở hữu:
+* Physical product, chất lượng vật lý, nhiệt độ, freshness, spoilage hoặc sensory condition.
+* Ý chí và quyết định cuối cùng của user.
+* System clock, operating system và third-party platform services.
+* Độ chính xác tuyệt đối của barcode, OCR, catalogue hoặc external data provider.
+* Các kết luận chuyên môn về safety, medical, legal hoặc regulatory nếu không có authority/policy tương ứng.
+Boundary principle: Expiry Things quản lý digital representation và lifecycle coordination; hệ thống không được giả vờ sở hữu physical truth chỉ vì có một date hoặc một status label.
+
+
+5. Core system entities – Các thực thể cốt lõi
+* User: actor tạo, đọc, xác nhận, chỉnh sửa và giải quyết trạng thái.
+* Household context: phạm vi sở hữu, thành viên, location và ownership khi cần.
+* Product record: digital representation của sản phẩm hoặc một item/batch được quản lý.
+* Lifecycle signal: thông tin giúp xác định vòng đời, có thể đến từ label, user, event hoặc external source.
+* Lifecycle event: một thay đổi có ý nghĩa như create, open, use, move, share, repair, replace hoặc resolve.
+* Lifecycle state: state hiện tại được hệ thống biểu diễn từ record, event, time và policy.
+* Attention item: representation cho biết sản phẩm hoặc state nào cần user chú ý.
+* Action: thao tác làm thay đổi physical state hoặc digital record.
+* Policy: rule giải thích lifecycle signal và state transition cho một loại sản phẩm.
+* Feedback: correction, preference và outcome signal do user cung cấp.
+
+
+6. Relationships và data flow – Quan hệ và luồng dữ liệu
+Luồng hệ thống cấp cao:
+User / source signal → Product record → Lifecycle event + time → Policy evaluation → Lifecycle state → Attention → User action → Updated lifecycle event → Reconciled product record.
+* User tạo hoặc cập nhật Product record.
+* Product record nhận Lifecycle signal và các Lifecycle event.
+* Time và Policy được dùng để đánh giá Lifecycle state.
+* Lifecycle state được chuyển thành Attention item.
+* Attention item cung cấp một Action có thể thực hiện.
+* Action tạo event hoặc update mới.
+* Update mới quay lại Product record để giảm physical–digital drift.
+Điểm quan trọng: hệ thống không kết thúc ở bước gửi cảnh báo. Output có giá trị phải tạo ra một action hoặc một quyết định rõ ràng, sau đó state phải được cập nhật lại.
+
+
+7. Lifecycle model – Mô hình vòng đời trừu tượng
+Hệ thống dùng một lifecycle abstraction chung, nhưng không áp đặt cùng một semantic state cho mọi domain. Lifecycle abstraction gồm các phase sau:
+* Captured: sản phẩm đã được đưa vào digital record.
+* Known/Interpreted: hệ thống đã xác định thông tin lifecycle đang có và mức độ chắc chắn.
+* Active: sản phẩm đang được user quản lý.
+* Attention required: có lý do khiến sản phẩm cần được xem xét hoặc hành động.
+* Actioned/Resolved: user đã thực hiện một action hoặc xác nhận trạng thái mới.
+* Archived/Removed: record không còn active nhưng lịch sử có thể vẫn cần giữ.
+Các tên như Fresh, Warning, Expired, Opened, PAO, Warranty hoặc những state cụ thể khác chỉ là domain policy implementation. Chúng không phải là định nghĩa universal của core system.
+
+
+8. State ownership và feedback loop
+System là state owner của digital record; user là authority của physical action. Hệ thống không được tự nhận rằng record đã thay đổi vật lý nếu không có event, input hoặc policy evidence phù hợp.
+Feedback loop chuẩn:
+* System surfaces một state hoặc attention item.
+* User quan sát và thực hiện action ngoài đời hoặc trong ứng dụng.
+* User xác nhận action hoặc correction.
+* System ghi Lifecycle event và cập nhật Product record.
+* System tính lại state và attention.
+* Feedback chỉ được dùng để cải thiện prioritisation sau khi state đủ đáng tin.
+Nếu user không cập nhật record, hệ thống cần thể hiện uncertainty hoặc stale risk thay vì im lặng coi record là chính xác.
+
+
+9. System inputs và outputs
+Inputs:
+* Thông tin user nhập từ physical product hoặc source signal.
+* Lifecycle event do user xác nhận.
+* Time/system clock.
+* Policy và rule của loại sản phẩm.
+* Optional external assistance như barcode, OCR, catalogue hoặc AI.
+* Feedback và notification preference.
+Outputs:
+* Current digital product record.
+* Lifecycle state và state confidence/provenance.
+* Attention list hoặc attention grouping.
+* Action prompt, reminder hoặc next-step suggestion.
+* Updated history sau khi user xử lý.
+* Feedback signal cho các lần prioritisation tiếp theo.
+
+
+10. Functional responsibility – System phải làm gì
+* Tạo, đọc, sửa và lưu Product record.
+* Gắn Lifecycle signal và Lifecycle event vào đúng record.
+* Đánh giá state từ record, event, time và policy.
+* Tạo Attention item khi state hoặc context yêu cầu.
+* Đưa ra Action phù hợp với thông tin hệ thống đang có.
+* Nhận correction và cập nhật lại digital state.
+* Giữ manual path khi automation hoặc external provider không hoạt động.
+* Duy trì history, provenance và feedback cần thiết.
+Đây là responsibility của system ở cấp functional abstraction; feature cụ thể, domain cụ thể và thứ tự triển khai thuộc tab Scope và các requirement/implementation documents.
+
+
+11. System quality principles – Nguyên tắc chất lượng
+* Trustworthy: phân biệt confirmed, estimated, unknown và stale information.
+* Low-friction: cập nhật thường ngày không được trở thành một công việc nặng hơn giá trị nhận được.
+* Actionable: attention phải gắn với một next step hoặc nói rõ khi chưa biết action.
+* Recoverable: lỗi barcode/OCR/external service không được làm mất manual path.
+* Consistent: cùng một event phải cập nhật state và history nhất quán.
+* Explainable: user hiểu vì sao một item được đưa lên attention.
+* Extensible: domain mới đi qua policy boundary, không làm biến dạng core model.
+* Safe by boundary: không tạo claim về physical safety, medical, legal hoặc regulatory khi không có authority.
+
+
+12. System definition summary
+Expiry Things là một whole system gồm User, Product record, Lifecycle signal, Lifecycle event, Time, Policy, State, Attention, Action, Persistence và Feedback. Các thành phần này tương tác để duy trì một digital representation hữu ích của những sản phẩm mà user đang quản lý.
+System purpose: biến thông tin lifecycle phân tán thành một state có thể hiểu, một attention có thể ưu tiên và một action có thể thực hiện; sau đó ghi nhận action để digital record tiếp tục phản ánh physical reality.
+System boundary: Expiry Things sở hữu digital lifecycle coordination, không sở hữu physical truth.
+Scope decision: domain nào được triển khai, domain nào deferred và capability nào thuộc MVP được ghi riêng trong tab Scope; không trộn scope decision vào system definition.
+[A] Cấu trúc system definition này bám theo system thinking và systems engineering: whole, entities, relationships, boundary, purpose, lifecycle và requirements. [C] Các domain policy cụ thể cần được kiểm chứng bằng evidence và local validation trước khi triển khai.
+
+
+
+
+
+
+Tab 8
+1. System Requiremtns:
