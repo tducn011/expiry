@@ -182,6 +182,7 @@ Stable identity with canonical definition locations; no inferred approval.
 | API-10 | api | [07-api/endpoints.md](../07-api/endpoints.md) |
 | API-11 | api | [07-api/endpoints.md](../07-api/endpoints.md) |
 | API-12 | api | [07-api/endpoints.md](../07-api/endpoints.md) |
+| API-13 | api | [07-api/endpoints.md](../07-api/endpoints.md) |
 | VT-01 | test | [10-testing/test-catalog.md](../10-testing/test-catalog.md) |
 | VT-02 | test | [10-testing/test-catalog.md](../10-testing/test-catalog.md) |
 | VT-03 | test | [10-testing/test-catalog.md](../10-testing/test-catalog.md) |
@@ -207,11 +208,12 @@ Stable identity with canonical definition locations; no inferred approval.
 | TC-23 | test | [10-testing/test-catalog.md](../10-testing/test-catalog.md) |
 | TC-24 | test | [10-testing/test-catalog.md](../10-testing/test-catalog.md) |
 | TC-25 | test | [10-testing/test-catalog.md](../10-testing/test-catalog.md) |
-| ADR-001 | adr | [adr/ADR-001-modular-monolith.md](../adr/ADR-001-modular-monolith.md) |
-| ADR-002 | adr | [adr/ADR-002-storage-orm.md](../adr/ADR-002-storage-orm.md) |
-| ADR-003 | adr | [adr/ADR-003-authentication.md](../adr/ADR-003-authentication.md) |
-| ADR-004 | adr | [adr/ADR-004-ocr-boundary.md](../adr/ADR-004-ocr-boundary.md) |
-| ADR-005 | adr | [adr/ADR-005-observability.md](../adr/ADR-005-observability.md) |
+| ADR-001 | adr | [08-architecture/ADR-001-modular-monolith.md](../08-architecture/ADR-001-modular-monolith.md) |
+| ADR-002 | adr | [08-architecture/ADR-002-storage-orm.md](../08-architecture/ADR-002-storage-orm.md) |
+| ADR-003 | adr | [08-architecture/ADR-003-authentication.md](../08-architecture/ADR-003-authentication.md) |
+| ADR-004 | adr | [08-architecture/ADR-004-ocr-boundary.md](../08-architecture/ADR-004-ocr-boundary.md) |
+| ADR-005 | adr | [08-architecture/ADR-005-observability.md](../08-architecture/ADR-005-observability.md) |
+| ADR-006 | adr | [08-architecture/ADR-006-hybrid-architecture.md](../08-architecture/ADR-006-hybrid-architecture.md) |
 | WF-00 | screen | [06-navigation/navigation.md](../06-navigation/navigation.md) |
 | WF-01 | screen | [06-navigation/navigation.md](../06-navigation/navigation.md) |
 | WF-02 | screen | [06-navigation/navigation.md](../06-navigation/navigation.md) |

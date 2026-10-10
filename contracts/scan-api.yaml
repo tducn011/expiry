@@ -1,0 +1,216 @@
+openapi: 3.1.0
+info:
+  title: Expiry Python Scan Service API
+  version: 1.0.0
+  description: >
+    Internal HTTP contract between Node.js Backend and Python Scan Service.
+    Stateless worker for image preprocessing, OCR, and expiry date/name heuristic parsing.
+    No direct database access.
+servers:
+  - url: http://python-scan:8000
+    description: Internal Docker service URL
+  - url: http://localhost:8000
+    description: Local development URL
+
+paths:
+  /health:
+    get:
+      summary: Liveness and readiness health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /scan:
+    post:
+      summary: Preprocess image, execute OCR, and parse candidate dates and names
+      operationId: scanImage
+      parameters:
+        - name: X-Correlation-ID
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Traceability correlation ID across services
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Uploaded food package image (max 5MB, JPEG/PNG/WebP)
+          application/json:
+            schema:
+              type: object
+              required:
+                - image_base64
+              properties:
+                image_base64:
+                  type: string
+                  description: Base64-encoded image bytes
+      responses:
+        '200':
+          description: Successful text extraction and parsing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResponse'
+        '400':
+          description: Invalid image bytes or cannot decode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Image exceeds maximum allowed size (5MB)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '415':
+          description: Unsupported image media type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: No legible text detected in image
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal OCR engine failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - version
+        - tesseract_available
+      properties:
+        status:
+          type: string
+          example: healthy
+        service:
+          type: string
+          example: python-scan
+        version:
+          type: string
+          example: 1.0.0
+        tesseract_available:
+          type: boolean
+          example: true
+
+    ExpiryCandidate:
+      type: object
+      properties:
+        value:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-12-25"
+        date_certainty:
+          type: string
+          enum: [exact, inferred, null]
+          example: exact
+        date_label_type:
+          type: string
+          enum: [expiry, best_before, use_by, manufactured, unknown]
+          example: expiry
+        source_text:
+          type: string
+          example: "25/12/2026"
+        alternatives:
+          type: array
+          items:
+            type: string
+            format: date
+          example: []
+        ambiguous:
+          type: boolean
+          example: false
+        requires_confirmation:
+          type: boolean
+          example: true
+
+    ManufacturedCandidate:
+      type: object
+      properties:
+        value:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-10-10"
+        source_text:
+          type: string
+          example: "10/10/2026"
+
+    Candidates:
+      type: object
+      properties:
+        food_name:
+          type: string
+          nullable: true
+          example: null
+        expiry_date:
+          $ref: '#/components/schemas/ExpiryCandidate'
+        manufactured_date:
+          $ref: '#/components/schemas/ManufacturedCandidate'
+
+    ScanResponse:
+      type: object
+      required:
+        - raw_text
+        - candidates
+        - warnings
+        - errors
+      properties:
+        raw_text:
+          type: string
+          example: "NSX: 10/10/2026\nHSD: 25/12/2026\nLOT: 884B"
+        candidates:
+          $ref: '#/components/schemas/Candidates'
+        warnings:
+          type: array
+          items:
+            type: string
+          example: []
+        errors:
+          type: array
+          items:
+            type: string
+          example: []
+        execution_time_ms:
+          type: integer
+          example: 380
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: INVALID_IMAGE_BYTES
+        message:
+          type: string
+          example: Could not decode uploaded image file.

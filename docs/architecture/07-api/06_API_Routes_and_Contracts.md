@@ -19,6 +19,7 @@ Prefix thống nhất `/api/v1`; JSON snake_case; UUID path ID. Schema machine-r
 | API-10 | POST /api/v1/food-entries/{id}/restore | UC-10 | expected_version + key | 200 Entry | RestoreEntry | entries U, requests C/U |
 | API-11 | GET /api/v1/me/preferences | UC-11 | none | 200 Preferences | ReadPreferences | users R |
 | API-12 | PATCH /api/v1/me/preferences | UC-11 | expected_version, timezone?/attention_lead_days? + key | 200 Preferences | EditPreferences | users U, requests C/U |
+| API-13 | POST /api/v1/scans | UC-12 | multipart image file | 200 ScanResult | ScanOrchestration | requests C/U (transient extraction) |
 
 ## S3.23 Gate chain mỗi request
 Request ID/body-size/content-type → authentication khi private → schema validation → controller DTO → service object ownership + business rule → scoped repo/transaction → DB constraints → response/error mapper.
@@ -89,3 +90,59 @@ A reserved null-response row must not commit as success. Error rollback removes 
 - BE implement services theo same schema và acceptance scenarios SC-01…15.
 - Mock không dựng business truth trong UI; server là authority khi integrated. FE vẫn validate input cho UX.
 - Contract version/change log review chung trước khi đổi field/date meaning/status.
+
+## S3.29 Luồng Scan và Contract nội bộ (`scan-api.yaml`)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Người dùng
+    participant React as React UI
+    participant Node as Node.js Backend
+    participant PyScan as Python Scan Service (FastAPI)
+    participant MySQL as MySQL Database
+
+    User->>React: Chụp/tải ảnh bao bì thực phẩm
+    React->>Node: POST /api/v1/scans (multipart/form-data)
+    Note over Node: Validate mime/kích thước ảnh (max 5MB)
+    Node->>PyScan: POST /scan (Internal HTTP stream/bytes)
+    Note over PyScan: 1. preprocess.py (grayscale, resize, crop)<br/>2. ocr.py (Tesseract extract text)<br/>3. parser.py (Regex match date/name heuristics)
+    PyScan-->>Node: 200 OK: {raw_text, candidates, warnings}
+    Node-->>React: 200 OK: ScanResult (candidates: name, expiry_date, certainty)
+    React-->>User: Hiển thị form Review & Edit với dữ liệu gợi ý
+    User->>React: Điều chỉnh nếu cần & bấm Xác nhận (Confirm)
+    React->>Node: POST /api/v1/food-entries (API-01, Payload đã duyệt)
+    Node->>MySQL: INSERT food_entries + movements (ACID tx)
+    MySQL-->>Node: Commit thành công
+    Node-->>React: 201 Created
+    React-->>User: Cập nhật danh sách kho
+```
+
+### Đặc tả Endpoint API-13: `POST /api/v1/scans`
+- **Mục đích:** Nhận ảnh nhãn thực phẩm từ UI, điều phối tới Python Scan Service để bóc tách thông tin ứng viên.
+- **Content-Type:** `multipart/form-data` (file ảnh `image`) hoặc `application/json` (base64 string).
+- **Giới hạn:** Tối đa 5MB, định dạng cho phép: JPEG, PNG, WebP.
+- **Bảo mật:** Yêu cầu người dùng đã xác thực (hoặc session demo hợp lệ).
+- **Kết quả trả về:**
+  ```json
+  {
+    "raw_text": "EXP 25/12/2026 LOT 884B",
+    "candidates": {
+      "food_name": null,
+      "expiry_date": {
+        "value": "2026-12-25",
+        "date_certainty": "exact",
+        "date_label_type": "expiry",
+        "alternatives": [],
+        "ambiguous": false
+      }
+    },
+    "warnings": [],
+    "requires_confirmation": true
+  }
+  ```
+
+### Contract nội bộ Node ↔ Python (`contracts/scan-api.yaml`)
+- **Protocol:** HTTP REST nội bộ (không mở ra Internet).
+- **Endpoint:** `POST http://python-scan:8000/scan` và `GET http://python-scan:8000/health`.
+- **Ranh giới bất biến:** Python Scan Service là stateless, không có kết nối cơ sở dữ liệu MySQL, không lưu trữ ảnh lâu dài. Toàn bộ ML/DL custom training, model evaluation và LLM được loại bỏ.

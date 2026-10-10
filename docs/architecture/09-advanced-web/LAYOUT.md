@@ -85,27 +85,27 @@ Breakpoints: CSS 768px→8 columns/20px gutters; 1024px→12 columns/24px gutter
 
 Component inventory:
 
-- `uidemo/src/components/layout/Grid.tsx`
-- `uidemo/src/components/layout/PageHeader.tsx`
-- `uidemo/src/components/layout/Shell.tsx`
-- `uidemo/src/components/ui/Badge.tsx`
-- `uidemo/src/components/ui/Button.tsx`
-- `uidemo/src/components/ui/Card.tsx`
-- `uidemo/src/components/ui/EmptyState.tsx`
-- `uidemo/src/components/ui/Field.tsx`
-- `uidemo/src/components/ui/Icon.tsx`
-- `uidemo/src/components/ui/Modal.tsx`
-- `uidemo/src/components/ui/Segmented.tsx`
-- `uidemo/src/features/Detail.tsx`
-- `uidemo/src/features/EntryForm.tsx`
-- `uidemo/src/features/FoodCard.tsx`
-- `uidemo/src/features/History.tsx`
-- `uidemo/src/features/Inventory.tsx`
-- `uidemo/src/features/MovementForm.tsx`
-- `uidemo/src/features/Settings.tsx`
-- `uidemo/src/features/StatusDialog.tsx`
-- `uidemo/src/features/Trash.tsx`
-- `uidemo/src/features/Welcome.tsx`
+- `apps/web/src/components/layout/Grid.tsx`
+- `apps/web/src/components/layout/PageHeader.tsx`
+- `apps/web/src/components/layout/Shell.tsx`
+- `apps/web/src/components/ui/Badge.tsx`
+- `apps/web/src/components/ui/Button.tsx`
+- `apps/web/src/components/ui/Card.tsx`
+- `apps/web/src/components/ui/EmptyState.tsx`
+- `apps/web/src/components/ui/Field.tsx`
+- `apps/web/src/components/ui/Icon.tsx`
+- `apps/web/src/components/ui/Modal.tsx`
+- `apps/web/src/components/ui/Segmented.tsx`
+- `apps/web/src/features/Detail.tsx`
+- `apps/web/src/features/EntryForm.tsx`
+- `apps/web/src/features/FoodCard.tsx`
+- `apps/web/src/features/History.tsx`
+- `apps/web/src/features/Inventory.tsx`
+- `apps/web/src/features/MovementForm.tsx`
+- `apps/web/src/features/Settings.tsx`
+- `apps/web/src/features/StatusDialog.tsx`
+- `apps/web/src/features/Trash.tsx`
+- `apps/web/src/features/Welcome.tsx`
 
 Reusable presentation: Button, Field, Badge, Modal, Card, Segmented, EmptyState, Icon, Grid, PageHeader. Feature-owned forms/pages: EntryForm, MovementForm, Inventory, Detail, History, Trash, Settings, Welcome and recovery dialogs. Similar markup does not alone justify abstraction. Icons use existing component assets; use labels/semantics consistently.
 

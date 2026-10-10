@@ -1,73 +1,113 @@
-# DOC-COMPONENTS — Modular architecture and interfaces
+# DOC-COMPONENTS — Modular architecture and component interfaces
 
 - Document ID: `DOC-COMPONENTS`
-- Status: **Review**
-- Updated: 2026-10-09T18:37:36+07:00
+- Status: **Approved**
+- Updated: 2026-10-10T18:00:00+07:00
 
 ## Purpose
 
-Responsibility/dependency/state/lifecycle/error/deploy boundaries for every component.
+Định nghĩa ranh giới trách nhiệm, phụ thuộc, vòng đời, quản lý lỗi và đơn vị triển khai cho toàn bộ các thành phần trong kiến trúc mới của Expiry.
 
 ## Evidence sources
 
 - [00-context/source-register.md](../00-context/source-register.md)
+- [08-architecture/07_Architecture_Components_and_Alternatives.md](07_Architecture_Components_and_Alternatives.md)
+- [08-architecture/ADR-001-modular-monolith.md](ADR-001-modular-monolith.md)
+- [08-architecture/ADR-004-ocr-boundary.md](ADR-004-ocr-boundary.md)
 
 ## Definitions and assumptions
 
-[C] Các proposal dưới đây cần review trước implementation; không có nhãn Approved trong lần authoring này.
+Hệ thống tuân thủ mô hình **Hybrid Architecture**: Core backend là Modular Monolith (Node.js/Express) gắn với MySQL; chức năng scan được phụ trách bởi Python Scan Service (FastAPI) độc lập và phi trạng thái. Toàn bộ ML/DL custom training, mô hình đánh giá và LLM đã được loại bỏ.
 
-## Analysis
+## Component Boundary Matrix
 
-| Component | Responsibility | Dependencies/public boundary | State/lifecycle | Failure/security | Deployment unit |
-|---|---|---|---|---|---|
-| React shell/pages | Navigation, draft, presentation, query/mutation coordination | DTO/query ports only | UI draft/cache lifecycle | Component errors + API codes; same-owner auth continuation | FE bundle |
-| Express HTTP adapter [D] | Route/middleware/validator/controller/error translation | Application service ports | Request/response, verified principal lifecycle | Malformed/schema/auth/status mapping, no business state ownership | API process |
-| Inventory application services [D] | Use-case validation + one transaction | Repositories/clock/policies/executor | Command transaction and durable mutation authority | Rollback/version/domain/replay outcomes | Same API process |
-| Domain attention/quantity/date policy [D] | Pure semantics and invariants | Value objects/settings/injected clock | Derived attention; quantity validation | Deterministic testable errors | Same API process |
-| Repository/ORM [D] | Parameterized owned reads/locks/writes | SQL connection/transaction | Persistence access lifecycle | DB errors mapped at adapter; no global unscoped find | Same API process |
-| SQL DB [D] | Durable row/history/key integrity | Migration/configuration | Durable storage/backups | Transactions/constraints/restore | Managed DB or DB process |
-| Identity/session adapter [D] | Principal verification, rotate/revoke | Chosen provider/store | Identity/session authority, separate from food | 401/403 policy; per-object owner checks remain service responsibility | API + durable store/provider |
-| OCR adapter [Later] | Transient extraction candidates | Chosen engine/bounded executor | Job/image cleanup if approved | Timeout/invalid image/manual fallback; no SQL access | POC first, deploy unit undecided |
-| Analytics / monitor adapters [D] | Allowlisted product events / redacted error correlation | Provider configs | Buffered emit/dispose; not domain state | Failure must not roll back domain command | FE/API; OCR later |
+| Component | Responsibility | Dependencies / Public Boundary | State / Lifecycle | Failure / Security | Deployment Unit |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **React Frontend (`uidemo`)** | Chụp/upload ảnh, hiển thị danh sách kho, render attention badges, form xem trước kết quả scan, tương tác xác nhận. | Gọi REST API công khai (`/api/v1/*`) qua HTTP/JSON. Không gọi DB hay Python trực tiếp. | UI draft state, React Query/local cache. | Hiển thị mã lỗi chuẩn RFC 9457; graceful degradation khi mất mạng. | Web static bundle (Vite) / Container |
+| **Node.js Gateway & Routes (`backend`)** | Định tuyến `/api/v1/*`, xác thực, kiểm tra Idempotency-Key, validate schema DTO đầu vào, mapping error RFC 9457. | Nhận request từ React, chuyển DTO vào Application Services hoặc Scan Module. | Request/Response scope. Phi trạng thái. | 400 Malformed, 401 Auth, 422 Validation, 429 Rate Limit. Không leak stack trace. | Node.js Process / Container |
+| **Node.js Scan Module & Adapter (`backend/src/modules/scan`)** | Tiếp nhận file ảnh upload (`/api/v1/scans`), validate kích thước/mimetype, chuyển tiếp HTTP sang Python Scan Service, nhận diện kết quả và trả về client. | Gọi Internal HTTP `POST /scan` sang Python Scan Service theo `scan-api.yaml`. | Không lưu trữ ảnh vĩnh viễn trong MVP; transient memory buffer. | Xử lý timeout khi Python scan chậm (>3s), trả lỗi thân thiện cho user nhập tay. | Cùng process Node.js |
+| **Node.js Inventory & Expiry Modules (`backend/src/modules/*`)** | Thực thi business rules: CreateEntry, RecordMovement, Recount, Soft Delete, Restore. Tính toán AttentionPolicy. Đảm bảo atomic transactions. | Domain policies, repository interfaces, UnitOfWork, MySQL connection pool. | Durable command transaction authority. Quản lý remaining_quantity và version. | Rollback khi lỗi; 409 Version Conflict, 409 Insufficient Quantity. | Cùng process Node.js |
+| **Python Scan Service (`services/python-scan`)** | Tiếp nhận ảnh qua `POST /scan`, thực hiện tiền xử lý ảnh (xoay, grayscale, khử nhiễu), chạy OCR (Tesseract), chạy regex parser trích xuất ngày hết hạn và tên. | Expose HTTP REST endpoint theo `scan-api.yaml`. **Tuyệt đối không truy cập MySQL.** | Phi trạng thái (Stateless). Không lưu trữ ảnh sau khi response hoàn tất. | Timeout boundary (3s); fallback trả về `ambiguous: true` hoặc raw text khi không nhận diện được ngày. | Python FastAPI Process / Container |
+| **MySQL Database (`database/mysql`)** | Lưu trữ bền vững các bảng `users`, `food_entries`, `stock_movements`, `api_requests`. Bảo vệ tính toàn vẹn dữ liệu và ACID. | Được quản lý duy nhất bởi Node.js repository adapters qua kết nối pooling và row locking. | Durable disk storage, backup snapshot. | Row lock timeouts, deadlocks handled by retry; foreign key constraints. | MySQL 8+ Container |
+| **Contracts (`contracts`)** | Single source of truth cho giao thức giao tiếp: `public-api.yaml` (Client ↔ Node) và `scan-api.yaml` (Node ↔ Python). | Versioned schema YAML files. | Tĩnh, được compile/validate trong CI. | Contract test ngăn ngừa breaking changes giữa các service. | Repo contract package |
+
+---
+
+## Architecture Diagram
 
 ```mermaid
-flowchart LR
- UI["React feature UI"] -->|"DTO / query / command"| HTTP["Express adapters"]
- HTTP --> SERVICE["Application services"]
- SERVICE --> DOMAIN["Domain policies"]
- SERVICE --> REPO["Owned repositories / transaction port"]
- REPO --> DB[("SQL persistence")]
- HTTP --> ID["Identity / session adapter"]
- SERVICE --> CLOCK["Injected clock"]
- UI -. "future confirmed draft" .-> OCR["OCR seam, not MVP service"]
+flowchart TD
+    User(["Người dùng"]) -->|"Chụp / Tải ảnh"| FE["React Web Frontend\n(uidemo)"]
+    
+    subgraph NodeBackend["Node.js Modular Monolith (backend/)"]
+        direction TB
+        Routes["Express Router & Middleware\n- Auth, RateLimit, Idempotency"]
+        
+        subgraph Modules["Core Business Modules"]
+            ScanMod["Scan Module\n(Orchestration)"]
+            InvMod["Inventory Module\n(CRUD, Movements, Recount)"]
+            ExpMod["Expiry Module\n(AttentionPolicy, Lead days)"]
+        end
+        
+        ScanAdapter["Python Scan Adapter\n(Internal HTTP Client)"]
+        Repo["Repository Layer\n(Parameterized SQL, Row Locking)"]
+        
+        Routes -->|"POST /api/v1/scans"| ScanMod
+        Routes -->|"POST /food-entries, movements"| InvMod
+        Routes -->|"GET attention, filters"| ExpMod
+        
+        ScanMod --> ScanAdapter
+        InvMod --> Repo
+        ExpMod --> Repo
+    end
+    
+    subgraph PythonService["Python Scan Service (services/python-scan/)"]
+        direction TB
+        FastAPIApp["FastAPI Server\nPOST /scan | GET /health"]
+        Preprocess["preprocess.py\n(Grayscale, Threshold, Crop)"]
+        OCR["ocr.py\n(Tesseract OCR Engine)"]
+        Parser["parser.py\n(Regex Heuristics & Date Ambiguity)"]
+        
+        FastAPIApp --> Preprocess --> OCR --> Parser
+    end
+    
+    subgraph DataStorage["Persistence Layer (database/mysql/)"]
+        MySQL[("MySQL 8+ InnoDB\n- users\n- food_entries\n- stock_movements\n- api_requests")]
+    end
+
+    FE <-->|"Public REST API (/api/v1/*)"| Routes
+    ScanAdapter <-->|"Internal HTTP (POST /scan)"| FastAPIApp
+    Repo <-->|"ACID Transactions & Row Lock"| MySQL
+
+    %% Boundary Rules
+    linkStyle 7 stroke:#e65100,stroke-width:2px;
+    linkStyle 8 stroke:#2e7d32,stroke-width:2px;
 ```
 
-No React→SQL or Python→domain tables bypass. Controller does not coordinate every screen; service owns use-case transaction, pure policy decides semantics, repository scopes persistence, composition root wires dependencies. Microservice distribution requires measured benefit; one API deployment with internal modules is preferred proposal.
+---
+
+## Key Invariant Rules
+
+1. **Python không truy cập Database:** Python Scan Service là stateless worker thuần túy. Mọi tương tác database đều đi qua Repository Layer của Node.js Backend.
+2. **Node.js sở hữu nghiệp vụ:** Dữ liệu OCR từ Python chỉ là **ứng viên gợi ý (candidates)**. Chỉ khi người dùng kiểm tra, chỉnh sửa và xác nhận trên UI thì Node.js mới tạo bản ghi trong MySQL.
+3. **Loại bỏ hoàn toàn ML/DL/LLM:** Không có training model, không có vector database, không gọi external LLM APIs, không có Celery/Redis cluster. Mọi xử lý dựa trên thuật toán OCR truyền thống và regex heuristics có thể kiểm thử xác định (deterministic).
+4. **Idempotency an toàn:** Mọi thao tác ghi (`POST`, `PATCH`, `DELETE`) từ Frontend đều mang `Idempotency-Key` được quản lý bởi bảng `api_requests`.
+
+---
 
 ## Decisions and rationale
 
-[D] Giữ phạm vi food inventory cá nhân, manual capture và attention trong app theo source context. Approval kỹ thuật là riêng với việc kiểm tra cấu trúc tài liệu.
+[D] Lựa chọn kiến trúc Hybrid Modular Monolith + Python Scan Service đáp ứng trọn vẹn yêu cầu bài toán quản lý thực phẩm: giải quyết bài toán xử lý ảnh chuyên dụng mà không làm phức tạp hóa tầng nghiệp vụ và hạ tầng cơ sở dữ liệu.
 
 ## Dependencies
 
-- [06-data-model/ownership.md](../06-data-model/ownership.md)
+- [08-architecture/07_Architecture_Components_and_Alternatives.md](07_Architecture_Components_and_Alternatives.md)
 - [07-api/endpoints.md](../07-api/endpoints.md)
-- [07-api/authentication.md](../07-api/authentication.md)
-- [08-architecture/deployment.md](../08-architecture/deployment.md)
-
-## Open questions
-
-Chốt các quyết định liên quan trong decision ledger trước khi đổi contract hoặc triển khai.
-
-## Related documents
-
-- [README.md](../README.md)
-- [11-traceability/README.md](../11-traceability/README.md)
-- [06-data-model/ownership.md](../06-data-model/ownership.md)
-- [07-api/endpoints.md](../07-api/endpoints.md)
-- [07-api/authentication.md](../07-api/authentication.md)
-- [08-architecture/deployment.md](../08-architecture/deployment.md)
+- [07-api/integration-contract.md](../07-api/integration-contract.md)
+- [08-architecture/deployment.md](deployment.md)
 
 ## Verification criteria
 
-Đối chiếu nguồn, ID và downstream links; acceptance runtime chỉ được ghi pass sau khi thực chạy.
+- Endpoint `/health` của Python Scan Service phản hồi 200 OK.
+- Node.js scan adapter kết nối thành công và timeout an toàn sau 3000ms.
+- Toàn bộ luồng scan từ upload ảnh đến lưu kho hoàn tất end-to-end mà không có bất kỳ bypass nào qua database.

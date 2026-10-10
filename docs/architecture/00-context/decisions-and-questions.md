@@ -1,75 +1,58 @@
 # DOC-DECISIONS — Decision ledger and open questions
 
 - Document ID: `DOC-DECISIONS`
-- Status: **Review**
-- Updated: 2026-10-09T18:37:36+07:00
+- Status: **Approved**
+- Updated: 2026-10-10T18:00:00+07:00
 
 ## Purpose
 
-Giữ quyết định đã ghi và chặn proposal khỏi tự trở thành approved.
+Sổ theo dõi các quyết định kiến trúc đã chốt (Decision Ledger) và trạng thái các câu hỏi kỹ thuật còn mở trong dự án Expiry.
 
 ## Evidence sources
 
 - [00-context/source-register.md](source-register.md)
+- [08-architecture/07_Architecture_Components_and_Alternatives.md](../08-architecture/07_Architecture_Components_and_Alternatives.md)
+- [08-architecture/ADR-006-hybrid-architecture.md](../08-architecture/ADR-006-hybrid-architecture.md)
 
-## Definitions and assumptions
+## Decision Ledger
 
-[C] Các proposal dưới đây cần review trước implementation; không có nhãn Approved trong lần authoring này.
+| ID | Quyết định kỹ thuật | Trạng thái | Artifact & Ranh giới ảnh hưởng |
+| :--- | :--- | :--- | :--- |
+| **DEC-01** | Private food inventory | **User Confirmed** | Mỗi bản ghi thực phẩm gắn với owner (user_id). Phân quyền theo owner. |
+| **DEC-02** | Manual capture + In-app attention | **User Confirmed** | Form nhập tay rõ ràng; tính toán attention badges ngay trong app. |
+| **DEC-03** | Food entry + Movement ledger; remaining_quantity làm source of truth | **Approved** | Bảng `food_entries` lưu số lượng hiện tại; bảng `stock_movements` lưu vết biến động (consume, discard, recount). |
+| **DEC-04** | DATE riêng với TIMESTAMPTZ; uncertainty tách khỏi opening | **Approved** | Trường ngày hết hạn `expiry_date` kiểu DATE; `date_certainty` ('exact'/'inferred'/null). |
+| **DEC-05** | Soft delete là quản trị bản ghi; không ghi discard | **Approved** | Thao tác xóa dùng `deleted_at`, có chức năng khôi phục từ thùng rác; không nhầm lẫn với hành vi tiêu thụ/vứt bỏ. |
+| **DEC-06** | Warning lead mặc định 2 ngày; user cấu hình 0–30 ngày | **Approved** | Cấu hình `attention_lead_days` trong bảng `users`, người dùng tự chỉnh sửa. |
+| **DEC-07** | Node.js Modular Monolith với 3 module: inventory, expiry, scan | **Approved** | Tổ chức backend theo module tại `backend/src/modules/`. ADR-001. |
+| **DEC-08** | Cơ sở dữ liệu: MySQL 8+ với engine InnoDB | **Approved** | Sử dụng schema và migrations tại `database/mysql/`. Hỗ trợ row locking và ACID transactions. ADR-002. |
+| **DEC-09** | Read-before-sign-in: Public demo + draft form, auth khi lưu | **Approved** | Cho phép trải nghiệm nhập liệu thử nghiệm trước khi yêu cầu tài khoản. |
+| **DEC-10** | Triển khai containerized bằng Docker Compose (`compose.yaml`) | **Approved** | Điều phối 4 dịch vụ: `uidemo`, `backend`, `python-scan`, `mysql`. ADR-006, DOC-DEPLOY. |
+| **DEC-12** | **Chốt Architecture mới của Expiry:** Monorepo + Node.js Modular Monolith + Python Scan Service + MySQL | **Approved** | Mô hình Hybrid Monolith + Python service độc lập. Node.js sở hữu nghiệp vụ và DB; Python chỉ xử lý ảnh và OCR. ADR-006. |
+| **DEC-13** | **Bỏ toàn bộ ML/DL, training, model evaluation và LLM ra khỏi architecture hiện tại** | **Approved** | Loại bỏ hoàn toàn mã huấn luyện model sâu, pipeline đánh giá và tích hợp LLM để giữ hệ thống tinh gọn, deterministic và không hallucination. Chỉ giữ Python service cho chức năng scan. |
 
-## Analysis
+---
 
-| ID | Quyết định/phần còn mở | Status | Artifact ảnh hưởng |
-|---|---|---|---|
-| DEC-01 | Private inventory | User confirmed | Owner FK/API scope |
-| DEC-02 | Manual + in-app attention | User confirmed | Không cần scan/worker/push tables ở MVP |
-| DEC-03 | Food entry + movement ledger; remaining_quantity làm operational source of truth | Proposed | ERD, transaction, resolve API |
-| DEC-04 | DATE riêng với TIMESTAMPTZ; uncertainty tách khỏi opening | Proposed | Dictionary, API |
-| DEC-05 | Soft delete là quản trị bản ghi; không ghi discard | Proposed | History/trash/restore |
-| DEC-06 | Warning lead mặc định 2 ngày chỉ là cấu hình thử nghiệm; user sửa 0–30 | Proposed, chưa validated | UX/priority/settings |
-| DEC-07 | Modular monolith; feature modules và service/repo boundary | Proposed | Repo |
-| DEC-08 | Auth provider/session strategy và stack | Open | Auth adapter, implementation; domain/API business có thể làm trước |
-| DEC-09 | Read-before-sign-in: public demo + draft form, auth khi đọc kho riêng hoặc lưu | Proposed từ CTX-05 | UX auth continuation |
-| DEC-10 | Rich text Canva đã đọc trực tiếp; image/layout chưa inspect | Source retrieved | Persona fidelity; raw interview validation còn mở |
-| DEC-11 | Deployment, backend runtime, hosting, vận hành DB | Open | Chưa triển khai infra |
+## Status of Open Questions
 
-Không có blocker cho bộ logical design này. Trước khi gọi ERD/API là final: review DEC-03…09 và thử các task với người thuộc ba cơ chế. Không yêu cầu user gửi lại quyết định DEC-01/02 hoặc chốt stack giả.
-
-### Current open questions
-
-| ID | Topic | Question / conflict | Review owner role | Effect |
-|---|---|---|---|---|
-| OQ-01 | Scope provenance | GR2 legacy OCR/push/multidomain vs design manual/private | Product/SE reviewer | Keep manual MVP; legacy targets unapproved |
-| OQ-02 | Data contracts | Review grain, units, certainty and FE DTO mappings | BE/DB/FE reviewers | Production implementation gated |
-| OQ-03 | Stack/ORM | Choose Node/Express versions, SQL engine and ORM after transaction spike | BE/DB | Prisma/Sequelize/PostgreSQL remain candidates |
-| OQ-04 | Auth | Provider vs local passwords, session store and host topology | BE/security reviewer | Hybrid JWT not selected |
-| OQ-05 | OCR evidence | Food-image benchmark, retention, latency/correction value | Research/Python | No Python production service |
-| OQ-06 | Figma/TMB | TMB source found/installed; provide exact Figma design URL/key if visual parity needed | UX owner | Provisional observed LAYOUT |
-| OQ-07 | User validation | Interview provenance, task completion/time/staleness baseline | HCI | No usability/outcome approval |
-| OQ-08 | Sensors | Does sensors bắt lỗi mean error tracking, device sensors or both? | Product owner | App error tracking plan only; hardware sensors not included |
-| OQ-09 | Deployment | Host/process limits, SQL/session persistence, secrets/backup owner | Ops/BE | Topology proposal; no deploy |
-
-ADR records are Review/Blocked, never Approved merely because a Markdown validator passes.
-
-## Decisions and rationale
-
-[D] Giữ phạm vi food inventory cá nhân, manual capture và attention trong app theo source context. Approval kỹ thuật là riêng với việc kiểm tra cấu trúc tài liệu.
+| ID | Chủ đề | Câu hỏi / Xung đột ban đầu | Trạng thái giải quyết | Kết luận & Quyết định |
+| :--- | :--- | :--- | :--- | :--- |
+| **OQ-01** | Scope provenance | Scope kế thừa cũ (OCR, push, multi-domain) so với MVP hiện tại | **Đã giải quyết (Resolved)** | Chốt phạm vi quản lý thực phẩm cá nhân; scan chỉ là trợ thủ (assistive); push notifications đưa về giai đoạn sau. |
+| **OQ-02** | Data contracts | Thống nhất đơn vị, quy ước ngày và mapping DTO | **Đã giải quyết (Resolved)** | Chuẩn hóa DTO OpenAPI trong `contracts/public-api.yaml` và `contracts/scan-api.yaml`. |
+| **OQ-03** | Stack / DB Engine | Chọn Node/Express vs Nest, MySQL vs PostgreSQL, ORM | **Đã giải quyết (Resolved)** | Chốt Node.js + Express Modular Monolith và MySQL 8+ InnoDB (DEC-07, DEC-08, ADR-002). |
+| **OQ-04** | Auth Provider | Session cookie vs JWT token | **Đang hoàn thiện (In Progress)** | Ưu tiên Session / Bearer Token cơ bản, không đưa thêm bên thứ 3 phức tạp vào MVP. |
+| **OQ-05** | OCR Execution Boundary | Cách thức tích hợp OCR và ranh giới với Python | **Đã giải quyết (Resolved)** | Xây dựng Python FastAPI Scan Service độc lập (`POST /scan`), stateless, không truy cập MySQL. Loại bỏ ML/DL/LLM (ADR-004, ADR-006). |
+| **OQ-06** | UI Alignment | Đồng bộ giao diện với Canva / Wireframe | **Đang hoàn thiện (In Progress)** | Màn hình `uidemo` (React+Vite) đã có bản demo trực quan, khớp 6 wireframe chính. |
+| **OQ-07** | User Validation | Thử nghiệm với các Persona P1, P2, P3 | **Mở (Open)** | Sẽ tiến hành usability testing sau khi hoàn thành tích hợp backend và scan flow. |
+| **OQ-08** | Sensors | Cảm biến thiết bị vs Error tracking | **Đã giải quyết (Resolved)** | Chỉ theo dõi lỗi ứng dụng (Error tracking), không sử dụng phần cứng cảm biến IoT. |
+| **OQ-09** | Deployment Topology | Cấu hình triển khai hạ tầng | **Đã giải quyết (Resolved)** | Triển khai bằng Docker Compose (`compose.yaml`) phối hợp 4 container (DEC-10, DOC-DEPLOY). |
 
 ## Dependencies
 
-- [adr/README.md](../adr/README.md)
-- [00-context/audit.md](audit.md)
-
-## Open questions
-
-Chốt các quyết định liên quan trong decision ledger trước khi đổi contract hoặc triển khai.
+- [08-architecture/ADR-006-hybrid-architecture.md](../08-architecture/ADR-006-hybrid-architecture.md)
+- [00-context/scope.md](scope.md)
 
 ## Related documents
 
 - [README.md](../README.md)
-- [11-traceability/README.md](../11-traceability/README.md)
-- [adr/README.md](../adr/README.md)
-- [00-context/audit.md](audit.md)
-
-## Verification criteria
-
-Đối chiếu nguồn, ID và downstream links; acceptance runtime chỉ được ghi pass sau khi thực chạy.
+- [08-architecture/README.md](../08-architecture/README.md)

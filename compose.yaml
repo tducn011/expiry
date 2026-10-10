@@ -1,0 +1,65 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: expiry-mysql84
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+00:00
+      - --authentication-policy=caching_sha2_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_dev_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-expiry_dev}
+      MYSQL_USER: ${MYSQL_USER:-expiry_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app_dev_password}
+    ports:
+      - "127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/mysql/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  python-scan:
+    build:
+      context: ./services/python-scan
+      dockerfile: Dockerfile
+    container_name: expiry-python-scan
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: expiry-api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-expiry_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app_dev_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-expiry_dev}
+      SCAN_SERVICE_URL: http://python-scan:8000
+    depends_on:
+      mysql:
+        condition: service_healthy
+      python-scan:
+        condition: service_started
+
+volumes:
+  mysql_data:

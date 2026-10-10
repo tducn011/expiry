@@ -1,0 +1,16 @@
+{
+  "name": "expiry-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build:web": "npm --workspace=apps/web run build",
+    "test:api": "npm --workspace=apps/api test",
+    "test:python": "python3 -m unittest discover -s services/python-scan/tests",
+    "test:all": "npm run test:api && npm run test:python && npm run build:web",
+    "dev:web": "npm --workspace=apps/web run dev",
+    "dev:api": "npm --workspace=apps/api run dev"
+  }
+}

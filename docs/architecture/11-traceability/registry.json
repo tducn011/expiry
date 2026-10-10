@@ -21,7 +21,7 @@
     {
       "id": "DOC-SCOPE",
       "path": "00-context/scope.md",
-      "status": "Review"
+      "status": "Approved"
     },
     {
       "id": "DOC-GLOSSARY",
@@ -31,7 +31,7 @@
     {
       "id": "DOC-DECISIONS",
       "path": "00-context/decisions-and-questions.md",
-      "status": "Review"
+      "status": "Approved"
     },
     {
       "id": "DOC-P01",
@@ -96,7 +96,7 @@
     {
       "id": "DOC-UNSUPPORTED",
       "path": "03-requirements-features/unsupported-proposals.md",
-      "status": "Review"
+      "status": "Approved"
     },
     {
       "id": "DOC-UC",
@@ -161,7 +161,7 @@
     {
       "id": "DOC-COMPONENTS",
       "path": "08-architecture/components.md",
-      "status": "Review"
+      "status": "Approved"
     },
     {
       "id": "DOC-SEQUENCES",
@@ -171,7 +171,7 @@
     {
       "id": "DOC-API",
       "path": "07-api/endpoints.md",
-      "status": "Review"
+      "status": "Approved"
     },
     {
       "id": "DOC-PROTOCOL",
@@ -199,9 +199,9 @@
       "status": "Review"
     },
     {
-      "id": "DOC-OCR-CONTRACT",
+      "id": "DOC-SCAN-CONTRACT",
       "path": "17-python-ocr/integration-contract.md",
-      "status": "Draft"
+      "status": "Approved"
     },
     {
       "id": "DOC-AUTH",
@@ -226,7 +226,7 @@
     {
       "id": "DOC-DEPLOY",
       "path": "08-architecture/deployment.md",
-      "status": "Draft"
+      "status": "Approved"
     },
     {
       "id": "DOC-EXTENSION",
@@ -241,12 +241,12 @@
     {
       "id": "DOC-ADR-001",
       "path": "adr/ADR-001-modular-monolith.md",
-      "status": "Review"
+      "status": "Approved"
     },
     {
       "id": "DOC-ADR-002",
       "path": "adr/ADR-002-storage-orm.md",
-      "status": "Blocked"
+      "status": "Approved"
     },
     {
       "id": "DOC-ADR-003",
@@ -256,7 +256,7 @@
     {
       "id": "DOC-ADR-004",
       "path": "adr/ADR-004-ocr-boundary.md",
-      "status": "Review"
+      "status": "Approved"
     },
     {
       "id": "DOC-ADR-005",
@@ -437,6 +437,11 @@
       "id": "DOC-FINAL-CHECK-PERSONA",
       "path": "03-requirements-features/final-check-persona-alignment.md",
       "status": "Review"
+    },
+    {
+      "id": "DOC-ADR-006",
+      "path": "08-architecture/ADR-006-hybrid-architecture.md",
+      "status": "Approved"
     }
   ],
   "nodes": [
@@ -2483,6 +2488,22 @@
       "path": "06-data-model/data-flows.md",
       "status": "Review",
       "purpose": "Preferences/identity continuation"
+    },
+    {
+      "id": "API-13",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "name": "POST /api/v1/scans",
+      "tests": [
+        "VT-18",
+        "VT-19"
+      ]
+    },
+    {
+      "id": "ADR-006",
+      "kind": "adr",
+      "path": "08-architecture/ADR-006-hybrid-architecture.md",
+      "name": "Hybrid Architecture (Node.js Modular Monolith + Python Scan Service + MySQL)"
     }
   ],
   "edges": [

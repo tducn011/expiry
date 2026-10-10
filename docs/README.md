@@ -3,6 +3,7 @@
 
 > **Phân loại tài liệu theo môn học và chức năng.**  
 > Tất cả docs đã được tổ chức vào `architecture/` theo 15 subfolder.  
+> **Kiến trúc chính thức (Locked Architecture):** Monorepo + Node.js Modular Monolith (`backend/`) + Python Scan Service (`services/python-scan/`) + MySQL (`database/mysql/`). Bỏ toàn bộ ML/DL, training pipeline, model evaluation và LLM.  
 > Cập nhật: 2026-10-10.
 
 ---
@@ -86,23 +87,24 @@ docs/architecture/
 ### 07 — API & Integration
 | Doc | Mô tả |
 |-----|-------|
-| [06_API_Routes_and_Contracts.md](architecture/07-api/06_API_Routes_and_Contracts.md) | Route/API contract và mapping |
+| [06_API_Routes_and_Contracts.md](architecture/07-api/06_API_Routes_and_Contracts.md) | Route/API contract và mapping (API-01 đến API-13) |
 | [endpoints.md](architecture/07-api/endpoints.md) | REST resource và endpoint catalog đầy đủ |
 | [authentication.md](architecture/07-api/authentication.md) | Sessions, JWT và authorization design |
-| [integration-contract.md](architecture/07-api/integration-contract.md) | Interface contract giữa các module |
+| [integration-contract.md](architecture/07-api/integration-contract.md) | Interface contract giữa Node.js và Python Scan Service (scan-api.yaml) |
 | [protocol-and-compatibility.md](architecture/07-api/protocol-and-compatibility.md) | Write protocol, compatibility và module interfaces |
 
 ### 08 — System Architecture & ADRs
 | Doc | Mô tả |
 |-----|-------|
-| [07_Architecture_Components_and_Alternatives.md](architecture/08-architecture/07_Architecture_Components_and_Alternatives.md) | Alternatives, recommendation kiến trúc, ownership FE/BE |
-| [ADR-001-modular-monolith.md](architecture/08-architecture/ADR-001-modular-monolith.md) | ADR: lý do chọn modular monolith |
-| [ADR-002-storage-orm.md](architecture/08-architecture/ADR-002-storage-orm.md) | ADR: storage layer và ORM |
+| [07_Architecture_Components_and_Alternatives.md](architecture/08-architecture/07_Architecture_Components_and_Alternatives.md) | Kiến trúc tổng thể Monorepo + Node.js + Python Scan + MySQL, ranh giới và luồng scan |
+| [ADR-001-modular-monolith.md](architecture/08-architecture/ADR-001-modular-monolith.md) | ADR: Node.js Modular Monolith (inventory, expiry, scan) |
+| [ADR-002-storage-orm.md](architecture/08-architecture/ADR-002-storage-orm.md) | ADR: MySQL 8+ InnoDB làm cơ sở dữ liệu chính thức |
 | [ADR-003-authentication.md](architecture/08-architecture/ADR-003-authentication.md) | ADR: chiến lược xác thực |
-| [ADR-004-ocr-boundary.md](architecture/08-architecture/ADR-004-ocr-boundary.md) | ADR: ranh giới tích hợp OCR |
+| [ADR-004-ocr-boundary.md](architecture/08-architecture/ADR-004-ocr-boundary.md) | ADR: Python Scan Service cho OCR và xử lý ảnh, bỏ ML/DL/LLM |
 | [ADR-005-observability.md](architecture/08-architecture/ADR-005-observability.md) | ADR: observability, logging, monitoring |
-| [components.md](architecture/08-architecture/components.md) | Catalog các module/component và interface |
-| [deployment.md](architecture/08-architecture/deployment.md) | Environment, CI/CD và rollback architecture |
+| [ADR-006-hybrid-architecture.md](architecture/08-architecture/ADR-006-hybrid-architecture.md) | ADR: Quyết định kiến trúc Hybrid chính thức, loại bỏ hoàn toàn ML/DL/LLM |
+| [components.md](architecture/08-architecture/components.md) | Catalog các component, sơ đồ tương tác và ranh giới bất biến |
+| [deployment.md](architecture/08-architecture/deployment.md) | Environment, Docker Compose (compose.yaml) và CI/CD |
 | [deploy.md](architecture/08-architecture/deploy.md) | Deployment checklist rút gọn |
 | [analytics-monitoring.md](architecture/08-architecture/analytics-monitoring.md) | Analytics, monitoring và observability |
 | [Expiry_System_Definition.md](architecture/08-architecture/Expiry_System_Definition.md) | Định nghĩa hệ thống đầy đủ |

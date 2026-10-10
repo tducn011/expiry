@@ -222,9 +222,38 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Error codes | 400/401/404/409/413/415/422/429/500; specific codes linked by protocol |
 | Required tests | VT-13, TC-20, VT-12 |
 
-OpenAPI remains the single machine-readable DTO source, version 0.1.0. The `/api/v1` server prefix is distinct from relative operation paths. Current bearer security scheme is an auth example, not approved transport. A cookie-session selection must update scheme/FE adapter and auth tests together before integration.
+### API-13 — POST /api/v1/scans
+
+| Attribute | Contract |
+|---|---|
+| Purpose / actor | Scan food package image and extract candidate metadata for user preview |
+| Related UC | UC-12 (Assistive Capture via Image Scan) |
+| Related flows | Luồng Scan: Upload -> OCR -> Review & Edit -> Confirm (Save) |
+| Request | `multipart/form-data` with `image` (max 5MB, JPEG/PNG/WebP) or JSON with base64 |
+| Response | 200 ScanResult (candidates: food_name, expiry_date, certainty, alternatives, raw_text) |
+| Schemas / validation | Reference: `contracts/public-api.yaml` & `contracts/scan-api.yaml` |
+| Authorization | Principal identity (hoặc demo guest token) |
+| Business rule definitions | Bóc tách ứng viên (candidates); người dùng bắt buộc xác nhận trước khi lưu vào kho |
+| DB operations | Không ghi trực tiếp `food_entries` hay `stock_movements`; transient operation |
+| Service/HTTP role | ScanOrchestration trong Node.js điều phối gọi HTTP `POST /scan` tới Python Scan Service |
+| Error codes | 400 MALFORMED_IMAGE / 413 IMAGE_TOO_LARGE / 415 UNSUPPORTED_IMAGE_TYPE / 504 SCAN_TIMEOUT / 500 INTERNAL_ERROR |
+| Required tests | VT-18 (Image upload & validation), VT-19 (Python service integration & timeout fallback) |
+
+### Internal Endpoint — POST /scan (Python Scan Service)
+
+| Attribute | Contract |
+|---|---|
+| Purpose / actor | Tiền xử lý ảnh, chạy OCR (Tesseract) và parser regex trích xuất hạn dùng và tên thực phẩm |
+| Network boundary | Chỉ tiếp nhận kết nối nội bộ từ Node.js Backend (`http://python-scan:8000/scan`) |
+| Request payload | Raw binary image stream hoặc multipart file |
+| Response payload | 200 OK: `{ "raw_text": string, "candidates": object, "warnings": array, "errors": array }` |
+| DB access | **Không có quyền truy cập MySQL.** Hoàn toàn stateless. |
+| SLA & Timeout | Phản hồi trong < 2.0s; timeout cutoff tại 3.0s |
+
+OpenAPI remains the single machine-readable DTO source: `contracts/public-api.yaml` cho Public API và `contracts/scan-api.yaml` cho Internal Scan Service.
 
 ## Decisions and rationale
+
 
 [D] Giữ phạm vi food inventory cá nhân, manual capture và attention trong app theo source context. Approval kỹ thuật là riêng với việc kiểm tra cấu trúc tài liệu.
 

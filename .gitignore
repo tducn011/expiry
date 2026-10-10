@@ -27,3 +27,11 @@ Thumbs.db
 .vscode/
 *.tsbuildinfo
 .vite/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/

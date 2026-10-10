@@ -1,88 +1,163 @@
-# DOC-OCR-CONTRACT — Conditional Python integration seam
+# DOC-SCAN-CONTRACT — Python Scan Service Integration Contract
 
-- Document ID: `DOC-OCR-CONTRACT`
-- Status: **Draft**
-- Updated: 2026-10-09T18:37:36+07:00
+- Document ID: `DOC-SCAN-CONTRACT`
+- Status: **Approved**
+- Updated: 2026-10-10T18:00:00+07:00
 
 ## Purpose
 
-Extraction contract ready for research discussion; no approved endpoint/entity.
+Quy định hợp đồng kỹ thuật và giao diện API nội bộ (`contracts/scan-api.yaml`) giữa **Node.js Backend (Modular Monolith)** và **Python Scan Service (FastAPI)** phục vụ chức năng tiền xử lý ảnh, OCR và trích xuất dữ liệu hạn dùng.
 
 ## Evidence sources
 
 - [00-context/source-register.md](../00-context/source-register.md)
+- [08-architecture/07_Architecture_Components_and_Alternatives.md](../08-architecture/07_Architecture_Components_and_Alternatives.md)
+- [08-architecture/ADR-004-ocr-boundary.md](../08-architecture/ADR-004-ocr-boundary.md)
+- [08-architecture/ADR-006-hybrid-architecture.md](../08-architecture/ADR-006-hybrid-architecture.md)
 
-## Definitions and assumptions
+## Architecture Boundary & Invariants
 
-[C] Các proposal dưới đây cần review trước implementation; không có nhãn Approved trong lần authoring này.
+```text
+[React UI] 
+   │  (Upload multipart image)
+   ▼
+[Node.js Backend: modules/scan]
+   │  (Internal HTTP call: POST http://python-scan:8000/scan)
+   ▼
+[Python Scan Service: FastAPI]
+   ├── 1. preprocess.py (Làm sạch, xoay, tăng tương phản)
+   ├── 2. ocr.py (Tesseract OCR Engine)
+   └── 3. parser.py (Regex match ngày hết hạn & tên)
+   │
+   ▼  (JSON response: candidates & raw text)
+[Node.js Backend]
+   │  (Trả ScanResult về UI để User Review & Edit)
+   ▼
+[React UI] (User kiểm tra -> Bấm Confirm -> Gọi POST /api/v1/food-entries lưu vào MySQL)
+```
 
-## Analysis
+> [!IMPORTANT]
+> **Quy tắc bất biến:**
+> 1. **Stateless:** Python Scan Service hoàn toàn phi trạng thái. Không lưu ảnh trên đĩa cứng lâu dài.
+> 2. **Không chạm Database:** Python Scan Service **không kết nối tới MySQL**. Mọi thao tác lưu dữ liệu đều do Node.js Backend đảm nhận sau khi người dùng xác nhận.
+> 3. **Không ML/DL/LLM:** Dịch vụ không chứa pipeline huấn luyện, không tải mô hình AI cồng kềnh, không gọi external LLM API. Chỉ dùng OpenCV/Pillow, Tesseract và regex heuristics có thể kiểm thử xác định.
 
-Status: conditional proposal only; no `/ocr` route is added to canonical MVP OpenAPI.
+---
 
-Pipeline: user image → Express image validation/owner correlation → bounded Python executor → text and parsed candidates → normalization/field validation → user preview/correction/confirmation → ordinary EntryCreate service. Python never writes food tables or approves safety.
+## Contract Endpoints
 
-| Contract aspect | Proposed boundary / open acceptance |
-|---|---|
-| Input | Validated bytes/task correlation; content signature/decode/dimensions capped; numeric limits chosen from measured resource budget |
-| Preprocessing | Optional orientation/crop/contrast steps, record parameters; retain user original only under explicit retention policy |
-| Execution | Pinned engine/models; warm/cold timing and memory measured |
-| Output | Versioned raw text + field candidates/source spans/ambiguity/errors; no durable IDs assigned |
-| Timeout/retry | Bounded execution; cancel/kill/cleanup; retry same extraction task without duplicating domain writes |
-| Validation | Invalid image/multiple/ambiguous date returns explicit candidates/errors; no default guessed expiry |
-| Cleanup | Success/failure/cancel all clean transient image/output; exact retention pending |
-| Persistence | Only confirmed, domain-valid DTO through backend capture; generated fields remain proposals until user confirms |
+### 1. `GET /health`
+- **Mục đích:** Health check (Liveness & Readiness probe) cho Docker Compose và Node.js adapter.
+- **Request:** Không có tham số.
+- **Response (200 OK):**
+  ```json
+  {
+    "status": "healthy",
+    "service": "python-scan",
+    "version": "1.0.0",
+    "tesseract_available": true
+  }
+  ```
 
-Illustrative output — not selected production schema:
+### 2. `POST /scan`
+- **Mục đích:** Nhận dữ liệu ảnh, tiền xử lý, chạy OCR và trích xuất các trường ứng viên.
+- **Content-Type:** `multipart/form-data` (form field `file`) hoặc `application/json` (với `image_base64`).
+- **Headers:**
+  - `X-Correlation-ID`: Chuỗi UUID để correlate log giữa Node.js và Python.
+- **Giới hạn đầu vào:**
+  - Kích thước tối đa: 5MB.
+  - Định dạng: JPEG, PNG, WebP.
+  - Độ phân giải khuyến nghị: tối thiểu 800x600, tối đa 4000x4000.
+- **SLA thời gian:**
+  - Mục tiêu: < 1500ms.
+  - Hard timeout phía Node.js: 3000ms.
 
+#### Schema Phản hồi Thành công (200 OK):
 ```json
 {
-  "schema_version": "0.1-proposed",
-  "request_id": "opaque-correlation-id",
+  "raw_text": "NSX: 10/10/2026\nHSD: 25/12/2026\nLOT: 884B",
+  "candidates": {
+    "food_name": null,
+    "expiry_date": {
+      "value": "2026-12-25",
+      "date_certainty": "exact",
+      "date_label_type": "expiry",
+      "source_text": "25/12/2026",
+      "alternatives": [],
+      "ambiguous": false,
+      "requires_confirmation": true
+    },
+    "manufactured_date": {
+      "value": "2026-10-10",
+      "source_text": "10/10/2026"
+    }
+  },
+  "warnings": [],
+  "errors": [],
+  "execution_time_ms": 420
+}
+```
+
+#### Schema Phản hồi khi ngày bị nhập nhằng (Ambiguous Date - 200 OK):
+```json
+{
   "raw_text": "EXP 03/04/26",
   "candidates": {
+    "food_name": null,
     "expiry_date": {
       "value": null,
+      "date_certainty": "inferred",
+      "date_label_type": "expiry",
+      "source_text": "03/04/26",
       "alternatives": [
         "2026-04-03",
         "2026-03-04"
       ],
-      "source_text": "03/04/26",
       "ambiguous": true,
       "requires_confirmation": true
     }
   },
   "warnings": [
-    "AMBIGUOUS_DATE"
+    "AMBIGUOUS_DATE_FORMAT_DAY_MONTH_REVERSIBLE"
   ],
-  "errors": []
+  "errors": [],
+  "execution_time_ms": 380
 }
 ```
 
-Mode alternatives: in-process/local spike least deployment cost; subprocess bounds process and memory; HTTP service isolates scaling but adds auth/network/ops; queue helps jobs/retries only when workload and latency warrant it. Synchronous vs asynchronous cannot be selected without timing/workload measurements. Express/Python contract tests must cover schema version, invalid image, ambiguous date, timeouts/cancellation/cleanup and confirmed manual fallback.
+#### Mã lỗi (Error Responses):
+| HTTP Status | Error Code | Ý nghĩa |
+| :--- | :--- | :--- |
+| `400 Bad Request` | `INVALID_IMAGE_BYTES` | Dữ liệu tải lên bị hỏng hoặc không thể giải mã hình ảnh. |
+| `413 Payload Too Large` | `IMAGE_TOO_LARGE` | Dung lượng ảnh vượt quá 5MB. |
+| `415 Unsupported Media` | `UNSUPPORTED_FORMAT` | Không hỗ trợ định dạng ảnh (chỉ chấp nhận JPEG, PNG, WebP). |
+| `422 Unprocessable` | `NO_TEXT_DETECTED` | Ảnh quá mờ, không tìm thấy ký tự văn bản nào. |
+| `500 Server Error` | `OCR_ENGINE_ERROR` | Lỗi nội bộ trong quá trình thực thi Tesseract. |
+
+---
+
+## File Machine-Readable
+
+Contract OpenAPI chuẩn định dạng YAML được lưu trữ tại:
+```text
+contracts/scan-api.yaml
+```
 
 ## Decisions and rationale
 
-[D] Giữ phạm vi food inventory cá nhân, manual capture và attention trong app theo source context. Approval kỹ thuật là riêng với việc kiểm tra cấu trúc tài liệu.
+[D] Quyết định tách biệt Python Scan Service và chuẩn hóa qua `scan-api.yaml` đảm bảo sự độc lập tuyệt đối giữa 2 service:
+1. Node.js backend không bị phụ thuộc vào môi trường Python/C-bindings.
+2. Python Scan Service có thể kiểm thử tự động độc lập bằng pytest và fixtures ảnh giả lập.
+3. Người dùng luôn là người kiểm duyệt cuối cùng trước khi ghi nhận bất kỳ dữ liệu nào vào database.
 
 ## Dependencies
 
-- [04-technology-research/ocr-research.md](../04-technology-research/ocr-research.md)
-- [adr/ADR-004-ocr-boundary.md](../adr/ADR-004-ocr-boundary.md)
-- [10-testing/test-catalog.md](../10-testing/test-catalog.md)
-
-## Open questions
-
-Approval of OCR feature, dataset, file caps, timeout, language/models, host/process support and retention are all pending.
-
-## Related documents
-
-- [README.md](../README.md)
-- [11-traceability/README.md](../11-traceability/README.md)
-- [04-technology-research/ocr-research.md](../04-technology-research/ocr-research.md)
-- [adr/ADR-004-ocr-boundary.md](../adr/ADR-004-ocr-boundary.md)
-- [10-testing/test-catalog.md](../10-testing/test-catalog.md)
+- [08-architecture/ADR-004-ocr-boundary.md](../08-architecture/ADR-004-ocr-boundary.md)
+- [08-architecture/ADR-006-hybrid-architecture.md](../08-architecture/ADR-006-hybrid-architecture.md)
+- [07-api/06_API_Routes_and_Contracts.md](06_API_Routes_and_Contracts.md)
 
 ## Verification criteria
 
-Đối chiếu nguồn, ID và downstream links; acceptance runtime chỉ được ghi pass sau khi thực chạy.
+- Endpoint `/health` trả về `{"status":"healthy"}`.
+- Kiểm thử unit test `test_scan_endpoint` với ảnh mẫu test fixture trả về kết quả đúng cấu trúc `candidates` và `warnings`.
+- Khi Python service mất kết nối, Node.js fallback an toàn thông báo người dùng nhập tay mà không làm crash server.
