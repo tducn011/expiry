@@ -1,4 +1,4 @@
-import type { FoodEntry } from "../mockApi"
+import type { FoodEntry } from "../domain/types"
 import { fmtQty, fmtTime, unitLabel } from "../lib/format"
 import Grid from "../components/layout/Grid"
 import PageHeader from "../components/layout/PageHeader"
@@ -7,9 +7,11 @@ import Card from "../components/ui/Card"
 import EmptyState from "../components/ui/EmptyState"
 
 export default function Trash({
+  timezone = "Asia/Ho_Chi_Minh",
   foods,
   onRestore,
 }: {
+  timezone?: string
   foods: FoodEntry[]
   onRestore: (f: FoodEntry) => void
 }) {
@@ -30,7 +32,7 @@ export default function Trash({
                     <strong>{f.name}</strong>
                     <span>
                       {fmtQty(f.remaining_quantity)} {unitLabel[f.unit]}
-                      {f.deleted_at && ` · Xóa lúc ${fmtTime(f.deleted_at)}`}
+                      {f.deleted_at && ` · Xóa lúc ${fmtTime(f.deleted_at, timezone)}`}
                     </span>
                   </div>
                   <Button

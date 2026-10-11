@@ -28,7 +28,7 @@ Verified primary documentation consulted in this iteration.
 | OFF-06 | OWASP session management | [OWASP session management](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html) | Session credential lifecycle, cookie protections and rotation/revocation guidance |
 | OFF-07 | OWASP CSRF prevention | [OWASP CSRF prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) | Cookie-auth state changes need CSRF design; SameSite alone is not entire protection |
 | OFF-08 | Google Analytics events | [Google Analytics events](https://developers.google.com/analytics/devguides/collection/ga4/events) | Event setup; product event choice/consent remain project decisions |
-| OFF-09 | PostgreSQL row locking | [PostgreSQL row locking](https://www.postgresql.org/docs/current/explicit-locking.html) | Locking must be within chosen transaction design |
+| OFF-09 | MySQL 8.4 locking reads | [MySQL 8.4 locking reads](https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html) | Locking must be within chosen transaction design |
 | OFF-10 | Prisma transactions | [Prisma transactions](https://www.prisma.io/docs/orm/fundamentals/transactions) | Candidate transaction API; evaluate exact lock/raw query path in spike |
 | OFF-11 | Sequelize transactions | [Sequelize transactions](https://sequelize.org/docs/v6/other-topics/transactions/) | Candidate managed/unmanaged transaction behavior; evaluate on chosen DB |
 | OFF-12 | OpenAPI 3.1.1 | [OpenAPI 3.1.1](https://spec.openapis.org/oas/v3.1.1.html) | Machine-readable HTTP/schema contract, not running server |

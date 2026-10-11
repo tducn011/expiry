@@ -27,7 +27,7 @@ Phân biệt observed behavior, design drafts và gaps trước authoring.
 | AUD-05 | uidemo/src/mockApi.ts | Prototype authority | In-memory arrays; hard-coded TODAY 2026-10-08; enum/DTO mismatch with OpenAPI | High | Adapter contract and clock parity required before FE/BE integration |
 | AUD-06 | uidemo/src/App.tsx | UI state/auth/navigation | authenticated Boolean; query params read once; local setView; no demonstrated history routing | High | Simulated auth, browser back contract missing |
 | AUD-07 | uidemo/HANDOFF.md vs src/index.css | Layout | Handoff says 28px cards/1200px width and older tokens; CSS has r-card16/content-max1100 | High | CSS observed current authority; provisional LAYOUT documents exact tokens |
-| AUD-08 | contracts/schema_reference_postgresql.sql | DB reference | PostgreSQL DDL; no backend/migration runner in tracked corpus | High | Schema proposal, not applied database |
+| AUD-08 | contracts/schema_reference_mysql.sql | DB reference | MySQL 8.4 DDL; no backend/migration runner in tracked corpus | High | Schema proposal, not applied database |
 | AUD-09 | Source discovery | Figma/TMB convention | Initially no Figma design URL/key or project LAYOUT; user pointed to hackathon, five canonical TMB skills now read/installed | High for search scope | TMB source resolved; Figma source gap remains |
 | AUD-10 | doc research + PDF slides | Evidence taxonomy | Research synthesis and OCR slides have limitations; docs ≠ primary research validation | High | Keep research claims attributed; no field-validation claim |
 

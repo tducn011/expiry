@@ -7,7 +7,7 @@ import type {
   EntryDraft,
   FoodEntry,
   Unit,
-} from "../mockApi"
+} from "../domain/types"
 import {
   certaintyLabel,
   fmtQty,

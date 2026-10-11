@@ -44,13 +44,14 @@ export async function loadEnv() {
   };
 }
 
-let pool = null;
+const pools = new Map();
 
 export async function getPool(customDb) {
   const config = await loadEnv();
   const database = customDb || config.database;
-  if (!pool || pool.config?.connectionConfig?.database !== database) {
-    pool = mysql.createPool({
+  const key = JSON.stringify([config.host, config.port, config.user, config.password, database]);
+  if (!pools.has(key)) {
+    pools.set(key, mysql.createPool({
       host: config.host,
       port: config.port,
       user: config.user,
@@ -64,15 +65,22 @@ export async function getPool(customDb) {
       decimalNumbers: false,
       supportBigNumbers: true,
       bigNumberStrings: true
-    });
+    }));
   }
-  return pool;
+  return pools.get(key);
+}
+
+export async function closePools() {
+  const current = [...pools.values()];
+  pools.clear();
+  await Promise.all(current.map(pool => pool.end()));
 }
 
 export async function connect(database) {
   const p = await getPool(database);
   const conn = await p.getConnection();
-  await conn.query("SET SESSION time_zone='+00:00'");
+  try { await conn.query("SET SESSION time_zone='+00:00'"); }
+  catch (error) { conn.destroy(); throw error; }
   // Return wrapper with commit/rollback/end matching single connection semantics
   return {
     execute: (sql, values) => conn.execute(sql, values),

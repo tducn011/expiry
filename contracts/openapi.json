@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Expiry private food inventory API",
-    "version": "0.1.0",
-    "description": "Review draft. Bearer scheme is an adapter example; auth implementation and stack not yet selected. Business/date/unit rules in accompanying specification."
+    "version": "0.2.0",
+    "description": "Local email/password and durable server-session contract selected by the user on11October2026. Inventory/date/unit business rules remain in the accompanying specification. Migration002 is explicitly approved."
   },
   "servers": [
     {
@@ -12,7 +12,10 @@
   ],
   "security": [
     {
-      "IdentityBearer": []
+      "SessionCookie": []
+    },
+    {
+      "ProductionSessionCookie": []
     }
   ],
   "paths": {
@@ -31,6 +34,16 @@
               "maxLength": 100,
               "pattern": "^[A-Za-z0-9_-]+$"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 32
+            },
+            "description": "Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact configured Origin."
           }
         ],
         "responses": {
@@ -484,6 +497,16 @@
               "maxLength": 100,
               "pattern": "^[A-Za-z0-9_-]+$"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 32
+            },
+            "description": "Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact configured Origin."
           }
         ],
         "responses": {
@@ -639,6 +662,16 @@
               "type": "integer",
               "minimum": 1
             }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 32
+            },
+            "description": "Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact configured Origin."
           }
         ],
         "responses": {
@@ -770,6 +803,16 @@
               "maxLength": 100,
               "pattern": "^[A-Za-z0-9_-]+$"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 32
+            },
+            "description": "Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact configured Origin."
           }
         ],
         "responses": {
@@ -1054,6 +1097,16 @@
               "maxLength": 100,
               "pattern": "^[A-Za-z0-9_-]+$"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 32
+            },
+            "description": "Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact configured Origin."
           }
         ],
         "responses": {
@@ -1341,6 +1394,16 @@
               "maxLength": 100,
               "pattern": "^[A-Za-z0-9_-]+$"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 32
+            },
+            "description": "Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact configured Origin."
           }
         ],
         "responses": {
@@ -1587,6 +1650,16 @@
               "maxLength": 100,
               "pattern": "^[A-Za-z0-9_-]+$"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 32
+            },
+            "description": "Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact configured Origin."
           }
         ],
         "responses": {
@@ -1710,14 +1783,547 @@
           }
         }
       }
+    },
+    "/scans": {
+      "post": {
+        "operationId": "API-13",
+        "summary": "API-13 POST /scans - Upload food image for OCR and candidate extraction",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "image"
+                ],
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Food package image file (max 5MB, JPEG/PNG/WebP)"
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "image_base64"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "image_base64": {
+                    "type": "string",
+                    "description": "Base64 JPEG/PNG/WebP bytes, decoded size at most5MiB."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Extraction result with candidate fields for user review and edit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "raw_text",
+                    "candidates",
+                    "requires_confirmation"
+                  ],
+                  "properties": {
+                    "raw_text": {
+                      "type": "string"
+                    },
+                    "candidates": {
+                      "type": "object",
+                      "properties": {
+                        "food_name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "expiry_date": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date"
+                            },
+                            "date_certainty": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "enum": [
+                                "exact",
+                                "inferred",
+                                null
+                              ]
+                            },
+                            "date_label_type": {
+                              "type": "string"
+                            },
+                            "source_text": {
+                              "type": "string"
+                            },
+                            "alternatives": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "format": "date"
+                              }
+                            },
+                            "ambiguous": {
+                              "type": "boolean"
+                            },
+                            "requires_confirmation": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "requires_confirmation": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed image upload"
+          },
+          "413": {
+            "description": "Image exceeds maximum 5MB size limit"
+          },
+          "415": {
+            "description": "Unsupported media format"
+          },
+          "504": {
+            "description": "Scan service timeout (>3s)"
+          },
+          "401": {
+            "description": "Authentication, CSRF, image/OCR or service failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authentication, CSRF, image/OCR or service failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Authentication, CSRF, image/OCR or service failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authentication, CSRF, image/OCR or service failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 32
+            },
+            "description": "Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact configured Origin."
+          }
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "AUTH-REGISTER",
+        "summary": "Create a local account and session",
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Exact trusted browser origin configured in APP_ORIGIN."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRegistration"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Authenticated session; opaque credential is set only in an HttpOnly cookie",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AUTH-LOGIN",
+        "summary": "Verify local credentials and rotate the browser session",
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Exact trusted browser origin configured in APP_ORIGIN."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthLogin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated session; opaque credential is set only in an HttpOnly cookie",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/session": {
+      "get": {
+        "operationId": "AUTH-SESSION",
+        "summary": "Read the trusted current principal and per-session CSRF token",
+        "responses": {
+          "200": {
+            "description": "Active durable session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AUTH-LOGOUT",
+        "summary": "Revoke the current session and clear the credential cookie",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Exact trusted browser origin configured in APP_ORIGIN."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 32
+            },
+            "description": "Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact configured Origin."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Session revoked"
+          },
+          "401": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Rejected request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "securitySchemes": {
-      "IdentityBearer": {
-        "type": "http",
-        "scheme": "bearer",
-        "description": "Verified principal provided by selected identity adapter; does not prescribe JWT."
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "expiry_session",
+        "description": "Local development opaque server session. Backend validates the durable session; client identity headers are ignored."
+      },
+      "ProductionSessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-expiry_session",
+        "description": "Production HTTPS, HttpOnly, Secure, SameSite=Lax, host-only opaque session."
       }
     },
     "schemas": {
@@ -2382,6 +2988,119 @@
           "title",
           "status",
           "code"
+        ]
+      },
+      "AuthUser": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "attention_lead_days": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 30
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "email",
+          "timezone",
+          "attention_lead_days",
+          "version"
+        ]
+      },
+      "AuthLogin": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 15,
+            "maxLength": 128,
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "AuthRegistration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 15,
+            "maxLength": 128,
+            "writeOnly": true
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "timezone": {
+            "type": "string",
+            "default": "Asia/Ho_Chi_Minh"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "display_name"
+        ]
+      },
+      "AuthSession": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthUser"
+          },
+          "csrf_token": {
+            "type": "string",
+            "minLength": 32
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "user",
+          "csrf_token",
+          "expires_at"
         ]
       }
     }

@@ -1,13 +1,13 @@
 openapi: 3.1.1
 info:
   title: Expiry private food inventory API
-  version: 0.1.0
-  description: Review draft. Bearer scheme is an adapter example; auth implementation
-    and stack not yet selected. Business/date/unit rules in accompanying specification.
+  version: 0.2.0
+  description: Local email/password and durable server-session contract selected by the user on11October2026. Inventory/date/unit business rules remain in the accompanying specification. Migration002 is explicitly approved.
 servers:
 - url: /api/v1
 security:
-- IdentityBearer: []
+- SessionCookie: []
+- ProductionSessionCookie: []
 paths:
   /food-entries:
     post:
@@ -22,6 +22,14 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: &id001
+          type: string
+          minLength: 32
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests
+          must also carry an exact configured Origin.
       responses:
         '201':
           description: Success
@@ -303,6 +311,12 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests
+          must also carry an exact configured Origin.
       responses:
         '200':
           description: Success
@@ -399,6 +413,12 @@ paths:
         schema:
           type: integer
           minimum: 1
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests
+          must also carry an exact configured Origin.
       responses:
         '204':
           description: Success
@@ -480,6 +500,12 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests
+          must also carry an exact configured Origin.
       responses:
         '201':
           description: Success
@@ -655,6 +681,12 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests
+          must also carry an exact configured Origin.
       responses:
         '201':
           description: Success
@@ -831,6 +863,12 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests
+          must also carry an exact configured Origin.
       responses:
         '200':
           description: Success
@@ -981,6 +1019,12 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests
+          must also carry an exact configured Origin.
       responses:
         '200':
           description: Success
@@ -1070,10 +1114,19 @@ paths:
                   type: string
                   format: binary
                   description: Food package image file (max 5MB, JPEG/PNG/WebP)
+          application/json:
+            schema:
+              type: object
+              required:
+              - image_base64
+              additionalProperties: false
+              properties:
+                image_base64:
+                  type: string
+                  description: Base64 JPEG/PNG/WebP bytes, decoded size at most5MiB.
       responses:
         '200':
-          description: Extraction result with candidate fields for user review and
-            edit
+          description: Extraction result with candidate fields for user review and edit
           content:
             application/json:
               schema:
@@ -1089,17 +1142,21 @@ paths:
                     type: object
                     properties:
                       food_name:
-                        type: string
-                        nullable: true
+                        type:
+                        - string
+                        - 'null'
                       expiry_date:
                         type: object
                         properties:
                           value:
-                            type: string
+                            type:
+                            - string
+                            - 'null'
                             format: date
-                            nullable: true
                           date_certainty:
-                            type: string
+                            type:
+                            - string
+                            - 'null'
                             enum:
                             - exact
                             - inferred
@@ -1131,13 +1188,188 @@ paths:
           description: Unsupported media format
         '504':
           description: Scan service timeout (>3s)
+        '401':
+          description: Authentication, CSRF, image/OCR or service failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Authentication, CSRF, image/OCR or service failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: Authentication, CSRF, image/OCR or service failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Authentication, CSRF, image/OCR or service failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      parameters:
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests
+          must also carry an exact configured Origin.
+  /auth/register:
+    post:
+      operationId: AUTH-REGISTER
+      summary: Create a local account and session
+      security: []
+      parameters:
+      - &id002
+        in: header
+        name: Origin
+        required: true
+        schema:
+          type: string
+          format: uri
+        description: Exact trusted browser origin configured in APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegistration'
+      responses:
+        '201':
+          description: Authenticated session; opaque credential is set only in an HttpOnly
+            cookie
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '400': &id003
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401': &id004
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403': &id005
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409': &id006
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422': &id007
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429': &id008
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503': &id009
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/login:
+    post:
+      operationId: AUTH-LOGIN
+      summary: Verify local credentials and rotate the browser session
+      security: []
+      parameters:
+      - *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLogin'
+      responses:
+        '200':
+          description: Authenticated session; opaque credential is set only in an HttpOnly
+            cookie
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '400': *id003
+        '401': *id004
+        '403': *id005
+        '409': *id006
+        '422': *id007
+        '429': *id008
+        '503': *id009
+  /auth/session:
+    get:
+      operationId: AUTH-SESSION
+      summary: Read the trusted current principal and per-session CSRF token
+      responses:
+        '200':
+          description: Active durable session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '401': *id004
+        '503': *id009
+  /auth/logout:
+    post:
+      operationId: AUTH-LOGOUT
+      summary: Revoke the current session and clear the credential cookie
+      parameters:
+      - *id002
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests
+          must also carry an exact configured Origin.
+      responses:
+        '204':
+          description: Session revoked
+        '401': *id004
+        '403': *id005
+        '503': *id009
 components:
   securitySchemes:
-    IdentityBearer:
-      type: http
-      scheme: bearer
-      description: Verified principal provided by selected identity adapter; does
-        not prescribe JWT.
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: expiry_session
+      description: Local development opaque server session. Backend validates the durable
+        session; client identity headers are ignored.
+    ProductionSessionCookie:
+      type: apiKey
+      in: cookie
+      name: __Host-expiry_session
+      description: Production HTTPS, HttpOnly, Secure, SameSite=Lax, host-only opaque
+        session.
   schemas:
     EntryCreate:
       type: object
@@ -1619,3 +1851,89 @@ components:
       - title
       - status
       - code
+    AuthUser:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        timezone:
+          type: string
+        attention_lead_days:
+          type: integer
+          minimum: 0
+          maximum: 30
+        version:
+          type: integer
+          minimum: 1
+      required:
+      - id
+      - display_name
+      - email
+      - timezone
+      - attention_lead_days
+      - version
+    AuthLogin:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 15
+          maxLength: 128
+          writeOnly: true
+      required:
+      - email
+      - password
+    AuthRegistration:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 15
+          maxLength: 128
+          writeOnly: true
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        timezone:
+          type: string
+          default: Asia/Ho_Chi_Minh
+      required:
+      - email
+      - password
+      - display_name
+    AuthSession:
+      type: object
+      additionalProperties: false
+      properties:
+        user:
+          $ref: '#/components/schemas/AuthUser'
+        csrf_token:
+          type: string
+          minLength: 32
+        expires_at:
+          type: string
+          format: date-time
+      required:
+      - user
+      - csrf_token
+      - expires_at

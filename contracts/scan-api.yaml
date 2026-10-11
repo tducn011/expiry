@@ -123,12 +123,12 @@ components:
       type: object
       properties:
         value:
-          type: string
+          type: [string, "null"]
           format: date
-          nullable: true
+
           example: "2026-12-25"
         date_certainty:
-          type: string
+          type: [string, "null"]
           enum: [exact, inferred, null]
           example: exact
         date_label_type:
@@ -155,9 +155,9 @@ components:
       type: object
       properties:
         value:
-          type: string
+          type: [string, "null"]
           format: date
-          nullable: true
+
           example: "2026-10-10"
         source_text:
           type: string
@@ -167,8 +167,8 @@ components:
       type: object
       properties:
         food_name:
-          type: string
-          nullable: true
+          type: [string, "null"]
+
           example: null
         expiry_date:
           $ref: '#/components/schemas/ExpiryCandidate'

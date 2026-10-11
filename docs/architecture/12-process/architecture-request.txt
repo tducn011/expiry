@@ -106,7 +106,7 @@ Current proposed stack:
 
 Do not change an established technology without explaining the problem, alternatives, migration cost, and evidence.
 
-PostgreSQL, Sequelize, Prisma, Redis, and Python OCR libraries are candidates until their use is confirmed.
+MySQL, Sequelize, Prisma, Redis, and Python OCR libraries are candidates until their use is confirmed.
 
 Do not claim that a candidate is already installed.
 

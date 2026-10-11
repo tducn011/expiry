@@ -3,6 +3,7 @@ import { Router } from 'express';
 export function createScanRouter(controller) {
   const router = Router();
 
+  router.post('/scans', controller.upload);
   router.post('/scan', controller.scan);
   router.get('/scan/health', controller.health);
 

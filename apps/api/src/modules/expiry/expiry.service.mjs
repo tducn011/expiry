@@ -1,25 +1,22 @@
 import { InventoryRepository } from '../../shared/repository.mjs';
 import { connect } from '../../shared/connection.mjs';
+import { DomainError } from '../../shared/domain.mjs';
+import { preferencesDTO } from '../../shared/public-dto.mjs';
 
 export class ExpiryService {
-  constructor(database) {
+  constructor(database, options = {}) {
     this.database = database;
-    this.repo = new InventoryRepository(database);
+    this.repo = options.repository ?? new InventoryRepository(database, options);
+    this.connection = options.connect ?? connect;
   }
 
   async getPreferences(owner) {
     this.repo.principal(owner);
-    const c = await connect(this.database);
+    const c = await this.connection(this.database);
     try {
-      const [[user]] = await c.execute('SELECT id, identity_subject, display_name, timezone, attention_lead_days, version FROM users WHERE id = ?', [owner]);
-      if (!user) {
-        return {
-          timezone: 'Asia/Ho_Chi_Minh',
-          attention_lead_days: 3,
-          version: 1
-        };
-      }
-      return user;
+      const [[user]] = await c.execute('SELECT timezone, attention_lead_days, version FROM users WHERE id = ?', [owner]);
+      if (!user) throw new DomainError(401, 'AUTH_REQUIRED');
+      return preferencesDTO(user);
     } finally {
       await c.end();
     }

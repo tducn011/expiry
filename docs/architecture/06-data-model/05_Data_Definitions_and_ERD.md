@@ -7,7 +7,7 @@
 4. Phân biệt persisted state, derived projection, transport DTO và UI-only draft.
 5. Viết invariants, event/command shape, lifecycle và transaction boundary.
 6. Xác định functional dependencies và cardinality; sau đó ERD logical.
-7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án PostgreSQL, không khóa stack user.
+7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án MySQL 8.4 (InnoDB).
 
 **Data dictionary không chỉ ghi `date: string`.** Phải ghi đây là calendar date, null khi nào, ai nhập, ai dùng, có tự derive không và timezone nào dùng so sánh.
 

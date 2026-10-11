@@ -36,7 +36,7 @@ Không có products/catalog ở MVP: chưa có use case catalog, hai món tên g
 
 ### Physical SQL reference
 
-[Proposed PostgreSQL DDL](../../../Expiry_System_Design_2026-10-08/contracts/schema_reference_postgresql.sql); not a deployed migration. PK/FK/check/index clauses are the readable source. ORM decision ADR-002 remains open; no ORM models claimed installed.
+[MySQL 8.4 DDL](../../../Expiry_System_Design_2026-10-08/contracts/schema_reference_mysql.sql); not a deployed migration. PK/FK/check/index clauses are the readable source. ORM decision ADR-002 remains open; no ORM models claimed installed.
 
 ### Migration plan [D]
 

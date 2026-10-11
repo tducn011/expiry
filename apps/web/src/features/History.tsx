@@ -1,14 +1,16 @@
-import type { FoodEntry, QuantityMovement } from "../mockApi"
+import type { FoodEntry, QuantityMovement } from "../domain/types"
 import { fmtQty, fmtTime, movementLabel, unitLabel } from "../lib/format"
 import Button from "../components/ui/Button"
 import Modal, { ModalActions } from "../components/ui/Modal"
 
 /** UI-09 read-only timeline. A list, not a form: only the timeline region may scroll. */
 export default function History({
+  timezone = "Asia/Ho_Chi_Minh",
   food,
   movements,
   onClose,
 }: {
+  timezone?: string
   food: FoodEntry
   movements: QuantityMovement[]
   onClose: () => void
@@ -39,7 +41,7 @@ export default function History({
             <div className="timeline-item" key={m.id}>
               <span className={`timeline-dot ${m.kind}`} />
               <div>
-                <span>{fmtTime(m.recorded_at)}</span>
+                <span>{fmtTime(m.recorded_at, timezone)}</span>
                 <h3>{movementLabel[m.kind]}</h3>
                 {m.reason && <p>{m.reason}</p>}
               </div>

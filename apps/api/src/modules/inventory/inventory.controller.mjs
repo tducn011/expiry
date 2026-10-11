@@ -1,3 +1,6 @@
+import { paginationQuery, queryInteger } from '../../shared/public-dto.mjs';
+import { DomainError } from '../../shared/domain.mjs';
+
 export class InventoryController {
   constructor(inventoryService) {
     this.service = inventoryService;
@@ -18,13 +21,14 @@ export class InventoryController {
 
   list = async (req, res, next) => {
     try {
+      const view = req.query.view ?? 'inventory';
+      if (!['inventory', 'attention'].includes(view)) throw new DomainError(422, 'VALIDATION_ERROR');
       const query = {
-        view: req.query.view || 'inventory',
-        lifecycle: req.query.lifecycle || 'active',
+        view,
+        lifecycle: req.query.lifecycle ?? 'active',
         attention: req.query.attention,
-        page: req.query.page ? parseInt(req.query.page, 10) : 1,
-        limit: req.query.limit ? parseInt(req.query.limit, 10) : 20,
-        q: req.query.q || '',
+        ...paginationQuery(req.query),
+        q: req.query.q ?? '',
         location: req.query.location
       };
       const result = await this.service.listEntries(req.userId, query);
@@ -57,7 +61,8 @@ export class InventoryController {
 
   remove = async (req, res, next) => {
     try {
-      const result = await this.service.removeEntry(req.userId, req.idempotencyKey, req.params.id, req.body || {});
+      const input = { expected_version: queryInteger(req.query.expected_version) };
+      const result = await this.service.removeEntry(req.userId, req.idempotencyKey, req.params.id, input);
       if (result.replayed) {
         res.setHeader('Idempotency-Replayed', 'true');
       }
@@ -93,8 +98,8 @@ export class InventoryController {
 
   listMovements = async (req, res, next) => {
     try {
-      const movements = await this.service.listMovements(req.userId, req.params.id);
-      return res.status(200).json({ items: movements });
+      const result = await this.service.listMovements(req.userId, req.params.id, paginationQuery(req.query));
+      return res.status(200).json(result);
     } catch (err) {
       next(err);
     }
@@ -114,11 +119,7 @@ export class InventoryController {
 
   listTrash = async (req, res, next) => {
     try {
-      const query = {
-        page: req.query.page ? parseInt(req.query.page, 10) : 1,
-        limit: req.query.limit ? parseInt(req.query.limit, 10) : 20,
-        q: req.query.q || ''
-      };
+      const query = paginationQuery(req.query);
       const result = await this.service.listTrash(req.userId, query);
       return res.status(200).json(result);
     } catch (err) {

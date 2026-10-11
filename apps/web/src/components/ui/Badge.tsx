@@ -1,4 +1,4 @@
-import type { Attention } from "../../mockApi"
+import type { Attention } from "../../domain/types"
 import { attentionLabel } from "../../lib/format"
 import Icon from "./Icon"
 

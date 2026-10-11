@@ -1,8 +1,17 @@
-import { InventoryRepository } from '../../shared/repository.mjs';
+import { connect } from '../../shared/connection.mjs';
+import { entryDTO, movementDTO, inactiveAttention, publicAttention } from '../../shared/public-dto.mjs';
+import { PublicInventoryRepository, ownerPreferences } from './public-inventory.repository.mjs';
 
 export class InventoryService {
   constructor(database, options = {}) {
-    this.repo = new InventoryRepository(database, options);
+    this.database = database;
+    this.clock = options.clock ?? (() => new Date());
+    this.repo = options.repository ?? new PublicInventoryRepository(database, { ...options, clock: this.clock });
+    this.readPreferences = options.readPreferences ?? (async owner => {
+      const connection = await connect(this.database);
+      try { return await ownerPreferences(connection, owner); }
+      finally { await connection.end(); }
+    });
   }
 
   async createEntry(owner, idempotencyKey, input) {
@@ -10,11 +19,12 @@ export class InventoryService {
   }
 
   async listEntries(owner, query) {
-    return this.repo.list(owner, query);
+    return this.publicList(await this.repo.list(owner, query));
   }
 
   async getEntry(owner, id) {
-    return this.repo.get(owner, id, false);
+    const entry = await this.repo.get(owner, id, false);
+    return entryDTO(entry, publicAttention(entry, await this.readPreferences(owner), this.clock()));
   }
 
   async editEntry(owner, idempotencyKey, id, input) {
@@ -33,8 +43,10 @@ export class InventoryService {
     return this.repo.consume(owner, idempotencyKey, id, input);
   }
 
-  async listMovements(owner, id) {
-    return this.repo.get(owner, id, true);
+  async listMovements(owner, id, { page = 1, limit = 20 } = {}) {
+    const movements = await this.repo.get(owner, id, true);
+    const start = (page - 1) * limit;
+    return { items: movements.slice(start, start + limit).map(movementDTO), pagination: { page, limit, total: movements.length } };
   }
 
   async recountQuantity(owner, idempotencyKey, id, input) {
@@ -42,6 +54,13 @@ export class InventoryService {
   }
 
   async listTrash(owner, query = {}) {
-    return this.repo.list(owner, { ...query, view: 'trash' });
+    return this.publicList(await this.repo.list(owner, { ...query, view: 'trash', lifecycle: 'all' }));
+  }
+
+  publicList(result) {
+    return {
+      items: result.items.map(entry => entryDTO(entry, entry.attention ?? inactiveAttention(result.as_of_date))),
+      pagination: { page: result.page, limit: result.limit, total: result.total }
+    };
   }
 }

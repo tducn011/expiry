@@ -38,7 +38,7 @@ Separate actually run checks from planned application acceptance.
 
 - Mermaid syntax was parsed, diagrams were not visually rendered or checked for every layout/semantic relation.
 - PlantUML source files were read/linked, not parsed/rendered: no local Java/PlantUML runtime was available.
-- Proposed PostgreSQL DDL was not applied; real locking/rollback/owner/session persistence was not tested.
+- MySQL 8.4 DDL was not applied; real locking/rollback/owner/session persistence was not tested.
 - Application tests VT-01…17 and TC-18…25 remain **Not run — specification only**. The5 schema fixtures and documentation tests do not clear these cases.
 - No browser/device/audio/performance/usability/participant study, deployment or production OCR integration test was performed.
 - Package metadata and official technology documentation were read; food-label OCR accuracy/latency/correction benefit not measured.
