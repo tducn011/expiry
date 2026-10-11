@@ -1,5 +1,5 @@
-import { DEMO_DATE } from "../mockApi"
-import type { Attention, FoodEntry } from "../mockApi"
+import { DEMO_DATE } from "../domain/types"
+import type { Attention, FoodEntry } from "../domain/types"
 import {
   attentionGroups,
   attentionGuidance,
@@ -32,6 +32,8 @@ export const defaultFilters: InventoryFilters = {
 
 export default function Inventory({
   mode,
+  asOfDate = "2026-10-08",
+  demo = true,
   foods,
   allFoods,
   counts,
@@ -45,6 +47,8 @@ export default function Inventory({
   onShowInventory,
   onAction,
 }: {
+  asOfDate?: string
+  demo?: boolean
   mode: "inventory" | "attention"
   foods: FoodEntry[]
   allFoods: FoodEntry[]
@@ -104,7 +108,7 @@ export default function Inventory({
   return (
     <Grid className="page">
       <PageHeader
-        eyebrow={`Dữ liệu demo · ${fmtDate(DEMO_DATE)}`}
+        eyebrow={`${demo ? "Dữ liệu demo" : "Theo ngày hệ thống"} · ${fmtDate(asOfDate)}`}
         title={isAttention ? "Cần chú ý" : "Kho thực phẩm"}
         description={
           isAttention

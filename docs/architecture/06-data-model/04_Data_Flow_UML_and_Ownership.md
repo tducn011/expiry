@@ -72,7 +72,7 @@ sequenceDiagram
  UI->>API: POST entry + Idempotency-Key
  API->>API: Authenticate and validate DTO
  API->>S: execute(principal, draft, key)
- S->>DB: Begin; reserve key / check replay
+ S->>DB: Begin, reserve key / check replay
  alt Key already completed, same fingerprint
   DB-->>S: Saved response
  else New command
@@ -98,7 +98,7 @@ sequenceDiagram
  API->>S: principal + validated query
  S->>DB: Read owner settings + scoped entries
  DB-->>S: Metadata and quantities
- S->>S: Derive with clock/timezone; sort before pagination
+ S->>S: Derive with clock/timezone, sort before pagination
  S-->>API: items + reasons + as_of_date + pagination
  API-->>UI: 200
  UI-->>U: Groups and actionable detail links
@@ -116,7 +116,7 @@ sequenceDiagram
  U->>UI: Use / discard amount
  UI->>API: POST movement + expected_version + key
  API->>S: principal + command
- S->>DB: Begin; reserve key
+ S->>DB: Begin, reserve key
  alt Replay with same fingerprint
   DB-->>S: Original response
  else New command
@@ -129,7 +129,7 @@ sequenceDiagram
    API-->>UI: 409 / 422
    UI-->>U: Refetch/review draft
   else Valid
-   S->>DB: Update quantity/version; insert movement; save result
+   S->>DB: Update quantity/version, insert movement, save result
    S->>DB: Commit
    S-->>API: Updated entry + movement
    API-->>UI: 201

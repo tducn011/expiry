@@ -1,4 +1,4 @@
-import type { Attention, FoodEntry, QuantityMovement } from "../mockApi"
+import type { Attention, FoodEntry, QuantityMovement } from "../domain/types"
 import {
   attentionGuidance,
   fmtDate,
@@ -18,12 +18,14 @@ import Icon from "../components/ui/Icon"
 export type DetailAction = "consume" | "discard" | "recount" | "history" | "edit" | "date" | "delete"
 
 export default function Detail({
+  timezone = "Asia/Ho_Chi_Minh",
   food,
   attention,
   movements,
   onBack,
   onAction,
 }: {
+  timezone?: string
   food: FoodEntry
   attention: Attention
   movements: QuantityMovement[]
@@ -229,7 +231,7 @@ export default function Detail({
                 </span>
                 <p>
                   <strong>{movementLabel[m.kind]}</strong>
-                  <small>{fmtTime(m.recorded_at)}</small>
+                  <small>{fmtTime(m.recorded_at, timezone)}</small>
                 </p>
                 <em>
                   {fmtQty(m.quantity_before)} → {fmtQty(m.quantity_after)}{" "}

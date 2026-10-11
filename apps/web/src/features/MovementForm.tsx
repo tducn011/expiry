@@ -1,5 +1,5 @@
 import { useState } from "react"
-import type { FoodEntry } from "../mockApi"
+import type { FoodEntry } from "../domain/types"
 import { fmtQty, unitLabel } from "../lib/format"
 import Button from "../components/ui/Button"
 import Field from "../components/ui/Field"

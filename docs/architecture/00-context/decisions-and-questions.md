@@ -39,7 +39,7 @@ Sổ theo dõi các quyết định kiến trúc đã chốt (Decision Ledger) v
 | :--- | :--- | :--- | :--- | :--- |
 | **OQ-01** | Scope provenance | Scope kế thừa cũ (OCR, push, multi-domain) so với MVP hiện tại | **Đã giải quyết (Resolved)** | Chốt phạm vi quản lý thực phẩm cá nhân; scan chỉ là trợ thủ (assistive); push notifications đưa về giai đoạn sau. |
 | **OQ-02** | Data contracts | Thống nhất đơn vị, quy ước ngày và mapping DTO | **Đã giải quyết (Resolved)** | Chuẩn hóa DTO OpenAPI trong `contracts/public-api.yaml` và `contracts/scan-api.yaml`. |
-| **OQ-03** | Stack / DB Engine | Chọn Node/Express vs Nest, MySQL vs PostgreSQL, ORM | **Đã giải quyết (Resolved)** | Chốt Node.js + Express Modular Monolith và MySQL 8+ InnoDB (DEC-07, DEC-08, ADR-002). |
+| **OQ-03** | Stack / DB Engine | Chọn Node/Express vs Nest, MySQL vs MySQL, ORM | **Đã giải quyết (Resolved)** | Chốt Node.js + Express Modular Monolith và MySQL 8+ InnoDB (DEC-07, DEC-08, ADR-002). |
 | **OQ-04** | Auth Provider | Session cookie vs JWT token | **Đang hoàn thiện (In Progress)** | Ưu tiên Session / Bearer Token cơ bản, không đưa thêm bên thứ 3 phức tạp vào MVP. |
 | **OQ-05** | OCR Execution Boundary | Cách thức tích hợp OCR và ranh giới với Python | **Đã giải quyết (Resolved)** | Xây dựng Python FastAPI Scan Service độc lập (`POST /scan`), stateless, không truy cập MySQL. Loại bỏ ML/DL/LLM (ADR-004, ADR-006). |
 | **OQ-06** | UI Alignment | Đồng bộ giao diện với Canva / Wireframe | **Đang hoàn thiện (In Progress)** | Màn hình `uidemo` (React+Vite) đã có bản demo trực quan, khớp 6 wireframe chính. |

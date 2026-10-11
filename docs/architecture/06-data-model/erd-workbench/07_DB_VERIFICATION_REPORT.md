@@ -155,9 +155,9 @@ Backup/restore actually used mysqldump and import into a new sandbox. Comparison
 | Visibility | nullabledeleted_at | soft delete/restore without quantity event | no FEconnected acceptance |
 | Attention | no storedstatuscolumn | classification/filter/priority before pagination, injected frozen clock | no approved production SLA or food-safety outcome |
 
-## PostgreSQL / MySQL / OpenAPI / FE gaps
+## MySQL / OpenAPI / FE gaps
 
-PostgreSQL uuid/timestamptz/jsonb/regex ~ and partial indexes were converted as documented in06_MYSQL_IMPLEMENTATION_NOTES. MySQL uses readable ASCII UUIDs, DECIMAL, UTC DATETIME, JSON, REGEXP_LIKE, generated uniqueness and composite indexes. Whole migration DDL is not claimed atomic; DML rollback is separately exercised. Future physical changes require new version,not editing applied001.
+MySQL uuid/timestamptz/jsonb/regex ~ and partial indexes were converted as documented in06_MYSQL_IMPLEMENTATION_NOTES. MySQL uses readable ASCII UUIDs, DECIMAL, UTC DATETIME, JSON, REGEXP_LIKE, generated uniqueness and composite indexes. Whole migration DDL is not claimed atomic; DML rollback is separately exercised. Future physical changes require new version,not editing applied001.
 
 Observed source mismatches:
 - known versus exact; date_* versus expiry_date_*

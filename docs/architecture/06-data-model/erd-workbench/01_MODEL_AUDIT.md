@@ -13,13 +13,13 @@ Repository root `/home/pro/Downloads/expiry`, branch `feature/ui`, baseline `6d2
 | Requirements | `docs/02_Requirements_and_Business_Rules.md`, `docs/business-rules.md`, `docs/nonfunctional-requirements.md` |
 | Interactions | `docs/03_User_Flows_Scenarios_and_Use_Cases.md`, `docs/scenarios.md`, `docs/use-cases.md` |
 | Behavior | `docs/04_Data_Flow_UML_and_Ownership.md`, `docs/ownership.md`, `docs/data-flows.md` |
-| Model | `docs/05_Data_Definitions_and_ERD.md`, `docs/dictionary.md`, `docs/erd.md`, `contracts/schema_reference_postgresql.sql` |
+| Model | `docs/05_Data_Definitions_and_ERD.md`, `docs/dictionary.md`, `docs/erd.md`, `contracts/schema_reference_mysql.sql` |
 | API/validation | `docs/06_API_Routes_and_Contracts.md`, `contracts/openapi.json`, `contracts/fixtures.json`, `docs/09_Traceability_Implementation_and_Verification.md` |
 | Observed prototype | `uidemo/src/mockApi.ts`, `uidemo/package.json` |
 
 ## Problem, boundary and ownership
 
-Symptom: the project has a PostgreSQL reference and in-memory UI, with no applied MySQL migration or real DB acceptance evidence. Goal: preserve private food capture/review/resolve semantics while testing candidate persistence. System owns digital records; user reports physical use/disposal/count. Three personas describe behavioral needs, not three database roles. P1 needs visibility, P2 context when plans change, P3 low-friction accurate updates. DEC-01/02 are recorded-confirmed private/manual/in-app scope. Grain, ledger, default two-day lead, units/date policy and auth/provider remain proposed/open.
+Symptom: the project has a MySQL 8.4 reference and in-memory UI, with no applied MySQL migration or real DB acceptance evidence. Goal: preserve private food capture/review/resolve semantics while testing candidate persistence. System owns digital records; user reports physical use/disposal/count. Three personas describe behavioral needs, not three database roles. P1 needs visibility, P2 context when plans change, P3 low-friction accurate updates. DEC-01/02 are recorded-confirmed private/manual/in-app scope. Grain, ledger, default two-day lead, units/date policy and auth/provider remain proposed/open.
 
 `principal → validated command → transaction/idempotency reservation → owner-scoped row lock → entry + append ledger + saved response → commit → DTO/refetch`
 
@@ -27,7 +27,7 @@ State owner: DB `food_entries.remaining_quantity` after commit; ledger is audit 
 
 ## Source evidence
 
-FILE: `contracts/schema_reference_postgresql.sql`  
+FILE: `contracts/schema_reference_mysql.sql`  
 ROLE: draft persistence reference.  
 EVIDENCE: native `uuid`, `timestamptz`, `jsonb`, regex `~`, partial indexes, four tables, `BEGIN/COMMIT`.  
 ISSUE: cannot execute unchanged on MySQL; FK alone cannot require an initial child or authorize owner access.  

@@ -5,7 +5,7 @@ import type {
   DateSource,
   MovementKind,
   Unit,
-} from "../mockApi"
+} from "../domain/types"
 
 export const unitLabel: Record<Unit, string> = {
   piece: "cái",
@@ -89,9 +89,9 @@ export const fmtQty = (n: number) =>
   n.toLocaleString("vi-VN", { maximumFractionDigits: 3 })
 export const fmtDate = (d: string | null) =>
   d ? d.split("-").reverse().join("/") : ""
-export const fmtTime = (ts: string) =>
+export const fmtTime = (ts: string, timezone = "Asia/Ho_Chi_Minh") =>
   new Date(ts).toLocaleString("vi-VN", {
-    timeZone: "Asia/Ho_Chi_Minh",
+    timeZone: timezone,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

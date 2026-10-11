@@ -23,7 +23,7 @@ Hệ thống yêu cầu hỗ trợ ACID transaction, row-level locking cho concu
 | Khía cạnh | Quyết định & Phân tích |
 | :--- | :--- |
 | **Vấn đề** | Đảm bảo tính nhất quán dữ liệu số lượng, lưu trữ nhật ký biến động và cơ chế Idempotency-Key. |
-| **Phương án xem xét** | 1. **MySQL 8+ với engine InnoDB** (Chọn).<br/>2. PostgreSQL (Tham chiếu ban đầu, chuyển sang MySQL theo cấu trúc dự án).<br/>3. SQLite / NoSQL (Loại bỏ vì thiếu tính mở rộng hoặc ACID locking chuẩn). |
+| **Phương án xem xét** | 1. **MySQL 8+ với engine InnoDB** (Chọn).<br/>2. MySQL 8+ InnoDB.<br/>3. SQLite / NoSQL (Loại bỏ vì thiếu tính mở rộng hoặc ACID locking chuẩn). |
 | **Bằng chứng** | Thư mục `database/mysql/` đã được thiết lập đầy đủ với migrations, scripts khởi tạo, file seed và ERD Workbench chuẩn. InnoDB hỗ trợ đầy đủ row locking (`FOR UPDATE`), repeatable read isolation và foreign keys. |
 | **Đánh đổi** | Cần quản lý cấu hình transaction và timezone trên MySQL đúng chuẩn `UTC` / `+00:00`. |
 | **Quyết định** | **Chấp thuận (Approved):** Chọn **MySQL 8+ (InnoDB)** làm cơ sở dữ liệu chính thức của Expiry. |

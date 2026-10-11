@@ -1,4 +1,4 @@
-# PostgreSQL → MySQL 8.4 difference audit
+# MySQL 8.4 Physical Implementation Notes
 
 Candidate physical mapping for the food draft. Logical assumptions remain review items.
 

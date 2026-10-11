@@ -1,5 +1,5 @@
 import { createApp } from './app.mjs';
-import { loadEnv } from './shared/connection.mjs';
+import { loadEnv, closePools } from './shared/connection.mjs';
 
 async function bootstrap() {
   const env = await loadEnv();
@@ -13,7 +13,8 @@ async function bootstrap() {
 
   const shutdown = () => {
     console.log('\n[Expiry API] Shutting down gracefully...');
-    server.close(() => {
+    server.close(async () => {
+      await closePools();
       console.log('[Expiry API] Closed all connections.');
       process.exit(0);
     });

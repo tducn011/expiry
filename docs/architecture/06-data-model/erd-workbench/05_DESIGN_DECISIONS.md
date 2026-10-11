@@ -10,7 +10,7 @@ Evidence labels: [A] checked source/runtime, [B] official documentation, [C] inf
 | MYSQL-04 | DATE for expiry/opening; DATETIME(6) UTC for events | proposed; DATETIME avoids TIMESTAMP range; UTC enforced on connection, explicit timezone conversion for local-day policy |
 | MYSQL-05 | VARCHAR + CHECK enumerations | proposed; visible domain values and versioned migrations; no ordinal ENUM coupling |
 | MYSQL-06 | generated nullable initial_entry_id + UNIQUE | proposed; at most one initial, other movements NULL; application transaction enforces at least one |
-| MYSQL-07 | composite owner/visibility/date indexes | proposed; no PostgreSQL partial syntax; attention CASE sorted before pagination can still require filesort |
+| MYSQL-07 | composite owner/visibility/date indexes | proposed; composite index syntax; attention CASE sorted before pagination can still require filesort |
 | MYSQL-08 | api_requests.operation encodes command + target | proposed; preserves original dictionary without adding polymorphic target FK; hash canonical payload, owner+key PK |
 | MYSQL-09 | JSON null for completed 204; SQL NULL for reserved result | proposed; both result fields are null or both SQL-nonnull; incomplete reservation never commits in repository |
 | MYSQL-10 | one metadata migration table | proposed infrastructure only; not fifth domain entity; SHA256 prevents silent rewrite; MySQL DDL replay is not transactionally atomic as a whole |

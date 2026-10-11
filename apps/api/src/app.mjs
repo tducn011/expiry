@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import { authMiddleware, idempotencyMiddleware, errorHandler } from './shared/middleware.mjs';
+import { idempotencyMiddleware, errorHandler } from './shared/middleware.mjs';
+import { AuthRepository } from './modules/auth/auth.repository.mjs';
+import { createAuthBoundary } from './modules/auth/auth.routes.mjs';
 import { InventoryService } from './modules/inventory/inventory.service.mjs';
 import { InventoryController } from './modules/inventory/inventory.controller.mjs';
 import { createInventoryRouter } from './modules/inventory/inventory.routes.mjs';
@@ -11,13 +13,18 @@ import { ScanService } from './modules/scan/scan.service.mjs';
 import { ScanController } from './modules/scan/scan.controller.mjs';
 import { createScanRouter } from './modules/scan/scan.routes.mjs';
 
-export function createApp({ database, scanServiceUrl } = {}) {
+export function createApp({ database, scanServiceUrl, authRepository, allowedOrigins, secureCookies = process.env.NODE_ENV === 'production', now, scanOptions = {} } = {}) {
   const app = express();
+  app.disable('x-powered-by');
+  const configuredOrigins = allowedOrigins ?? (process.env.APP_ORIGIN
+    ? process.env.APP_ORIGIN.split(',').map(value => value.trim()).filter(Boolean)
+    : secureCookies ? [] : ['http://localhost:8443', 'http://127.0.0.1:8443', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4174', 'http://127.0.0.1:4174', 'http://localhost:3001', 'http://127.0.0.1:3001']);
+  if (secureCookies && configuredOrigins.length === 0) throw new Error('Production requires APP_ORIGIN with the exact HTTPS frontend origin');
+  const auth = createAuthBoundary({ repository: authRepository ?? new AuthRepository(database), allowedOrigins: configuredOrigins, secureCookies, ...(now ? { now } : {}) });
 
   // Basic middleware
-  app.use(cors());
+  app.use(cors({ credentials: true, origin: (origin, callback) => callback(null, !origin || configuredOrigins.includes(origin)) }));
   app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   // Root healthcheck
   app.get('/health', (req, res) => {
@@ -32,8 +39,16 @@ export function createApp({ database, scanServiceUrl } = {}) {
   // API v1 Router
   const v1Router = express.Router();
 
-  // Domain security & idempotency
-  v1Router.use(authMiddleware);
+  // Credential endpoints precede domain commands. Ownership comes only from a
+  // durable verified session; caller identity headers have no authority.
+  v1Router.use('/auth', auth.router);
+  v1Router.use(auth.requireAuth);
+  v1Router.use(auth.requireCsrf);
+
+  // Extraction is transient and does not reserve a mutation replay key.
+  const scanService = new ScanService(scanServiceUrl, scanOptions);
+  const scanController = new ScanController(scanService);
+  v1Router.use('/', createScanRouter(scanController));
   v1Router.use(idempotencyMiddleware);
 
   // Initialize modular services
@@ -44,10 +59,6 @@ export function createApp({ database, scanServiceUrl } = {}) {
   const expiryService = new ExpiryService(database);
   const expiryController = new ExpiryController(expiryService);
   v1Router.use('/', createExpiryRouter(expiryController));
-
-  const scanService = new ScanService(scanServiceUrl);
-  const scanController = new ScanController(scanService);
-  v1Router.use('/', createScanRouter(scanController));
 
   // Mount API v1
   app.use('/api/v1', v1Router);

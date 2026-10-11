@@ -1,4 +1,4 @@
-import type { Attention, FoodEntry } from "../mockApi"
+import type { Attention, FoodEntry } from "../domain/types"
 import { attentionLabel, fmtDate, fmtQty, unitLabel } from "../lib/format"
 import Badge from "../components/ui/Badge"
 import Icon from "../components/ui/Icon"
