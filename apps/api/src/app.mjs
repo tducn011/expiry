@@ -18,7 +18,7 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
   app.disable('x-powered-by');
   const configuredOrigins = allowedOrigins ?? (process.env.APP_ORIGIN
     ? process.env.APP_ORIGIN.split(',').map(value => value.trim()).filter(Boolean)
-    : secureCookies ? [] : ['http://localhost:8443', 'http://127.0.0.1:8443', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4174', 'http://127.0.0.1:4174', 'http://localhost:3001', 'http://127.0.0.1:3001']);
+    : secureCookies ? ['https://expiry.vercel.app', 'https://demoexpiry.vercel.app'] : ['http://localhost:8443', 'http://127.0.0.1:8443', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4174', 'http://127.0.0.1:4174', 'http://localhost:3001', 'http://127.0.0.1:3001', 'https://expiry.vercel.app', 'https://demoexpiry.vercel.app']);
   if (secureCookies && configuredOrigins.length === 0) throw new Error('Production requires APP_ORIGIN with the exact HTTPS frontend origin');
   const auth = createAuthBoundary({ repository: authRepository ?? new AuthRepository(database), allowedOrigins: configuredOrigins, secureCookies, ...(now ? { now } : {}) });
 
