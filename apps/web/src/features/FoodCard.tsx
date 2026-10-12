@@ -71,7 +71,9 @@ export default function FoodCard({
         ) : food.remaining_quantity > 0 ? (
           <button
             type="button"
-            className={`row-action ${attention === "past" ? "danger" : "primary"}`}
+            className={`row-action ${
+              attention === "past" ? "danger" : "primary"
+            }`}
             onClick={() =>
               onAction(attention === "past" ? "discard" : "consume")
             }

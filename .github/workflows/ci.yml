@@ -1,0 +1,166 @@
+name: CI/CD Industrial Quality Gate
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  lint-and-static:
+    name: DevSecOps, Lint & TypeScript Static Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Web Dependencies
+        run: cd apps/web && pnpm install
+
+      - name: Check Code Formatting (oxfmt)
+        run: cd apps/web && ./node_modules/.bin/oxfmt --check src/
+
+      - name: Run TypeScript Typecheck (tsc --noEmit)
+        run: cd apps/web && ./node_modules/.bin/tsc --noEmit
+
+  test-ui:
+    name: UI Component Testing (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Web Dependencies
+        run: cd apps/web && pnpm install
+
+      - name: Run Vitest Component Suite
+        run: cd apps/web && pnpm test
+
+  test-api:
+    name: Backend API Unit & Contract Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+
+      - name: Install API Dependencies
+        run: npm --prefix apps/api install
+
+      - name: Run API Tests
+        run: npm run test:api
+        env:
+          NODE_ENV: test
+
+  build-web:
+    name: Frontend Production Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Web Dependencies
+        run: npm --prefix apps/web install
+
+      - name: Run Web Production Build
+        run: npm run build:web
+
+  test-python:
+    name: Python Scan Microservice Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: services/python-scan/requirements.txt
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r services/python-scan/requirements.txt
+
+      - name: Run Python Scan Unit Tests
+        run: python -m unittest discover -s services/python-scan/tests
+
+  behavior-and-contracts:
+    name: Live Full-Stack Behavioral, OpenAPI & DBOps Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Root Dependencies
+        run: npm install mysql2
+
+      - name: Start Full-Stack Docker Services
+        run: |
+          docker compose up -d --build
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:3001/health | grep -q "ok"; then
+              echo "✅ All Docker services are healthy and responding!"
+              break
+            fi
+            echo "Waiting for services to become healthy ($i/30)..."
+            sleep 2
+          done
+
+      - name: Verify DBOps Schema & Ledger Integrity
+        run: node scripts/test-dbops.mjs
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_PORT: 3307
+
+      - name: Run E2E Behavioral & OpenAPI Contract Verification
+        run: node scripts/test-behavior-contract.mjs
+        env:
+          API_BASE: http://127.0.0.1:3001
+          TEST_ORIGIN: https://demoexpiry.vercel.app
+
+      - name: Collect Container Logs on Failure
+        if: failure()
+        run: docker compose logs

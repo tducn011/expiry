@@ -65,13 +65,15 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
 
   // Fallback 404
   app.use((req, res) => {
-    res.status(404).json({
+    res.status(404).type('application/problem+json').json({
       type: 'https://api.expiry.app/problems/NOT_FOUND',
       title: 'NOT_FOUND',
       status: 404,
+      code: 'NOT_FOUND',
       detail: `Route ${req.method} ${req.originalUrl} not found.`
     });
   });
+
 
   // Global Error Handler
   app.use(errorHandler);

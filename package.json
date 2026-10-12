@@ -8,8 +8,17 @@
   "scripts": {
     "build:web": "npm --workspace=apps/web run build",
     "test:api": "npm --workspace=apps/api test",
-    "test:python": "python3 -m unittest discover -s services/python-scan/tests",
-    "test:all": "npm run test:api && npm run test:python && npm run build:web",
+    "test:python": "docker run --rm -v ./services/python-scan:/app expiry-python-scan python -m unittest discover tests",
+    "test:ui": "pnpm --filter expiry-ui test",
+    "test:dbops": "node scripts/test-dbops.mjs",
+    "test:format": "cd apps/web && ./node_modules/.bin/oxfmt --check src/",
+    "format": "cd apps/web && ./node_modules/.bin/oxfmt src/",
+    "typecheck": "cd apps/web && ./node_modules/.bin/tsc --noEmit",
+    "test:behavior": "node scripts/test-behavior-contract.mjs",
+    "test:all": "npm run test:api && npm run test:python && npm run test:ui && npm run test:dbops && npm run build:web && npm run test:behavior",
+    "review:pr": "node scripts/review-pr.mjs",
+    "notify": "node scripts/notify-mobile.mjs",
+    "tui": "./expiry-tui",
     "dev:web": "npm --workspace=apps/web run dev",
     "dev:api": "npm --workspace=apps/api run dev"
   }

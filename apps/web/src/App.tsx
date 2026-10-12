@@ -85,9 +85,18 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const real = useExpiry(view, filters, 1)
 
   // Demo fallback state (only when ?demo=1 or demoMode is explicitly active)
-  const demoEntries = useMemo(() => (isDemo ? mockApi.listEntries() : []), [isDemo, revision])
-  const demoTrash = useMemo(() => (isDemo ? mockApi.listTrash() : []), [isDemo, revision])
-  const demoPrefs = useMemo(() => (isDemo ? mockApi.getPreferences() : null), [isDemo, revision])
+  const demoEntries = useMemo(
+    () => (isDemo ? mockApi.listEntries() : []),
+    [isDemo, revision],
+  )
+  const demoTrash = useMemo(
+    () => (isDemo ? mockApi.listTrash() : []),
+    [isDemo, revision],
+  )
+  const demoPrefs = useMemo(
+    () => (isDemo ? mockApi.getPreferences() : null),
+    [isDemo, revision],
+  )
   const demoSelected = useMemo(
     () => (isDemo && selectedId ? mockApi.getEntry(selectedId) : null),
     [isDemo, selectedId, revision],
@@ -97,7 +106,11 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const entries: FoodEntry[] = isDemo ? demoEntries : real.allFoods
   const trash: FoodEntry[] = isDemo ? demoTrash : real.trash
   const prefs = isDemo
-    ? (demoPrefs ?? { timezone: "Asia/Ho_Chi_Minh", attention_lead_days: 2, version: 1 })
+    ? (demoPrefs ?? {
+        timezone: "Asia/Ho_Chi_Minh",
+        attention_lead_days: 2,
+        version: 1,
+      })
     : (real.prefs ?? {
         timezone: "Asia/Ho_Chi_Minh",
         attention_lead_days: 2,
@@ -106,15 +119,17 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const selected: FoodEntry | null = isDemo
     ? demoSelected
-    : (real.selected || entries.find((e) => e.id === selectedId) || null)
+    : real.selected || entries.find((e) => e.id === selectedId) || null
 
   const modalEntryId = actionEntryId ?? selectedId
   const modalEntry: FoodEntry | null = isDemo
-    ? (modalEntryId ? mockApi.getEntry(modalEntryId) : null)
-    : (entries.find((e) => e.id === modalEntryId) ||
-       trash.find((e) => e.id === modalEntryId) ||
-       selected ||
-       null)
+    ? modalEntryId
+      ? mockApi.getEntry(modalEntryId)
+      : null
+    : entries.find((e) => e.id === modalEntryId) ||
+      trash.find((e) => e.id === modalEntryId) ||
+      selected ||
+      null
 
   const attention = (e: Pick<FoodEntry, "expiry_date">) =>
     attentionFor(e, prefs.attention_lead_days)
@@ -177,8 +192,8 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   )
 
   const displayName = isDemo
-    ? (mockApi.user.display_name || "Bạn (Demo)")
-    : (real.session?.user?.display_name || "Chưa đăng nhập")
+    ? mockApi.user.display_name || "Bạn (Demo)"
+    : real.session?.user?.display_name || "Chưa đăng nhập"
 
   const navigate = (v: View) => {
     setView(v)
@@ -270,7 +285,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       }}
       displayName={displayName}
       urgentCount={urgentCount}
-      onAuth={!isDemo && !real.session ? () => setAuthModalOpen(true) : undefined}
+      onAuth={
+        !isDemo && !real.session ? () => setAuthModalOpen(true) : undefined
+      }
     >
       {notice && (
         <div className="toast" role="status">
@@ -281,13 +298,24 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
       {/* Global backend error display */}
       {!isDemo && real.error && !authModalOpen && (
-        <div className="toast error" role="alert" style={{ background: "var(--danger, #dc2626)", color: "#fff" }}>
+        <div
+          className="toast error"
+          role="alert"
+          style={{ background: "var(--danger, #dc2626)", color: "#fff" }}
+        >
           <Icon name="alert" />
           {real.error.message}
           {real.canRetry && (
             <button
               type="button"
-              style={{ marginLeft: 8, textDecoration: "underline", color: "#fff", background: "none", border: "none", cursor: "pointer" }}
+              style={{
+                marginLeft: 8,
+                textDecoration: "underline",
+                color: "#fff",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
               onClick={() => real.retry()}
             >
               Thử lại
@@ -334,10 +362,15 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             }
 
             if (!real.session) return
-            const cmd = newCommand(real.session.user.id, "PATCH", "/me/preferences", {
-              expected_version: prefs.version,
-              ...patch,
-            })
+            const cmd = newCommand(
+              real.session.user.id,
+              "PATCH",
+              "/me/preferences",
+              {
+                expected_version: prefs.version,
+                ...patch,
+              },
+            )
             const res = await real.run(cmd)
             if (res.ok) {
               setNotice("Đã lưu cài đặt")
@@ -414,7 +447,11 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             const res = await real.authenticate(mode, input)
             if (res.ok) {
               setAuthModalOpen(false)
-              setNotice(mode === "login" ? "Đăng nhập thành công" : "Tạo tài khoản thành công")
+              setNotice(
+                mode === "login"
+                  ? "Đăng nhập thành công"
+                  : "Tạo tài khoản thành công",
+              )
               window.setTimeout(() => setNotice(""), 3000)
               if (pendingCreate) {
                 const payload = pendingCreate
@@ -438,7 +475,13 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 const key = mockApi.createCommandKey(modal)
                 try {
                   if (modal === "recount") {
-                    mockApi.recount(key, modalEntry.id, modalEntry.version, amount, why)
+                    mockApi.recount(
+                      key,
+                      modalEntry.id,
+                      modalEntry.version,
+                      amount,
+                      why,
+                    )
                   } else {
                     mockApi.recordMovement(
                       key,
@@ -454,7 +497,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                   setNotice(
                     modal === "recount"
                       ? "Đã cập nhật lượng sau kiểm lại"
-                      : `Đã ghi nhận ${modal === "consume" ? "đã dùng" : "đã bỏ"}`,
+                      : `Đã ghi nhận ${
+                          modal === "consume" ? "đã dùng" : "đã bỏ"
+                        }`,
                   )
                   window.setTimeout(() => setNotice(""), 3000)
                 } catch {
@@ -496,7 +541,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 const res = await real.run(cmd)
                 if (res.ok) {
                   closeModal()
-                  setNotice(`Đã ghi nhận ${modal === "consume" ? "đã dùng" : "đã bỏ"}`)
+                  setNotice(
+                    `Đã ghi nhận ${modal === "consume" ? "đã dùng" : "đã bỏ"}`,
+                  )
                   window.setTimeout(() => setNotice(""), 3000)
                 }
               }

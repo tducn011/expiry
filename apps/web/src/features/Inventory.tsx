@@ -110,9 +110,7 @@ export default function Inventory({
         eyebrow={fmtDate(asOfDate)}
         title={isAttention ? "Cần chú ý" : "Kho thực phẩm"}
         description={
-          isAttention
-            ? undefined
-            : "Xem lại kho trước khi mua thêm."
+          isAttention ? undefined : "Xem lại kho trước khi mua thêm."
         }
         action={
           <Button variant="cta" onClick={onAdd} icon="plus">
@@ -267,7 +265,9 @@ export default function Inventory({
                   </Button>
                 }
               />
-            ) : filters.query && !isFilteredByAttention && filters.location === defaultFilters.location ? (
+            ) : filters.query &&
+              !isFilteredByAttention &&
+              filters.location === defaultFilters.location ? (
               <EmptyState
                 eyebrow="TÌM KIẾM"
                 title={`Không tìm thấy "${filters.query}"`}

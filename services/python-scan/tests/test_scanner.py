@@ -39,8 +39,10 @@ class TestScannerLogic(unittest.TestCase):
         self.assertEqual(candidates[0]["parsed_date"], "2026-10-25")
 
     def test_preprocess_empty_image(self):
-        _, err = preprocess_image(b"")
-        self.assertEqual(err, "Empty image payload")
+        from app.schemas.scan import ScanError
+        with self.assertRaises(ScanError) as ctx:
+            preprocess_image(b"")
+        self.assertEqual(ctx.exception.code, "INVALID_IMAGE_BYTES")
 
     def test_decode_image_bytes(self):
         import base64
