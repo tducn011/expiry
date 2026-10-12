@@ -5,11 +5,14 @@ import Button from "../components/ui/Button"
 export default function Welcome({
   onStart,
   onDemo,
+  onSkip,
 }: {
   onStart: () => void
   onDemo: () => void
+  onSkip?: () => void
 }) {
   const [step, setStep] = useState(0)
+  const handleSkip = onSkip || onStart
   const steps = [
     {
       number: "01",
@@ -21,31 +24,31 @@ export default function Welcome({
           <em>Chỉ vài giây.</em>
         </>
       ),
-      body: "Tên, lượng và đơn vị là đủ.",
+      body: "Tên, lượng và đơn vị. Thêm ngày theo dõi để nhận nhắc nhở kịp thời.",
     },
     {
       number: "02",
-      eyebrow: "THẤY RÕ",
+      eyebrow: "BIẾT NGAY",
       title: (
         <>
-          Biết món nào
+          Món nào cần
           <br />
-          <em>cần chú ý.</em>
+          <em>xử lý hôm nay.</em>
         </>
       ),
-      body: "Ngày, lượng và vị trí — ngay khi mở app.",
+      body: "Mở app — danh sách cần chú ý hiện ngay. Không cần tìm kiếm.",
     },
     {
       number: "03",
-      eyebrow: "GIỮ ĐÚNG",
+      eyebrow: "QUYẾT ĐỊNH",
       title: (
         <>
-          Dùng. Bỏ.
+          Dùng, bỏ
           <br />
-          <em>Kiểm lại.</em>
+          <em>hoặc sửa ngày.</em>
         </>
       ),
-      body: "Mọi thay đổi đều có lịch sử.",
+      body: "Mỗi lần cập nhật được lưu lại. Sửa nhầm vẫn có thể kiểm tra lại lịch sử.",
     },
   ]
   const current = steps[step]
@@ -53,7 +56,7 @@ export default function Welcome({
     <div className="welcome">
       <header>
         <span className="wordmark">EXPIRY</span>
-        <button className="skip-link" onClick={onDemo}>
+        <button className="skip-link" onClick={handleSkip}>
           Bỏ qua
         </button>
       </header>

@@ -35,20 +35,20 @@ export const movementLabel: Record<MovementKind, string> = {
 }
 
 export const attentionLabel: Record<Attention, string> = {
-  past: "Đã qua ngày theo dõi",
-  today: "Đến ngày theo dõi",
-  soon: "Sắp đến ngày theo dõi",
-  unknown: "Chưa có ngày theo dõi",
-  later: "Chưa đến ngày theo dõi",
+  past: "Đã qua ngày",
+  today: "Đến ngày hôm nay",
+  soon: "Sắp đến ngày",
+  unknown: "Chưa có ngày",
+  later: "Chưa đến ngày",
 }
 
 export const attentionReason = attentionLabel
 
 export const attentionGroups: [Attention, string][] = [
-  ["past", "Kiểm tra trước khi quyết định"],
+  ["past", "Cần xem xét"],
   ["today", "Đến ngày đã ghi"],
-  ["soon", "Xem cho bữa tiếp theo"],
-  ["unknown", "Cần bổ sung thông tin"],
+  ["soon", "Sắp đến ngày"],
+  ["unknown", "Chưa có ngày theo dõi"],
 ]
 
 export const attentionGuidance: Record<Attention, {
@@ -57,23 +57,23 @@ export const attentionGuidance: Record<Attention, {
 }> = {
   past: {
     title: "Ngày đã ghi đã qua",
-    body: "Đối chiếu nhãn và tình trạng thực tế. Sửa thông tin nếu ghi sai; ghi nhận đã bỏ nếu bạn đã loại bỏ thực phẩm.",
+    body: "Kiểm tra thực tế, sửa ngày nếu ghi sai hoặc ghi nhận đã bỏ.",
   },
   today: {
-    title: "Xem lại món này khi chọn bữa tiếp theo",
-    body: "Đã đến ngày bạn ghi. Xem lượng, vị trí và thông tin thực tế trước khi quyết định; chỉ ghi nhận đã dùng sau khi bạn đã sử dụng.",
+    title: "Đến ngày bạn ghi",
+    body: "Xem lượng và vị trí; chỉ ghi nhận đã dùng sau khi thực sự sử dụng.",
   },
   soon: {
-    title: "Kế hoạch bữa ăn đổi? Xem món này trước",
-    body: "Ngày bạn ghi đang đến gần. Xem lượng và vị trí để cân nhắc cho bữa tiếp theo; có thể kiểm lại nếu thông tin chưa khớp.",
+    title: "Ngày sắp đến",
+    body: "Cân nhắc cho bữa tiếp theo; kiểm lại nếu thông tin chưa đúng.",
   },
   unknown: {
-    title: "Cần biết thêm trước khi ưu tiên",
-    body: "Chưa có ngày theo dõi nên chưa thể xếp ưu tiên theo ngày. Bổ sung từ nhãn nếu có, hoặc giữ chưa biết và kiểm tra thực tế.",
+    title: "Chưa có ngày theo dõi",
+    body: "Bổ sung ngày từ nhãn nếu có, hoặc kiểm tra thực tế.",
   },
   later: {
-    title: "Xem lại kho trước khi mua thêm",
-    body: "Chưa đến ngày bạn ghi. Kiểm tra lượng thực tế và ghi nhận nếu đã dùng để thông tin trong kho theo kịp.",
+    title: "Chưa đến ngày",
+    body: "Kiểm tra lượng thực tế và ghi nhận nếu đã dùng.",
   },
 }
 

@@ -1,4 +1,3 @@
-import { DEMO_DATE } from "../domain/types"
 import type { Attention, FoodEntry } from "../domain/types"
 import {
   attentionGroups,
@@ -32,8 +31,8 @@ export const defaultFilters: InventoryFilters = {
 
 export default function Inventory({
   mode,
-  asOfDate = "2026-10-08",
-  demo = true,
+  asOfDate = new Date().toISOString().slice(0, 10),
+  demo = false,
   foods,
   allFoods,
   counts,
@@ -108,12 +107,12 @@ export default function Inventory({
   return (
     <Grid className="page">
       <PageHeader
-        eyebrow={`${demo ? "Dữ liệu demo" : "Theo ngày hệ thống"} · ${fmtDate(asOfDate)}`}
+        eyebrow={fmtDate(asOfDate)}
         title={isAttention ? "Cần chú ý" : "Kho thực phẩm"}
         description={
           isAttention
-            ? "Bắt đầu từ những thực phẩm cần quyết định, thay vì phải quét toàn bộ kho."
-            : "Xem lại kho trước khi mua thêm. Cập nhật từng món ngay trong danh sách."
+            ? undefined
+            : "Xem lại kho trước khi mua thêm."
         }
         action={
           <Button variant="cta" onClick={onAdd} icon="plus">
@@ -257,54 +256,65 @@ export default function Inventory({
             <span>{foods.length} món</span>
           </div>
           {!foods.length ? (
-            <EmptyState
-              eyebrow={
-                hasFilters
-                  ? "KHÔNG CÓ KẾT QUẢ"
-                  : isAttention
-                    ? "ĐÃ XEM HẾT"
-                    : "KHO TRỐNG"
-              }
-              title={
-                hasFilters
-                  ? "Không có món khớp bộ lọc"
-                  : isAttention
-                    ? "Chưa có món cần chú ý theo dữ liệu đã ghi"
-                    : "Thêm thực phẩm đầu tiên"
-              }
-              body={
-                hasFilters
-                  ? "Thử đổi hoặc đặt lại bộ lọc để xem các món khác."
-                  : isAttention
-                    ? "Bạn có thể xem toàn bộ kho trước khi mua thêm. Các món chưa có ngày vẫn cần được kiểm tra thực tế."
-                    : "Tên, lượng và đơn vị là đủ để bắt đầu. Ngày và vị trí có thể bổ sung sau."
-              }
-              action={
-                <Button
-                  variant={
-                    hasFilters
-                      ? "outline"
-                      : isAttention
-                        ? "secondary"
-                        : "cta"
-                  }
-                  icon={!hasFilters && !isAttention ? "plus" : undefined}
-                  onClick={
-                    hasFilters
-                      ? () => setFilters(defaultFilters)
-                      : isAttention
-                        ? onShowInventory
-                        : onAdd
-                  }
-                >
-                  {hasFilters
-                    ? "Đặt lại bộ lọc"
-                    : isAttention
-                      ? "Xem kho thực phẩm"
-                      : "Thêm thực phẩm đầu tiên"}
-                </Button>
-              }
-            />
+            !allFoods.length ? (
+              <EmptyState
+                eyebrow="KHO TRỐNG"
+                title="Chưa có thực phẩm nào"
+                body="Thêm thực phẩm đầu tiên để bắt đầu theo dõi hạn sử dụng."
+                action={
+                  <Button variant="cta" icon="plus" onClick={onAdd}>
+                    Thêm thực phẩm
+                  </Button>
+                }
+              />
+            ) : filters.query && !isFilteredByAttention && filters.location === defaultFilters.location ? (
+              <EmptyState
+                eyebrow="TÌM KIẾM"
+                title={`Không tìm thấy "${filters.query}"`}
+                body="Kiểm tra lại chính tả hoặc xóa từ khóa tìm kiếm."
+                action={
+                  <Button variant="outline" onClick={() => set("query", "")}>
+                    Xóa tìm kiếm
+                  </Button>
+                }
+              />
+            ) : hasFilters ? (
+              <EmptyState
+                eyebrow="BỘ LỌC"
+                title="Không có món khớp bộ lọc"
+                body="Thử đổi hoặc đặt lại bộ lọc để xem các món khác."
+                action={
+                  <Button
+                    variant="outline"
+                    onClick={() => setFilters(defaultFilters)}
+                  >
+                    Đặt lại bộ lọc
+                  </Button>
+                }
+              />
+            ) : isAttention ? (
+              <EmptyState
+                eyebrow="HOÀN TẤT"
+                title="Chưa có món cần chú ý"
+                body="Tất cả thực phẩm trong kho đều trong hạn hoặc chưa đến ngày theo dõi."
+                action={
+                  <Button variant="secondary" onClick={onShowInventory}>
+                    Xem kho thực phẩm
+                  </Button>
+                }
+              />
+            ) : (
+              <EmptyState
+                eyebrow="KHO TRỐNG"
+                title="Thêm thực phẩm đầu tiên"
+                body="Tên, lượng và đơn vị là đủ để bắt đầu."
+                action={
+                  <Button variant="cta" icon="plus" onClick={onAdd}>
+                    Thêm thực phẩm đầu tiên
+                  </Button>
+                }
+              />
+            )
           ) : isAttention ? (
             attentionGroups.map(([key, title]) => {
               const group = foods.filter((f) => attention(f) === key)
@@ -361,9 +371,6 @@ export default function Inventory({
                 </div>
               </dl>
             </div>
-            <p className="demo-note">
-              Dữ liệu demo trong phiên này. Tải lại trang sẽ đặt lại dữ liệu.
-            </p>
           </aside>
         )}
       </div>

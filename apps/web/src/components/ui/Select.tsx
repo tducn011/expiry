@@ -121,28 +121,35 @@ export default function Select<T extends string>({
 
     const position = () => {
       const rect = trigger.getBoundingClientRect()
-      const viewportWidth = document.documentElement.clientWidth
-      const viewportHeight = window.innerHeight
+      const viewport = window.visualViewport
+      const viewportWidth =
+        viewport?.width ?? document.documentElement.clientWidth
+      const viewportHeight = viewport?.height ?? window.innerHeight
+      const viewportTop = viewport?.offsetTop ?? 0
+      const viewportLeft = viewport?.offsetLeft ?? 0
       const padding = 8
       const gap = 8
       // Set width before measuring height so wrapped labels cannot distort the first opening.
       popover.style.width = `${Math.min(rect.width, viewportWidth - padding * 2)}px`
       list.style.maxHeight = "332px"
       const naturalHeight = popover.getBoundingClientRect().height
-      const below = viewportHeight - rect.bottom - gap - padding
-      const above = rect.top - gap - padding
+      const below = viewportTop + viewportHeight - rect.bottom - gap - padding
+      const above = rect.top - viewportTop - gap - padding
       const flip = naturalHeight > below && above > below
       const available = flip ? above : below
       const extraHeight = naturalHeight - list.getBoundingClientRect().height
       list.style.maxHeight = `${Math.max(40, Math.min(332, available - extraHeight))}px`
       const height = popover.getBoundingClientRect().height
       const left = Math.max(
-        padding,
-        Math.min(rect.left, viewportWidth - popover.offsetWidth - padding),
+        viewportLeft + padding,
+        Math.min(
+          rect.left,
+          viewportLeft + viewportWidth - popover.offsetWidth - padding,
+        ),
       )
       const top = flip ? rect.top - gap - height : rect.bottom + gap
       popover.style.left = `${left}px`
-      popover.style.top = `${Math.max(padding, Math.min(top, viewportHeight - height - padding))}px`
+      popover.style.top = `${Math.max(viewportTop + padding, Math.min(top, viewportTop + viewportHeight - height - padding))}px`
       popover.style.visibility = "visible"
     }
 
@@ -151,6 +158,8 @@ export default function Select<T extends string>({
     observer.observe(trigger)
     window.addEventListener("resize", position)
     window.addEventListener("scroll", position, true)
+    window.visualViewport?.addEventListener("resize", position)
+    window.visualViewport?.addEventListener("scroll", position)
     const outside = (event: PointerEvent) => {
       const target = event.target as Node
       if (!trigger.contains(target) && !popover.contains(target)) close()
@@ -165,6 +174,8 @@ export default function Select<T extends string>({
       observer.disconnect()
       window.removeEventListener("resize", position)
       window.removeEventListener("scroll", position, true)
+      window.visualViewport?.removeEventListener("resize", position)
+      window.visualViewport?.removeEventListener("scroll", position)
       document.removeEventListener("pointerdown", outside)
       window.clearTimeout(flashTimer)
     }

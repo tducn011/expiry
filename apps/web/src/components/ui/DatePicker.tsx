@@ -214,6 +214,10 @@ export default function DatePicker({
       const viewportHeight = viewport?.height ?? window.innerHeight
       const viewportWidth = viewport?.width ?? window.innerWidth
       popover.style.maxWidth = `${Math.max(0, viewportWidth - padding * 2)}px`
+      // A calendar can be taller than either side of its trigger (landscape,
+      // enlarged text or a soft keyboard). Keep the portal inside the visual
+      // viewport and let its own contents scroll rather than escape the form.
+      popover.style.maxHeight = `${Math.max(0, viewportHeight - padding * 2)}px`
       let triggerRect = trigger.getBoundingClientRect()
       const popoverRect = popover.getBoundingClientRect()
       let below =
@@ -279,7 +283,13 @@ export default function DatePicker({
         ),
       )
       popover.style.left = `${left}px`
-      popover.style.top = `${top}px`
+      popover.style.top = `${Math.max(
+        viewportTop + padding,
+        Math.min(
+          top,
+          viewportTop + viewportHeight - popoverRect.height - padding,
+        ),
+      )}px`
       popover.style.visibility = "visible"
       popover.dataset.side = openAbove ? "top" : "bottom"
       positioning = false
@@ -312,9 +322,16 @@ export default function DatePicker({
         : view === "months"
           ? `[data-month="${focusedMonth}"]`
           : `[data-year="${focusedYear}"]`
-    popoverRef.current
-      ?.querySelector<HTMLButtonElement>(selector)
-      ?.focus({ preventScroll: true })
+    const popover = popoverRef.current
+    const target = popover?.querySelector<HTMLButtonElement>(selector)
+    target?.focus({ preventScroll: true })
+    if (popover && target) {
+      const panel = popover.getBoundingClientRect()
+      const item = target.getBoundingClientRect()
+      if (item.top < panel.top) popover.scrollTop -= panel.top - item.top + 8
+      else if (item.bottom > panel.bottom)
+        popover.scrollTop += item.bottom - panel.bottom + 8
+    }
   }, [
     open,
     view,

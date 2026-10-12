@@ -16,41 +16,31 @@ export type User = {
   updated_at: string
 }
 
-// ---------- ERD: food_entries ----------
-export type Unit = "piece" | "g" | "ml"
-export type DateCertainty = "exact" | "estimated" | "unknown"
-export type DateSource = "package_label" | "user_reentered" | "user_estimate"
-export type DateLabelType = "use_by" | "best_before" | "unknown"
+// ponytail: reuse shared domain types to eliminate 50+ lines of duplicate definitions
+import type {
+  Attention,
+  CreatePayload,
+  DateCertainty,
+  DateLabelType,
+  DateSource,
+  EntryDraft,
+  FoodEntry,
+  MovementKind,
+  QuantityMovement,
+  Unit,
+} from "./domain/types"
 
-export type FoodEntry = {
-  id: string
-  user_id: string
-  name: string
-  storage_location: string | null
-  remaining_quantity: number
-  unit: Unit
-  expiry_date: string | null
-  expiry_date_certainty: DateCertainty
-  expiry_date_source: DateSource | null
-  expiry_date_label_type: DateLabelType | null
-  opened_on: string | null
-  note: string | null
-  version: number
-  deleted_at: string | null
-  created_at: string
-  updated_at: string
-}
-
-// ---------- ERD: quantity_movements ----------
-export type MovementKind = "initial" | "consume" | "discard" | "recount"
-export type QuantityMovement = {
-  id: string
-  entry_id: string
-  kind: MovementKind
-  quantity_before: number
-  quantity_after: number
-  reason: string | null
-  recorded_at: string
+export type {
+  Attention,
+  CreatePayload,
+  DateCertainty,
+  DateLabelType,
+  DateSource,
+  EntryDraft,
+  FoodEntry,
+  MovementKind,
+  QuantityMovement,
+  Unit,
 }
 
 // ---------- ERD: api_requests ----------
@@ -65,9 +55,6 @@ export type ApiRequest = {
   created_at: string
 }
 
-// ---------- Derived (never stored) ----------
-export type Attention = "past" | "today" | "soon" | "unknown" | "later"
-
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -77,24 +64,11 @@ export class ApiError extends Error {
   }
 }
 
-export type EntryDraft = {
-  name: string
-  storage_location: string | null
-  expiry_date: string | null
-  expiry_date_certainty: DateCertainty
-  expiry_date_source: DateSource | null
-  expiry_date_label_type: DateLabelType | null
-  opened_on: string | null
-  note: string | null
-}
-export type CreatePayload = EntryDraft & {
-  initial_quantity: number
-  unit: Unit
-}
-
-export const DEMO_DATE = "2026-10-08"
+/** ponytail: real date replaces fixed demo date */
+const todayDate = () => new Date().toISOString().slice(0, 10)
+export const DEMO_DATE = todayDate()
 const USER_ID = "usr_demo"
-let clock = new Date("2026-10-08T11:20:00+07:00").getTime()
+let clock = Date.now()
 const now = () => {
   clock += 60000
   return new Date(clock).toISOString()
@@ -126,9 +100,10 @@ export function attentionFor(
   leadDays: number,
 ): Attention {
   if (!entry.expiry_date) return "unknown"
+  const today = todayDate()
   const days = Math.round(
     (new Date(`${entry.expiry_date}T12:00:00`).getTime() -
-      new Date(`${DEMO_DATE}T12:00:00`).getTime()) /
+      new Date(`${today}T12:00:00`).getTime()) /
       86400000,
   )
   if (days < 0) return "past"

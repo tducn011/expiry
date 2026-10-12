@@ -15,10 +15,12 @@ export default function Settings({
   prefs,
   displayName,
   onSave,
+  onLogout,
 }: {
   prefs: Prefs
   displayName: string
   onSave: (p: Prefs) => void
+  onLogout?: () => void
 }) {
   const [days, setDays] = useState(String(prefs.attention_lead_days))
   const [timezone, setTimezone] = useState(prefs.timezone)
@@ -43,6 +45,11 @@ export default function Settings({
               <strong>{displayName}</strong>
               <small>Tài khoản cá nhân</small>
             </div>
+            {onLogout && (
+              <Button variant="outline" size="sm" onClick={onLogout}>
+                Đăng xuất
+              </Button>
+            )}
           </div>
         </Card>
 

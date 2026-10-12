@@ -1,7 +1,7 @@
 import { ReactNode } from "react"
 
 /**
- * Layout grid: 4 columns < 680px, 8 columns < 1100px, 12 columns above.
+ * Layout grid: 4 columns < 768px, 8 columns < 1024px, 12 columns above.
  * Children set their span with Tailwind `col-span-*` utilities (mobile-first).
  */
 export default function Grid({

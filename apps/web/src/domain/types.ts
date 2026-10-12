@@ -9,6 +9,7 @@ export type FoodEntry = {
   as_of_date?: string
   attention_reason?: string
   id: string
+  user_id?: string
   name: string
   storage_location: string | null
   remaining_quantity: number

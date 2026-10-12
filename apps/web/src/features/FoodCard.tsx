@@ -80,17 +80,17 @@ export default function FoodCard({
             } ${food.name}`}
           >
             <Icon name={attention === "past" ? "trash" : "check"} />
-            {attention === "past" ? "Đã bỏ" : "Đã dùng"}
+            {attention === "past" ? "Ghi đã bỏ" : "Đã dùng"}
           </button>
         ) : null}
         <button
           type="button"
           className="row-action"
           onClick={() => onAction("recount")}
-          aria-label={`Kiểm lại ${food.name}`}
+          aria-label={`Kiểm kho ${food.name}`}
         >
           <Icon name="review" />
-          Kiểm lại
+          Kiểm kho
         </button>
       </div>
     </article>

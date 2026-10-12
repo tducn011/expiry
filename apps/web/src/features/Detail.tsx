@@ -10,6 +10,7 @@ import {
   unitLabel,
 } from "../lib/format"
 import Grid from "../components/layout/Grid"
+import Breadcrumb from "../components/layout/Breadcrumb"
 import Badge from "../components/ui/Badge"
 import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
@@ -23,6 +24,7 @@ export default function Detail({
   attention,
   movements,
   onBack,
+  parentLabel = "Kho thực phẩm",
   onAction,
 }: {
   timezone?: string
@@ -30,6 +32,7 @@ export default function Detail({
   attention: Attention
   movements: QuantityMovement[]
   onBack: () => void
+  parentLabel?: string
   onAction: (a: DetailAction) => void
 }) {
   const unit = unitLabel[food.unit]
@@ -62,17 +65,13 @@ export default function Detail({
 
   return (
     <Grid className="page">
-      <button
-        className="back-link col-span-full"
-        onClick={onBack}
-        type="button"
-      >
-        <Icon name="back" />
-        Quay lại kho
-      </button>
+      <Breadcrumb
+        className="col-span-full"
+        items={[{ label: parentLabel, onNavigate: onBack }]}
+      />
 
       {/* Main Action Card: Logically together => Physically together */}
-      <Card className="detail-main col-span-full lg:col-span-7">
+      <Card className="detail-main col-span-full xl:col-span-7">
         <div className="detail-title">
           <div>
             <span className={`status-pill ${empty ? "is-empty" : "is-active"}`}>
@@ -140,11 +139,7 @@ export default function Detail({
               : guidance.body}
           </p>
           {attention === "unknown" && !empty && (
-            <Button
-              variant="cta"
-              icon="edit"
-              onClick={() => onAction("date")}
-            >
+            <Button variant="cta" icon="edit" onClick={() => onAction("date")}>
               Bổ sung ngày theo dõi
             </Button>
           )}
@@ -195,7 +190,7 @@ export default function Detail({
       </Card>
 
       {/* Aside: Metadata and Movement Audit Log */}
-      <div className="detail-aside col-span-full lg:col-span-5">
+      <div className="detail-aside col-span-full xl:col-span-5">
         <Card title="Thông tin bổ sung">
           <dl className="facts">
             {facts.map(([k, v, note]) => (
