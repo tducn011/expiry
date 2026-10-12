@@ -34,7 +34,9 @@ export default function Button({
   return (
     <button
       type={type}
-      className={`button ${variant} ${size !== "md" ? size : ""} ${block ? "block" : ""} ${className}`.trim()}
+      className={`button ${variant} ${size !== "md" ? size : ""} ${
+        block ? "block" : ""
+      } ${className}`.trim()}
       onClick={onClick}
       disabled={disabled || loading}
       aria-busy={loading ? "true" : undefined}

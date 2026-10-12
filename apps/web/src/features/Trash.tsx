@@ -32,7 +32,8 @@ export default function Trash({
                     <strong>{f.name}</strong>
                     <span>
                       {fmtQty(f.remaining_quantity)} {unitLabel[f.unit]}
-                      {f.deleted_at && ` · Xóa lúc ${fmtTime(f.deleted_at, timezone)}`}
+                      {f.deleted_at &&
+                        ` · Xóa lúc ${fmtTime(f.deleted_at, timezone)}`}
                     </span>
                   </div>
                   <Button

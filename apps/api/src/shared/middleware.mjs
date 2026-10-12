@@ -20,15 +20,16 @@ export function errorHandler(err, req, res, next) {
       type: `https://api.expiry.app/problems/${err.code}`,
       title: err.code,
       status: err.status,
+      code: err.code,
       detail: err.message || err.code
     });
   }
 
   if (err.type === 'entity.too.large') return res.status(413).type('application/problem+json').json({
-    type: 'https://api.expiry.app/problems/PAYLOAD_TOO_LARGE', title: 'PAYLOAD_TOO_LARGE', status: 413, detail: 'Request body exceeds the configured limit.'
+    type: 'https://api.expiry.app/problems/PAYLOAD_TOO_LARGE', title: 'PAYLOAD_TOO_LARGE', status: 413, code: 'PAYLOAD_TOO_LARGE', detail: 'Request body exceeds the configured limit.'
   });
   if (err.type === 'entity.parse.failed') return res.status(400).type('application/problem+json').json({
-    type: 'https://api.expiry.app/problems/MALFORMED_JSON', title: 'MALFORMED_JSON', status: 400, detail: 'Request body is not valid JSON.'
+    type: 'https://api.expiry.app/problems/MALFORMED_JSON', title: 'MALFORMED_JSON', status: 400, code: 'MALFORMED_JSON', detail: 'Request body is not valid JSON.'
   });
   // Never expose SQL statements, credential-bearing request data or DB errors.
   console.error('Unhandled API error', { code: err.code || err.name });
@@ -36,6 +37,8 @@ export function errorHandler(err, req, res, next) {
     type: 'https://api.expiry.app/problems/INTERNAL_SERVER_ERROR',
     title: 'INTERNAL_SERVER_ERROR',
     status: 500,
+    code: 'INTERNAL_SERVER_ERROR',
     detail: 'An unexpected server error occurred.'
   });
+
 }

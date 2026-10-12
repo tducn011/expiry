@@ -38,7 +38,6 @@ export type QuantityMovement = {
   recorded_at: string
 }
 
-
 export type Attention = "past" | "today" | "soon" | "unknown" | "later"
 export type EntryDraft = {
   name: string
@@ -55,6 +54,13 @@ export type CreatePayload = EntryDraft & {
   unit: Unit
 }
 
-
-export type Preferences = { timezone: string; attention_lead_days: number; version: number }
-export type Session = { user: Preferences & { id: string; display_name: string; email: string }; csrf_token: string; expires_at: string }
+export type Preferences = {
+  timezone: string
+  attention_lead_days: number
+  version: number
+}
+export type Session = {
+  user: Preferences & { id: string display_name: string email: string }
+  csrf_token: string
+  expires_at: string
+}
