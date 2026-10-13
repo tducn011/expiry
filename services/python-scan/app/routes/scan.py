@@ -10,6 +10,7 @@ except ImportError:
     router = None
 
 from app.schemas.scan import ScanResult, DateCandidate, ScanRequest
+from app.scanner.datereg_adapter import extract_datereg_text
 from app.scanner.preprocessor import decode_image_bytes, preprocess_image
 from app.scanner.date_parser import parse_date_candidates
 
@@ -54,11 +55,23 @@ if router:
         if prep_warn:
             warnings.append(prep_warn)
 
-        ocr_text = extract_ocr_text(processed_bytes)
+        ocr_text = ""
+        candidates_raw = []
+        try:
+            ocr_text = extract_datereg_text(processed_bytes)
+            candidates_raw = parse_date_candidates(ocr_text)
+            if not candidates_raw:
+                warnings.append("DateReg found no valid date; falling back to Tesseract")
+        except Exception as exc:
+            warnings.append(f"DateReg unavailable; falling back to Tesseract ({type(exc).__name__})")
+
+        if not candidates_raw:
+            ocr_text = extract_ocr_text(processed_bytes)
+            candidates_raw = parse_date_candidates(ocr_text)
+
         if not ocr_text:
             warnings.append("No text recognized or OCR engine not available; returning empty candidates")
 
-        candidates_raw = parse_date_candidates(ocr_text)
         candidates = [DateCandidate(**c) for c in candidates_raw]
 
         return ScanResult(
