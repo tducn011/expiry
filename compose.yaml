@@ -28,6 +28,8 @@ services:
     build:
       context: ./services/python-scan
       dockerfile: Dockerfile
+      args:
+        ENABLE_DATEREG: ${ENABLE_DATEREG:-false}
     container_name: expiry-python-scan
     restart: unless-stopped
     ports:
