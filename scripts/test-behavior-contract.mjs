@@ -291,7 +291,7 @@ async function runBehavioralAndContractSuite() {
     record('STAGE 10: INVENTORY LIST', 'Danh sách trả về pagination chuẩn và khớp EntryList schema');
   }
 
-  // Stage 11: OCR Microservice Health (Internal Bridge)
+  // Stage 11: OCR Microservice Health & Live Image Scan Bridge
   {
     const res = await fetch(`${API_BASE}/api/v1/scan/health`, {
       headers: { Cookie: cookie, Origin: ORIGIN }
@@ -300,7 +300,27 @@ async function runBehavioralAndContractSuite() {
     const scanHealth = await res.json();
     assert.equal(scanHealth.service, 'python-scan');
     assert.equal(scanHealth.status, 'healthy');
-    record('STAGE 11: OCR SCAN BRIDGE', 'API kết nối thành công sang Python Scan microservice');
+
+    // Live extraction verification
+    const sampleImage = await readFile(new URL('../services/python-scan/tests/evidence/label-exp.png', import.meta.url));
+    const scanRes = await fetch(`${API_BASE}/api/v1/scans`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: ORIGIN,
+        Cookie: cookie,
+        'X-CSRF-Token': csrfToken
+      },
+      body: JSON.stringify({ image_base64: `data:image/png;base64,${sampleImage.toString('base64')}` })
+    });
+    assert.equal(scanRes.status, 200);
+    const scanResult = await scanRes.json();
+    assert.equal(typeof scanResult.raw_text, 'string');
+    assert.equal(scanResult.candidates.expiry_date.value, '2026-12-31');
+    assert.equal(scanResult.candidates.expiry_date.date_certainty, 'exact');
+    assert.equal(scanResult.requires_confirmation, true);
+
+    record('STAGE 11: OCR SCAN BRIDGE', 'API kết nối và trích xuất nhãn thực tế thành công qua Python Scan microservice');
   }
 
   // Stage 12: Soft Delete & Trash Inspection
