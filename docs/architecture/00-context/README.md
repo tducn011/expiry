@@ -24,7 +24,7 @@ Index, canonical artifacts and downstream reading path.
 - [00-context/scope.md](scope.md)
 - [00-context/source-register.md](source-register.md)
 - [00-context/system-definition.md](system-definition.md)
-- [00-context/tmb-skills.md](tmb-skills.md)
+- [00-context/tmb-skills.md](../12-process/tmb-skills.md)
 
 Current maturity: reviewable artifacts; no inherited proposal automatically approved. Use dependencies to assess downstream changes, and the gate register to identify blocked acceptance.
 
@@ -40,7 +40,7 @@ Current maturity: reviewable artifacts; no inherited proposal automatically appr
 - [00-context/scope.md](scope.md)
 - [00-context/source-register.md](source-register.md)
 - [00-context/system-definition.md](system-definition.md)
-- [00-context/tmb-skills.md](tmb-skills.md)
+- [00-context/tmb-skills.md](../12-process/tmb-skills.md)
 - [01-personas/README.md](../01-personas/README.md)
 
 ## Open questions
@@ -57,7 +57,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [00-context/scope.md](scope.md)
 - [00-context/source-register.md](source-register.md)
 - [00-context/system-definition.md](system-definition.md)
-- [00-context/tmb-skills.md](tmb-skills.md)
+- [00-context/tmb-skills.md](../12-process/tmb-skills.md)
 - [01-personas/README.md](../01-personas/README.md)
 
 ## Verification criteria

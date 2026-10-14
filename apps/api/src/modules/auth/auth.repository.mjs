@@ -85,7 +85,7 @@ export class AuthRepository {
     return this.transaction(connection => this.insertSession(connection, userId, session, previousHash));
   }
 
-  async current(hash, now, idleTimeoutMs) {
+  async current(hash, clock, idleTimeoutMs) {
     return this.transaction(async connection => {
       const [[row]] = await connection.execute(
         `SELECT u.id,u.display_name,u.timezone,u.attention_lead_days,u.version,c.email_normalized,
@@ -94,6 +94,10 @@ export class AuthRepository {
          JOIN local_credentials c ON c.user_id=u.id WHERE s.token_hash=? FOR UPDATE`,
         [hash]
       );
+      // Sample request time after FOR UPDATE returns. A request may have waited
+      // behind a newer legitimate activity update while retaining an older
+      // timestamp captured at middleware entry.
+      const now = clock();
       if (!row || row.revoked_at !== null || instant(row.expires_at) <= now || instant(row.last_seen_at).getTime() + idleTimeoutMs <= now.getTime()) return null;
       if (instant(row.created_at) > now || instant(row.last_seen_at) > now) throw new DomainError(503, 'AUTH_UNAVAILABLE');
       await connection.execute('UPDATE user_sessions SET last_seen_at=? WHERE token_hash=?', [sqlDate(now), hash]);

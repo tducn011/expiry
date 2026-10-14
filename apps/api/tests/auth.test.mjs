@@ -27,7 +27,8 @@ class AuthFixture {
     if (previousHash && this.sessions.has(previousHash)) this.sessions.get(previousHash).revoked_at = session.created_at;
     this.sessions.set(session.token_hash, { ...session, user_id: id, last_seen_at: session.created_at, revoked_at: null });
   }
-  async current(hash, now, idle) {
+  async current(hash, clock, idle) {
+    const now = clock();
     const session = this.sessions.get(hash);
     if (!session || session.revoked_at || session.expires_at <= now || session.last_seen_at.getTime() + idle <= now.getTime()) return null;
     session.last_seen_at = now;

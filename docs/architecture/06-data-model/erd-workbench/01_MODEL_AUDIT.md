@@ -1,10 +1,10 @@
-# Expiry — model audit
+# Expiry — source and live schema model audit
 
-Status: candidate implementation of a review model, 2026-10-10. SQL verification does not approve stakeholder requirements.
+Status: initial requirements audit dated2026-10-10, reconciled with the live development schema and native Workbench model on2026-10-13. SQL verification does not approve stakeholder requirements.
 
 ## Current context and resolved sources [A]
 
-Repository root `/home/pro/Downloads/expiry`, branch `feature/ui`, baseline `6d2a078fed3e1a5c1c54fb19bc7b20765720256c`. Existing UI changes and deleted historical paths predate this task. No phase-one folder or ZIP was found. Actual sources are flat in `docs/` and `contracts/`; historical references to `docs/architecture/`, `doc/SystemEngineer/` and `Expiry_System_Design_2026-10-08/` are not resolved files today.
+The original source inventory below was recorded on2026-10-10 at baseline `6d2a078fed3e1a5c1c54fb19bc7b20765720256c`; its branch and deleted-path statements are historical and are not assertions about the current checkout. SCH-03 rechecked the live DB and model in place on2026-10-13. Actual requirements sources are flat in `docs/` and `contracts/`; historical references to `doc/SystemEngineer/` and `Expiry_System_Design_2026-10-08/` were not resolved in the initial audit.
 
 | Requested source group | Resolved files read |
 |---|---|
@@ -15,11 +15,11 @@ Repository root `/home/pro/Downloads/expiry`, branch `feature/ui`, baseline `6d2
 | Behavior | `docs/04_Data_Flow_UML_and_Ownership.md`, `docs/ownership.md`, `docs/data-flows.md` |
 | Model | `docs/05_Data_Definitions_and_ERD.md`, `docs/dictionary.md`, `docs/erd.md`, `contracts/schema_reference_mysql.sql` |
 | API/validation | `docs/06_API_Routes_and_Contracts.md`, `contracts/openapi.json`, `contracts/fixtures.json`, `docs/09_Traceability_Implementation_and_Verification.md` |
-| Observed prototype | `uidemo/src/mockApi.ts`, `uidemo/package.json` |
+| Observed prototype | `apps/web/src/mockApi.ts`, `apps/web/package.json` |
 
 ## Problem, boundary and ownership
 
-Symptom: the project has a MySQL 8.4 reference and in-memory UI, with no applied MySQL migration or real DB acceptance evidence. Goal: preserve private food capture/review/resolve semantics while testing candidate persistence. System owns digital records; user reports physical use/disposal/count. Three personas describe behavioral needs, not three database roles. P1 needs visibility, P2 context when plans change, P3 low-friction accurate updates. DEC-01/02 are recorded-confirmed private/manual/in-app scope. Grain, ledger, default two-day lead, units/date policy and auth/provider remain proposed/open.
+The original audit began with a MySQL 8.4 reference and in-memory UI, before applied migration and real-DB evidence existed. SCH-03 now confirms a development schema with migrations001+002 and isolated transaction test evidence; it remains a candidate system boundary, not production acceptance. Preserve private food capture/review/resolve semantics. System owns digital records; user reports physical use/disposal/count. Three personas describe behavioral needs, not three database roles. P1 needs visibility, P2 context when plans change, P3 low-friction accurate updates. DEC-01/02 are recorded-confirmed private/manual/in-app scope. Grain, ledger, default two-day lead, units/date policy and product auth/provider decisions remain proposed/open.
 
 `principal → validated command → transaction/idempotency reservation → owner-scoped row lock → entry + append ledger + saved response → commit → DTO/refetch`
 
@@ -39,10 +39,10 @@ EVIDENCE: RULE-04/19 require atomic entry/ledger/replay; RULE-15 separates soft 
 ISSUE: candidate behavior needs real integration tests; document status is Review.  
 CONFIDENCE: High.
 
-FILE: `uidemo/src/mockApi.ts`  
-ROLE: in-memory prototype, singleton records and demo clock.  
-EVIDENCE: `DateCertainty = exact`, `quantity_movements/recount`, `DEMO_DATE = 2026-10-08`, numeric quantities and `usr_demo` identity.  
-ISSUE: DTO/enums/clock differ from contract; no deployed API authentication or real concurrency.  
+FILE: `apps/web/src/mockApi.ts`
+ROLE: in-memory prototype, singleton records and demo clock.
+EVIDENCE: `DateCertainty = exact`, `quantity_movements/recount`, `DEMO_DATE` is derived by `todayDate()`, numeric quantities and `usr_demo` identity.
+ISSUE: DTO/enums differ from the database/API contract; this mock module is in-memory. This database suite does not measure application-to-database integration or real concurrency.
 CONFIDENCE: High.
 
 ## Candidate traceability (food namespace)
@@ -67,7 +67,8 @@ No renumbering of `FINAL CHECK::*` or `SYS-*`; source namespaces remain distinct
 
 ## Open gaps and assumptions
 
-- [C] Candidate four-table physical model implements the current food draft; stakeholder approval of logical grain remains pending.
+- [A] The current live development model has seven tables: four inventory/request tables, local credential/session tables from002, and the runner-owned migration ledger.
+- [C] The seven-table candidate schema implements persistence and local session storage in development; stakeholder approval of logical grain and production authentication policy remains pending.
 - [D] MySQL 8.4 is selected by this task; this does not settle whole-product stack/auth/provider/deployment.
 - [A] Mandatory initial child, immutable unit, ledger equality and completed reservations require a transaction owner in addition to database constraints.
 - [C] UTC DATETIME policy and ASCII UUIDs preserve DTO readability; binary UUID packing is deferred.

@@ -111,3 +111,15 @@ flowchart TD
 - Endpoint `/health` của Python Scan Service phản hồi 200 OK.
 - Node.js scan adapter kết nối thành công và timeout an toàn sau 3000ms.
 - Toàn bộ luồng scan từ upload ảnh đến lưu kho hoàn tất end-to-end mà không có bất kỳ bypass nào qua database.
+
+## Analysis
+
+Current component ownership is mapped from source; see the dated schema reconciliation for current flows.
+
+## Open questions
+
+Hosting, browser acceptance, and OCR sample governance are outside this component inventory.
+
+## Related documents
+
+- [Dated source reconciliation](../10-testing/schema-reconciliation-2026-10-13.md)

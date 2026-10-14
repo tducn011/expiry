@@ -48,3 +48,7 @@ Hệ thống yêu cầu hỗ trợ ACID transaction, row-level locking cho concu
 
 - Các migration trong `database/mysql/migrations` thực thi thành công không lỗi cú pháp.
 - Các lệnh `SELECT ... FOR UPDATE` và rollback khi gặp `INSUFFICIENT_QUANTITY` hoạt động chính xác trong môi trường kiểm thử.
+
+## Open questions
+
+The current physical schema is in MySQL migrations; production operations remain separate.

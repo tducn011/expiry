@@ -28,7 +28,7 @@ Task study: capture known/unknown date, review attention, use partial amount, di
 
 Các tác vụ trên là tình huống thử nghiệm đề xuất, chưa là quan sát đã diễn ra. Ghi rõ cách tuyển người theo cơ chế hành vi, mức phù hợp với tác vụ, dữ liệu ban đầu, điều kiện thử và mẫu số cho mỗi kết quả. Không yêu cầu người dùng chọn một persona trong ứng dụng. Ngưỡng nghiệm thu cần thống nhất trước khi thu thập dữ liệu; không tự thêm mục tiêu số chạm hoặc thời gian từ bản demo.
 
-These tasks align with current FINAL CHECK::SC-01…03 and section 13.4; see the [namespaced crosswalk](../03-requirements-features/final-check-persona-alignment.md). A technical runtime check records whether a command/UI path behaved as specified; a user task study records whether the person understood and completed the intended decision. Waste/cost and long-term maintenance outcomes need separate real-world measurement.
+These tasks align with current FINAL CHECK::SC-01…03 and section 13.4; see the [namespaced crosswalk](../01-personas/final-check-persona-alignment.md). A technical runtime check records whether a command/UI path behaved as specified; a user task study records whether the person understood and completed the intended decision. Waste/cost and long-term maintenance outcomes need separate real-world measurement.
 
 Measure completion/error/correction, median and distribution of task time, tap count, stale-record audit against physical food, decision explanation and relevant next action. Capture and state accuracy precede notification/action/outcome conclusions. No claimed waste reduction/savings from prototype/demo data.
 
@@ -41,7 +41,7 @@ Baseline manual path first; measure OCR correction cost only after food-image sp
 ## Dependencies
 
 - [01-personas/persona-evidence-gaps.md](../01-personas/persona-evidence-gaps.md)
-- [10-testing/test-catalog.md](test-catalog.md)
+- [10-testing/test-catalog.md](../10-testing/test-catalog.md)
 - [03-requirements-features/nonfunctional-requirements.md](../03-requirements-features/nonfunctional-requirements.md)
 
 ## Open questions
@@ -53,7 +53,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [01-personas/persona-evidence-gaps.md](../01-personas/persona-evidence-gaps.md)
-- [10-testing/test-catalog.md](test-catalog.md)
+- [10-testing/test-catalog.md](../10-testing/test-catalog.md)
 - [03-requirements-features/nonfunctional-requirements.md](../03-requirements-features/nonfunctional-requirements.md)
 
 ## Verification criteria

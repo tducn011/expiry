@@ -2243,6 +2243,35 @@
   justify-content: flex-end;
 }
 
+.scan-assist {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  background: var(--surface-2, var(--surface));
+}
+
+.scan-assist-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.scan-review {
+  padding-top: 14px;
+  border-top: 1px solid var(--line-2);
+}
+
+.scan-review p {
+  overflow-wrap: anywhere;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
 .empty {
   min-height: 300px;
   display: grid;
@@ -2294,6 +2323,10 @@
   padding: 16px;
   background: rgb(18 28 38 / .38);
   animation: backdrop-in .18s ease-out;
+}
+
+.modal-backdrop.active {
+  z-index: 110;
 }
 
 .modal {

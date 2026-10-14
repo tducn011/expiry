@@ -3,6 +3,7 @@ import test from 'node:test';
 import { createApp } from '../src/app.mjs';
 import express from 'express';
 import { idempotencyMiddleware, errorHandler } from '../src/shared/middleware.mjs';
+import { DomainError } from '../src/shared/domain.mjs';
 
 test('App initialization and healthcheck', async () => {
   const app = createApp();
@@ -21,6 +22,39 @@ test('App initialization and healthcheck', async () => {
   } finally {
     server.close();
   }
+});
+
+test('problem responses use problem media type and always include a stable code', async t => {
+  const app = express();
+  app.use(express.json({ limit: '16b' }));
+  app.get('/domain-error', (_req, _res, next) => next(new DomainError(422, 'BAD_INPUT')));
+  app.post('/unhandled', (_req, _res, next) => next(new Error('private database details')));
+  app.use(errorHandler);
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise(resolve => server.once('listening', resolve));
+  t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  for (const [path, init, status, code] of [
+    ['/domain-error', {}, 422, 'BAD_INPUT'],
+    ['/bad-json', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{' }, 400, 'MALFORMED_JSON'],
+    ['/too-large', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: 'a'.repeat(64) }) }, 413, 'PAYLOAD_TOO_LARGE'],
+    ['/unhandled', { method: 'POST' }, 500, 'INTERNAL_SERVER_ERROR']
+  ]) {
+    const response = await fetch(`${base}${path}`, init);
+    assert.equal(response.status, status);
+    assert.match(response.headers.get('content-type'), /^application\/problem\+json/);
+    const body = await response.json();
+    assert.equal(body.code, code);
+    if (path === '/unhandled') assert.doesNotMatch(JSON.stringify(body), /private database details/);
+  }
+  const appServer = createApp().listen(0, '127.0.0.1');
+  await new Promise(resolve => appServer.once('listening', resolve));
+  try {
+    const missing = await fetch(`http://127.0.0.1:${appServer.address().port}/no-such-route`);
+    assert.equal(missing.status, 404);
+    assert.match(missing.headers.get('content-type'), /^application\/problem\+json/);
+    assert.equal((await missing.json()).code, 'NOT_FOUND');
+  } finally { await new Promise(resolve => { appServer.close(resolve); appServer.closeAllConnections(); }); }
 });
 
 test('Idempotency Key validation middleware', async () => {

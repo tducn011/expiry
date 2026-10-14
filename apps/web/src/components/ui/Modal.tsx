@@ -1,6 +1,22 @@
 import { useEffect, useRef, useState } from "react"
 import type { ReactNode } from "react"
+import Button from "./Button"
 import Icon from "./Icon"
+
+let foregroundModalCount = 0
+let previousBodyOverflow = ""
+
+function acquireModalScrollLock() {
+  if (foregroundModalCount === 0) {
+    previousBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+  }
+  foregroundModalCount += 1
+  return () => {
+    foregroundModalCount = Math.max(0, foregroundModalCount - 1)
+    if (foregroundModalCount === 0) document.body.style.overflow = previousBodyOverflow
+  }
+}
 
 /** Shared dialog with fixed chrome, contained scrolling, and focus restoration. */
 export default function Modal({
@@ -13,6 +29,7 @@ export default function Modal({
   size = "regular",
   layout = "flow",
   dismissible = true,
+  active = true,
 }: {
   eyebrow?: string
   title: string
@@ -23,8 +40,11 @@ export default function Modal({
   size?: "compact" | "regular" | "wide"
   layout?: "flow" | "form" | "list"
   dismissible?: boolean
+  active?: boolean
 }) {
   const dialogRef = useRef<HTMLElement>(null)
+  const activeRef = useRef(active)
+  activeRef.current = active
   // Capture before child autoFocus runs during the commit.
   const [opener] = useState(() =>
     document.activeElement instanceof HTMLElement
@@ -35,10 +55,10 @@ export default function Modal({
   closeRef.current = onClose
 
   useEffect(() => {
+    if (!active) return
     const dialog = dialogRef.current
     if (!dialog) return
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = "hidden"
+    const releaseScrollLock = acquireModalScrollLock()
     const focusable = () =>
       Array.from(
         dialog.querySelectorAll<HTMLElement>(
@@ -49,6 +69,7 @@ export default function Modal({
       (focusable()[0] ?? dialog).focus({ preventScroll: true })
 
     const handleKey = (event: KeyboardEvent) => {
+      if (!activeRef.current) return
       // Portaled controls consume Escape and manage their own keyboard navigation.
       if (
         event.defaultPrevented ||
@@ -80,16 +101,18 @@ export default function Modal({
     document.addEventListener("keydown", handleKey)
     return () => {
       document.removeEventListener("keydown", handleKey)
-      document.body.style.overflow = previousOverflow
+      releaseScrollLock()
       if (opener?.isConnected) opener.focus({ preventScroll: true })
     }
-  }, [dismissible, opener])
+  }, [active, dismissible, opener])
 
   return (
     <div
-      className="modal-backdrop"
+      className={`modal-backdrop ${active ? "active" : "suspended"}`}
       role="presentation"
-      onMouseDown={dismissible ? () => closeRef.current() : undefined}
+      aria-hidden={active ? undefined : true}
+      inert={active ? undefined : true}
+      onMouseDown={active && dismissible ? () => closeRef.current() : undefined}
     >
       <section
         ref={dialogRef}
@@ -120,6 +143,30 @@ export default function Modal({
         {children}
         {footer && <footer className="modal-footer">{footer}</footer>}
       </section>
+    </div>
+  )
+}
+
+export function RetryAction({
+  canRetry,
+  pending,
+  error,
+  onRetry,
+}: {
+  canRetry: boolean
+  pending: boolean
+  error: string
+  onRetry: () => void
+}) {
+  if (!canRetry) return null
+  return (
+    <div className="stack" role="status">
+      <p className="note-box" role="alert">
+        {error || "Thao tác trước chưa được xác nhận. Hãy thử lại để tiếp tục."}
+      </p>
+      <Button type="button" variant="secondary" loading={pending} onClick={onRetry}>
+        Thử lại thao tác đang chờ
+      </Button>
     </div>
   )
 }

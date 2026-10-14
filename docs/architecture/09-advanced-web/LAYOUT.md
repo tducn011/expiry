@@ -11,7 +11,7 @@ UI-specific layout specification grounded in CSS; project map stays root LAYOUT.
 ## Evidence sources
 
 - [00-context/source-register.md](../00-context/source-register.md)
-- [00-context/tmb-skills.md](../00-context/tmb-skills.md)
+- [00-context/tmb-skills.md](../12-process/tmb-skills.md)
 
 ## Definitions and assumptions
 
@@ -81,7 +81,7 @@ UI-specific layout specification grounded in CSS; project map stays root LAYOUT.
 | --gutter | 24px |
 | --margin | 40px |
 
-Breakpoints: CSS 768px→8 columns/20px gutters; 1024px→12 columns/24px gutters; default4 columns/16px. Shell source owns desktop sidebar and mobile dock, with explicit Add action. CSS is current style authority; the current handoff agrees with r-card16/content-max1100. On narrow screens the urgency controls use a 2-column grid; the inventory later control (“Chưa đến ngày theo dõi”) spans both columns. Form bodies use min-height:0 and overflow-y:auto, retaining the header/footer while long content scrolls; desktop wide form bodies keep the 340px limit. The [persona alignment evidence](../03-requirements-features/final-check-persona-alignment.md) records the tested viewport bounds and date-form limitation.
+Breakpoints: CSS 768px→8 columns/20px gutters; 1024px→12 columns/24px gutters; default4 columns/16px. Shell source owns desktop sidebar and mobile dock, with explicit Add action. CSS is current style authority; the current handoff agrees with r-card16/content-max1100. On narrow screens the urgency controls use a 2-column grid; the inventory later control (“Chưa đến ngày theo dõi”) spans both columns. Form bodies use min-height:0 and overflow-y:auto, retaining the header/footer while long content scrolls; desktop wide form bodies keep the 340px limit. The [persona alignment evidence](../01-personas/final-check-persona-alignment.md) records the tested viewport bounds and date-form limitation.
 
 Component inventory:
 
@@ -117,9 +117,9 @@ Reusable presentation: Button, Field, Badge, Modal, Card, Segmented, EmptyState,
 
 ## Dependencies
 
-- [06-navigation/navigation.md](../06-navigation/navigation.md)
+- [06-navigation/navigation.md](../05-interaction-design/navigation.md)
 - [09-advanced-web/state-and-integration.md](state-and-integration.md)
-- [10-testing/research-validation.md](../10-testing/research-validation.md)
+- [10-testing/research-validation.md](../02-challenges/research-validation.md)
 
 ## Open questions
 
@@ -129,9 +129,9 @@ Exact Figma node/source absent; verify all overflow/mobile/keyboard behavior dur
 
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
-- [06-navigation/navigation.md](../06-navigation/navigation.md)
+- [06-navigation/navigation.md](../05-interaction-design/navigation.md)
 - [09-advanced-web/state-and-integration.md](state-and-integration.md)
-- [10-testing/research-validation.md](../10-testing/research-validation.md)
+- [10-testing/research-validation.md](../02-challenges/research-validation.md)
 
 ## Verification criteria
 

@@ -10,10 +10,10 @@ Giữ truy vết từ nhu cầu trong ba persona Canva qua bản FINAL CHECK hi�
 
 ## Evidence sources
 
-- [FINAL CHECK — System Engineering Gr2](https://docs.google.com/document/d/1js1KBfrVrgDn9EVC4_sNGIvUlWQNlLRC66nyTeAvBmA/edit?tab=t.1rjc5vc4ma1w), bản native readback sau cập nhật ngày 2026-10-10: [snapshot](../00-context/sources/google-doc-final-check-2026-10-10.md).
+- [FINAL CHECK — System Engineering Gr2](https://docs.google.com/document/d/1js1KBfrVrgDn9EVC4_sNGIvUlWQNlLRC66nyTeAvBmA/edit?tab=t.1rjc5vc4ma1w), bản native readback sau cập nhật ngày 2026-10-10: [snapshot](../consolidated/google-doc-final-check-2026-10-10.md).
 - Revision readback: `AHj4eMS5EWe-jr7L4pHoM2K-E6BEo9zjw16uvcESw_yvGNDsovpQqmff6fOg2H3XwNoA0TY9TPgjRNyuN9QjckK20SN4AjaiSwSTns135X8`.
-- [Source register](../00-context/source-register.md), [Canva persona source](../00-context/sources/canva-personas.txt) và [ba persona](../01-personas/README.md).
-- [Slide System Engineering.pdf](../../../doc/SystemEngineer/Slide%20System%20Engineering.pdf), trang 70–73: phân tầng Business, User (stakeholder), Functional, Nonfunctional và Transition Requirements.
+- [Source register](../00-context/source-register.md), [Canva persona source](canva-personas.txt) và [ba persona](../01-personas/README.md).
+- [Slide System Engineering.pdf](../consolidated/Slide System Engineering.pdf), trang 70–73: phân tầng Business, User (stakeholder), Functional, Nonfunctional và Transition Requirements.
 
 ## Definitions and assumptions
 
@@ -22,7 +22,7 @@ Giữ truy vết từ nhu cầu trong ba persona Canva qua bản FINAL CHECK hi�
 | Không gian ID | Nơi định nghĩa | Cách đọc |
 |---|---|---|
 | `FINAL CHECK::BR-01…04`, `SYS-SR-01…07`, `UR-01…10`, `FR-*`, `NFR-*`, `FEAT-*`, `RULE-*`, `SC-*` | Tab FINAL CHECK và snapshot đọc lại ở trên | Prefix `FINAL CHECK::` trong bản đối chiếu chỉ xác định tài liệu nguồn; ID trong Google Docs được giữ nguyên |
-| `SYS-BR-*`, `SYS-FR-*`, `SYS-NFR-*` | [Bản tóm tắt toàn hệ thống](../../Expiry_System_Requirements_Summary.md) | Bản tổng hợp yêu cầu logic riêng; `SYS-BR-01` không đồng nghĩa `FINAL CHECK::BR-01` |
+| `SYS-BR-*`, `SYS-FR-*`, `SYS-NFR-*` | [Bản tóm tắt toàn hệ thống](../03-requirements-features/Expiry_System_Requirements_Summary.md) | Bản tổng hợp yêu cầu logic riêng; `SYS-BR-01` không đồng nghĩa `FINAL CHECK::BR-01` |
 | `BR-V1-*`, `ST-V1-*`, `FR-*`, `NFR-*`, `F-*`, `RULE-*`, `UC-*`, `SC-*`, `UF-*`, `WF-*` | Bộ architecture food và [registry](../11-traceability/registry.json) | Phương án thiết kế food để review; `food::FR-03` là attention, còn `FINAL CHECK::FR-03` là cập nhật thông tin |
 | `P-01/P-02/P-03` và `P1/P2/P3` | FINAL CHECK và bộ persona architecture | Cùng ba persona Canva, hai cách viết; không phải hai bộ người dùng hay RBAC roles |
 
@@ -58,7 +58,7 @@ Một người có thể mua, cất, xem, sử dụng, cập nhật và nhận n
 | SYS-SR-03 | Giảm công sức cập nhật — ST-01, P3 trọng tâm | ST-V1-03; NEED-03; FR-01/04/05/06/07/08 | Các đường từng sản phẩm thuộc core; mức công sức cần đo với người dùng |
 | SYS-SR-04 | Nhận được thông báo phù hợp — ST-01 | FR-03/09 hỗ trợ attention trong app | Kênh gửi, lập lịch và kiểm soát thông báo ngoài app chưa được xác nhận/triển khai |
 | SYS-SR-05 | Bảo vệ thông tin quản lý — ST-01 | ST-V1-04; FR-10; NFR-01/04 | Auth và quyền trong mock không chứng minh bảo mật production; chia sẻ hộ gia đình chưa chốt |
-| SYS-SR-06 | Đánh giá được hiệu quả hệ thống — ST-02 | [Research validation](../10-testing/research-validation.md), [coverage](../11-traceability/coverage.md) | Có kế hoạch và liên kết; chưa có nghiên cứu người dùng hoặc outcome data |
+| SYS-SR-06 | Đánh giá được hiệu quả hệ thống — ST-02 | [Research validation](../02-challenges/research-validation.md), [coverage](../10-testing/coverage.md) | Có kế hoạch và liên kết; chưa có nghiên cứu người dùng hoặc outcome data |
 | SYS-SR-07 | Duy trì tính nhất quán phát triển — ST-03 | ST-V1-05; registry, rules, dictionary, contracts | Kiểm tra cấu trúc tài liệu không nghiệm thu backend, database hay vận hành |
 
 ### User requirements đến thiết kế và source UI
@@ -105,12 +105,12 @@ Paths ở trên là acceptance cho prototype đã được người dùng cho ph
 
 ## Dependencies
 
-- [Stakeholder requirements food](stakeholder-requirements.md)
-- [Functional requirements food](system-requirements.md)
-- [Business outcomes food](business-requirements.md)
+- [Stakeholder requirements food](../03-requirements-features/stakeholder-requirements.md)
+- [Functional requirements food](../03-requirements-features/system-requirements.md)
+- [Business outcomes food](../03-requirements-features/business-requirements.md)
 - [Frontend owners](../09-advanced-web/state-and-integration.md)
-- [Research validation](../10-testing/research-validation.md)
-- [Prototype handoff](../../../uidemo/HANDOFF.md)
+- [Research validation](../02-challenges/research-validation.md)
+- [preserved source extraction snapshot](../consolidated/Expiry_Full_Data_Extraction_2026-10-09.md) (the original `uidemo/HANDOFF.md` path is unavailable in this checkout)
 
 ## Open questions
 
@@ -120,8 +120,8 @@ Phỏng vấn gốc, tính đại diện của persona, scope chia sẻ, kênh g
 
 - [Requirements index](README.md)
 - [Source register](../00-context/source-register.md)
-- [System summary](../../Expiry_System_Requirements_Summary.md)
-- [Architecture coverage](../11-traceability/coverage.md)
+- [System summary](../03-requirements-features/Expiry_System_Requirements_Summary.md)
+- [Architecture coverage](../10-testing/coverage.md)
 
 ## Verification criteria
 

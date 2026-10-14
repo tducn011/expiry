@@ -46,7 +46,7 @@ Add `--include-legacy` to audit linked old `.mmd` sources; known source failures
 ## Dependencies
 
 - [traceability/registry.json](../11-traceability/registry.json)
-- [11-traceability/verification-report.md](../11-traceability/verification-report.md)
+- [11-traceability/verification-report.md](../10-testing/verification-report.md)
 
 ## Open questions
 
@@ -57,7 +57,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [traceability/registry.json](../11-traceability/registry.json)
-- [11-traceability/verification-report.md](../11-traceability/verification-report.md)
+- [11-traceability/verification-report.md](../10-testing/verification-report.md)
 
 ## Verification criteria
 

@@ -69,7 +69,7 @@ export function createAuthBoundary({
     const token = cookieToken(req, cookieName);
     if (!token) return next(new DomainError(401, 'AUTH_REQUIRED'));
     res.set('Cache-Control', 'no-store');
-    Promise.resolve(repository.current(tokenHash(token), now(), idleTimeoutMs)).then(session => {
+    Promise.resolve(repository.current(tokenHash(token), now, idleTimeoutMs)).then(session => {
       if (!session) {
         res.clearCookie(cookieName, cookieOptions);
         throw new DomainError(401, 'AUTH_REQUIRED');

@@ -50,8 +50,8 @@ Promotion gate: show capture benefit after corrections, coherent date-field unce
 ## Dependencies
 
 - [03-requirements-features/unsupported-proposals.md](../03-requirements-features/unsupported-proposals.md)
-- [17-python-ocr/integration-contract.md](../17-python-ocr/integration-contract.md)
-- [adr/ADR-004-ocr-boundary.md](../adr/ADR-004-ocr-boundary.md)
+- [17-python-ocr/integration-contract.md](../07-api/integration-contract.md)
+- [adr/ADR-004-ocr-boundary.md](../08-architecture/ADR-004-ocr-boundary.md)
 
 ## Open questions
 
@@ -62,8 +62,8 @@ Dataset/consent, target hardware/latency/cost threshold, expected image fields a
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [03-requirements-features/unsupported-proposals.md](../03-requirements-features/unsupported-proposals.md)
-- [17-python-ocr/integration-contract.md](../17-python-ocr/integration-contract.md)
-- [adr/ADR-004-ocr-boundary.md](../adr/ADR-004-ocr-boundary.md)
+- [17-python-ocr/integration-contract.md](../07-api/integration-contract.md)
+- [adr/ADR-004-ocr-boundary.md](../08-architecture/ADR-004-ocr-boundary.md)
 
 ## Verification criteria
 

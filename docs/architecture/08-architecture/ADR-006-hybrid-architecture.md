@@ -4,6 +4,10 @@
 - Status: **Approved**
 - Updated: 2026-10-10T18:00:00+07:00
 
+## Current source correction [A/D] — 2026-10-13
+
+Current source folders are `apps/web/` and `apps/api/` (not the historical `uidemo/` and `backend/` paths shown in this ADR). The seven-table candidate MySQL schema remains the current persistence boundary. The OCR labeled-sample table is a review-only proposal documented in [schema input/output](../06-data-model/schema-input-output.md); it does not reverse the runtime OCR-only boundary or approve DL/training collection.
+
 ## Purpose
 
 Ghi nhận quyết định kiến trúc tổng thể chính thức của hệ thống Expiry:
@@ -119,3 +123,31 @@ User -> Upload image -> React -> POST /api/v1/scans -> Node.js
 - [08-architecture/components.md](components.md)
 - [08-architecture/deployment.md](deployment.md)
 - [07-api/integration-contract.md](../07-api/integration-contract.md)
+
+## Definitions and assumptions
+
+Runtime folder names and current boundaries are clarified by the dated source correction.
+
+## Analysis
+
+Source implementation and candidate dataset curation are separate concerns.
+
+## Decisions and rationale
+
+This ADR records the previously selected OCR runtime boundary; the sample table proposal remains review-only.
+
+## Dependencies
+
+See current source map and contracts linked below.
+
+## Open questions
+
+See unresolved sample-data governance questions in the schema input/output guide.
+
+## Related documents
+
+- [Current schema and OCR proposal](../06-data-model/schema-input-output.md)
+
+## Verification criteria
+
+Verify runtime boundary from current source; do not infer sample-table approval.

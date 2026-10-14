@@ -50,8 +50,8 @@ Promotion gate: show capture benefit after corrections, coherent date-field unce
 ## Dependencies
 
 - [03-requirements-features/unsupported-proposals.md](../03-requirements-features/unsupported-proposals.md)
-- [17-python-ocr/integration-contract.md](../17-python-ocr/integration-contract.md)
-- [adr/ADR-004-ocr-boundary.md](../adr/ADR-004-ocr-boundary.md)
+- [17-python-ocr/integration-contract.md](../07-api/integration-contract.md)
+- [adr/ADR-004-ocr-boundary.md](../08-architecture/ADR-004-ocr-boundary.md)
 
 ## Open questions
 
@@ -62,9 +62,13 @@ Dataset/consent, target hardware/latency/cost threshold, expected image fields a
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [03-requirements-features/unsupported-proposals.md](../03-requirements-features/unsupported-proposals.md)
-- [17-python-ocr/integration-contract.md](../17-python-ocr/integration-contract.md)
-- [adr/ADR-004-ocr-boundary.md](../adr/ADR-004-ocr-boundary.md)
+- [17-python-ocr/integration-contract.md](../07-api/integration-contract.md)
+- [adr/ADR-004-ocr-boundary.md](../08-architecture/ADR-004-ocr-boundary.md)
 
 ## Verification criteria
 
 POC report must contain measured food-label results; temporary OCR of slides cannot pass the product OCR gate.
+
+## Current implementation boundary — 2026-10-13 [A/D]
+
+Current OCR extracts transient candidates for explicit human review. A labeled sample table is a review-only data-model proposal, not a current feature, training pipeline, or production collection. Any future dataset needs reviewed source eligibility, consent/retention controls, and separate verified labels; see [schema input/output](../06-data-model/schema-input-output.md).

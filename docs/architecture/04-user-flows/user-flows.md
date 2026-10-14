@@ -18,183 +18,23 @@
 
 ## Analysis
 
-### UF-01 — Ghi đồ mới trước khi quên
+**[A] Current UI map:** `App` owns the selected shell view and modal state. Real-mode Add is gated by session before the Add form opens; Auth is a modal. The Add form has local draft state and optional scan assist. Detail is selected content inside the shell. Edit, movement action, History, authentication, and confirmations are overlays. Inventory and Attention share one list component; Trash and Settings are separate shell views. See [current navigation](../05-interaction-design/navigation.md).
 
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | P1/P3 |
-| Use case | UC-01 |
-| Entry point / task path | WF-01→Add→WF-02→Save→WF-03 |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-01→Add→WF-02→Save→WF-03; result: Entry đã lưu, initial movement, xuất hiện trong inventory |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | Entry đã lưu, initial movement, xuất hiện trong inventory |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
+| Flow | Persona / UC | Current entry and steps | Current success result | Failure / recovery boundary |
+|---|---|---|---|---|
+| UF-01 Record a new item | P1/P3 · UC-01 | Attention or Inventory → Add; if unauthenticated, Auth first → Add form → submit | Entry plus initial movement commit together. Add closes, success toast appears, and the same list remains visible; no automatic Detail navigation | Invalid form/API response retains form values; uncertain command may use immutable same-key retry; changed identity clears pending private state |
+| UF-02 Keep an entry with unknown date | P1/P2 · UC-01 | Authenticated Add form → choose unknown date in date/details step → submit | `expiry_date=null`, certainty/source unknown, label unspecified; list stays active and no date is invented | Missing required name/quantity blocks submit; date is optional |
+| UF-03 Understand recorded attention | P1 · UC-02/03 | Attention list/filter → select entry → selected Detail content | Shows amount, date context, and reason; no quantity mutation | Read failure has request feedback/retry; foreign or missing resource does not disclose another owner |
+| UF-04 Choose a task from the inventory | P2 · UC-03/04 | Inventory/Attention filters → selected Detail or an action opened from a card | User chooses a distinct movement action; current data updates after server confirmation | Stale/invalid writes surface conflict/validation feedback; no optimistic claim of persisted change |
+| UF-05 Record consumption | All · UC-04 | Detail or card action → Use form → enter amount → confirm | Quantity/version update with one consume movement; action closes and current Detail/attention is refreshed | Stale version/invalid amount is rejected; uncertain command retries with original identity |
+| UF-06 Record discard | All · UC-05 | Detail or card action → Discard form → enter amount/reason → confirm | Quantity/version update with discard movement; discard remains distinct from soft delete | Same validation/version/retry boundaries as consumption |
+| UF-07 Reconcile a count | P3/P2 · UC-07 | Detail or card action → Recount form → enter actual amount and required reason → confirm | Changed value appends adjustment and updates quantity; equal value returns no-op without movement | Stale version or invalid value keeps user in recovery path; a changed draft is a new command after resolving conflict |
+| UF-08 Correct entry metadata | P3/P2 · UC-06 | Selected Detail → Edit modal → update allowed metadata → save | PATCH updates metadata/version only, closes modal, remains on selected Detail, and shows toast; quantity/unit/history stay unchanged | Synthetic-401 browser observation: Auth foreground is reachable, same-owner name/location draft remains, immutable retry is available and applies metadata only; quantity observed unchanged at 500. One separate bounded lost-response discard retry was observed; broad browser acceptance remains unclaimed |
+| UF-09 Remove or restore a mistaken record | P3 · UC-09/10 | Detail → delete confirmation → list; Trash shell view → restore confirmation → Inventory | Delete clears selection and returns to current list with toast; restore returns to Inventory with toast. Neither changes quantity or movement history | Cancel confirmation has no mutation; stale/error response remains recoverable through command feedback |
+| UF-10 Adjust attention settings | All · UC-11 | Settings shell view → edit timezone/lead days → save | Successful preferences update stays on Settings with confirmation; new reads use current preferences/as-of date | Invalid lead days (outside 0–30) block save; version conflict requires current settings review |
+| UF-11 Continue after session expiry | All · UC-00 | Pending create or submitted Edit/action receives 401 → Auth foreground → authenticate same owner → resume task | Add intent opens Add only after auth; an already-submitted command remains frozen and is retried explicitly; same-owner Edit draft remains available in bounded browser check | Cancel pending Add clears the intent. Changed owner clears selected/private pending state. One bounded lost-response discard retry was observed; broad recovery and timing claims remain out of scope |
 
-### UF-02 — Không bỏ việc theo dõi chỉ vì thiếu nhãn
-
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | P1/P2 |
-| Use case | UC-01 |
-| Entry point / task path | WF-02→chọn Không biết hạn→Save→WF-03 |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-02→chọn Không biết hạn→Save→WF-03; result: Date null, unknown visible; không fake date |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | Date null, unknown visible; không fake date |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
-
-### UF-03 — Nhớ được món cần xem
-
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | P1 |
-| Use case | UC-02, UC-03 |
-| Entry point / task path | WF-01→attention group→item→WF-03 |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-01→attention group→item→WF-03; result: User thấy amount/location/reason; chưa claim food used |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | User thấy amount/location/reason; chưa claim food used |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
-
-### UF-04 — Chọn món đáng chú ý từ đồ đang có
-
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | P2 |
-| Use case | UC-03, UC-04 |
-| Entry point / task path | WF-01→location/filter→item→WF-03→action→WF-04→confirm |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-01→location/filter→item→WF-03→action→WF-04→confirm; result: User tự chọn action; hệ thống ghi kết quả |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | User tự chọn action; hệ thống ghi kết quả |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
-
-### UF-05 — Số lượng app đúng sau dùng
-
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | All |
-| Use case | UC-04 |
-| Entry point / task path | WF-03→Use→WF-04 amount→confirm→WF-03 |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-03→Use→WF-04 amount→confirm→WF-03; result: Remaining giảm đúng; history tạo 1 lần |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | Remaining giảm đúng; history tạo 1 lần |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
-
-### UF-06 — Phản ánh đồ thật đã bỏ
-
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | All |
-| Use case | UC-05 |
-| Entry point / task path | WF-03→Discard→WF-04 amount→confirm→WF-03 |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-03→Discard→WF-04 amount→confirm→WF-03; result: Remaining giảm; discard history; zero→depleted |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | Remaining giảm; discard history; zero→depleted |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
-
-### UF-07 — Sửa số lượng lệch nhanh
-
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | P3/P2 |
-| Use case | UC-07, UC-08 |
-| Entry point / task path | WF-03→Recount→WF-04 actual+reason→confirm→WF-03→history |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-03→Recount→WF-04 actual+reason→confirm→WF-03→history; result: Amount đúng và correction traceable |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | Amount đúng và correction traceable |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
-
-### UF-08 — Sửa ngày/vị trí nguồn nhập sai
-
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | P3/P2 |
-| Use case | UC-06 |
-| Entry point / task path | WF-03→Edit→WF-02→Save→WF-03 |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-03→Edit→WF-02→Save→WF-03; result: Version tăng; attention recomputed |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | Version tăng; attention recomputed |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
-
-### UF-09 — Dọn bản ghi nhầm, lấy lại khi xóa sai
-
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | P3 |
-| Use case | UC-09, UC-10 |
-| Entry point / task path | WF-03→Remove record→confirm→WF-05 trash→Restore→WF-03 |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-03→Remove record→confirm→WF-05 trash→Restore→WF-03; result: Quantity/history không đổi bởi delete/restore |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | Quantity/history không đổi bởi delete/restore |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
-
-### UF-10 — Điều chỉnh cách chú ý
-
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | All |
-| Use case | UC-11 |
-| Entry point / task path | WF-01→Settings→WF-06→Save→WF-01 |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-01→Settings→WF-06→Save→WF-01; result: Lead/timezone cập nhật; list có as_of_date mới |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | Lead/timezone cập nhật; list có as_of_date mới |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
-
-### UF-11 — Không mất draft khi auth hết hạn
-
-| Attribute | Proposed interaction contract |
-|---|---|
-| Persona | All |
-| Use case | UC-00 |
-| Entry point / task path | WF-02/04→Save→401→auth→resume cùng draft→Save |
-| Goal/subgoals | Inspect context → choose/enter data → confirm → observe feedback; read-only flow stops at informed decision |
-| Required data | Route DTO + form/current record/settings, identified in flow-to-data matrix |
-| Actions/system response | WF-02/04→Save→401→auth→resume cùng draft→Save; result: Không trừ quantity trước khi server success |
-| Validation | Schema/form UX + server owner/version/domain checks; exact rules are canonical |
-| Decision/branches | Unknown date allowed; invalid fields stay draft; session/private boundary invokes UC-00 |
-| Failure/recovery | 422 fix draft; 409 refetch before new command; uncertain result retry same key/payload |
-| Exit/success | Không trừ quantity trước khi server success |
-| Cancel/back | Return without mutation; preserve originating list or unsaved draft by navigation contract |
-
-Task decomposition: CF-01 needs draft + identity continuation + create + confirmed saved record. CF-02 depends on owner/settings/read policy, does not write records. CF-03 depends on selected entry/current version + confirmed physical action + atomic mutation + cache refresh. Parallel UI design may use fixtures once the proposed contract is reviewed; it does not create a second business truth.
+The use-case layer names goals and rules; these flow paths describe current UI composition and response. `WF-05` is a legacy design anchor for two distinct surfaces, not one combined History/Trash page. All unexecuted or still-running checks remain outside the verified behavior claims.
 
 ## Decisions and rationale
 
@@ -202,8 +42,8 @@ Task decomposition: CF-01 needs draft + identity continuation + create + confirm
 
 ## Dependencies
 
-- [06-navigation/navigation.md](../06-navigation/navigation.md)
-- [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md)
+- [06-navigation/navigation.md](../05-interaction-design/navigation.md)
+- [05-use-cases-uml/use-cases.md](use-cases.md)
 - [06-data-model/data-flows.md](../06-data-model/data-flows.md)
 
 ## Open questions
@@ -214,10 +54,14 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
-- [06-navigation/navigation.md](../06-navigation/navigation.md)
-- [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md)
+- [06-navigation/navigation.md](../05-interaction-design/navigation.md)
+- [05-use-cases-uml/use-cases.md](use-cases.md)
 - [06-data-model/data-flows.md](../06-data-model/data-flows.md)
 
 ## Verification criteria
 
 Đối chiếu nguồn, ID và downstream links; acceptance runtime chỉ được ghi pass sau khi thực chạy.
+
+## Current source alignment — 2026-10-13 [A]
+
+Add/auth continuation and OCR review are described in the current [schema input/output guide](../06-data-model/schema-input-output.md) and [source reconciliation](../10-testing/schema-reconciliation-2026-10-13.md). Scan returns transient candidate data; a separate reviewed create command persists it. Same-owner recovery is required before resuming an interrupted command.

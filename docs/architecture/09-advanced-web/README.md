@@ -31,7 +31,7 @@ Current maturity: reviewable artifacts; no inherited proposal automatically appr
 
 - [09-advanced-web/LAYOUT.md](LAYOUT.md)
 - [09-advanced-web/state-and-integration.md](state-and-integration.md)
-- [17-python-ocr/README.md](../17-python-ocr/README.md)
+- [17-python-ocr/README.md](../07-api/README.md)
 
 ## Open questions
 
@@ -43,7 +43,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [11-traceability/README.md](../11-traceability/README.md)
 - [09-advanced-web/LAYOUT.md](LAYOUT.md)
 - [09-advanced-web/state-and-integration.md](state-and-integration.md)
-- [17-python-ocr/README.md](../17-python-ocr/README.md)
+- [17-python-ocr/README.md](../07-api/README.md)
 
 ## Verification criteria
 

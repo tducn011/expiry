@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type {
   CreatePayload,
   DateCertainty,
@@ -8,6 +8,7 @@ import type {
   FoodEntry,
   Unit,
 } from "../domain/types"
+import { scanToEntryDraft, type ScanResult } from "../api/client"
 import {
   certaintyLabel,
   fmtQty,
@@ -20,9 +21,10 @@ import Button from "../components/ui/Button"
 import DatePicker from "../components/ui/DatePicker"
 import Field from "../components/ui/Field"
 import Icon from "../components/ui/Icon"
-import Modal, { ModalActions } from "../components/ui/Modal"
+import Modal, { ModalActions, RetryAction } from "../components/ui/Modal"
 import Segmented from "../components/ui/Segmented"
 import Select from "../components/ui/Select"
+import ScanForm from "./ScanForm"
 
 type FormState = {
   name: string
@@ -45,16 +47,30 @@ export default function EntryForm({
   onClose,
   onCreate,
   onUpdate,
+  onScan,
+  active = true,
+  canRetry = false,
+  retryPending = false,
+  retryError = "",
+  onRetry,
 }: {
   entry?: FoodEntry
   initial?: CreatePayload | null
   initialStep?: 0 | 1
   onClose: () => void
-  onCreate?: (p: CreatePayload) => void
-  onUpdate?: (p: EntryDraft) => void
+  onCreate?: (p: CreatePayload) => void | Promise<void>
+  onUpdate?: (p: EntryDraft) => void | Promise<void>
+  onScan?: (file: File) => Promise<ScanResult>
+  active?: boolean
+  canRetry?: boolean
+  retryPending?: boolean
+  retryError?: string
+  onRetry?: () => void
 }) {
   const base = entry ?? initial
+  const submitInFlight = useRef(false)
   const [step, setStep] = useState<0 | 1>(initialStep)
+  const [scanOpen, setScanOpen] = useState(false)
   const [tried, setTried] = useState([false, false])
   const [form, setForm] = useState<FormState>({
     name: base?.name ?? "",
@@ -74,16 +90,23 @@ export default function EntryForm({
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }))
   const qty = Number(form.quantity)
+  const quantityFormatValid = /^\d+(?:\.\d{1,3})?$/.test(form.quantity)
   const errors: Record<string, string>[] = [
     {
       name: form.name.trim() ? "" : "Nhập tên thực phẩm.",
       quantity: entry
         ? ""
-        : !form.quantity || qty <= 0
+        : !form.quantity
           ? "Lượng phải lớn hơn 0."
-          : form.unit === "piece" && !Number.isInteger(qty)
-            ? "Đơn vị “cái” chỉ nhận số nguyên."
-            : "",
+          : !quantityFormatValid || !Number.isFinite(qty)
+            ? "Nhập lượng dạng số, tối đa 3 chữ số thập phân."
+            : qty > 999999999.999
+              ? "Lượng tối đa là 999.999.999,999."
+              : qty <= 0
+                ? "Lượng phải lớn hơn 0."
+                : form.unit === "piece" && !Number.isInteger(qty)
+                  ? "Đơn vị “cái” chỉ nhận số nguyên."
+                  : "",
     },
     {
       expiry_date:
@@ -99,6 +122,7 @@ export default function EntryForm({
     if (stepValid(step)) setStep(1)
   }
   const submit = () => {
+    if (submitInFlight.current || canRetry || retryPending) return
     setTried([true, true])
     if (!stepValid(0)) {
       setStep(0)
@@ -123,9 +147,24 @@ export default function EntryForm({
       opened_on: form.opened_on || null,
       note: form.note.trim() || null,
     }
-    entry
-      ? onUpdate?.(draft)
-      : onCreate?.({ ...draft, initial_quantity: qty, unit: form.unit })
+    submitInFlight.current = true
+    let result: void | Promise<void>
+    try {
+      result = entry
+        ? onUpdate?.(draft)
+        : onCreate?.({ ...draft, initial_quantity: qty, unit: form.unit })
+    } catch (error) {
+      submitInFlight.current = false
+      throw error
+    }
+    if (result && typeof result.then === "function") {
+      void result.then(
+        () => { submitInFlight.current = false },
+        () => { submitInFlight.current = false },
+      )
+    } else {
+      submitInFlight.current = false
+    }
   }
   const steps = ["Cơ bản", "Ngày & ghi chú"]
 
@@ -136,6 +175,7 @@ export default function EntryForm({
       eyebrow={entry ? "THÔNG TIN BẢN GHI" : "BẢN GHI MỚI"}
       title={entry ? "Sửa thực phẩm" : "Thêm thực phẩm"}
       onClose={onClose}
+      active={active}
     >
       <form
         className="stepped-form"
@@ -161,13 +201,46 @@ export default function EntryForm({
           ))}
         </ol>
         <div className="form-body">
+          <RetryAction canRetry={canRetry} pending={retryPending} error={retryError} onRetry={onRetry ?? (() => {})} />
           {step === 0 ? (
             <div className="form-grid" key="basic">
               {!entry && (
-                <p className="inline-hint span-2">
-                  Tên, lượng và đơn vị là đủ để lưu. Ngày và vị trí có thể bổ
-                  sung sau.
-                </p>
+                <div className="span-2 stack">
+                  <p className="inline-hint">
+                    Tên, lượng và đơn vị là đủ để lưu. Ngày và vị trí có thể bổ
+                    sung sau.
+                  </p>
+                  {onScan && (
+                    <div>
+                      <Button type="button" variant="outline" onClick={() => setScanOpen((open) => !open)}>
+                        {scanOpen ? "Đóng quét nhãn" : "Gợi ý từ ảnh nhãn"}
+                      </Button>
+                      {scanOpen && (
+                        <ScanForm
+                          onScan={onScan}
+                          onClose={() => setScanOpen(false)}
+                          onApply={(result, selectedDate) => {
+                            const mapped = scanToEntryDraft(result, selectedDate)
+                            setForm((current) => ({
+                              ...current,
+                              name: mapped.name || current.name,
+                              ...(mapped.expiry_date === null
+                                ? {}
+                                : {
+                                    expiry_date: mapped.expiry_date,
+                                    certainty: mapped.expiry_date_certainty,
+                                    source: mapped.expiry_date_source || "package_label",
+                                    label: mapped.expiry_date_label_type || "unknown",
+                                  }),
+                            }))
+                            setStep(1)
+                            setScanOpen(false)
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
               <div className="span-2">
                 <Field label="Tên thực phẩm *" error={show(0, "name")}>
@@ -198,6 +271,7 @@ export default function EntryForm({
                       inputMode="decimal"
                       type="number"
                       min="0.001"
+                      max="999999999.999"
                       step={form.unit === "piece" ? 1 : 0.001}
                       value={form.quantity}
                       onChange={(e) => set("quantity", e.target.value)}
@@ -352,7 +426,7 @@ export default function EntryForm({
                     {entry ? "Ngày & ghi chú →" : "Bổ sung ngày →"}
                   </Button>
                 )}
-                <Button type="submit" variant="cta">
+                <Button type="submit" variant="cta" disabled={canRetry || retryPending}>
                   {entry
                     ? "Lưu thay đổi"
                     : step === 0

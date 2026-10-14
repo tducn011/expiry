@@ -33,7 +33,7 @@ Domain entities: User, FoodEntry, StockMovement, ApiRequest. Attention/lifecycle
 ## Dependencies
 
 - [00-context/scope.md](scope.md)
-- [06-data-model/ownership.md](../06-data-model/ownership.md)
+- [06-data-model/ownership.md](ownership.md)
 - [06-data-model/dictionary.md](../06-data-model/dictionary.md)
 
 ## Open questions
@@ -45,7 +45,7 @@ FoodEntry grain/date/source review còn mở; extension domains không đổi de
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [00-context/scope.md](scope.md)
-- [06-data-model/ownership.md](../06-data-model/ownership.md)
+- [06-data-model/ownership.md](ownership.md)
 - [06-data-model/dictionary.md](../06-data-model/dictionary.md)
 
 ## Verification criteria

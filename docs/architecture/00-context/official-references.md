@@ -42,7 +42,7 @@ Access date 09/10/2026. Versions/licenses below are registry/release metadata an
 
 ## Dependencies
 
-- [04-technology-research/ocr-research.md](ocr-research.md)
+- [04-technology-research/ocr-research.md](../02-challenges/ocr-research.md)
 - [07-api/authentication.md](../07-api/authentication.md)
 
 ## Open questions
@@ -53,7 +53,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
-- [04-technology-research/ocr-research.md](ocr-research.md)
+- [04-technology-research/ocr-research.md](../02-challenges/ocr-research.md)
 - [07-api/authentication.md](../07-api/authentication.md)
 
 ## Verification criteria

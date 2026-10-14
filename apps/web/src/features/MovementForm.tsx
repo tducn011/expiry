@@ -1,10 +1,10 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type { FoodEntry } from "../domain/types"
 import { fmtQty, unitLabel } from "../lib/format"
 import Button from "../components/ui/Button"
 import Field from "../components/ui/Field"
 import Icon from "../components/ui/Icon"
-import Modal, { ModalActions } from "../components/ui/Modal"
+import Modal, { ModalActions, RetryAction } from "../components/ui/Modal"
 
 export type MovementMode = "consume" | "discard" | "recount"
 
@@ -39,12 +39,23 @@ export default function MovementForm({
   mode,
   onClose,
   onSave,
+  active = true,
+  canRetry = false,
+  retryPending = false,
+  retryError = "",
+  onRetry,
 }: {
   food: FoodEntry
   mode: MovementMode
   onClose: () => void
-  onSave: (amount: number, reason: string) => void
+  onSave: (amount: number, reason: string) => void | Promise<void>
+  active?: boolean
+  canRetry?: boolean
+  retryPending?: boolean
+  retryError?: string
+  onRetry?: () => void
 }) {
+  const saveInFlight = useRef(false)
   const [amount, setAmount] = useState("")
   const [why, setWhy] = useState("")
   const [tried, setTried] = useState(false)
@@ -52,6 +63,7 @@ export default function MovementForm({
   const unit = unitLabel[food.unit]
   const n = Number(amount)
   const recount = mode === "recount"
+  const amountFormatValid = /^\d+(?:\.\d{1,3})?$/.test(amount)
   const after = recount
     ? amount === ""
       ? food.remaining_quantity
@@ -60,19 +72,24 @@ export default function MovementForm({
   const amountError =
     amount === ""
       ? "Nhập lượng."
-      : food.unit === "piece" && !Number.isInteger(n)
-        ? "Đơn vị “cái” chỉ nhận số nguyên."
-        : recount
-          ? n < 0
-            ? "Lượng không thể âm."
-            : ""
-          : n <= 0
-            ? "Lượng phải lớn hơn 0."
-            : n > food.remaining_quantity
-              ? `Chỉ còn ${fmtQty(food.remaining_quantity)} ${unit}.`
-              : ""
+      : !amountFormatValid || !Number.isFinite(n)
+        ? "Nhập lượng dạng số, tối đa 3 chữ số thập phân."
+        : n > 999999999.999
+          ? "Lượng tối đa là 999.999.999,999."
+          : food.unit === "piece" && !Number.isInteger(n)
+            ? "Đơn vị “cái” chỉ nhận số nguyên."
+            : recount
+              ? n < 0
+                ? "Lượng không thể âm."
+                : ""
+              : n <= 0
+                ? "Lượng phải lớn hơn 0."
+                : n > food.remaining_quantity
+                  ? `Chỉ còn ${fmtQty(food.remaining_quantity)} ${unit}.`
+                  : ""
   const reasonError = recount && !why.trim() ? "Nhập lý do kiểm lại." : ""
   const noop = recount && amount !== "" && n === food.remaining_quantity
+  const displayedAfter = Number.isFinite(after) ? Math.min(999999999.999, Math.max(0, after)) : 0
 
   return (
     <Modal
@@ -80,6 +97,7 @@ export default function MovementForm({
       eyebrow={food.name}
       title={text.title}
       onClose={onClose}
+      active={active}
     >
       <form
         className="stepped-form"
@@ -87,10 +105,27 @@ export default function MovementForm({
         onSubmit={(e) => {
           e.preventDefault()
           setTried(true)
-          if (!amountError && !reasonError && !noop) onSave(n, why.trim())
+          if (saveInFlight.current || canRetry || retryPending || amountError || reasonError || noop) return
+          saveInFlight.current = true
+          let result: void | Promise<void>
+          try {
+            result = onSave(n, why.trim())
+          } catch (failure) {
+            saveInFlight.current = false
+            throw failure
+          }
+          if (result && typeof result.then === "function") {
+            void result.then(
+              () => { saveInFlight.current = false },
+              () => { saveInFlight.current = false },
+            )
+          } else {
+            saveInFlight.current = false
+          }
         }}
       >
         <div className="form-body compact">
+          <RetryAction canRetry={canRetry} pending={retryPending} error={retryError} onRetry={onRetry ?? (() => {})} />
           <Field label={text.amount} error={tried ? amountError : ""}>
             <div className="amount-input">
               <input
@@ -98,6 +133,7 @@ export default function MovementForm({
                 inputMode="decimal"
                 type="number"
                 min={0}
+                max={999999999.999}
                 step={food.unit === "piece" ? 1 : 0.001}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -144,7 +180,7 @@ export default function MovementForm({
             <span>
               Sau thao tác
               <strong>
-                {fmtQty(Math.max(0, after))} {unit}
+                {fmtQty(displayedAfter)} {unit}
               </strong>
             </span>
           </div>
@@ -200,7 +236,7 @@ export default function MovementForm({
               <Button
                 variant={mode === "discard" ? "danger" : "primary"}
                 type="submit"
-                disabled={noop}
+                disabled={noop || canRetry || retryPending}
               >
                 {mode === "discard"
                   ? "Xác nhận đã bỏ"

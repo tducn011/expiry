@@ -45,11 +45,13 @@ export default function Settings({
               <strong>{displayName}</strong>
               <small>Tài khoản cá nhân</small>
             </div>
-            {onLogout && (
-              <Button variant="outline" size="sm" onClick={onLogout}>
-                Đăng xuất
-              </Button>
-            )}
+            <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+              {onLogout && (
+                <Button variant="ghost" size="sm" onClick={onLogout}>
+                  Đăng xuất
+                </Button>
+              )}
+            </div>
           </div>
         </Card>
 

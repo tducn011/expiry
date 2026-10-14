@@ -10,6 +10,7 @@ import { ExpiryController } from '../src/modules/expiry/expiry.controller.mjs';
 import { createExpiryRouter } from '../src/modules/expiry/expiry.routes.mjs';
 import { publicCommandWork } from '../src/modules/inventory/public-inventory.repository.mjs';
 import { entryDTO, publicAttention, movementDTO, utcInstant } from '../src/shared/public-dto.mjs';
+import { publicScanResult } from '../src/modules/scan/scan.service.mjs';
 
 const contract = JSON.parse(await readFile(new URL('../../../contracts/openapi.json', import.meta.url), 'utf8'));
 const owner = '00000000-0000-4000-8000-000000000001';
@@ -44,6 +45,7 @@ function conforms(value, schema, path = 'response') {
   if (allowed.length) assert.ok(allowed.includes(type) || allowed.includes('integer') && Number.isInteger(value), `${path}: wrong type ${type}`);
   if (value === null) return;
   if (schema.enum) assert.ok(schema.enum.includes(value), `${path}: enum`);
+  if (Object.hasOwn(schema, 'const')) assert.equal(value, schema.const, `${path}: const`);
   if (schema.pattern) assert.match(value, new RegExp(schema.pattern), `${path}: pattern`);
   if (schema.minimum !== undefined) assert.ok(value >= schema.minimum, `${path}: minimum`);
   if (schema.maximum !== undefined) assert.ok(value <= schema.maximum, `${path}: maximum`);
@@ -72,7 +74,7 @@ async function harness(t, overrides = {}) {
   });
   const repo = {
     principal: () => owner,
-    list: async (_owner, query) => {
+  list: async (_owner, query) => {
       calls.push(['list', query]);
       const item = query.view === 'trash' ? { ...row, deleted_at: '2026-10-10 12:00:00.000001', remaining_quantity: '0.000', attention: null } : { ...row, attention: publicAttention(row, preferences, instant) };
       return { items: [item], page: query.page, limit: query.limit, total: 1, as_of_date: '2026-10-11' };
@@ -103,7 +105,7 @@ async function harness(t, overrides = {}) {
   return { calls, projected, request: (path, options = {}) => fetch(`http://127.0.0.1:${server.address().port}/api/v1${path}`, options) };
 }
 
-test('detail/list/trash project exact Entry and EntryList contracts, including inactive depleted trash', async t => {
+test('detail/list/trash project exact Entry and EntryList contracts, including owner-local date and inactive trash', async t => {
   const { request, calls } = await harness(t);
   const detail = await (await request(`/food-entries/${entryId}`)).json();
   validate(detail, 'Entry');
@@ -113,9 +115,31 @@ test('detail/list/trash project exact Entry and EntryList contracts, including i
   assert.ok(!Object.hasOwn(detail, 'user_id'));
   const list = await (await request('/food-entries?page=2&limit=5')).json();
   validate(list, 'EntryList'); assert.deepEqual(list.pagination, { page: 2, limit: 5, total: 1 });
+  assert.equal(list.as_of_date, '2026-10-11');
   const trash = await (await request('/trash/food-entries')).json();
   validate(trash, 'EntryList'); assert.equal(trash.items[0].attention.status, 'inactive');
   assert.equal(trash.items[0].lifecycle, 'depleted'); assert.equal(calls.at(-1)[1].lifecycle, 'all');
+});
+
+test('empty EntryList retains its repository owner-local as_of_date', async t => {
+  const { request } = await harness(t, { list: async () => ({ items: [], page: 1, limit: 20, total: 0, as_of_date: '2026-10-11' }) });
+  const list = await (await request('/food-entries')).json();
+  validate(list, 'EntryList');
+  assert.deepEqual(list.items, []);
+  assert.equal(list.as_of_date, '2026-10-11');
+});
+
+test('public scan adapter output conforms to its explicit nested review contract', () => {
+  const result = publicScanResult({ raw_text: 'NSX: 10/10/2026 HSD: 25/12/2026', candidates: {
+    food_name: null,
+    expiry_date: { value: '2026-12-25', date_certainty: 'exact', date_label_type: 'expiry', source_text: '25/12/2026', alternatives: [], ambiguous: false },
+    manufactured_date: { value: '2026-10-10', source_text: '10/10/2026' }
+  }, warnings: [], errors: [] });
+  const schema = contract.paths['/scans'].post.responses['200'].content['application/json'].schema;
+  conforms(result, schema, 'scan');
+  assert.equal(result.requires_confirmation, true);
+  assert.equal(result.candidates.expiry_date.requires_confirmation, true);
+  assert.throws(() => conforms({ ...result, requires_confirmation: false }, schema, 'scan'));
 });
 
 test('create/edit/restore and quantity commands meet public schemas and replay headers', async t => {
@@ -147,6 +171,7 @@ test('history pagination and exact signed decimal delta match MovementList', asy
 
 test('delete version uses query and rejects absent or malformed integers without mutation', async t => {
   const { request, calls } = await harness(t);
+  assert.equal(contract.paths['/food-entries/{id}'].delete.parameters.find(parameter => parameter.name === 'expected_version').schema.maximum, 2147483647);
   const response = await request(`/food-entries/${entryId}?expected_version=2`, { method: 'DELETE' });
   assert.equal(response.status, 204); assert.equal(await response.text(), '');
   assert.deepEqual(calls.find(([name]) => name === 'remove')[1], { expected_version: 2 });

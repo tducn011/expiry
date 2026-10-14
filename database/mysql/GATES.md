@@ -1,35 +1,30 @@
-# Gates: Expiry MySQL implementation
+# SCH-03 MySQL schema and native Workbench evidence
 
-OWNS: database/mysql/**, docs/erd/**
+OWNS: `database/mysql/**`, `docs/architecture/06-data-model/erd-workbench/**`
 
-Scope: Resolve source evidence, build a candidate logical/physical model, execute MySQL 8.4 sandbox migrations and real transaction tests, and record Workbench evidence and remaining gaps.
+Scope: verify the existing development schema, preserve the prior model, generate a native Workbench projection from live SQL, and align only the owned model evidence/tests/docs. No DDL or migration was added or rewritten.
 
-- [x] G1: Resolved source paths, rules, grain and traceability have been audited
-  EVIDENCE: 01_MODEL_AUDIT resolves actual flat docs/contracts; independent source review verified RULE-01…24, food namespace, candidate grain and open assumptions.
+- [x] G1: Isolated DB transaction regression covers the current seven-table schema
+  CHECK: `node database/mysql/tests/run.mjs`
+  EVIDENCE: 2026-10-13; `EXPIRY_DB_TESTS_VERIFIED`; 35 PASS, 0 FAIL, 0 BLOCKED, 5 NOT TESTED; latest test DB `expiry_test_20261013084941122_b4bfbe`, separate restore DB retained.
 
-- [x] G2: Logical ERD, dictionary, relationship matrix and candidate decisions are coherent
-  EVIDENCE: Logical four-table model and 03/04/05 artifacts reviewed; minimum initial child is explicitly a transaction invariant, not an FK claim.
+- [x] G2: Canonical native-model static guards match full schema and retained backup
+  CHECK: `node database/mysql/tests/static.mjs`
+  EXPECT: `EXPIRY_STATIC_VERIFIED`
+  EVIDENCE: 2026-10-13; `EXPIRY_STATIC_VERIFIED`; canonical artifacts/hashes and diagram position guards, 7-table live/model parity, test counts and exact pre-SCH-03 backup hashes matched.
 
-- [x] G3: MySQL differences and all required authored artifacts pass static verification
-  CHECK: node database/mysql/tests/static.mjs
-  EXPECT: EXPIRY_STATIC_VERIFIED
-  EVIDENCE: automatic-evidence=v1; definition-sha256=01f0bd0a2afd9593103b46ebe1d01cbf51f8275b78b74fcabab374ba79d8b65b; exit=0; EXPECT=matched; output-sha256=e7f616e363051e40e41d533df048c9224eef87047dc655f85a2eec0663cec17f; output-bytes=23; shell=/bin/sh; cwd=/home/pro/Downloads/expiry; path=07b5b3625a23/15 entries
+- [x] G3: Existing `expiry_dev` verified without reset; migrations001+002 checksums match and seed replay preserves its row fingerprint
+  CHECK: `node database/mysql/scripts/manage.mjs verify-dev`
+  EXPECT: `EXPIRY_DEV_VERIFIED`
+  EVIDENCE: 2026-10-13; MySQL8.4.11; seven tables; healthy loopback127.0.0.1:3307; applied checksums 001=`32f2806e6bc4a2b271e3b93a8978352df6910334d3217501647b0729567b32cc`, 002=`96bbfdc4b3e1ee6aa454f41eb520fee6b3d12fe71e2c02ae442b887db8833adc`; seed fingerprint unchanged.
 
-- [x] G4: Dedicated loopback-only MySQL 8.4 responds to authenticated SQL and dev migration/seed replay is safe
-  CHECK: node database/mysql/scripts/manage.mjs verify-dev
-  EXPECT: EXPIRY_DEV_VERIFIED
-  EVIDENCE: automatic-evidence=v1; definition-sha256=f08e8770005f442877791e2b4a39e6ba1a5a606734266a191f3f4ce581d34c09; exit=0; EXPECT=matched; output-sha256=593bc9becfae69f7dcabc4cd259662dcddf4cb82b3fd5c8ba4c6d7ee650ac438; output-bytes=909; shell=/bin/sh; cwd=/home/pro/Downloads/expiry; path=07b5b3625a23/15 entries
+- [x] G4: Prior `.mwb` preserved before its authorized replacement
+  EVIDENCE: `database/mysql/evidence/pre-sch03/backup-manifest.json` records exact original model (9,661 bytes, SHA-256 `9b24b335105ba2a3a7c701a83065e1eb23f0692d3bfdc96366db4881e0b498da`), previous PNG, and pre-task native evidence.
 
-- [x] G5: Workbench actually connects and reverse engineers live expiry_dev into a native model and EER export
-  EVIDENCE: Native Workbench8.0.36/GRT authenticated to8.4.11; checked native parser on unchanged SHOW CREATE with40 charsets;5tables/42columns/3FK match; valid native model ZIP and PNG viewed. GUI button/wizard clicks not performed.
+- [x] G5: Native Workbench GRT reads live SQL and exports the seven-table model/PNG
+  EVIDENCE: `workbench_native_evidence.json` PASS; 7 tables/53 columns/8 PK columns/5 FKs, 30 live CHECK constraints inventoried; 7 figures/5 connections; parser errors0. Full `food_entries` fields are visible; auth/API row and migration ledger are placed below without overlap. `workbench_open_evidence.json` confirms `expiry_app` connection with no saved password. Graphical model-open/diagram-activation verification is tracked separately in G6.
 
-- [x] G6: Fresh isolated MySQL test database passes schema, domain, rollback, concurrency, replay and query tests
-  CHECK: node database/mysql/tests/run.mjs
-  EXPECT: EXPIRY_DB_TESTS_VERIFIED
-  EVIDENCE: automatic-evidence=v1; definition-sha256=5f7f09e8987c8bab15b0159b272fa3cb00c4c6a4b57657b69fee5ef1e21ddf81; exit=0; EXPECT=matched; output-sha256=4638aab9c7c86f0a3b325d2cdabfff19c7ae2067fbbc51ac6596d0bb6fc94dc2; output-bytes=1009; shell=/bin/sh; cwd=/home/pro/Downloads/expiry; path=07b5b3625a23/15 entries
+- [x] G6: Saved model opened and EER diagram activated in a graphical Workbench session
+  EVIDENCE: `workbench_view_evidence.json` PASS from embedded GRT after `Workbench.openModel` and `activateDiagram`; the loaded document contains all 7 expected tables, 7 figures, and 5 connections in `Expiry live MySQL schema`. The Workbench process remains open. No GUI button/wizard click is claimed.
 
-- [x] G7: Repository owner scoping is tested and absent HTTP/auth/FE acceptance is accurately classified
-  EVIDENCE: OWNER-SCOPE exercises six foreign operations and principal401; HTTP identity establishment, FE recovery/accessibility, stakeholder approval and production performance remain explicit NOT TESTED per conditional task scope.
-
-- [x] G8: Report matches fresh evidence, source status, test results and all handoffs
-  EVIDENCE: 07_DB_VERIFICATION_REPORT refreshed against latest fresh test run (35PASS/0FAIL/5NOTTESTED), source parity audit, native Workbench view/model/PNG and actual INFORMATION_SCHEMA. Candidate approval and all external acceptance boundaries remain explicit. Static credential scan includes decompressed native model XML; git diff --check passed.
+Native extraction/export and graphical open/activation gates passed. The Workbench table model does not represent CHECK expressions; immutable migration SQL, the live dump and MySQL checks remain authoritative. HTTP/backend integration, production DB/deployment, device/UI acceptance and stakeholder approval remain outside these gates.

@@ -37,7 +37,7 @@ Examples: adding a filter may affect query contract/FE/test only; household shar
 ## Dependencies
 
 - [traceability/README.md](../11-traceability/README.md)
-- [adr/README.md](../adr/README.md)
+- [adr/README.md](../08-architecture/README.md)
 - [12-process/workstreams.md](../12-process/workstreams.md)
 
 ## Open questions
@@ -48,7 +48,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
-- [adr/README.md](../adr/README.md)
+- [adr/README.md](../08-architecture/README.md)
 - [12-process/workstreams.md](../12-process/workstreams.md)
 
 ## Verification criteria

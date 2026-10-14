@@ -32,7 +32,7 @@ Giữ outcome khác với capability và empirical KPI.
 
 No local baseline validates waste reduction, savings, safety, 40%/100%/80% metrics. Those historical targets remain research/product gates; use task/capture/staleness measurements first.
 
-The BR-V1-* outcomes above retain their food-design meanings. The current FINAL CHECK BR-01…04 respectively target waste reduction, decision support, resource use and sustained management; see the [persona and requirement crosswalk](final-check-persona-alignment.md) for support relationships. This crosswalk does not rename BR-V1 IDs or treat working demo commands as achieved outcomes.
+The BR-V1-* outcomes above retain their food-design meanings. The current FINAL CHECK BR-01…04 respectively target waste reduction, decision support, resource use and sustained management; see the [persona and requirement crosswalk](../01-personas/final-check-persona-alignment.md) for support relationships. This crosswalk does not rename BR-V1 IDs or treat working demo commands as achieved outcomes.
 
 ## Decisions and rationale
 
@@ -41,7 +41,7 @@ The BR-V1-* outcomes above retain their food-design meanings. The current FINAL 
 ## Dependencies
 
 - [02-challenges/needs-opportunities.md](../02-challenges/needs-opportunities.md)
-- [10-testing/research-validation.md](../10-testing/research-validation.md)
+- [10-testing/research-validation.md](../02-challenges/research-validation.md)
 
 ## Open questions
 
@@ -52,7 +52,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [02-challenges/needs-opportunities.md](../02-challenges/needs-opportunities.md)
-- [10-testing/research-validation.md](../10-testing/research-validation.md)
+- [10-testing/research-validation.md](../02-challenges/research-validation.md)
 
 ## Verification criteria
 
