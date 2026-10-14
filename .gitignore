@@ -27,8 +27,6 @@ Thumbs.db
 .vscode/
 *.tsbuildinfo
 .vite/
-/expiry-tui
-tools/expiry-tui/target/
 
 
 # Python
