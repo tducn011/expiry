@@ -6,7 +6,11 @@ import Icon from "../components/ui/Icon"
 import Modal, { ModalActions } from "../components/ui/Modal"
 
 export type AuthMode = "login" | "register" | "reauth"
-export type AuthSubmitPayload = { email: string; password: string; display_name?: string }
+export type AuthSubmitPayload = {
+  email: string
+  password: string
+  display_name?: string
+}
 
 export default function AuthForm({
   initialMode = "login",
@@ -20,7 +24,10 @@ export default function AuthForm({
   initialEmail?: string
   pending: boolean
   error: string
-  onSubmit: (mode: AuthMode, input: AuthSubmitPayload) => Promise<boolean | void>
+  onSubmit: (
+    mode: AuthMode,
+    input: AuthSubmitPayload,
+  ) => Promise<boolean | void>
   onClose: () => void
 }) {
   const [mode, setMode] = useState<AuthMode>(initialMode)
@@ -30,9 +37,15 @@ export default function AuthForm({
   const [tried, setTried] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const cleanEmail = email.trim()
-  const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail) ? "" : "Vui lòng nhập địa chỉ email hợp lệ."
-  const passwordError = [...password].length >= 15 && [...password].length <= 128 ? "" : "Mật khẩu cần từ 15 đến 128 ký tự."
-  const nameError = mode === "register" && !name.trim() ? "Vui lòng nhập tên hiển thị." : ""
+  const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
+    ? ""
+    : "Vui lòng nhập địa chỉ email hợp lệ."
+  const passwordError =
+    [...password].length >= 15 && [...password].length <= 128
+      ? ""
+      : "Mật khẩu cần từ 15 đến 128 ký tự."
+  const nameError =
+    mode === "register" && !name.trim() ? "Vui lòng nhập tên hiển thị." : ""
 
   const switchMode = (next: AuthMode) => {
     setMode(next)
@@ -54,10 +67,18 @@ export default function AuthForm({
   const reauth = mode === "reauth"
   return (
     <Modal
-      title={reauth ? "Xác thực lại tài khoản" : mode === "login" ? "Đăng nhập để tiếp tục" : "Tạo tài khoản cá nhân"}
+      title={
+        reauth
+          ? "Xác thực lại tài khoản"
+          : mode === "login"
+            ? "Đăng nhập để tiếp tục"
+            : "Tạo tài khoản cá nhân"
+      }
       eyebrow={reauth ? "PHIÊN ĐÃ HẾT HẠN" : "TÀI KHOẢN CÁ NHÂN"}
       layout="form"
-      onClose={() => { if (!pending) onClose() }}
+      onClose={() => {
+        if (!pending) onClose()
+      }}
     >
       <form className="stepped-form" noValidate onSubmit={submit}>
         <div className="form-body">
@@ -70,38 +91,118 @@ export default function AuthForm({
             {mode === "register" && (
               <div className="span-2">
                 <Field label="Tên hiển thị *" error={tried ? nameError : ""}>
-                  <input autoComplete="name" maxLength={100} value={name} onChange={(event) => setName(event.target.value)} disabled={pending} />
+                  <input
+                    autoComplete="name"
+                    maxLength={100}
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    disabled={pending}
+                  />
                 </Field>
               </div>
             )}
             <div className="span-2">
               <Field label="Email *" error={tried ? emailError : ""}>
-                <input autoFocus={!reauth} type="email" autoComplete="username" maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} disabled={pending || reauth} placeholder="tenban@example.com" />
+                <input
+                  autoFocus={!reauth}
+                  type="email"
+                  autoComplete="username"
+                  maxLength={254}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={pending || reauth}
+                  placeholder="tenban@example.com"
+                />
               </Field>
             </div>
             <div className="span-2">
-              <Field label="Mật khẩu *" error={tried ? passwordError : ""} hint="Từ 15 đến 128 ký tự.">
-                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                  <input style={{ paddingRight: 42, width: "100%" }} type={showPassword ? "text" : "password"} autoComplete={mode === "register" ? "new-password" : "current-password"} value={password} onChange={(event) => setPassword(event.target.value)} disabled={pending} />
-                  <button type="button" tabIndex={-1} aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowPassword((value) => !value)} style={{ position: "absolute", right: 8, background: "none", border: 0, cursor: "pointer", padding: 6, color: "var(--muted, #64748b)", display: "flex" }}>
+              <Field
+                label="Mật khẩu *"
+                error={tried ? passwordError : ""}
+                hint="Từ 15 đến 128 ký tự."
+              >
+                <div
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <input
+                    style={{ paddingRight: 42, width: "100%" }}
+                    type={showPassword ? "text" : "password"}
+                    autoComplete={
+                      mode === "register" ? "new-password" : "current-password"
+                    }
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    disabled={pending}
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    onClick={() => setShowPassword((value) => !value)}
+                    style={{
+                      position: "absolute",
+                      right: 8,
+                      background: "none",
+                      border: 0,
+                      cursor: "pointer",
+                      padding: 6,
+                      color: "var(--muted, #64748b)",
+                      display: "flex",
+                    }}
+                  >
                     <Icon name={showPassword ? "eye-off" : "eye"} />
                   </button>
                 </div>
               </Field>
             </div>
-            {error && <p className="note-box span-2" role="alert">{error}</p>}
+            {error && (
+              <p className="note-box span-2" role="alert">
+                {error}
+              </p>
+            )}
           </div>
         </div>
         <footer className="modal-footer">
           <ModalActions
-            start={reauth ? (
-              <Button type="button" variant="ghost" disabled={pending} onClick={() => switchMode("login")}>Dùng tài khoản khác</Button>
-            ) : mode === "register" ? (
-              <Button type="button" variant="ghost" disabled={pending} onClick={() => switchMode("login")}>Đã có tài khoản? Đăng nhập</Button>
-            ) : (
-              <Button type="button" variant="ghost" disabled={pending || reauth} onClick={() => switchMode("register")}>Tạo tài khoản mới</Button>
-            )}
-            end={<Button type="submit" variant="primary" loading={pending}>{mode === "register" ? "Tạo tài khoản" : "Đăng nhập"}</Button>}
+            start={
+              reauth ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={pending}
+                  onClick={() => switchMode("login")}
+                >
+                  Dùng tài khoản khác
+                </Button>
+              ) : mode === "register" ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={pending}
+                  onClick={() => switchMode("login")}
+                >
+                  Đã có tài khoản? Đăng nhập
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={pending || reauth}
+                  onClick={() => switchMode("register")}
+                >
+                  Tạo tài khoản mới
+                </Button>
+              )
+            }
+            end={
+              <Button type="submit" variant="primary" loading={pending}>
+                {mode === "register" ? "Tạo tài khoản" : "Đăng nhập"}
+              </Button>
+            }
           />
         </footer>
       </form>

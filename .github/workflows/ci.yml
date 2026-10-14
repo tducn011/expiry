@@ -94,11 +94,16 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       - name: Install Web Dependencies
-        run: npm --prefix apps/web install
+        run: cd apps/web && pnpm install
 
       - name: Run Web Production Build
-        run: npm run build:web
+        run: cd apps/web && pnpm build
 
   test-python:
     name: Python Scan Microservice Tests
@@ -134,8 +139,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Root Dependencies
-        run: npm install mysql2
+      - name: Install API Dependencies
+        run: npm --prefix apps/api install
 
       - name: Start Full-Stack Docker Services
         run: |
@@ -150,7 +155,7 @@ jobs:
           done
 
       - name: Verify DBOps Schema & Ledger Integrity
-        run: node scripts/test-dbops.mjs
+        run: NODE_PATH=apps/api/node_modules node scripts/test-dbops.mjs
         env:
           MYSQL_HOST: 127.0.0.1
           MYSQL_PORT: 3307

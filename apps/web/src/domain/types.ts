@@ -60,7 +60,11 @@ export type Preferences = {
   version: number
 }
 export type Session = {
-  user: Preferences & { id: string display_name: string email: string }
+  user: Preferences & {
+    id: string
+    display_name: string
+    email: string
+  }
   csrf_token: string
   expires_at: string
 }

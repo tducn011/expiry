@@ -2,8 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import express from 'express';
 import { randomBytes } from 'node:crypto';
-import { connect, rootSql, migrate, grants } from '../../../database/mysql/src/connection.mjs';
-import { applyAuthMigration } from '../../../database/mysql/scripts/auth-migration.mjs';
 import { AuthRepository } from '../src/modules/auth/auth.repository.mjs';
 import { createAuthBoundary } from '../src/modules/auth/auth.routes.mjs';
 import { tokenHash } from '../src/modules/auth/auth.crypto.mjs';
@@ -13,6 +11,9 @@ const origin = 'http://127.0.0.1:5173';
 const password = 'A strong local test password 2026!';
 
 test('approved local-auth migration and HTTP lifecycle against isolated real MySQL', { skip: !enabled }, async t => {
+  if (!enabled) return;
+  const { connect, rootSql, migrate, grants } = await import('../../../database/mysql/src/connection.mjs');
+  const { applyAuthMigration } = await import('../../../database/mysql/scripts/auth-migration.mjs');
   const database = `expiry_test_auth_${randomBytes(6).toString('hex')}`;
   let timestamp = Date.parse('2026-10-11T03:00:00.000Z');
   let server;
