@@ -12,6 +12,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+ARG ENABLE_DATEREG=false
+COPY requirements-datereg.txt .
+RUN if [ "$ENABLE_DATEREG" = "true" ]; then pip install --no-cache-dir -r requirements-datereg.txt; fi
+
 COPY app/ ./app/
 
 EXPOSE 8000

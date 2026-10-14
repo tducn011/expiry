@@ -14,6 +14,7 @@ from starlette.exceptions import HTTPException
 from app.schemas.scan import ScanResult, ScanError
 from app.scanner.preprocessor import MAX_IMAGE_BYTES, MAX_ENCODED_BYTES, decode_image_bytes, preprocess_image
 from app.scanner.date_parser import normalized_candidates
+from app.scanner.datereg_adapter import extract_datereg_text
 
 router = APIRouter()
 OCR_TIMEOUT_SECONDS = 2.5
@@ -42,11 +43,30 @@ def extract_ocr_text(image_bytes: bytes) -> str:
 def process_scan(raw_bytes: bytes) -> ScanResult:
     started = time.monotonic()
     processed, _warning = preprocess_image(raw_bytes)
-    raw_text = extract_ocr_text(processed)
+    raw_text = ""
+    warnings: list[str] = []
+
+    try:
+        raw_text = extract_datereg_text(processed)
+        if not raw_text.strip():
+            warnings.append("DateReg found no valid date; falling back to Tesseract")
+    except Exception as exc:
+        warnings.append(f"DateReg unavailable; falling back to Tesseract ({type(exc).__name__})")
+
+    if not raw_text.strip():
+        raw_text = extract_ocr_text(processed)
+
     if not raw_text.strip():
         raise ScanError(422, "NO_LEGIBLE_TEXT", "No legible text was detected in the image.")
-    candidates, warnings = normalized_candidates(raw_text)
-    return ScanResult(raw_text=raw_text, candidates=candidates, warnings=warnings, errors=[], execution_time_ms=int((time.monotonic() - started) * 1000))
+    candidates, parsed_warnings = normalized_candidates(raw_text)
+    warnings.extend(parsed_warnings)
+    return ScanResult(
+        raw_text=raw_text,
+        candidates=candidates,
+        warnings=warnings,
+        errors=[],
+        execution_time_ms=int((time.monotonic() - started) * 1000),
+    )
 
 
 @router.post("/scan", response_model=ScanResult)

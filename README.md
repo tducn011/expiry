@@ -22,7 +22,7 @@ expiry/
 │       ├── app/
 │       │   ├── routes/         # /health and /scan
 │       │   ├── schemas/        # Pydantic models matching scan-api.yaml
-│       │   └── scanner/        # Deterministic regex date parser & preprocessor
+│       │   └── scanner/        # Date parser, preprocessing, Tesseract fallback, optional DateReg
 │       ├── tests/              # Scanner unit tests
 │       ├── requirements.txt
 │       └── Dockerfile
@@ -50,9 +50,9 @@ expiry/
    - Sole authority for business rules, optimistic concurrency (`version`), idempotency reservations (`api_requests`), and persistence.
    - Modules are cleanly separated: `modules/inventory`, `modules/expiry`, and `modules/scan`.
 3. **Python Scan Service (`services/python-scan`)**:
-   - Stateless microservice dedicated to image preprocessing and date candidate extraction.
+   - Stateless microservice dedicated to image preprocessing and date candidate extraction. It can use the optional DateReg YOLOv8 + CTC models before falling back to Tesseract.
    - **Zero direct database access:** Python cannot mutate MySQL inventory records.
-   - No heavy ML/DL training frameworks, PyTorch, or LLMs (YAGNI & Ponytail principle).
+   - The default deployment remains lightweight; the optional DateReg engine adds TensorFlow and Ultralytics only when explicitly enabled.
 4. **Database (`database/mysql`)**:
    - Relational persistence in MySQL 8.4 InnoDB with generated columns, audit ledgers (`stock_movements`), and foreign key integrity.
 
@@ -106,3 +106,8 @@ curl http://localhost:8000/health
    pip install -r requirements.txt
    uvicorn app.main:app --port 8000
    ```
+   To enable DateReg locally, install its optional dependencies before starting the service:
+   ```bash
+   pip install -r requirements-datereg.txt
+   ```
+   For Docker Compose, opt in with `ENABLE_DATEREG=true docker compose build python-scan` before starting the stack. The default is `false`.

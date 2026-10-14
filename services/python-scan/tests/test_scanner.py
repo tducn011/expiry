@@ -1,7 +1,9 @@
 import base64
+import io
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 # Add services/python-scan to sys.path.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -16,6 +18,7 @@ from app.scanner.preprocessor import (  # noqa: E402
     preprocess_image,
 )
 from app.schemas.scan import ScanError, ScanResult  # noqa: E402
+from app.routes.scan import process_scan  # noqa: E402
 
 
 class TestScannerLogic(unittest.TestCase):
@@ -97,6 +100,34 @@ class TestScannerLogic(unittest.TestCase):
         original = b"test-image-content"
         b64_str = base64.b64encode(original).decode()
         self.assertEqual(decode_image_bytes(f"data:image/png;base64,{b64_str}"), original)
+
+
+class TestScanRouteEngineSelection(unittest.TestCase):
+    def _scan(self):
+        from PIL import Image
+
+        image = Image.new("RGB", (32, 32), "white")
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        return process_scan(buffer.getvalue())
+
+    def test_uses_datereg_candidates(self):
+        with patch("app.routes.scan.extract_datereg_text", return_value="EXP 15/10/2026"), patch(
+            "app.routes.scan.extract_ocr_text", side_effect=AssertionError("unexpected fallback")
+        ):
+            result = self._scan()
+
+        self.assertEqual(result.candidates.expiry_date.value, "2026-10-15")
+        self.assertEqual(result.candidates.expiry_date.date_label_type, "use_by")
+
+    def test_falls_back_to_tesseract_when_datereg_fails(self):
+        with patch("app.routes.scan.extract_datereg_text", side_effect=RuntimeError("missing weights")), patch(
+            "app.routes.scan.extract_ocr_text", return_value="EXP 15/10/2026"
+        ):
+            result = self._scan()
+
+        self.assertEqual(result.candidates.expiry_date.value, "2026-10-15")
+        self.assertTrue(any("falling back to Tesseract" in warning for warning in result.warnings))
 
 
 if __name__ == "__main__":
