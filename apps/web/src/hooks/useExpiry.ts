@@ -196,7 +196,11 @@ export function useExpiry(
 
   const authenticate = async (
     mode: "login" | "register",
-    input: { email: string password: string display_name?: string },
+    input: {
+      email: string
+      password: string
+      display_name?: string
+    },
   ) => {
     setBusy(true)
     try {

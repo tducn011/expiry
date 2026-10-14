@@ -13,7 +13,11 @@ export default function AuthForm({
   error: string
   onSubmit: (
     mode: "login" | "register",
-    input: { email: string password: string display_name?: string },
+    input: {
+      email: string
+      password: string
+      display_name?: string
+    },
   ) => Promise<void>
   onClose: () => void
 }) {

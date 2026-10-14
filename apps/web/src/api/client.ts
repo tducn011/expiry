@@ -67,7 +67,11 @@ export type EntryDTO = Omit<FoodEntry, "remaining_quantity" | "expiry_date_certa
 }
 export type Page<T,> = {
   items: T[]
-  pagination: { page: number limit: number total: number }
+  pagination: {
+    page: number
+    limit: number
+    total: number
+  }
   as_of_date?: string
 }
 export type Command = Readonly<{
@@ -280,7 +284,11 @@ export class ApiClient {
   }
   async authenticate(
     mode: "login" | "register",
-    input: { email: string password: string display_name?: string },
+    input: {
+      email: string
+      password: string
+      display_name?: string
+    },
   ) {
     await this.request(`/auth/${mode}`, {
       method: "POST",
