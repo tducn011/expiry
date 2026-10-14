@@ -55,3 +55,77 @@ describe("UI Domain Formatting & Helpers", () => {
     expect(formatted).toContain("12/10/2026")
   })
 })
+
+describe("Scanner UI Adapter (scanToEntryDraft)", () => {
+  const baseResult: import("../src/api/client").ScanResult = {
+    raw_text: "YOGURT\nEXP 2026-12-31",
+    candidates: {
+      food_name: "Yogurt",
+      expiry_date: {
+        value: "2026-12-31",
+        date_certainty: "exact",
+        date_label_type: "use_by",
+        source_text: "2026-12-31",
+        alternatives: [],
+        ambiguous: false,
+        requires_confirmation: true,
+      },
+      manufactured_date: {
+        value: null,
+        source_text: "",
+      },
+    },
+    warnings: [],
+    errors: [],
+    requires_confirmation: true,
+  }
+
+  it("projects exact un-ambiguous expiry date into package_label metadata", async () => {
+    const { scanToEntryDraft } = await import("../src/api/client")
+    const draft = scanToEntryDraft(baseResult, "2026-12-31")
+    expect(draft.name).toBe("Yogurt")
+    expect(draft.expiry_date).toBe("2026-12-31")
+    expect(draft.expiry_date_certainty).toBe("exact")
+    expect(draft.expiry_date_source).toBe("package_label")
+    expect(draft.expiry_date_label_type).toBe("use_by")
+  })
+
+  it("projects ambiguous date into user_estimate metadata when confirmed", async () => {
+    const { scanToEntryDraft } = await import("../src/api/client")
+    const ambiguousResult: typeof baseResult = {
+      ...baseResult,
+      candidates: {
+        ...baseResult.candidates,
+        expiry_date: {
+          ...baseResult.candidates.expiry_date,
+          value: null,
+          ambiguous: true,
+          alternatives: ["2026-06-05", "2026-05-06"],
+        },
+      },
+    }
+    const draft = scanToEntryDraft(ambiguousResult, "2026-06-05")
+    expect(draft.expiry_date).toBe("2026-06-05")
+    expect(draft.expiry_date_certainty).toBe("estimated")
+    expect(draft.expiry_date_source).toBe("user_estimate")
+  })
+
+  it("never allows manufactured date to become expiry date", async () => {
+    const { scanToEntryDraft } = await import("../src/api/client")
+    const mfgResult: typeof baseResult = {
+      ...baseResult,
+      candidates: {
+        ...baseResult.candidates,
+        expiry_date: {
+          ...baseResult.candidates.expiry_date,
+          value: "2026-03-01",
+          date_label_type: "manufactured",
+        },
+      },
+    }
+    const draft = scanToEntryDraft(mfgResult, "2026-03-01")
+    expect(draft.expiry_date).toBeNull()
+    expect(draft.expiry_date_certainty).toBe("unknown")
+    expect(draft.expiry_date_source).toBeNull()
+  })
+})
