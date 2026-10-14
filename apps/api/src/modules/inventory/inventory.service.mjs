@@ -60,6 +60,7 @@ export class InventoryService {
   publicList(result) {
     return {
       items: result.items.map(entry => entryDTO(entry, entry.attention ?? inactiveAttention(result.as_of_date))),
+      as_of_date: result.as_of_date,
       pagination: { page: result.page, limit: result.limit, total: result.total }
     };
   }

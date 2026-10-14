@@ -19,7 +19,7 @@ Index, canonical artifacts and downstream reading path.
 ## Analysis
 
 - [08-architecture/components.md](components.md)
-- [08-architecture/sequences.md](sequences.md)
+- [08-architecture/sequences.md](../05-interaction-design/sequences.md)
 
 Current maturity: reviewable artifacts; no inherited proposal automatically approved. Use dependencies to assess downstream changes, and the gate register to identify blocked acceptance.
 
@@ -30,7 +30,7 @@ Current maturity: reviewable artifacts; no inherited proposal automatically appr
 ## Dependencies
 
 - [08-architecture/components.md](components.md)
-- [08-architecture/sequences.md](sequences.md)
+- [08-architecture/sequences.md](../05-interaction-design/sequences.md)
 - [07-api/README.md](../07-api/README.md)
 
 ## Open questions
@@ -42,7 +42,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [08-architecture/components.md](components.md)
-- [08-architecture/sequences.md](sequences.md)
+- [08-architecture/sequences.md](../05-interaction-design/sequences.md)
 - [07-api/README.md](../07-api/README.md)
 
 ## Verification criteria

@@ -56,3 +56,15 @@ Hệ thống tập trung giải quyết bài toán theo dõi thực phẩm cá n
 
 - Kiến trúc hệ thống không chứa file training `.pt`, `.h5`, `train.py`, hay phụ thuộc PyTorch/TensorFlow.
 - Kiểm thử end-to-end các use-case nghiệp vụ P0 hoàn thành trọn vẹn trong phạm vi đã chốt.
+
+## Source reconciliation — 2026-10-13 [A]
+
+Current implementation is food-inventory/API/MySQL with local auth and transient human-reviewed OCR assist. OCR labeled-sample storage is proposed for review only; it is not included in current delivery scope or schema. See [dated reconciliation](../10-testing/schema-reconciliation-2026-10-13.md) and [schema input/output](../06-data-model/schema-input-output.md).
+
+## Analysis
+
+This document defines the system boundary from evidence; delivery tasks remain in the root roadmap.
+
+## Open questions
+
+See the current open questions in [decisions-and-questions.md](decisions-and-questions.md).

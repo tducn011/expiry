@@ -3,12 +3,13 @@ import {randomUUID,randomBytes} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {performance} from 'node:perf_hooks';
 import {connect,rootSql,migrate,grants,base,run,containerId} from '../src/connection.mjs';
+import {applyAuthMigration} from '../scripts/auth-migration.mjs';
 import {InventoryRepository} from '../src/repository.mjs';
 import {attention} from '../src/domain.mjs';
 
 const stamp=new Date().toISOString().replace(/[-:TZ.]/g,'').toLowerCase();
 const database=`expiry_test_${stamp}_${randomBytes(3).toString('hex')}`;
-const report={started_at:new Date().toISOString(),database,results:[],notes:[],commands:['node database/mysql/tests/run.mjs'],schema:null};
+const report={started_at:new Date().toISOString(),database,results:[],notes:[],commands:['node database/mysql/tests/run.mjs'],migrations:null,schema:null};
 const evidence=new URL('evidence/',base);
 await mkdir(evidence,{recursive:true});
 async function check(test_id,requirements,setup,command,expected,fn) {
@@ -52,37 +53,40 @@ function barrier(count) {
   }};
 }
 await rootSql(`CREATE DATABASE \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;`);
-const applied=await migrate(database);assert.equal(applied.applied,true);await grants(database);
+const applied=await migrate(database);assert.equal(applied.applied,true);await grants(database);const authApplied=await applyAuthMigration(database);assert.equal(authApplied.applied,true);report.migrations={version001:applied,version002:authApplied};
 
-await check('SCHEMA-STRUCTURE','VT-01/16; RULE-01/03/04/09/10/18','Fresh isolated schema','INFORMATION_SCHEMA tables/columns/constraints/statistics','Exactly four domain tables + one migration table; all expected columns/keys/checks',async()=>{
+await check('SCHEMA-STRUCTURE','VT-01/16; RULE-01/03/04/09/10/18','Fresh isolated schema with migrations001 and002','INFORMATION_SCHEMA tables/columns/constraints/statistics','Six migration-defined tables + one migration ledger; all expected columns/keys/checks',async()=>{
   return db(async c=>{
     const [tables]=await c.query('SELECT TABLE_NAME,ENGINE FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=? ORDER BY TABLE_NAME',[database]);
-    assert.deepEqual(tables.map(t=>t.TABLE_NAME),['api_requests','food_entries','schema_migrations','stock_movements','users']);assert(tables.every(t=>t.ENGINE==='InnoDB'));
+    assert.deepEqual(tables.map(t=>t.TABLE_NAME),['api_requests','food_entries','local_credentials','schema_migrations','stock_movements','user_sessions','users']);assert(tables.every(t=>t.ENGINE==='InnoDB'));
     const [columns]=await c.query('SELECT TABLE_NAME,COLUMN_NAME,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT,COLLATION_NAME,EXTRA,GENERATION_EXPRESSION FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=? ORDER BY TABLE_NAME,ORDINAL_POSITION',[database]);
-    const expectedColumns={users:['id','identity_subject','display_name','timezone','attention_lead_days','version','created_at','updated_at'],food_entries:['id','user_id','name','storage_location','remaining_quantity','unit','expiry_date','date_certainty','date_source','date_label_type','opened_on','note','version','deleted_at','created_at','updated_at'],stock_movements:['id','entry_id','kind','quantity_before','quantity_after','reason','recorded_at','initial_entry_id'],api_requests:['user_id','idempotency_key','operation','request_hash','response_status','response_body','created_at'],schema_migrations:['version','sha256','applied_at']};
+    const expectedColumns={users:['id','identity_subject','display_name','timezone','attention_lead_days','version','created_at','updated_at'],food_entries:['id','user_id','name','storage_location','remaining_quantity','unit','expiry_date','date_certainty','date_source','date_label_type','opened_on','note','version','deleted_at','created_at','updated_at'],stock_movements:['id','entry_id','kind','quantity_before','quantity_after','reason','recorded_at','initial_entry_id'],api_requests:['user_id','idempotency_key','operation','request_hash','response_status','response_body','created_at'],local_credentials:['user_id','email_normalized','password_verifier','created_at','updated_at'],user_sessions:['token_hash','user_id','created_at','last_seen_at','expires_at','revoked_at'],schema_migrations:['version','sha256','applied_at']};
     for(const [name,fields] of Object.entries(expectedColumns)) assert.deepEqual(columns.filter(v=>v.TABLE_NAME===name).map(v=>v.COLUMN_NAME),fields);
-    const nullable={users:[],food_entries:['expiry_date','opened_on','note','deleted_at'],stock_movements:['reason','initial_entry_id'],api_requests:['response_status','response_body'],schema_migrations:[]};
+    const nullable={users:[],food_entries:['expiry_date','opened_on','note','deleted_at'],stock_movements:['reason','initial_entry_id'],api_requests:['response_status','response_body'],local_credentials:[],user_sessions:['revoked_at'],schema_migrations:[]};
     for(const column of columns) assert.equal(column.IS_NULLABLE,nullable[column.TABLE_NAME].includes(column.COLUMN_NAME)?'YES':'NO');
     const col=(t,n)=>columns.find(v=>v.TABLE_NAME===t&&v.COLUMN_NAME===n);
     for(const [t,n] of [['users','id'],['food_entries','id'],['food_entries','user_id'],['stock_movements','entry_id'],['api_requests','user_id'],['api_requests','idempotency_key'],['api_requests','request_hash']]) assert.equal(col(t,n).COLLATION_NAME,'ascii_bin');
     assert.equal(col('food_entries','remaining_quantity').COLUMN_TYPE,'decimal(12,3)');assert.equal(col('food_entries','expiry_date').COLUMN_TYPE,'date');assert.equal(col('food_entries','expiry_date').IS_NULLABLE,'YES');assert.equal(col('food_entries','created_at').COLUMN_TYPE,'datetime(6)');assert.equal(col('api_requests','response_body').COLUMN_TYPE,'json');assert.match(col('stock_movements','initial_entry_id').EXTRA,/STORED GENERATED/);
     assert.equal(col('users','attention_lead_days').COLUMN_DEFAULT,'2');assert.equal(col('users','timezone').COLUMN_DEFAULT,'Asia/Ho_Chi_Minh');assert.equal(col('food_entries','date_certainty').COLUMN_DEFAULT,'unknown');assert.equal(col('food_entries','date_source').COLUMN_DEFAULT,'unknown');assert.equal(col('food_entries','date_label_type').COLUMN_DEFAULT,'unspecified');
     const [fks]=await c.query('SELECT CONSTRAINT_NAME,TABLE_NAME,REFERENCED_TABLE_NAME,UPDATE_RULE,DELETE_RULE FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=? ORDER BY CONSTRAINT_NAME',[database]);
-    assert.equal(fks.length,3);assert(fks.every(f=>f.DELETE_RULE==='RESTRICT'&&f.UPDATE_RULE==='RESTRICT'));
+    assert.equal(fks.length,5);assert(fks.every(f=>f.DELETE_RULE==='RESTRICT'&&f.UPDATE_RULE==='RESTRICT'));
     const [references]=await c.query('SELECT TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=? AND REFERENCED_TABLE_NAME IS NOT NULL ORDER BY TABLE_NAME',[database]);
-    assert.deepEqual(references.map(r=>[r.TABLE_NAME,r.COLUMN_NAME,r.REFERENCED_TABLE_NAME,r.REFERENCED_COLUMN_NAME]),[['api_requests','user_id','users','id'],['food_entries','user_id','users','id'],['stock_movements','entry_id','food_entries','id']]);
+    assert.deepEqual(references.map(r=>[r.TABLE_NAME,r.COLUMN_NAME,r.REFERENCED_TABLE_NAME,r.REFERENCED_COLUMN_NAME]),[['api_requests','user_id','users','id'],['food_entries','user_id','users','id'],['local_credentials','user_id','users','id'],['stock_movements','entry_id','food_entries','id'],['user_sessions','user_id','users','id']]);
     const [constraints]=await c.query('SELECT TABLE_NAME,CONSTRAINT_NAME,CONSTRAINT_TYPE,ENFORCED FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA=? ORDER BY TABLE_NAME,CONSTRAINT_NAME',[database]);
     assert(constraints.filter(v=>v.CONSTRAINT_TYPE==='CHECK').every(v=>v.ENFORCED==='YES'));
-    const declaredChecks=[...((await readFile(new URL('migrations/001_initial_schema.sql',base),'utf8')).matchAll(/CONSTRAINT\s+(\w+)\s+CHECK/g))].map(m=>m[1]).sort();
-    assert.deepEqual(constraints.filter(v=>v.CONSTRAINT_TYPE==='CHECK').map(v=>v.CONSTRAINT_NAME).sort(),declaredChecks);
+    const migrationSql=(await readFile(new URL('migrations/001_initial_schema.sql',base),'utf8'))+'\n'+(await readFile(new URL('migrations/002_local_auth.sql',base),'utf8'));
+    const declaredChecks=[...migrationSql.matchAll(/CONSTRAINT\s+(\w+)\s+CHECK/g)].map(m=>m[1]).sort();
+    const checkConstraints=constraints.filter(v=>v.CONSTRAINT_TYPE==='CHECK');
+    assert.equal(checkConstraints.length,30);assert.deepEqual(checkConstraints.map(v=>v.CONSTRAINT_NAME).sort(),declaredChecks);
     const [indexes]=await c.query('SELECT TABLE_NAME,INDEX_NAME,COLUMN_NAME,SEQ_IN_INDEX,NON_UNIQUE,COLLATION FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=? ORDER BY TABLE_NAME,INDEX_NAME,SEQ_IN_INDEX',[database]);
     const fields=(table,index)=>indexes.filter(i=>i.TABLE_NAME===table&&i.INDEX_NAME===index).map(i=>i.COLUMN_NAME);
     assert.deepEqual(fields('api_requests','PRIMARY'),['user_id','idempotency_key']);assert.deepEqual(fields('stock_movements','one_initial_per_entry'),['initial_entry_id']);assert.deepEqual(fields('food_entries','entries_owner_visible'),['user_id','deleted_at','expiry_date','id']);assert.deepEqual(fields('food_entries','entries_owner_quantity'),['user_id','deleted_at','remaining_quantity','id']);assert.deepEqual(fields('food_entries','entries_owner_trash'),['user_id','deleted_at','id']);assert.deepEqual(fields('stock_movements','movements_entry_history'),['entry_id','recorded_at','id']);
     assert(!indexes.some(v=>v.TABLE_NAME==='food_entries'&&v.NON_UNIQUE===0&&v.COLUMN_NAME==='name'));
-    report.schema={tables,columns,fks,constraints,indexes,check_count:constraints.filter(v=>v.CONSTRAINT_TYPE==='CHECK').length};return {table_count:tables.length,column_count:columns.length,fk_count:fks.length,check_count:report.schema.check_count};
+    assert.equal(tables.length,7);assert.equal(columns.length,53);assert.equal(fks.length,5);
+    report.schema={tables,columns,fks,constraints,indexes,check_count:checkConstraints.length};return {table_count:tables.length,column_count:columns.length,fk_count:fks.length,check_count:report.schema.check_count};
   });
 });
-await check('MIGRATION-REPLAY','VT-16; NFR-07','Applied version001','migrate(database) again; sha256 comparison','No DDL replay or duplicate metadata record',async()=>{const second=await migrate(database);assert.equal(second.applied,false);assert.equal(second.hash,applied.hash);return second;});
+await check('MIGRATION-REPLAY','VT-16; NFR-07','Applied versions001 and002','Replay both checksum-guarded migration runners','No DDL replay or duplicate metadata record',async()=>{const second=await migrate(database);assert.equal(second.applied,false);assert.equal(second.hash,applied.hash);const authSecond=await applyAuthMigration(database);assert.equal(authSecond.applied,false);assert.equal(authSecond.sha256,authApplied.sha256);return {baseline:second,auth:authSecond};});
 await check('FK-ORPHANS','RULE-01/04; VT-01','Existing owner; random nonexistent owner/entry','Direct INSERT orphan entries, movements, api_requests; administrator DELETE owner','FK rejects all orphans and RESTRICT rejects parent delete',async()=>{
   const owner=await user(),entry=await create(owner);
   await db(async c=>{
@@ -266,24 +270,24 @@ await check('LEDGER-SUM','RULE-04/19; VT-03/09/10','All committed test fixtures'
   return db(async c=>{const [bad]=await c.query("SELECT e.id,e.remaining_quantity,COUNT(m.id) events,SUM(m.kind='initial') initials,SUM(m.quantity_after-m.quantity_before) total FROM food_entries e LEFT JOIN stock_movements m ON m.entry_id=e.id GROUP BY e.id,e.remaining_quantity HAVING events=0 OR initials<>1 OR total<>e.remaining_quantity");assert.equal(bad.length,0);const [[row]]=await c.query('SELECT COUNT(*) requests,SUM(response_status IS NULL) incomplete FROM api_requests');assert.equal(Number(row.incomplete),0);const [[{n}]]=await c.query('SELECT COUNT(*) n FROM food_entries');return {entries:Number(n),requests:Number(row.requests),incomplete:0,ledger_violations:0};});
 });
 await check('API-FE-PARITY-AUDIT','NFR-03; VT-01/14; FR-01/04/08','Actual draft OpenAPI/fixtures and observed mock source','Parse JSON;inspect enums/decimal/UUID/restore/date/table names','Known discrepancies recorded;no claim mock/HTTP adapter integrated',async()=>{
-  const api=JSON.parse(await readFile(new URL('../../contracts/openapi.json',base),'utf8')),fixtures=JSON.parse(await readFile(new URL('../../contracts/fixtures.json',base),'utf8')),mock=await readFile(new URL('../../uidemo/src/mockApi.ts',base),'utf8');
-  assert.equal(api.openapi,'3.1.1');assert.equal(fixtures.create_known.date_certainty,'known');assert.match(mock,/"exact"/);assert.match(mock,/quantity_movements/);assert.match(mock,/DEMO_DATE = "2026-10-08"/);
+  const api=JSON.parse(await readFile(new URL('../../contracts/openapi.json',base),'utf8')),fixtures=JSON.parse(await readFile(new URL('../../contracts/fixtures.json',base),'utf8')),mock=await readFile(new URL('../../apps/web/src/mockApi.ts',base),'utf8');
+  assert.equal(api.openapi,'3.1.1');assert.equal(fixtures.create_known.date_certainty,'known');assert.match(mock,/"exact"/);assert.match(mock,/quantity_movements/);assert.match(mock,/DEMO_DATE = todayDate\(\)/);
   const restore=api.paths['/api/v1/food-entries/{id}/restore']?.post??api.paths['/food-entries/{id}/restore']?.post;
   assert(restore,'Restore contract path missing');assert.equal(restore.requestBody.content['application/json'].schema.$ref,'#/components/schemas/VersionCommand');assert(api.components.schemas.VersionCommand.required.includes('expected_version'));
   assert.match(mock,/restoreEntry\(key: string, id: string\)/);assert.match(mock,/response_status: 200/);assert.match(mock,/new ApiError\(422, "IDEMPOTENCY_PAYLOAD_MISMATCH"\)/);
-  report.parity={contract_version:api.openapi,mismatches:['known versus exact; date_* versus expiry_date_*','stock_movements/adjustment versus quantity_movements/recount','UUID/decimal-string versus ent_/numbers','SQL composite owner/key versus mock synthetic id','OpenAPI restore VersionCommand requires expected_version; mock restoreEntry(key,id) omits it','mock saved response_status always200; DB create/movement201, delete204, recount no-op200','mock key reuse422 IDEMPOTENCY_PAYLOAD_MISMATCH; contract/repository409 IDEMPOTENCY_KEY_REUSED','mock JSON.stringify payload fingerprint versus canonical normalized SHA256','fixed DEMO_DATE versus injected owner-local day'],required_adapter:'Explicit DTO/enum/decimal/UUID/date and error mapping; history pagination; no UI changes in this task'};return report.parity;
+  report.parity={contract_version:api.openapi,mismatches:['known versus exact; date_certainty/date_source labels need explicit canonical mapping','stock_movements/adjustment versus quantity_movements/recount','UUID/decimal-string versus ent_/numbers','SQL composite owner/key versus mock synthetic request id','OpenAPI restore VersionCommand requires expected_version; mock restoreEntry(key,id) omits it','mock saved response_status always200; DB create/movement201, delete204, recount no-op200','mock key reuse422 IDEMPOTENCY_PAYLOAD_MISMATCH; contract/repository409 IDEMPOTENCY_KEY_REUSED','mock JSON.stringify payload fingerprint versus canonical normalized SHA256'],existing_adapter:'apps/web/src/api/client.ts maps date vocabularies, UUID/quantity response shapes and create quantity; application-to-database integration is not measured by this isolated suite and has separate integration evidence',remaining:'History pagination and server DTO/error adaptation still require review'};return report.parity;
 });
 await check('BACKUP-RESTORE','VT-16 sandbox scope; NFR-07','Fresh test DB with fixtures;new distinct restore DB','mysqldump single transaction then rootSQL import;counts/ledger/FKs','Full fixture/schema restore matches;original dev preserved',async()=>{
   const restored=database+'_restore';
   const dump=await run('docker',['exec',await containerId(),'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysqldump --user=root --single-transaction --skip-comments --set-gtid-purged=OFF "$1"','sh',database]);
   await rootSql(`CREATE DATABASE \`${restored}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;`);await rootSql(dump,restored);await grants(restored);
   const c=await connect(restored);
-  try {for(const table of ['users','food_entries','stock_movements','api_requests','schema_migrations']){const [[original]]=await db(o=>o.query(`SELECT COUNT(*) n FROM ${table}`));const [[copy]]=await c.query(`SELECT COUNT(*) n FROM ${table}`);assert.equal(copy.n,original.n);}const [bad]=await c.query('SELECT e.id FROM food_entries e LEFT JOIN stock_movements m ON m.entry_id=e.id GROUP BY e.id,e.remaining_quantity HAVING SUM(m.quantity_after-m.quantity_before)<>e.remaining_quantity OR COUNT(m.id)=0');assert.equal(bad.length,0);const [[{n}]]=await c.query('SELECT COUNT(*) n FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=?',[restored]);assert.equal(Number(n),3);}finally{await c.end();}
-  report.restore_database=restored;return {restored_database:restored,dump_bytes:Buffer.byteLength(dump),table_counts_equal:true,ledger_equal:true,fk_count:3,staging_production:'NOT TESTED'};
+  try {for(const table of ['users','food_entries','stock_movements','api_requests','local_credentials','user_sessions','schema_migrations']){const [[original]]=await db(o=>o.query(`SELECT COUNT(*) n FROM ${table}`));const [[copy]]=await c.query(`SELECT COUNT(*) n FROM ${table}`);assert.equal(copy.n,original.n);}const [bad]=await c.query('SELECT e.id FROM food_entries e LEFT JOIN stock_movements m ON m.entry_id=e.id GROUP BY e.id,e.remaining_quantity HAVING SUM(m.quantity_after-m.quantity_before)<>e.remaining_quantity OR COUNT(m.id)=0');assert.equal(bad.length,0);const [[{n}]]=await c.query('SELECT COUNT(*) n FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=?',[restored]);assert.equal(Number(n),5);}finally{await c.end();}
+  report.restore_database=restored;return {restored_database:restored,dump_bytes:Buffer.byteLength(dump),table_counts_equal:true,ledger_equal:true,fk_count:5,staging_production:'NOT TESTED'};
 });
 for(const [test_id,requirements,reason] of [
-  ['HTTP-AUTH-INTEGRATION','SC-13; VT-12; FR-10; NFR-01','No HTTP API/auth provider exists in repository; trusted-principal sandbox tests do not verify identity establishment.'],
-  ['UI-RECOVERY-INTEGRATION','SC-08/09/15; VT-15; NFR-04','New repository is not wired into uidemo; draft/401/timeout/refetch behavior requires FE/API integration.'],
+  ['HTTP-AUTH-INTEGRATION','SC-13; VT-12; FR-10; NFR-01','Not measured by this isolated database suite; HTTP authentication and database integration evidence is covered by separate integration gates.'],
+  ['UI-RECOVERY-INTEGRATION','SC-08/09/15; VT-15; NFR-04','Not measured by this isolated database suite; web recovery/refetch integration evidence is covered by separate integration gates.'],
   ['UX-ACCESSIBILITY','VT-17; NFR-05','No UI change or keyboard/screen-reader/device acceptance performed in this DB task.'],
   ['BUSINESS-MODEL-APPROVAL','BR-V1-01/02/03; DEC-03…09','Stakeholder/user research approval is separate from database constraints and SQL tests.'],
   ['PRODUCTION-PERFORMANCE','NFR-08','Representative local EXPLAIN is recorded; no hosting/volume/SLA approved or benchmarked.']

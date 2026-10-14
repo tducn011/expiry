@@ -1,17 +1,26 @@
 {
   "status": "PASS",
-  "timestamp_utc": "2026-10-10T04:26:43.160424+00:00",
+  "timestamp_utc": "2026-10-13T11:32:42.431301+00:00",
   "method": "Workbench.openModel + actual loaded .mwb document + native activateDiagram",
   "tables": [
     "api_requests",
     "food_entries",
+    "local_credentials",
     "schema_migrations",
     "stock_movements",
+    "user_sessions",
     "users"
   ],
   "diagram": "Expiry live MySQL schema",
-  "figures": 5,
-  "connections": 3,
+  "figures": 7,
+  "connections": 5,
   "user_untitled_model_modified": false,
-  "attempts": 1
+  "attempts": 1,
+  "process_observation": {
+    "observed_at_utc": "2026-10-13T11:33:14Z",
+    "launcher_pid": 37838,
+    "workbench_binary_pid": 37943,
+    "display": ":0",
+    "state": "running"
+  }
 }

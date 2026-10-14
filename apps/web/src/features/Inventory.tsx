@@ -31,7 +31,7 @@ export const defaultFilters: InventoryFilters = {
 
 export default function Inventory({
   mode,
-  asOfDate = new Date().toISOString().slice(0, 10),
+  asOfDate,
   demo = false,
   foods,
   allFoods,
@@ -46,7 +46,7 @@ export default function Inventory({
   onShowInventory,
   onAction,
 }: {
-  asOfDate?: string
+  asOfDate: string
   demo?: boolean
   mode: "inventory" | "attention"
   foods: FoodEntry[]

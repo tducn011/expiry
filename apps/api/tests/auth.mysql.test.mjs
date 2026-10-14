@@ -83,6 +83,60 @@ test('approved local-auth migration and HTTP lifecycle against isolated real MyS
       assert.ok(rows[0].token_hash === tokenHash(rawToken), 'Persisted hash must correspond to the issued opaque token');
     });
 
+    await t.test('a session read queued behind a newer activity update uses the time after acquiring its row lock', async () => {
+      const hash = tokenHash(owner.cookie.split('=')[1]);
+      const blocker = await connect(database);
+      await blocker.beginTransaction();
+      await blocker.execute('SELECT token_hash FROM user_sessions WHERE token_hash=? FOR UPDATE', [hash]);
+
+      let waitingThread;
+      let signalWaiting;
+      const waiting = new Promise(resolve => { signalWaiting = resolve; });
+      const delayedRepository = new AuthRepository(database, { connect: async db => {
+        const connection = await connect(db);
+        const execute = connection.execute.bind(connection);
+        connection.execute = (sql, values) => {
+          if (sql.includes('FROM user_sessions') && sql.includes('FOR UPDATE')) {
+            waitingThread = connection.threadId;
+            signalWaiting();
+          }
+          return execute(sql, values);
+        };
+        return connection;
+      } });
+      const capturedAt = new Date(timestamp + 100);
+      let acquiredLockTime = capturedAt;
+      const pending = delayedRepository.current(hash, () => acquiredLockTime, 1000);
+      await waiting;
+
+      const deadline = Date.now() + 5000;
+      let lockWait = false;
+      while (Date.now() < deadline) {
+        const state = (await rootSql(`SELECT trx_state FROM information_schema.innodb_trx WHERE trx_mysql_thread_id=${Number(waitingThread)};`, database)).trim();
+        if (state === 'LOCK WAIT') { lockWait = true; break; }
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+      assert.equal(lockWait, true, 'the auth read must be waiting on the held session-row lock');
+
+      const laterActivity = new Date(timestamp + 200);
+      await blocker.execute('UPDATE user_sessions SET last_seen_at=? WHERE token_hash=?', [laterActivity.toISOString().slice(0, 23).replace('T', ' '), hash]);
+      acquiredLockTime = laterActivity;
+      await blocker.commit();
+      await blocker.end();
+      const authenticated = await pending;
+      assert.equal(authenticated.user.id, owner.body.user.id);
+      const [rows] = await connect(database).then(async connection => {
+        try { return await connection.execute('SELECT last_seen_at FROM user_sessions WHERE token_hash=?', [hash]); }
+        finally { await connection.end(); }
+      });
+      assert.equal(new Date(`${rows[0].last_seen_at.replace(' ', 'T')}Z`).toISOString(), laterActivity.toISOString());
+      const futureActivity = new Date(laterActivity.getTime() + 1000);
+      await query('UPDATE user_sessions SET last_seen_at=? WHERE token_hash=?', [futureActivity.toISOString().slice(0, 23).replace('T', ' '), hash]);
+      await assert.rejects(repository().current(hash, () => laterActivity, 1000), error => error.code === 'AUTH_UNAVAILABLE');
+      await query('UPDATE user_sessions SET last_seen_at=? WHERE token_hash=?', [laterActivity.toISOString().slice(0, 23).replace('T', ' '), hash]);
+      timestamp += 200;
+    });
+
     await t.test('case-normalized duplicate registration rolls back its attempted user and session inserts', async () => {
       const rejected = await request('/api/v1/auth/register', { method: 'POST', body: { email: 'OWNER@EXAMPLE.COM', password, display_name: 'Duplicate' } });
       assert.equal(rejected.status, 409);

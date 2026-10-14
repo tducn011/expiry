@@ -660,7 +660,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 1
+              "minimum": 1,
+              "maximum": 2147483647
             }
           },
           {
@@ -1830,9 +1831,12 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": [
                     "raw_text",
                     "candidates",
+                    "warnings",
+                    "errors",
                     "requires_confirmation"
                   ],
                   "properties": {
@@ -1841,6 +1845,12 @@
                     },
                     "candidates": {
                       "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "food_name",
+                        "expiry_date",
+                        "manufactured_date"
+                      ],
                       "properties": {
                         "food_name": {
                           "type": [
@@ -1850,6 +1860,16 @@
                         },
                         "expiry_date": {
                           "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "value",
+                            "date_certainty",
+                            "date_label_type",
+                            "source_text",
+                            "alternatives",
+                            "ambiguous",
+                            "requires_confirmation"
+                          ],
                           "properties": {
                             "value": {
                               "type": [
@@ -1870,7 +1890,14 @@
                               ]
                             },
                             "date_label_type": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "expiry",
+                                "best_before",
+                                "use_by",
+                                "manufactured",
+                                "unknown"
+                              ]
                             },
                             "source_text": {
                               "type": "string"
@@ -1886,7 +1913,28 @@
                               "type": "boolean"
                             },
                             "requires_confirmation": {
+                              "const": true,
                               "type": "boolean"
+                            }
+                          }
+                        },
+                        "manufactured_date": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "value",
+                            "source_text"
+                          ],
+                          "properties": {
+                            "value": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date"
+                            },
+                            "source_text": {
+                              "type": "string"
                             }
                           }
                         }
@@ -1898,7 +1946,14 @@
                         "type": "string"
                       }
                     },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
                     "requires_confirmation": {
+                      "const": true,
                       "type": "boolean"
                     }
                   }
@@ -1907,16 +1962,44 @@
             }
           },
           "400": {
-            "description": "Malformed image upload"
+            "description": "Malformed image upload or invalid request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           },
           "413": {
-            "description": "Image exceeds maximum 5MB size limit"
+            "description": "Image exceeds maximum 5MB size limit",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           },
           "415": {
-            "description": "Unsupported media format"
+            "description": "Unsupported media format",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           },
           "504": {
-            "description": "Scan service timeout (>3s)"
+            "description": "Scan service timeout (>3s)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           },
           "401": {
             "description": "Authentication, CSRF, image/OCR or service failure",
@@ -2469,7 +2552,8 @@
           },
           "expected_version": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 1,
+            "maximum": 2147483647
           }
         },
         "required": [
@@ -2692,7 +2776,8 @@
           },
           "expected_version": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 1,
+            "maximum": 2147483647
           },
           "reason": {
             "type": [
@@ -2724,7 +2809,8 @@
           },
           "expected_version": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 1,
+            "maximum": 2147483647
           }
         },
         "required": [
@@ -2739,7 +2825,8 @@
         "properties": {
           "expected_version": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 1,
+            "maximum": 2147483647
           }
         },
         "required": [
@@ -2867,11 +2954,16 @@
           },
           "pagination": {
             "$ref": "#/components/schemas/Pagination"
+          },
+          "as_of_date": {
+            "type": "string",
+            "format": "date"
           }
         },
         "required": [
           "items",
-          "pagination"
+          "pagination",
+          "as_of_date"
         ],
         "additionalProperties": false
       },
@@ -2932,7 +3024,8 @@
           },
           "expected_version": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 1,
+            "maximum": 2147483647
           }
         },
         "required": [

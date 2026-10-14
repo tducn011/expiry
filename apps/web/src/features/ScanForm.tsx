@@ -1,167 +1,110 @@
 import { useState } from "react"
-import type { CreatePayload } from "../domain/types"
-import type { ScanCandidate, ScanResult } from "../api/client"
+import type { ScanDateCandidate, ScanResult } from "../api/client"
 import Button from "../components/ui/Button"
 import Field from "../components/ui/Field"
-import Modal, { ModalActions } from "../components/ui/Modal"
 import { fmtDate } from "../lib/format"
+
+const warningLabels: Record<string, string> = {
+  AMBIGUOUS_EXPIRY_DATE: "Ngày theo dõi có nhiều cách đọc. Hãy so sánh các phương án với nhãn gốc.",
+  AMBIGUOUS_MANUFACTURED_DATE: "Ngày sản xuất có nhiều cách đọc. Hãy kiểm tra lại trên nhãn gốc.",
+  UNLABELLED_DATE: "Không thể xác định ý nghĩa của ngày chưa có nhãn. Hãy nhập ngày theo dõi bằng tay nếu cần.",
+}
+
+function warningMessage(warning: string) {
+  const code = warning.split(":", 1)[0]
+  return warningLabels[code] || "Có điểm cần kiểm tra trên ảnh nhãn. Hãy đối chiếu thông tin với bao bì gốc trước khi áp dụng."
+}
 
 export default function ScanForm({
   onScan,
-  onReview,
+  onApply,
   onClose,
 }: {
   onScan: (file: File) => Promise<ScanResult>
-  onReview: (draft: CreatePayload) => void
+  onApply: (result: ScanResult, selectedDate: string | null) => void
   onClose: () => void
 }) {
   const [file, setFile] = useState<File | null>(null)
   const [result, setResult] = useState<ScanResult | null>(null)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
-  const review = (candidate?: ScanCandidate) => {
-    const date = candidate?.expiry_date || candidate?.parsed_date || null
-    const validDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null
-    const certainty = !validDate
-      ? "unknown"
-      : candidate?.ambiguous
-        ? "estimated"
-        : "exact"
-    onReview({
-      name: candidate?.food_name || "",
-      initial_quantity: 0,
-      unit: "piece",
-      storage_location: null,
-      expiry_date: validDate,
-      expiry_date_certainty: certainty,
-      expiry_date_source:
-        certainty === "unknown"
-          ? null
-          : certainty === "estimated"
-            ? "user_estimate"
-            : "package_label",
-      expiry_date_label_type:
-        candidate?.date_label_type === "use_by" ||
-        candidate?.date_label_type === "best_before"
-          ? candidate.date_label_type
-          : null,
-      opened_on: null,
-      note: null,
-    })
-  }
+
+  const candidate: ScanDateCandidate | undefined = result?.candidates.expiry_date
+  const choices = candidate && candidate.date_label_type !== "manufactured"
+    ? [...new Set([candidate.value, ...candidate.alternatives].filter((value): value is string => Boolean(value)))]
+    : []
+
   return (
-    <Modal
-      title="Quét thông tin trên bao bì"
-      eyebrow="GỢI Ý NHẬP LIỆU"
-      layout="form"
-      onClose={() => {
-        if (!pending) onClose()
-      }}
-    >
-      <div className="form-body stack">
-        <p className="inline-hint">
-          Kết quả chỉ là gợi ý. Đối chiếu nhãn, nhập lượng và kiểm tra thông tin
-          trước khi bấm lưu vào kho.
-        </p>
-        <Field label="Ảnh bao bì" hint="JPEG, PNG hoặc WebP, tối đa 5 MB.">
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            disabled={pending}
-            onChange={(e) => {
-              setFile(e.target.files?.[0] ?? null)
-              setResult(null)
-              setError("")
-            }}
-          />
-        </Field>
+    <section className="scan-assist stack" aria-label="Quét nhãn bao bì">
+      <div className="scan-assist-heading">
+        <strong>Gợi ý từ ảnh nhãn</strong>
+        <Button variant="ghost" size="sm" type="button" onClick={onClose} disabled={pending}>Đóng</Button>
+      </div>
+      <p className="inline-hint">Ảnh chỉ tạo gợi ý. Xem lại văn bản và chọn ngày trước khi áp dụng vào biểu mẫu; app không tự lưu món.</p>
+      <Field label="Ảnh bao bì" hint="JPEG, PNG hoặc WebP, tối đa 5 MB.">
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          disabled={pending}
+          onChange={(event) => {
+            setFile(event.target.files?.[0] ?? null)
+            setResult(null)
+            setSelectedDate(null)
+            setError("")
+          }}
+        />
+      </Field>
+      <div className="row-actions">
         <Button
-          variant="primary"
+          type="button"
+          variant="secondary"
           loading={pending}
-          disabled={!file}
+          disabled={!file || pending}
           onClick={() => {
             if (!file || pending) return
-            if (
-              !file.size ||
-              file.size > 5 * 1024 * 1024 ||
-              !["image/jpeg", "image/png", "image/webp"].includes(file.type)
-            ) {
+            if (!file.size || file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
               setError("Chọn ảnh JPEG, PNG hoặc WebP không quá 5 MB.")
               return
             }
             setPending(true)
             setError("")
-            onScan(file)
-              .then(setResult)
-              .catch((error) =>
-                setError(
-                  error instanceof Error
-                    ? error.message
-                    : "Không thể quét ảnh. Bạn có thể nhập tay.",
-                ),
-              )
+            void onScan(file)
+              .then((value) => {
+                setResult(value)
+                setSelectedDate(value.candidates.expiry_date.value)
+              })
+              .catch((failure: unknown) => setError(failure instanceof Error ? failure.message : "Không thể quét ảnh. Bạn có thể nhập tay."))
               .finally(() => setPending(false))
           }}
-        >
-          Đọc ảnh
-        </Button>
-        {error && (
-          <p className="note-box" role="alert">
-            {error}
-          </p>
-        )}
-        {result && (
-          <div className="stack">
-            <p>
-              {result.candidates.length
-                ? "Chọn gợi ý để kiểm tra và chỉnh sửa:"
-                : "Chưa đọc được ngày rõ ràng. Bạn vẫn có thể nhập tay."}
-            </p>
-            {result.warnings.map((warning, i) => (
-              <p className="note-box" key={i}>
-                {warning}
-              </p>
-            ))}
-            {result.candidates.map((candidate, i) => (
-              <Button
-                key={i}
-                variant="outline"
-                onClick={() => review(candidate)}
-              >
-                {candidate.food_name || "Ngày trên bao bì"} ·{" "}
-                {fmtDate(
-                  candidate.expiry_date || candidate.parsed_date || null,
-                )}
-                {candidate.ambiguous ? " · Cần kiểm tra" : ""}
-              </Button>
-            ))}
-            {result.raw_text && (
-              <details>
-                <summary>Văn bản đã đọc</summary>
-                <p>{result.raw_text}</p>
-              </details>
-            )}
-          </div>
-        )}
+        >Đọc ảnh</Button>
       </div>
-      <footer className="modal-footer">
-        <ModalActions
-          start={
-            <Button variant="ghost" onClick={onClose} disabled={pending}>
-              Hủy
-            </Button>
-          }
-          end={
-            <Button
-              variant="secondary"
-              onClick={() => review()}
-              disabled={pending}
-            >
-              Nhập tay
-            </Button>
-          }
-        />
-      </footer>
-    </Modal>
+      {error && <p className="note-box" role="alert">{error}</p>}
+      {result && (
+        <div className="stack scan-review">
+          <strong>Đối chiếu gợi ý trước khi áp dụng</strong>
+          {result.warnings.map((warning, index) => <p className="note-box" key={`w-${index}`}>{warningMessage(warning)}</p>)}
+          {result.errors.map((message, index) => <p className="note-box" key={`e-${index}`}>{message}</p>)}
+          <p>Tên đọc được: {result.candidates.food_name || "Chưa nhận diện; bạn có thể nhập tay."}</p>
+          <p>Ngày sản xuất đọc được: {result.candidates.manufactured_date.value ? `${fmtDate(result.candidates.manufactured_date.value)} · ${result.candidates.manufactured_date.source_text}` : "Chưa nhận diện"}. Ngày này không được dùng làm ngày theo dõi hoặc ngày mở.</p>
+          <p>Ngày theo dõi: {candidate?.source_text || "Chưa nhận diện"}{candidate?.ambiguous ? " · Có nhiều cách đọc" : ""}</p>
+          {choices.length > 0 ? (
+            <Field as="fieldset" label="Chọn ngày để đưa vào biểu mẫu">
+              <div className="chips">
+                {choices.map((value) => (
+                  <button type="button" key={value} aria-pressed={selectedDate === value} className={selectedDate === value ? "active" : ""} onClick={() => setSelectedDate(value)}>
+                    {fmtDate(value)}{candidate?.value === value ? " · gợi ý chính" : " · phương án khác"}
+                  </button>
+                ))}
+              </div>
+            </Field>
+          ) : <p className="inline-hint">Không có ngày theo dõi đủ rõ để áp dụng. Bạn có thể tiếp tục nhập tay.</p>}
+          {result.raw_text && <details><summary>Văn bản đã đọc</summary><p>{result.raw_text}</p></details>}
+          <Button type="button" variant="primary" onClick={() => onApply(result, selectedDate)}>
+            Áp dụng gợi ý vào biểu mẫu
+          </Button>
+        </div>
+      )}
+    </section>
   )
 }

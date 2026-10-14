@@ -4,6 +4,30 @@
 - Status: **Review**
 - Updated: 2026-10-09T18:37:36+07:00
 
+## Current contract inventory [A] — 2026-10-13
+
+The active machine-readable source is [`contracts/openapi.json`](../../../contracts/openapi.json), mirrored for review in [`contracts/public-api.yaml`](../../../contracts/public-api.yaml). It defines 17 operations: API-01…13 and AUTH-REGISTER/LOGIN/SESSION/LOGOUT. The inherited API-01…13 narrative below is historical and contains stale contract references; use the current contract and [schema input/output guide](../06-data-model/schema-input-output.md) for current fields and behavior.
+
+| Operation ID | Method and path |
+|---|---|
+| API-01 | POST `/food-entries` |
+| API-02 | GET `/food-entries` |
+| API-03 | GET `/food-entries/{id}` |
+| API-04 | PATCH `/food-entries/{id}` |
+| API-05 | POST `/food-entries/{id}/movements` |
+| API-06 | POST `/food-entries/{id}/recounts` |
+| API-07 | GET `/food-entries/{id}/movements` |
+| API-08 | DELETE `/food-entries/{id}` |
+| API-09 | GET `/trash/food-entries` |
+| API-10 | POST `/food-entries/{id}/restore` |
+| API-11 | GET `/me/preferences` |
+| API-12 | PATCH `/me/preferences` |
+| API-13 | POST `/scans` |
+| AUTH-REGISTER | POST `/auth/register` |
+| AUTH-LOGIN | POST `/auth/login` |
+| AUTH-SESSION | GET `/auth/session` |
+| AUTH-LOGOUT | POST `/auth/logout` |
+
 ## Purpose
 
 Every endpoint linked to goal, ownership, inputs/results/data and tests.
@@ -27,7 +51,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-01, UF-02 |
 | Request | EntryCreate + key |
 | Response | 201 Entry, Location |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | entries C, movements C, requests C/U |
@@ -44,7 +68,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-03, UF-04 |
 | Request | q/location/view/lifecycle/attention/page/limit |
 | Response | 200 EntryList |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | users/entries R |
@@ -61,7 +85,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-03, UF-04 |
 | Request | UUID |
 | Response | 200 Entry |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | users/entries R |
@@ -78,7 +102,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-08 |
 | Request | MetadataPatch + expected_version + key |
 | Response | 200 Entry |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | entries U, requests C/U |
@@ -95,7 +119,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-04, UF-05, UF-06 |
 | Request | consume/discard, amount, expected_version, reason? + key |
 | Response | 201 MutationResult |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | entries U, movements C, requests C/U |
@@ -112,7 +136,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-07 |
 | Request | actual_quantity, reason, expected_version + key |
 | Response | 201 MutationResult; 200 no-op |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | entries U, movements C or no-op, requests C/U |
@@ -129,7 +153,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-07 |
 | Request | page/limit |
 | Response | 200 MovementList |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | entries owner check/movements R |
@@ -146,7 +170,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-09 |
 | Request | expected_version in query + key |
 | Response | 204 |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | entries U, requests C/U |
@@ -163,7 +187,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-09 |
 | Request | page/limit |
 | Response | 200 EntryList (deleted entries) |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | entries/users R |
@@ -180,7 +204,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-09 |
 | Request | expected_version + key |
 | Response | 200 Entry |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | entries U, requests C/U |
@@ -197,7 +221,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-10 |
 | Request | none |
 | Response | 200 Preferences |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | users R |
@@ -214,7 +238,7 @@ Every endpoint linked to goal, ownership, inputs/results/data and tests.
 | Related flows | UF-10 |
 | Request | expected_version, timezone?/attention_lead_days? + key |
 | Response | 200 Preferences |
-| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../Expiry_System_Design_2026-10-08/contracts/openapi.json) |
+| Schemas / validation | Exact reference: [OpenAPI 3.1.1 review contract](../../../contracts/openapi.json) |
 | Authorization | Principal identity; every ID scoped to owner including movements/trash; foreign/missing404 |
 | Business rule definitions | [03-requirements-features/business-rules.md](../03-requirements-features/business-rules.md) |
 | DB operations | users U, requests C/U |

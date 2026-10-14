@@ -35,7 +35,7 @@ Need product/operational signals without sensitive inventory exposure.
 ## Dependencies
 
 - [14-system-architecture/components.md](../08-architecture/components.md)
-- [04-technology-research/official-references.md](../04-technology-research/official-references.md)
+- [04-technology-research/official-references.md](../00-context/official-references.md)
 - [00-context/decisions-and-questions.md](../00-context/decisions-and-questions.md)
 
 ## Open questions
@@ -47,7 +47,7 @@ Review owner must record approval rationale and verify the corresponding gate; n
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [08-architecture/components.md](../08-architecture/components.md)
-- [04-technology-research/official-references.md](../04-technology-research/official-references.md)
+- [04-technology-research/official-references.md](../00-context/official-references.md)
 - [00-context/decisions-and-questions.md](../00-context/decisions-and-questions.md)
 
 ## Verification criteria

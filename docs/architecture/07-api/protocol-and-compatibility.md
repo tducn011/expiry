@@ -101,7 +101,7 @@ Module ports [D]: CreateEntry/ReviewInventory/EditEntry/RecordMovement/RecountEn
 
 - [14-system-architecture/components.md](../08-architecture/components.md)
 - [06-data-model/dictionary.md](../06-data-model/dictionary.md)
-- [adr/ADR-003-authentication.md](../adr/ADR-003-authentication.md)
+- [adr/ADR-003-authentication.md](../08-architecture/ADR-003-authentication.md)
 
 ## Open questions
 
@@ -113,7 +113,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [11-traceability/README.md](../11-traceability/README.md)
 - [08-architecture/components.md](../08-architecture/components.md)
 - [06-data-model/dictionary.md](../06-data-model/dictionary.md)
-- [adr/ADR-003-authentication.md](../adr/ADR-003-authentication.md)
+- [adr/ADR-003-authentication.md](../08-architecture/ADR-003-authentication.md)
 
 ## Verification criteria
 

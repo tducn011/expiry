@@ -52,8 +52,8 @@ All artifacts remain Draft/Review/Blocked. Structural pass cannot mark an artifa
 
 ## Dependencies
 
-- [scripts/README.md](../scripts/README.md)
-- [11-traceability/gates.md](gates.md)
+- [scripts/README.md](../tooling/README.md)
+- [11-traceability/gates.md](../12-process/gates.md)
 - [10-testing/test-catalog.md](../10-testing/test-catalog.md)
 
 ## Open questions
@@ -64,8 +64,8 @@ Remaining runtime/device/user-study gaps cannot be cleared by documentation tool
 
 - [README.md](../README.md)
 - [11-traceability/README.md](README.md)
-- [scripts/README.md](../scripts/README.md)
-- [11-traceability/gates.md](gates.md)
+- [scripts/README.md](../tooling/README.md)
+- [11-traceability/gates.md](../12-process/gates.md)
 - [10-testing/test-catalog.md](../10-testing/test-catalog.md)
 
 ## Verification criteria

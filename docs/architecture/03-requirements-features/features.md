@@ -172,8 +172,8 @@ Auth continuation FR-10 is a supporting boundary across features, not renamed F-
 
 - [03-requirements-features/system-requirements.md](system-requirements.md)
 - [03-requirements-features/business-rules.md](business-rules.md)
-- [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md)
-- [11-traceability/coverage.md](../11-traceability/coverage.md)
+- [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md)
+- [11-traceability/coverage.md](../10-testing/coverage.md)
 
 ## Open questions
 
@@ -185,8 +185,8 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [11-traceability/README.md](../11-traceability/README.md)
 - [03-requirements-features/system-requirements.md](system-requirements.md)
 - [03-requirements-features/business-rules.md](business-rules.md)
-- [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md)
-- [11-traceability/coverage.md](../11-traceability/coverage.md)
+- [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md)
+- [11-traceability/coverage.md](../10-testing/coverage.md)
 
 ## Verification criteria
 

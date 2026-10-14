@@ -39,7 +39,7 @@ Immediate dependency-unblocking work: resolve OQ-01 scope conflicts in group sou
 ## Dependencies
 
 - [00-context/decisions-and-questions.md](../00-context/decisions-and-questions.md)
-- [11-traceability/gates.md](../11-traceability/gates.md)
+- [11-traceability/gates.md](gates.md)
 - [07-api/protocol-and-compatibility.md](../07-api/protocol-and-compatibility.md)
 - [10-testing/test-catalog.md](../10-testing/test-catalog.md)
 
@@ -52,7 +52,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [00-context/decisions-and-questions.md](../00-context/decisions-and-questions.md)
-- [11-traceability/gates.md](../11-traceability/gates.md)
+- [11-traceability/gates.md](gates.md)
 - [07-api/protocol-and-compatibility.md](../07-api/protocol-and-compatibility.md)
 - [10-testing/test-catalog.md](../10-testing/test-catalog.md)
 

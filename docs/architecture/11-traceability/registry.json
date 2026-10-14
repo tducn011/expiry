@@ -1,17 +1,77 @@
 {
   "schema_version": 1,
-  "updated": "2026-10-10",
-  "openapi": "../../Expiry_System_Design_2026-10-08/contracts/openapi.json",
+  "updated": "2026-10-13",
+  "openapi": "../../contracts/openapi.json",
   "documents": [
+    {
+      "id": "DOC-ADR-001",
+      "path": "08-architecture/ADR-001-modular-monolith.md",
+      "status": "Approved"
+    },
+    {
+      "id": "DOC-ADR-002",
+      "path": "08-architecture/ADR-002-storage-orm.md",
+      "status": "Approved"
+    },
+    {
+      "id": "DOC-ADR-003",
+      "path": "08-architecture/ADR-003-authentication.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-ADR-004",
+      "path": "08-architecture/ADR-004-ocr-boundary.md",
+      "status": "Approved"
+    },
+    {
+      "id": "DOC-ADR-005",
+      "path": "08-architecture/ADR-005-observability.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-ADR-006",
+      "path": "08-architecture/ADR-006-hybrid-architecture.md",
+      "status": "Approved"
+    },
+    {
+      "id": "DOC-API",
+      "path": "07-api/endpoints.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-ARCH-ROOT",
+      "path": "README.md",
+      "status": "Review"
+    },
     {
       "id": "DOC-AUDIT",
       "path": "00-context/audit.md",
       "status": "Review"
     },
     {
-      "id": "DOC-SOURCES",
-      "path": "00-context/source-register.md",
+      "id": "DOC-AUTH",
+      "path": "07-api/authentication.md",
       "status": "Review"
+    },
+    {
+      "id": "DOC-BR",
+      "path": "03-requirements-features/business-requirements.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-COMPONENTS",
+      "path": "08-architecture/components.md",
+      "status": "Approved"
+    },
+    {
+      "id": "DOC-COVERAGE",
+      "path": "10-testing/coverage.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-DECISIONS",
+      "path": "00-context/decisions-and-questions.md",
+      "status": "Approved"
     },
     {
       "id": "DOC-DEFINITION",
@@ -19,9 +79,54 @@
       "status": "Review"
     },
     {
-      "id": "DOC-SCOPE",
-      "path": "00-context/scope.md",
+      "id": "DOC-DEPLOY",
+      "path": "08-architecture/deployment.md",
       "status": "Approved"
+    },
+    {
+      "id": "DOC-DFD",
+      "path": "06-data-model/data-flows.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-DICTIONARY",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-ERD",
+      "path": "06-data-model/erd.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-EXTENSION",
+      "path": "09-advanced-web/extension-process.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-FE-STATE",
+      "path": "09-advanced-web/state-and-integration.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-FEATURES",
+      "path": "03-requirements-features/features.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-FINAL-CHECK-PERSONA",
+      "path": "01-personas/final-check-persona-alignment.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-FR",
+      "path": "03-requirements-features/system-requirements.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-GATES",
+      "path": "12-process/gates.md",
+      "status": "Review"
     },
     {
       "id": "DOC-GLOSSARY",
@@ -29,9 +134,134 @@
       "status": "Review"
     },
     {
-      "id": "DOC-DECISIONS",
-      "path": "00-context/decisions-and-questions.md",
+      "id": "DOC-IDS",
+      "path": "11-traceability/id-register.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-IMPACTS",
+      "path": "03-requirements-features/impact-analysis.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-00",
+      "path": "00-context/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-00-CONTEXT-SOURCES",
+      "path": "00-context/sources/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-01",
+      "path": "01-personas/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-03",
+      "path": "03-requirements-features/README-index.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-04",
+      "path": "02-challenges/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-05",
+      "path": "04-user-flows/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-06",
+      "path": "05-interaction-design/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-14",
+      "path": "08-architecture/README-components.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-15",
+      "path": "07-api/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-16",
+      "path": "09-advanced-web/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-21",
+      "path": "08-architecture/README-deployment.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-22",
+      "path": "03-requirements-features/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-23",
+      "path": "12-process/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-INDEX-ADR",
+      "path": "08-architecture/README.md",
       "status": "Approved"
+    },
+    {
+      "id": "DOC-INDEX-TRACEABILITY",
+      "path": "11-traceability/README.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-NAV",
+      "path": "05-interaction-design/navigation.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-NEEDS",
+      "path": "02-challenges/needs-opportunities.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-NFR",
+      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-OBSERVABILITY",
+      "path": "08-architecture/analytics-monitoring.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-OCR-RESEARCH",
+      "path": "02-challenges/ocr-research.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-OFFICIAL",
+      "path": "00-context/official-references.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-OWNERS",
+      "path": "00-context/ownership.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-P-COMPARE",
+      "path": "01-personas/persona-comparison.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-P-GAPS",
+      "path": "01-personas/persona-evidence-gaps.md",
+      "status": "Review"
     },
     {
       "id": "DOC-P01",
@@ -49,38 +279,8 @@
       "status": "Review"
     },
     {
-      "id": "DOC-P-COMPARE",
-      "path": "01-personas/persona-comparison.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-P-GAPS",
-      "path": "01-personas/persona-evidence-gaps.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-NEEDS",
-      "path": "02-challenges/needs-opportunities.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-BR",
-      "path": "03-requirements-features/business-requirements.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-ST",
-      "path": "03-requirements-features/stakeholder-requirements.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-FR",
-      "path": "03-requirements-features/system-requirements.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-NFR",
-      "path": "03-requirements-features/nonfunctional-requirements.md",
+      "id": "DOC-PROTOCOL",
+      "path": "07-api/protocol-and-compatibility.md",
       "status": "Review"
     },
     {
@@ -89,33 +289,8 @@
       "status": "Review"
     },
     {
-      "id": "DOC-FEATURES",
-      "path": "03-requirements-features/features.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-UNSUPPORTED",
-      "path": "03-requirements-features/unsupported-proposals.md",
-      "status": "Approved"
-    },
-    {
-      "id": "DOC-UC",
-      "path": "05-use-cases-uml/use-cases.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-UML",
-      "path": "05-use-cases-uml/diagrams.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-NAV",
-      "path": "06-navigation/navigation.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-SCREEN-STATES",
-      "path": "06-navigation/screen-state-matrix.md",
+      "id": "DOC-SCAN-CONTRACT",
+      "path": "07-api/integration-contract.md",
       "status": "Review"
     },
     {
@@ -124,93 +299,43 @@
       "status": "Review"
     },
     {
-      "id": "DOC-IMPACTS",
-      "path": "08-consequences/impact-analysis.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-UF",
-      "path": "04-user-flows/user-flows.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-DFD",
-      "path": "06-data-model/data-flows.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-OWNERS",
-      "path": "06-data-model/ownership.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-DICTIONARY",
-      "path": "06-data-model/dictionary.md",
-      "status": "Review"
-    },
-    {
       "id": "DOC-SCHEMA",
-      "path": "12-database-schema/entities-and-migrations.md",
+      "path": "06-data-model/entities-and-migrations.md",
       "status": "Review"
     },
     {
-      "id": "DOC-ERD",
-      "path": "06-data-model/erd.md",
+      "id": "DOC-SCHEMA-IO",
+      "path": "06-data-model/schema-input-output.md",
       "status": "Review"
     },
     {
-      "id": "DOC-COMPONENTS",
-      "path": "08-architecture/components.md",
+      "id": "DOC-SCHEMA-RECON",
+      "path": "10-testing/schema-reconciliation-2026-10-13.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-SCOPE",
+      "path": "00-context/scope.md",
       "status": "Approved"
+    },
+    {
+      "id": "DOC-SCREEN-STATES",
+      "path": "05-interaction-design/screen-state-matrix.md",
+      "status": "Review"
     },
     {
       "id": "DOC-SEQUENCES",
-      "path": "08-architecture/sequences.md",
+      "path": "05-interaction-design/sequences.md",
       "status": "Review"
     },
     {
-      "id": "DOC-API",
-      "path": "07-api/endpoints.md",
-      "status": "Approved"
-    },
-    {
-      "id": "DOC-PROTOCOL",
-      "path": "07-api/protocol-and-compatibility.md",
+      "id": "DOC-SOURCES",
+      "path": "00-context/source-register.md",
       "status": "Review"
     },
     {
-      "id": "DOC-OFFICIAL",
-      "path": "04-technology-research/official-references.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-OCR-RESEARCH",
-      "path": "04-technology-research/ocr-research.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-UI-LAYOUT",
-      "path": "09-advanced-web/LAYOUT.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-FE-STATE",
-      "path": "09-advanced-web/state-and-integration.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-SCAN-CONTRACT",
-      "path": "17-python-ocr/integration-contract.md",
-      "status": "Approved"
-    },
-    {
-      "id": "DOC-AUTH",
-      "path": "07-api/authentication.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-OBSERVABILITY",
-      "path": "19-analytics-observability/analytics-monitoring.md",
+      "id": "DOC-ST",
+      "path": "03-requirements-features/stakeholder-requirements.md",
       "status": "Review"
     },
     {
@@ -219,229 +344,54 @@
       "status": "Review"
     },
     {
-      "id": "DOC-USER-VALIDATION",
-      "path": "10-testing/research-validation.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-DEPLOY",
-      "path": "08-architecture/deployment.md",
-      "status": "Approved"
-    },
-    {
-      "id": "DOC-EXTENSION",
-      "path": "22-feature-extension/extension-process.md",
-      "status": "Review"
-    },
-    {
       "id": "DOC-TMB",
-      "path": "00-context/tmb-skills.md",
+      "path": "12-process/tmb-skills.md",
       "status": "Review"
     },
     {
-      "id": "DOC-ADR-001",
-      "path": "adr/ADR-001-modular-monolith.md",
+      "id": "DOC-UC",
+      "path": "04-user-flows/use-cases.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-UF",
+      "path": "04-user-flows/user-flows.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-UI-LAYOUT",
+      "path": "09-advanced-web/LAYOUT.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-UML",
+      "path": "05-interaction-design/diagrams.md",
+      "status": "Review"
+    },
+    {
+      "id": "DOC-UNSUPPORTED",
+      "path": "03-requirements-features/unsupported-proposals.md",
       "status": "Approved"
     },
     {
-      "id": "DOC-ADR-002",
-      "path": "adr/ADR-002-storage-orm.md",
-      "status": "Approved"
+      "id": "DOC-USER-VALIDATION",
+      "path": "02-challenges/research-validation.md",
+      "status": "Review"
     },
     {
-      "id": "DOC-ADR-003",
-      "path": "adr/ADR-003-authentication.md",
-      "status": "Blocked"
+      "id": "DOC-VALIDATOR",
+      "path": "tooling/README.md",
+      "status": "Review"
     },
     {
-      "id": "DOC-ADR-004",
-      "path": "adr/ADR-004-ocr-boundary.md",
-      "status": "Approved"
-    },
-    {
-      "id": "DOC-ADR-005",
-      "path": "adr/ADR-005-observability.md",
+      "id": "DOC-VERIFY",
+      "path": "10-testing/verification-report.md",
       "status": "Review"
     },
     {
       "id": "DOC-WORKSTREAMS",
       "path": "12-process/workstreams.md",
       "status": "Review"
-    },
-    {
-      "id": "DOC-COVERAGE",
-      "path": "11-traceability/coverage.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-GATES",
-      "path": "11-traceability/gates.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-IDS",
-      "path": "11-traceability/id-register.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-VALIDATOR",
-      "path": "scripts/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-00",
-      "path": "00-context/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-01",
-      "path": "01-personas/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-02",
-      "path": "02-challenges/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-03",
-      "path": "03-requirements-features/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-04",
-      "path": "04-technology-research/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-05",
-      "path": "05-use-cases-uml/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-06",
-      "path": "06-navigation/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-07",
-      "path": "04-user-flows/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-08",
-      "path": "08-consequences/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-09",
-      "path": "04-user-flows/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-10",
-      "path": "06-data-model/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-11",
-      "path": "06-data-model/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-12",
-      "path": "12-database-schema/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-13",
-      "path": "06-data-model/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-14",
-      "path": "08-architecture/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-15",
-      "path": "07-api/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-16",
-      "path": "09-advanced-web/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-17",
-      "path": "17-python-ocr/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-18",
-      "path": "07-api/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-19",
-      "path": "19-analytics-observability/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-20",
-      "path": "10-testing/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-21",
-      "path": "08-architecture/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-22",
-      "path": "22-feature-extension/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-23",
-      "path": "12-process/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-ADR",
-      "path": "adr/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-TRACEABILITY",
-      "path": "11-traceability/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-INDEX-00-CONTEXT-SOURCES",
-      "path": "00-context/sources/README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-VERIFY",
-      "path": "11-traceability/verification-report.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-ARCH-ROOT",
-      "path": "README.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-FINAL-CHECK-PERSONA",
-      "path": "03-requirements-features/final-check-persona-alignment.md",
-      "status": "Review"
-    },
-    {
-      "id": "DOC-ADR-006",
-      "path": "08-architecture/ADR-006-hybrid-architecture.md",
-      "status": "Approved"
     }
   ],
   "nodes": [
@@ -450,131 +400,151 @@
       "kind": "persona",
       "path": "01-personas/P01-persona.md",
       "status": "Review",
-      "mechanism": "Visibility / occasional attention loss"
+      "mechanism": "Visibility / occasional attention loss",
+      "name": null
     },
     {
       "id": "P2",
       "kind": "persona",
       "path": "01-personas/P02-persona.md",
       "status": "Review",
-      "mechanism": "Changed plans / next-action gap"
+      "mechanism": "Changed plans / next-action gap",
+      "name": null
     },
     {
       "id": "P3",
       "kind": "persona",
       "path": "01-personas/P03-persona.md",
       "status": "Review",
-      "mechanism": "Maintenance burden / digital-physical drift"
+      "mechanism": "Maintenance burden / digital-physical drift",
+      "name": null
     },
     {
       "id": "CH-01",
       "kind": "challenge",
       "path": "02-challenges/needs-opportunities.md",
-      "status": "Review"
+      "status": "Review",
+      "name": null
     },
     {
       "id": "NEED-01",
       "kind": "need",
       "path": "02-challenges/needs-opportunities.md",
-      "status": "Review"
+      "status": "Review",
+      "name": null
     },
     {
       "id": "OPP-01",
       "kind": "opportunity",
       "path": "02-challenges/needs-opportunities.md",
-      "status": "Review"
+      "status": "Review",
+      "name": null
     },
     {
       "id": "CH-02",
       "kind": "challenge",
       "path": "02-challenges/needs-opportunities.md",
-      "status": "Review"
+      "status": "Review",
+      "name": null
     },
     {
       "id": "NEED-02",
       "kind": "need",
       "path": "02-challenges/needs-opportunities.md",
-      "status": "Review"
+      "status": "Review",
+      "name": null
     },
     {
       "id": "OPP-02",
       "kind": "opportunity",
       "path": "02-challenges/needs-opportunities.md",
-      "status": "Review"
+      "status": "Review",
+      "name": null
     },
     {
       "id": "CH-03",
       "kind": "challenge",
       "path": "02-challenges/needs-opportunities.md",
-      "status": "Review"
+      "status": "Review",
+      "name": null
     },
     {
       "id": "NEED-03",
       "kind": "need",
       "path": "02-challenges/needs-opportunities.md",
-      "status": "Review"
+      "status": "Review",
+      "name": null
     },
     {
       "id": "OPP-03",
       "kind": "opportunity",
       "path": "02-challenges/needs-opportunities.md",
-      "status": "Review"
+      "status": "Review",
+      "name": null
     },
     {
       "id": "BR-V1-01",
       "kind": "business-requirement",
       "path": "03-requirements-features/business-requirements.md",
       "status": "Review",
-      "definition": "Người dùng nhận biết thực phẩm đang có và cần chú ý với công thấp"
+      "definition": "Người dùng nhận biết thực phẩm đang có và cần chú ý với công thấp",
+      "name": null
     },
     {
       "id": "BR-V1-02",
       "kind": "business-requirement",
       "path": "03-requirements-features/business-requirements.md",
       "status": "Review",
-      "definition": "Người dùng có đủ context để quyết định bước tiếp khi kế hoạch đổi"
+      "definition": "Người dùng có đủ context để quyết định bước tiếp khi kế hoạch đổi",
+      "name": null
     },
     {
       "id": "BR-V1-03",
       "kind": "business-requirement",
       "path": "03-requirements-features/business-requirements.md",
       "status": "Review",
-      "definition": "Tồn kho số phản ánh thay đổi thực tế mà không tạo gánh nặng quản trị lớn"
+      "definition": "Tồn kho số phản ánh thay đổi thực tế mà không tạo gánh nặng quản trị lớn",
+      "name": null
     },
     {
       "id": "ST-V1-01",
       "kind": "stakeholder-requirement",
       "path": "03-requirements-features/stakeholder-requirements.md",
       "status": "Review",
-      "definition": "See food records and remaining quantities without relying on memory"
+      "definition": "See food records and remaining quantities without relying on memory",
+      "name": null
     },
     {
       "id": "ST-V1-02",
       "kind": "stakeholder-requirement",
       "path": "03-requirements-features/stakeholder-requirements.md",
       "status": "Review",
-      "definition": "Understand attention reason and choose an appropriate next action"
+      "definition": "Understand attention reason and choose an appropriate next action",
+      "name": null
     },
     {
       "id": "ST-V1-03",
       "kind": "stakeholder-requirement",
       "path": "03-requirements-features/stakeholder-requirements.md",
       "status": "Review",
-      "definition": "Record use/discard/corrections and recover errors with visible history"
+      "definition": "Record use/discard/corrections and recover errors with visible history",
+      "name": null
     },
     {
       "id": "ST-V1-04",
       "kind": "stakeholder-requirement",
       "path": "03-requirements-features/stakeholder-requirements.md",
       "status": "Review",
-      "definition": "Keep private records isolated and recover drafts during session loss"
+      "definition": "Keep private records isolated and recover drafts during session loss",
+      "name": null
     },
     {
       "id": "ST-V1-05",
       "kind": "stakeholder-requirement",
       "path": "03-requirements-features/stakeholder-requirements.md",
       "status": "Review",
-      "definition": "Integrate stable contracts and preserve data on deploy/recovery"
+      "definition": "Integrate stable contracts and preserve data on deploy/recovery",
+      "name": null
     },
     {
       "id": "FR-01",
@@ -586,7 +556,8 @@
         "VT-01",
         "VT-02",
         "VT-14"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "FR-02",
@@ -597,7 +568,8 @@
       "tests": [
         "VT-12",
         "TC-18"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "FR-03",
@@ -608,7 +580,8 @@
       "tests": [
         "VT-13",
         "TC-19"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "FR-04",
@@ -623,7 +596,8 @@
         "VT-06",
         "VT-07",
         "VT-10"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "FR-05",
@@ -634,7 +608,8 @@
       "tests": [
         "VT-14",
         "VT-15"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "FR-06",
@@ -645,7 +620,8 @@
       "tests": [
         "VT-08",
         "VT-09"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "FR-07",
@@ -656,7 +632,8 @@
       "tests": [
         "VT-10",
         "VT-12"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "FR-08",
@@ -666,7 +643,8 @@
       "definition": "Soft delete/trash/restore, tách physical disposal",
       "tests": [
         "VT-11"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "FR-09",
@@ -677,7 +655,8 @@
       "tests": [
         "VT-13",
         "TC-20"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "FR-10",
@@ -688,7 +667,8 @@
       "tests": [
         "VT-12",
         "VT-15"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "NFR-01",
@@ -698,7 +678,8 @@
       "definition": "Không cross-user read/write ở mọi endpoint và history",
       "tests": [
         "VT-12"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "NFR-02",
@@ -710,7 +691,8 @@
         "VT-02",
         "VT-05",
         "VT-06"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "NFR-03",
@@ -722,7 +704,8 @@
         "VT-01",
         "VT-14",
         "TC-21"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "NFR-04",
@@ -732,7 +715,8 @@
       "definition": "401 giữ draft; timeout retry cùng key; conflict refetch không silent replace",
       "tests": [
         "VT-15"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "NFR-05",
@@ -742,7 +726,8 @@
       "definition": "Label/input rõ, keyboard usable, trạng thái không chỉ màu, focus/dialog/error đúng",
       "tests": [
         "VT-17"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "NFR-06",
@@ -752,7 +737,8 @@
       "definition": "Date-only không bị lệch do UTC conversion; clock injection",
       "tests": [
         "VT-13"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "NFR-07",
@@ -762,7 +748,8 @@
       "definition": "Migration versioned, backup/restore baseline, generic errors, no secret logging",
       "tests": [
         "VT-16"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "NFR-08",
@@ -772,7 +759,8 @@
       "definition": "Chốt latency/volume sau biết hosting và dataset; chưa bịa SLA",
       "tests": [
         "TC-22"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "RULE-01",
@@ -780,7 +768,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Owner lấy từ principal authenticated; không nhận user_id trong business DTO",
-      "owner": "Service + scoped repo"
+      "owner": "Service + scoped repo",
+      "name": null
     },
     {
       "id": "RULE-02",
@@ -788,7 +777,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Một FoodEntry = food quantity có cùng unit/date/location/opening context. Cùng tên không phải cùng identity",
-      "owner": "Capture service"
+      "owner": "Capture service",
+      "name": null
     },
     {
       "id": "RULE-03",
@@ -796,7 +786,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Create quantity >0; remaining ≥0; max 999999999.999; piece số nguyên; g/ml 3 decimal; không convert unit ở MVP",
-      "owner": "Service + DB CHECK"
+      "owner": "Service + DB CHECK",
+      "name": null
     },
     {
       "id": "RULE-04",
@@ -804,7 +795,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Create lưu initial movement trước 0 → quantity; operational remaining là nguồn đọc, ledger cập nhật cùng transaction",
-      "owner": "Create service + DB"
+      "owner": "Create service + DB",
+      "name": null
     },
     {
       "id": "RULE-05",
@@ -812,7 +804,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Consume/discard amount >0 và ≤remaining; deleted/depleted không cho movement giảm",
-      "owner": "RecordMovement"
+      "owner": "RecordMovement",
+      "name": null
     },
     {
       "id": "RULE-06",
@@ -820,7 +813,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Recount nhập actual_quantity ≥0, reason bắt buộc; cùng lượng hiện có thì 200 no-op, không thêm movement/version",
-      "owner": "Recount service"
+      "owner": "Recount service",
+      "name": null
     },
     {
       "id": "RULE-07",
@@ -828,7 +822,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Không mutate remaining, version, user_id, deleted_at hoặc attention bằng generic metadata PATCH",
-      "owner": "DTO/schema + service"
+      "owner": "DTO/schema + service",
+      "name": null
     },
     {
       "id": "RULE-08",
@@ -836,7 +831,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "unit không đổi sau create; muốn đổi phải quyết định migration/conversion riêng",
-      "owner": "Service"
+      "owner": "Service",
+      "name": null
     },
     {
       "id": "RULE-09",
@@ -844,7 +840,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Date unknown → expiry_date null; known/estimated → cần ngày; nguồn printed_label/user_estimate/user_entered/unknown nhất quán",
-      "owner": "Metadata domain"
+      "owner": "Metadata domain",
+      "name": null
     },
     {
       "id": "RULE-10",
@@ -852,7 +849,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "date_label_type use_by/best_before/unspecified là nghĩa nhãn, không certainty. estimated chỉ với user_estimate; unknown đi cùng source unknown và label unspecified",
-      "owner": "Metadata + DB"
+      "owner": "Metadata + DB",
+      "name": null
     },
     {
       "id": "RULE-11",
@@ -860,7 +858,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "opened_on là field riêng nullable; không tự tính hạn mới, không tự kéo dài date khi freezer",
-      "owner": "Metadata/attention policy"
+      "owner": "Metadata/attention policy",
+      "name": null
     },
     {
       "id": "RULE-12",
@@ -868,7 +867,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Attention khi còn quantity và chưa deleted: unknown nếu chưa date; past_date nếu date<today; due_today nếu bằng; soon nếu 0<delta≤lead; later nếu delta>lead",
-      "owner": "AttentionPolicy"
+      "owner": "AttentionPolicy",
+      "name": null
     },
     {
       "id": "RULE-13",
@@ -876,7 +876,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Today là calendar date theo user timezone; response có as_of_date; lead 0…30, default thử 2",
-      "owner": "AttentionPolicy"
+      "owner": "AttentionPolicy",
+      "name": null
     },
     {
       "id": "RULE-14",
@@ -884,7 +885,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Attention không chứng minh safe/fresh; explain source, label, uncertainty. Không tự kết luận nên ăn khi quá use-by",
-      "owner": "AttentionPolicy/presenter"
+      "owner": "AttentionPolicy/presenter",
+      "name": null
     },
     {
       "id": "RULE-15",
@@ -892,7 +894,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Soft-delete giữ quantity/history, không tạo discard movement; restore chỉ bỏ deleted_at, recompute attention",
-      "owner": "Delete/restore service"
+      "owner": "Delete/restore service",
+      "name": null
     },
     {
       "id": "RULE-16",
@@ -900,7 +903,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Lifecycle active nếu remaining>0, depleted nếu 0; không ép một trạng thái consumed/discarded cho batch đã vừa dùng vừa bỏ",
-      "owner": "Derived presenter"
+      "owner": "Derived presenter",
+      "name": null
     },
     {
       "id": "RULE-17",
@@ -908,7 +912,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "expected_version phải khớp current cho update/action/delete/restore; successful mutation tăng version đúng một lần; no-op không tăng",
-      "owner": "Services"
+      "owner": "Services",
+      "name": null
     },
     {
       "id": "RULE-18",
@@ -916,7 +921,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Mọi write yêu cầu Idempotency-Key; cùng owner+key+operation+payload replay saved response, khác payload/operation →409; replay trước version check",
-      "owner": "Mutation executor + api_requests"
+      "owner": "Mutation executor + api_requests",
+      "name": null
     },
     {
       "id": "RULE-19",
@@ -924,7 +930,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Idempotency reservation/result và entry/history commit cùng transaction; thất bại rollback; MVP không tự expire keys",
-      "owner": "Transaction adapter"
+      "owner": "Transaction adapter",
+      "name": null
     },
     {
       "id": "RULE-20",
@@ -932,7 +939,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Sort priority past_date,due_today,soon,unknown,later; trong nhóm date asc NULLS LAST rồi created_at,id; unknown nhóm riêng visible",
-      "owner": "Query/AttentionPolicy"
+      "owner": "Query/AttentionPolicy",
+      "name": null
     },
     {
       "id": "RULE-21",
@@ -940,7 +948,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Past-date capture được phép, kèm reason; không reject vì quá ngày hôm nay",
-      "owner": "Create/UX"
+      "owner": "Create/UX",
+      "name": null
     },
     {
       "id": "RULE-22",
@@ -948,7 +957,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Unknown không silently suy date; opening/date edit chỉ metadata cả entry; mở một phần batch cần ghi tách ngay khi capture, split sau này phải atomic",
-      "owner": "Service/UX"
+      "owner": "Service/UX",
+      "name": null
     },
     {
       "id": "RULE-23",
@@ -956,7 +966,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "History không có public edit/delete endpoint; sửa sai bằng recount có reason, không rewrite historical consumption",
-      "owner": "Repo/service"
+      "owner": "Repo/service",
+      "name": null
     },
     {
       "id": "RULE-24",
@@ -964,7 +975,8 @@
       "path": "03-requirements-features/business-rules.md",
       "status": "Review",
       "definition": "Owner-only not-found hoặc foreign-owned ID →404; auth thiếu →401; lỗi input→422; conflict→409",
-      "owner": "Error mapper"
+      "owner": "Error mapper",
+      "name": null
     },
     {
       "id": "F-01",
@@ -980,7 +992,8 @@
       ],
       "use_cases": [
         "UC-01"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "F-02",
@@ -998,7 +1011,8 @@
       "use_cases": [
         "UC-02",
         "UC-03"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "F-03",
@@ -1013,7 +1027,8 @@
       ],
       "use_cases": [
         "UC-03"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "F-04",
@@ -1029,7 +1044,8 @@
       "use_cases": [
         "UC-04",
         "UC-05"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "F-05",
@@ -1047,7 +1063,8 @@
       "use_cases": [
         "UC-06",
         "UC-07"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "F-06",
@@ -1062,7 +1079,8 @@
       ],
       "use_cases": [
         "UC-08"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "F-07",
@@ -1078,7 +1096,8 @@
       "use_cases": [
         "UC-09",
         "UC-10"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "F-08",
@@ -1094,46 +1113,50 @@
       ],
       "use_cases": [
         "UC-11"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-00",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-10"
       ],
-      "apis": []
+      "apis": [],
+      "name": null
     },
     {
       "id": "UC-01",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-01"
       ],
       "apis": [
         "API-01"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-02",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-02"
       ],
       "apis": [
         "API-02"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-03",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-03"
@@ -1141,72 +1164,78 @@
       "apis": [
         "API-02",
         "API-03"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-04",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-04"
       ],
       "apis": [
         "API-05"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-05",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-04"
       ],
       "apis": [
         "API-05"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-06",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-05"
       ],
       "apis": [
         "API-04"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-07",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-06"
       ],
       "apis": [
         "API-06"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-08",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-07"
       ],
       "apis": [
         "API-07"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-09",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-08"
@@ -1214,12 +1243,13 @@
       "apis": [
         "API-08",
         "API-09"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-10",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-08"
@@ -1227,12 +1257,13 @@
       "apis": [
         "API-09",
         "API-10"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "UC-11",
       "kind": "use-case",
-      "path": "05-use-cases-uml/use-cases.md",
+      "path": "04-user-flows/use-cases.md",
       "status": "Review",
       "requirements": [
         "FR-09"
@@ -1240,7 +1271,8 @@
       "apis": [
         "API-11",
         "API-12"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-01",
@@ -1252,7 +1284,8 @@
       ],
       "flows": [
         "UF-01"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-02",
@@ -1264,7 +1297,8 @@
       ],
       "flows": [
         "UF-02"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-03",
@@ -1277,7 +1311,8 @@
       ],
       "flows": [
         "UF-03"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-04",
@@ -1290,7 +1325,8 @@
       ],
       "flows": [
         "UF-04"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-05",
@@ -1302,7 +1338,8 @@
       ],
       "flows": [
         "UF-05"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-06",
@@ -1314,7 +1351,8 @@
       ],
       "flows": [
         "UF-06"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-07",
@@ -1326,7 +1364,8 @@
       ],
       "flows": [
         "UF-07"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-08",
@@ -1338,7 +1377,8 @@
       ],
       "flows": [
         "UF-05"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-09",
@@ -1348,7 +1388,8 @@
       "use_cases": [
         "UC-04"
       ],
-      "flows": []
+      "flows": [],
+      "name": null
     },
     {
       "id": "SC-10",
@@ -1361,7 +1402,8 @@
       ],
       "flows": [
         "UF-09"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-11",
@@ -1373,7 +1415,8 @@
       ],
       "flows": [
         "UF-08"
-      ]
+      ],
+      "name": null
     },
     {
       "id": "SC-12",
@@ -1385,7 +1428,8 @@
         "UC-05",
         "UC-08"
       ],
-      "flows": []
+      "flows": [],
+      "name": null
     },
     {
       "id": "SC-13",
@@ -1393,7 +1437,8 @@
       "path": "04-user-flows/scenarios.md",
       "status": "Review",
       "use_cases": [],
-      "flows": []
+      "flows": [],
+      "name": null
     },
     {
       "id": "SC-14",
@@ -1404,7 +1449,8 @@
         "UC-03",
         "UC-11"
       ],
-      "flows": []
+      "flows": [],
+      "name": null
     },
     {
       "id": "SC-15",
@@ -1414,7 +1460,8 @@
       "use_cases": [
         "UC-03"
       ],
-      "flows": []
+      "flows": [],
+      "name": null
     },
     {
       "id": "UF-01",
@@ -1424,7 +1471,8 @@
       "use_cases": [
         "UC-01"
       ],
-      "goal": "Ghi đồ mới trước khi quên"
+      "goal": "Ghi đồ mới trước khi quên",
+      "name": null
     },
     {
       "id": "UF-02",
@@ -1434,7 +1482,8 @@
       "use_cases": [
         "UC-01"
       ],
-      "goal": "Không bỏ việc theo dõi chỉ vì thiếu nhãn"
+      "goal": "Không bỏ việc theo dõi chỉ vì thiếu nhãn",
+      "name": null
     },
     {
       "id": "UF-03",
@@ -1445,7 +1494,8 @@
         "UC-02",
         "UC-03"
       ],
-      "goal": "Nhớ được món cần xem"
+      "goal": "Nhớ được món cần xem",
+      "name": null
     },
     {
       "id": "UF-04",
@@ -1456,7 +1506,8 @@
         "UC-03",
         "UC-04"
       ],
-      "goal": "Chọn món đáng chú ý từ đồ đang có"
+      "goal": "Chọn món đáng chú ý từ đồ đang có",
+      "name": null
     },
     {
       "id": "UF-05",
@@ -1466,7 +1517,8 @@
       "use_cases": [
         "UC-04"
       ],
-      "goal": "Số lượng app đúng sau dùng"
+      "goal": "Số lượng app đúng sau dùng",
+      "name": null
     },
     {
       "id": "UF-06",
@@ -1476,7 +1528,8 @@
       "use_cases": [
         "UC-05"
       ],
-      "goal": "Phản ánh đồ thật đã bỏ"
+      "goal": "Phản ánh đồ thật đã bỏ",
+      "name": null
     },
     {
       "id": "UF-07",
@@ -1487,7 +1540,8 @@
         "UC-07",
         "UC-08"
       ],
-      "goal": "Sửa số lượng lệch nhanh"
+      "goal": "Sửa số lượng lệch nhanh",
+      "name": null
     },
     {
       "id": "UF-08",
@@ -1497,7 +1551,8 @@
       "use_cases": [
         "UC-06"
       ],
-      "goal": "Sửa ngày/vị trí nguồn nhập sai"
+      "goal": "Sửa ngày/vị trí nguồn nhập sai",
+      "name": null
     },
     {
       "id": "UF-09",
@@ -1508,7 +1563,8 @@
         "UC-09",
         "UC-10"
       ],
-      "goal": "Dọn bản ghi nhầm, lấy lại khi xóa sai"
+      "goal": "Dọn bản ghi nhầm, lấy lại khi xóa sai",
+      "name": null
     },
     {
       "id": "UF-10",
@@ -1518,7 +1574,8 @@
       "use_cases": [
         "UC-11"
       ],
-      "goal": "Điều chỉnh cách chú ý"
+      "goal": "Điều chỉnh cách chú ý",
+      "name": null
     },
     {
       "id": "UF-11",
@@ -1528,12 +1585,13 @@
       "use_cases": [
         "UC-00"
       ],
-      "goal": "Không mất draft khi auth hết hạn"
+      "goal": "Không mất draft khi auth hết hạn",
+      "name": null
     },
     {
       "id": "ENT-01",
       "kind": "entity",
-      "path": "12-database-schema/entities-and-migrations.md",
+      "path": "06-data-model/entities-and-migrations.md",
       "status": "Review",
       "name": "users",
       "purpose": "Authenticated owner identity/settings",
@@ -1542,7 +1600,7 @@
     {
       "id": "ENT-02",
       "kind": "entity",
-      "path": "12-database-schema/entities-and-migrations.md",
+      "path": "06-data-model/entities-and-migrations.md",
       "status": "Review",
       "name": "food_entries",
       "purpose": "Quantity with common unit/date/location/opening context",
@@ -1551,7 +1609,7 @@
     {
       "id": "ENT-03",
       "kind": "entity",
-      "path": "12-database-schema/entities-and-migrations.md",
+      "path": "06-data-model/entities-and-migrations.md",
       "status": "Review",
       "name": "stock_movements",
       "purpose": "One committed quantity change",
@@ -1560,7 +1618,7 @@
     {
       "id": "ENT-04",
       "kind": "entity",
-      "path": "12-database-schema/entities-and-migrations.md",
+      "path": "06-data-model/entities-and-migrations.md",
       "status": "Review",
       "name": "api_requests",
       "purpose": "One write command replay scope per owner/key",
@@ -1827,6 +1885,16 @@
       "entity": "ENT-03"
     },
     {
+      "id": "FIELD::stock_movements.initial_entry_id",
+      "kind": "persistent-field",
+      "path": "06-data-model/dictionary.md",
+      "status": "Review",
+      "name": "stock_movements.initial_entry_id",
+      "owner": "Inventory service",
+      "definition": "Nullable unique generated reference to the initial movement for a food entry; NULL for non-initial movements",
+      "entity": "ENT-03"
+    },
+    {
       "id": "FIELD::stock_movements.kind",
       "kind": "persistent-field",
       "path": "06-data-model/dictionary.md",
@@ -1847,13 +1915,13 @@
       "entity": "ENT-03"
     },
     {
-      "id": "FIELD::stock_movements.after",
+      "id": "FIELD::stock_movements.quantity_after",
       "kind": "persistent-field",
       "path": "06-data-model/dictionary.md",
       "status": "Review",
-      "name": "stock_movements.after",
+      "name": "stock_movements.quantity_after",
       "owner": "Locked entry + command",
-      "definition": "Nonnegative; delta derived after-before",
+      "definition": "Nonnegative decimal-string value after event; delta is after-before",
       "entity": "ENT-03"
     },
     {
@@ -1927,13 +1995,13 @@
       "entity": "ENT-04"
     },
     {
-      "id": "FIELD::api_requests.body",
+      "id": "FIELD::api_requests.response_body",
       "kind": "persistent-field",
       "path": "06-data-model/dictionary.md",
       "status": "Review",
-      "name": "api_requests.body",
+      "name": "api_requests.response_body",
       "owner": "Tx executor",
-      "definition": "Original command result; owner privacy/retention applies",
+      "definition": "Saved original command result snapshot; not latest-state authority",
       "entity": "ENT-04"
     },
     {
@@ -1959,7 +2027,8 @@
         "VT-02",
         "VT-14"
       ],
-      "operation": "POST /api/v1/food-entries"
+      "operation": "POST /api/v1/food-entries",
+      "name": null
     },
     {
       "id": "API-02",
@@ -1975,7 +2044,8 @@
         "TC-19",
         "VT-12"
       ],
-      "operation": "GET /api/v1/food-entries"
+      "operation": "GET /api/v1/food-entries",
+      "name": null
     },
     {
       "id": "API-03",
@@ -1989,7 +2059,8 @@
         "TC-19",
         "VT-12"
       ],
-      "operation": "GET /api/v1/food-entries/{id}"
+      "operation": "GET /api/v1/food-entries/{id}",
+      "name": null
     },
     {
       "id": "API-04",
@@ -2004,7 +2075,8 @@
         "VT-15",
         "VT-12"
       ],
-      "operation": "PATCH /api/v1/food-entries/{id}"
+      "operation": "PATCH /api/v1/food-entries/{id}",
+      "name": null
     },
     {
       "id": "API-05",
@@ -2024,7 +2096,8 @@
         "VT-10",
         "VT-12"
       ],
-      "operation": "POST /api/v1/food-entries/{id}/movements"
+      "operation": "POST /api/v1/food-entries/{id}/movements",
+      "name": null
     },
     {
       "id": "API-06",
@@ -2039,7 +2112,8 @@
         "VT-09",
         "VT-12"
       ],
-      "operation": "POST /api/v1/food-entries/{id}/recounts"
+      "operation": "POST /api/v1/food-entries/{id}/recounts",
+      "name": null
     },
     {
       "id": "API-07",
@@ -2053,7 +2127,8 @@
         "VT-10",
         "VT-12"
       ],
-      "operation": "GET /api/v1/food-entries/{id}/movements"
+      "operation": "GET /api/v1/food-entries/{id}/movements",
+      "name": null
     },
     {
       "id": "API-08",
@@ -2067,7 +2142,8 @@
         "VT-11",
         "VT-12"
       ],
-      "operation": "DELETE /api/v1/food-entries/{id}"
+      "operation": "DELETE /api/v1/food-entries/{id}",
+      "name": null
     },
     {
       "id": "API-09",
@@ -2082,7 +2158,8 @@
         "VT-11",
         "VT-12"
       ],
-      "operation": "GET /api/v1/trash/food-entries"
+      "operation": "GET /api/v1/trash/food-entries",
+      "name": null
     },
     {
       "id": "API-10",
@@ -2096,7 +2173,8 @@
         "VT-11",
         "VT-12"
       ],
-      "operation": "POST /api/v1/food-entries/{id}/restore"
+      "operation": "POST /api/v1/food-entries/{id}/restore",
+      "name": null
     },
     {
       "id": "API-11",
@@ -2110,7 +2188,8 @@
         "TC-20",
         "VT-12"
       ],
-      "operation": "GET /api/v1/me/preferences"
+      "operation": "GET /api/v1/me/preferences",
+      "name": null
     },
     {
       "id": "API-12",
@@ -2125,7 +2204,8 @@
         "TC-20",
         "VT-12"
       ],
-      "operation": "PATCH /api/v1/me/preferences"
+      "operation": "PATCH /api/v1/me/preferences",
+      "name": null
     },
     {
       "id": "VT-01",
@@ -2135,7 +2215,8 @@
       "execution": "Not run",
       "setup": "Create known/unknown date",
       "expected": "Shape đúng, initial event, unknown visible",
-      "layer": "Contract+DB"
+      "layer": "Contract+DB",
+      "name": null
     },
     {
       "id": "VT-02",
@@ -2145,7 +2226,8 @@
       "execution": "Not run",
       "setup": "Create rollback trước movement/request result",
       "expected": "Không orphan entry hoặc reserved key commit",
-      "layer": "Integration"
+      "layer": "Integration",
+      "name": null
     },
     {
       "id": "VT-03",
@@ -2155,7 +2237,8 @@
       "execution": "Not run",
       "setup": "Consume 250g từ 1000g",
       "expected": "750g; delta -250; version+1",
-      "layer": "Domain+DB"
+      "layer": "Domain+DB",
+      "name": null
     },
     {
       "id": "VT-04",
@@ -2165,7 +2248,8 @@
       "execution": "Not run",
       "setup": "Consume quá lượng/negative/piece fractional",
       "expected": "409 hoặc422; không write",
-      "layer": "Domain+contract"
+      "layer": "Domain+contract",
+      "name": null
     },
     {
       "id": "VT-05",
@@ -2175,7 +2259,8 @@
       "execution": "Not run",
       "setup": "Hai requests cùng version",
       "expected": "1 success, 1 conflict; quantity>=0",
-      "layer": "Real concurrent DB"
+      "layer": "Real concurrent DB",
+      "name": null
     },
     {
       "id": "VT-06",
@@ -2185,7 +2270,8 @@
       "execution": "Not run",
       "setup": "Same key+payload concurrent/retry",
       "expected": "1 mutation/event; original result replay",
-      "layer": "Real concurrent DB"
+      "layer": "Real concurrent DB",
+      "name": null
     },
     {
       "id": "VT-07",
@@ -2195,7 +2281,8 @@
       "execution": "Not run",
       "setup": "Same key different target/body",
       "expected": "409 key reuse",
-      "layer": "Integration"
+      "layer": "Integration",
+      "name": null
     },
     {
       "id": "VT-08",
@@ -2205,7 +2292,8 @@
       "execution": "Not run",
       "setup": "Recount to same amount",
       "expected": "200 no-op; no movement/version increment",
-      "layer": "Domain+DB"
+      "layer": "Domain+DB",
+      "name": null
     },
     {
       "id": "VT-09",
@@ -2215,7 +2303,8 @@
       "execution": "Not run",
       "setup": "Recount depleted to positive",
       "expected": "Active derived, adjustment reason",
-      "layer": "Domain+DB"
+      "layer": "Domain+DB",
+      "name": null
     },
     {
       "id": "VT-10",
@@ -2225,7 +2314,8 @@
       "execution": "Not run",
       "setup": "Consume then discard remainder",
       "expected": "Depleted; totals distinguish use/waste",
-      "layer": "Ledger audit"
+      "layer": "Ledger audit",
+      "name": null
     },
     {
       "id": "VT-11",
@@ -2235,7 +2325,8 @@
       "execution": "Not run",
       "setup": "Soft delete then restore",
       "expected": "Amount/history unchanged, visibility restored",
-      "layer": "Integration+UI"
+      "layer": "Integration+UI",
+      "name": null
     },
     {
       "id": "VT-12",
@@ -2245,7 +2336,8 @@
       "execution": "Not run",
       "setup": "GET/PATCH/action/history foreign ID",
       "expected": "404, no exposure",
-      "layer": "Auth regression"
+      "layer": "Auth regression",
+      "name": null
     },
     {
       "id": "VT-13",
@@ -2255,7 +2347,8 @@
       "execution": "Not run",
       "setup": "Clock around UTC/local midnight",
       "expected": "Correct today/soon/past_date",
-      "layer": "Injected clock tests"
+      "layer": "Injected clock tests",
+      "name": null
     },
     {
       "id": "VT-14",
@@ -2265,7 +2358,8 @@
       "execution": "Not run",
       "setup": "Metadata patch date→null malformed combination",
       "expected": "422; no partial invalid certainty",
-      "layer": "Contract+domain"
+      "layer": "Contract+domain",
+      "name": null
     },
     {
       "id": "VT-15",
@@ -2275,7 +2369,8 @@
       "execution": "Not run",
       "setup": "Timeout/401/409 UI",
       "expected": "Draft and stable key; refetch conflict",
-      "layer": "UI task tests"
+      "layer": "UI task tests",
+      "name": null
     },
     {
       "id": "VT-16",
@@ -2285,7 +2380,8 @@
       "execution": "Not run",
       "setup": "Migration fresh + backup restore",
       "expected": "Constraints/data recovered",
-      "layer": "Staging"
+      "layer": "Staging",
+      "name": null
     },
     {
       "id": "VT-17",
@@ -2295,7 +2391,8 @@
       "execution": "Not run",
       "setup": "Keyboard/labels/no color-only",
       "expected": "Task usable",
-      "layer": "UX/accessibility"
+      "layer": "UX/accessibility",
+      "name": null
     },
     {
       "id": "TC-18",
@@ -2305,7 +2402,8 @@
       "execution": "Not run",
       "setup": "Owner list filters/offset/order applied before pagination; distinct empty states",
       "expected": "Stable order + count/filter semantics across pages",
-      "layer": "API/query integration"
+      "layer": "API/query integration",
+      "name": null
     },
     {
       "id": "TC-19",
@@ -2315,7 +2413,8 @@
       "execution": "Not run",
       "setup": "Known/unknown/estimated/past/depleted/deleted attention + detail",
       "expected": "Reason/date source and safety caveat; eligible set correct",
-      "layer": "Domain + FE interaction"
+      "layer": "Domain + FE interaction",
+      "name": null
     },
     {
       "id": "TC-20",
@@ -2325,7 +2424,8 @@
       "execution": "Not run",
       "setup": "Read/edit preferences + stale version/local date changes",
       "expected": "Valid preferences or422/409; attention recomputed",
-      "layer": "Contract + integration"
+      "layer": "Contract + integration",
+      "name": null
     },
     {
       "id": "TC-21",
@@ -2335,7 +2435,8 @@
       "execution": "Not run",
       "setup": "Compare demo adapter DTOs to OpenAPI on every operation",
       "expected": "Schema parity; explicit enum/decimal/error mapping",
-      "layer": "Contract regression"
+      "layer": "Contract regression",
+      "name": null
     },
     {
       "id": "TC-22",
@@ -2345,7 +2446,8 @@
       "execution": "Not run",
       "setup": "Measure representative dataset/host under controlled load",
       "expected": "Record p50/p95/volume/hardware; approve target after baseline",
-      "layer": "Performance baseline"
+      "layer": "Performance baseline",
+      "name": null
     },
     {
       "id": "TC-23",
@@ -2355,7 +2457,8 @@
       "execution": "Not run",
       "setup": "Session rotate/logout/revoke/expire and cookie/CSRF requests",
       "expected": "Old credential invalid; unauthorized write rejected; draft/cache owner-safe",
-      "layer": "Auth integration"
+      "layer": "Auth integration",
+      "name": null
     },
     {
       "id": "TC-24",
@@ -2365,7 +2468,8 @@
       "execution": "Not run",
       "setup": "Analytics disabled/consent and redacted error telemetry",
       "expected": "No forbidden payload; no failed domain command from emitter error",
-      "layer": "Adapter integration"
+      "layer": "Adapter integration",
+      "name": null
     },
     {
       "id": "TC-25",
@@ -2375,119 +2479,136 @@
       "execution": "Not run",
       "setup": "Future OCR invalid/ambiguous image/timeout/cancel/cleanup",
       "expected": "No automatic persistence; manual fallback; bounded resources",
-      "layer": "Conditional OCR contract"
+      "layer": "Conditional OCR contract",
+      "name": null
     },
     {
       "id": "ADR-001",
       "kind": "adr",
-      "path": "adr/ADR-001-modular-monolith.md",
+      "path": "08-architecture/ADR-001-modular-monolith.md",
       "status": "Review",
-      "status_reason": "Review"
+      "status_reason": "Review",
+      "name": null
     },
     {
       "id": "ADR-002",
       "kind": "adr",
-      "path": "adr/ADR-002-storage-orm.md",
+      "path": "08-architecture/ADR-002-storage-orm.md",
       "status": "Review",
-      "status_reason": "Blocked"
+      "status_reason": "Blocked",
+      "name": null
     },
     {
       "id": "ADR-003",
       "kind": "adr",
-      "path": "adr/ADR-003-authentication.md",
+      "path": "08-architecture/ADR-003-authentication.md",
       "status": "Review",
-      "status_reason": "Blocked"
+      "status_reason": "Blocked",
+      "name": null
     },
     {
       "id": "ADR-004",
       "kind": "adr",
-      "path": "adr/ADR-004-ocr-boundary.md",
+      "path": "08-architecture/ADR-004-ocr-boundary.md",
       "status": "Review",
-      "status_reason": "Review"
+      "status_reason": "Review",
+      "name": null
     },
     {
       "id": "ADR-005",
       "kind": "adr",
-      "path": "adr/ADR-005-observability.md",
+      "path": "08-architecture/ADR-005-observability.md",
       "status": "Review",
-      "status_reason": "Review"
+      "status_reason": "Review",
+      "name": null
     },
     {
       "id": "WF-00",
       "kind": "screen",
-      "path": "06-navigation/navigation.md",
+      "path": "05-interaction-design/navigation.md",
       "status": "Review",
-      "purpose": "Preview không dùng dữ liệu riêng"
+      "purpose": "Preview không dùng dữ liệu riêng",
+      "name": null
     },
     {
       "id": "WF-01",
       "kind": "screen",
-      "path": "06-navigation/navigation.md",
+      "path": "05-interaction-design/navigation.md",
       "status": "Review",
-      "purpose": "Attention groups, reasons, search/location, all/depleted tab"
+      "purpose": "Attention groups, reasons, search/location, all/depleted tab",
+      "name": null
     },
     {
       "id": "WF-02",
       "kind": "screen",
-      "path": "06-navigation/navigation.md",
+      "path": "05-interaction-design/navigation.md",
       "status": "Review",
-      "purpose": "Name, amount/unit khi create, location, optional date/certainty/label/source/opened note"
+      "purpose": "Name, amount/unit khi create, location, optional date/certainty/label/source/opened note",
+      "name": null
     },
     {
       "id": "WF-03",
       "kind": "screen",
-      "path": "06-navigation/navigation.md",
+      "path": "05-interaction-design/navigation.md",
       "status": "Review",
-      "purpose": "Current amount/version/date context/attention reason"
+      "purpose": "Current amount/version/date context/attention reason",
+      "name": null
     },
     {
       "id": "WF-04",
       "kind": "screen",
-      "path": "06-navigation/navigation.md",
+      "path": "05-interaction-design/navigation.md",
       "status": "Review",
-      "purpose": "Action, amount/actual amount, reason khi recount; current quantity"
+      "purpose": "Action, amount/actual amount, reason khi recount; current quantity",
+      "name": null
     },
     {
       "id": "WF-05",
       "kind": "screen",
-      "path": "06-navigation/navigation.md",
+      "path": "05-interaction-design/navigation.md",
       "status": "Review",
-      "purpose": "Read-only movement history; trash là view riêng cùng layout list"
+      "purpose": "Read-only movement history; trash là view riêng cùng layout list",
+      "name": null
     },
     {
       "id": "WF-06",
       "kind": "screen",
-      "path": "06-navigation/navigation.md",
+      "path": "05-interaction-design/navigation.md",
       "status": "Review",
-      "purpose": "Timezone, attention lead"
+      "purpose": "Timezone, attention lead",
+      "name": null
     },
     {
       "id": "DF-01",
       "kind": "data-flow",
       "path": "06-data-model/data-flows.md",
       "status": "Review",
-      "purpose": "Capture"
+      "purpose": "Capture",
+      "name": null
     },
     {
       "id": "DF-02",
       "kind": "data-flow",
       "path": "06-data-model/data-flows.md",
       "status": "Review",
-      "purpose": "Review"
+      "purpose": "Review",
+      "name": null
     },
     {
       "id": "DF-03",
       "kind": "data-flow",
       "path": "06-data-model/data-flows.md",
       "status": "Review",
-      "purpose": "Resolve/reconcile"
+      "purpose": "Resolve/reconcile",
+      "name": null
     },
     {
       "id": "DF-04",
       "kind": "data-flow",
       "path": "06-data-model/data-flows.md",
       "status": "Review",
-      "purpose": "Preferences/identity continuation"
+      "purpose": "Preferences/identity continuation",
+      "name": null
     },
     {
       "id": "API-13",
@@ -2495,8 +2616,7 @@
       "path": "07-api/endpoints.md",
       "name": "POST /api/v1/scans",
       "tests": [
-        "VT-18",
-        "VT-19"
+        "TC-25"
       ]
     },
     {
@@ -2504,6 +2624,217 @@
       "kind": "adr",
       "path": "08-architecture/ADR-006-hybrid-architecture.md",
       "name": "Hybrid Architecture (Node.js Modular Monolith + Python Scan Service + MySQL)"
+    },
+    {
+      "id": "ENT-05",
+      "kind": "entity",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "local_credentials",
+      "purpose": "One local email/password verifier record per owner",
+      "owner": "Auth repository"
+    },
+    {
+      "id": "ENT-06",
+      "kind": "entity",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "user_sessions",
+      "purpose": "Opaque durable sessions with expiry/revocation state",
+      "owner": "Auth repository"
+    },
+    {
+      "id": "ENT-07",
+      "kind": "entity",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "schema_migrations",
+      "purpose": "Applied migration identity/checksum ledger",
+      "owner": "Migration runner"
+    },
+    {
+      "id": "FIELD::local_credentials.user_id",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "local_credentials.user_id",
+      "owner": "Auth repository",
+      "definition": "One-to-one FK/PK to users.id",
+      "entity": "ENT-05"
+    },
+    {
+      "id": "FIELD::local_credentials.email_normalized",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "local_credentials.email_normalized",
+      "owner": "Auth repository",
+      "definition": "Unique normalized login identifier",
+      "entity": "ENT-05"
+    },
+    {
+      "id": "FIELD::local_credentials.password_verifier",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "local_credentials.password_verifier",
+      "owner": "Auth repository",
+      "definition": "Encoded scrypt verifier; never plaintext",
+      "entity": "ENT-05"
+    },
+    {
+      "id": "FIELD::local_credentials.created_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "local_credentials.created_at",
+      "owner": "Auth repository",
+      "definition": "Credential creation instant",
+      "entity": "ENT-05"
+    },
+    {
+      "id": "FIELD::local_credentials.updated_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "local_credentials.updated_at",
+      "owner": "Auth repository",
+      "definition": "Last credential update instant",
+      "entity": "ENT-05"
+    },
+    {
+      "id": "FIELD::user_sessions.token_hash",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "user_sessions.token_hash",
+      "owner": "Auth repository",
+      "definition": "Opaque session-token digest PK",
+      "entity": "ENT-06"
+    },
+    {
+      "id": "FIELD::user_sessions.user_id",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "user_sessions.user_id",
+      "owner": "Auth repository",
+      "definition": "Owning user FK",
+      "entity": "ENT-06"
+    },
+    {
+      "id": "FIELD::user_sessions.created_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "user_sessions.created_at",
+      "owner": "Auth repository",
+      "definition": "Session creation instant",
+      "entity": "ENT-06"
+    },
+    {
+      "id": "FIELD::user_sessions.last_seen_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "user_sessions.last_seen_at",
+      "owner": "Auth repository",
+      "definition": "Last accepted activity instant",
+      "entity": "ENT-06"
+    },
+    {
+      "id": "FIELD::user_sessions.expires_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "user_sessions.expires_at",
+      "owner": "Auth repository",
+      "definition": "Absolute expiry instant",
+      "entity": "ENT-06"
+    },
+    {
+      "id": "FIELD::user_sessions.revoked_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "user_sessions.revoked_at",
+      "owner": "Auth repository",
+      "definition": "Nullable explicit revocation instant",
+      "entity": "ENT-06"
+    },
+    {
+      "id": "FIELD::schema_migrations.version",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "schema_migrations.version",
+      "owner": "Migration runner",
+      "definition": "Applied migration version PK",
+      "entity": "ENT-07"
+    },
+    {
+      "id": "FIELD::schema_migrations.sha256",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "schema_migrations.sha256",
+      "owner": "Migration runner",
+      "definition": "Applied migration file checksum",
+      "entity": "ENT-07"
+    },
+    {
+      "id": "FIELD::schema_migrations.applied_at",
+      "kind": "persistent-field",
+      "path": "06-data-model/erd-workbench/03_ENTITY_DICTIONARY.md",
+      "status": "Review",
+      "name": "schema_migrations.applied_at",
+      "owner": "Migration runner",
+      "definition": "Successful migration application instant",
+      "entity": "ENT-07"
+    },
+    {
+      "id": "AUTH-REGISTER",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "tests": [
+        "TC-23"
+      ],
+      "operation": "POST /api/v1/auth/register",
+      "name": null
+    },
+    {
+      "id": "AUTH-LOGIN",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "tests": [
+        "TC-23"
+      ],
+      "operation": "POST /api/v1/auth/login",
+      "name": null
+    },
+    {
+      "id": "AUTH-SESSION",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "tests": [
+        "TC-23"
+      ],
+      "operation": "GET /api/v1/auth/session",
+      "name": null
+    },
+    {
+      "id": "AUTH-LOGOUT",
+      "kind": "api",
+      "path": "07-api/endpoints.md",
+      "status": "Review",
+      "tests": [
+        "TC-23"
+      ],
+      "operation": "POST /api/v1/auth/logout",
+      "name": null
     }
   ],
   "edges": [
@@ -3329,7 +3660,7 @@
     },
     {
       "from": "ENT-03",
-      "to": "FIELD::stock_movements.after",
+      "to": "FIELD::stock_movements.quantity_after",
       "relation": "owns-field"
     },
     {
@@ -3369,7 +3700,7 @@
     },
     {
       "from": "ENT-04",
-      "to": "FIELD::api_requests.body",
+      "to": "FIELD::api_requests.response_body",
       "relation": "owns-field"
     },
     {
@@ -4181,6 +4512,76 @@
       "from": "API-12",
       "to": "WF-06",
       "relation": "consumed-by"
+    },
+    {
+      "from": "FIELD::local_credentials.user_id",
+      "to": "ENT-05",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::local_credentials.email_normalized",
+      "to": "ENT-05",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::local_credentials.password_verifier",
+      "to": "ENT-05",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::local_credentials.created_at",
+      "to": "ENT-05",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::local_credentials.updated_at",
+      "to": "ENT-05",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::user_sessions.token_hash",
+      "to": "ENT-06",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::user_sessions.user_id",
+      "to": "ENT-06",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::user_sessions.created_at",
+      "to": "ENT-06",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::user_sessions.last_seen_at",
+      "to": "ENT-06",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::user_sessions.expires_at",
+      "to": "ENT-06",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::user_sessions.revoked_at",
+      "to": "ENT-06",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::schema_migrations.version",
+      "to": "ENT-07",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::schema_migrations.sha256",
+      "to": "ENT-07",
+      "type": "belongs-to"
+    },
+    {
+      "from": "FIELD::schema_migrations.applied_at",
+      "to": "ENT-07",
+      "type": "belongs-to"
     }
   ],
   "gate_statuses": [
@@ -4227,5 +4628,428 @@
       "Executed affected checks + stage task/restore evidence"
     ]
   ],
-  "limits": "Structural coverage is not empirical user validation or executed acceptance tests."
+  "limits": "Structural coverage is not empirical user validation or executed acceptance tests.",
+  "unresolved_archival_refs": [
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "reason": "Original extracted source paths are preserved verbatim in the 2026-10-09 snapshot; some source files were not present in this checkout. Exact link targets and occurrences are enumerated in archival_link_exceptions."
+    }
+  ],
+  "archival_link_exceptions": [
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/00_Context_and_Evidence.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/01_Research_Personas_and_Opportunities.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/mockApi.ts",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/10_Canva_Persona_Source.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/02_Requirements_and_Business_Rules.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/03_User_Flows_Scenarios_and_Use_Cases.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/04_Data_Flow_UML_and_Ownership.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/05_Data_Definitions_and_ERD.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/06_API_Routes_and_Contracts.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/07_Architecture_Components_and_Alternatives.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/08_Wireframes_and_Interaction_Spec.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/09_Traceability_Implementation_and_Verification.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/App.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/HANDOFF.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/openapi.json",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/schema_reference_mysql.sql",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_Complete_System_Design_2026-10-08.pdf",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/Expiry_Complete_System_Design_2026-10-08.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/fixtures.json",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_1.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_2.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_3.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_1.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_2.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_3.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_4.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_5.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_6.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_7.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/05_Data_Definitions_and_ERD_1.mmd",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/activity_record_movement.puml",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/erd_overview.png",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/use_cases.puml",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/wireframes/expiry_wireframes.png",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/deploy.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/doc/SystemEngineer/REPORT.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/doc/SystemEngineer/Slide System Engineering.pdf",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/doc/SystemEngineer/food-expiry.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/doc/SystemEngineer/rawdocs/DEEP RESEARCH.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/doc/SystemEngineer/tracking.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/doc/sources requirements.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/.figma/make/site.json",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/.gitattributes",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/.gitignore",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/.mise.toml",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/.vercel/README.txt",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/.vercel/project.json",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/AGENTS.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/CLAUDE.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/README.md",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/index.html",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/package.json",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/pnpm-lock.yaml",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/layout/Grid.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/layout/PageHeader.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/layout/Shell.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/ui/Badge.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/ui/Button.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/ui/Card.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/ui/EmptyState.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/ui/Field.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/ui/Icon.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/ui/Modal.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/components/ui/Segmented.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/features/Detail.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/features/EntryForm.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/features/FoodCard.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/features/History.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/features/Inventory.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/features/MovementForm.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/features/Settings.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/features/StatusDialog.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/features/Trash.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/features/Welcome.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/index.css",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/lib/format.ts",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/main.tsx",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/src/vite-env.d.ts",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/tsconfig.json",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/vercel.json",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/uidemo/vite.config.ts",
+      "reason": "Preserved 2026-10-09 consolidated extraction cites original source files that are unavailable in this checkout; snapshot retained byte-for-byte."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/.gitignore",
+      "reason": "Absolute source link retained verbatim in the 2026-10-09 consolidated extraction; the snapshot is immutable historical evidence."
+    },
+    {
+      "source": "consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "target": "/home/pro/Downloads/expiry/README.md",
+      "reason": "Absolute source link retained verbatim in the 2026-10-09 consolidated extraction; the snapshot is immutable historical evidence."
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 # Expiry MySQL sandbox
 
-MySQL8.4 candidate persistence of the four-table food draft. It is separate from uidemo and from an HTTP authentication adapter. The live diagram/audit/report are in `../../docs/erd/`.
+MySQL8.4 candidate persistence in the isolated local sandbox. The current schema has six migration-defined tables plus the runner-owned `schema_migrations` ledger (7 tables, 53 columns, 5 foreign keys and 30 CHECK constraints). Native model, live DDL dump, audit and verification report are in `../../docs/architecture/06-data-model/erd-workbench/`. These artifacts describe development state and do not constitute production or product approval.
 
 ## Setup and replay
 
@@ -12,6 +12,7 @@ node scripts/init-env.mjs
 docker compose --env-file .env -f compose.yaml config --quiet
 docker compose --env-file .env -f compose.yaml up -d
 node scripts/manage.mjs migrate-dev
+node scripts/auth-migration.mjs expiry_dev
 node scripts/manage.mjs verify-dev
 node scripts/manage.mjs dump-dev
 node tests/run.mjs
@@ -30,9 +31,9 @@ Container project `expiry-mysql84`, named volume `expiry_mysql84_data`, loopback
 
 ## Schema and transaction ownership
 
-Migration001 creates users, food_entries, stock_movements, api_requests. Runner adds schema_migrations and checksum; repeated application is a no-op only when hash matches. MySQL DDL implicit commits mean a failure midway is preserved as an unversioned/partial schema and rejected, not silently rebuilt. Recover dev with an explicit reviewed forward migration/backup; never delete the volume to hide an error. New physical changes use a new version.
+Migration001 creates users, food_entries, stock_movements and api_requests. Migration002 adds local_credentials and user_sessions; both are checksum recorded in runner-owned `schema_migrations`. Repeated application is a no-op only when hashes match. The explicit 002 runner verifies001 and preserves existing domain rows. MySQL DDL implicit commits mean a failure midway is preserved as an unversioned/partial schema and rejected, not silently rebuilt. Recover dev with an explicit reviewed forward migration/backup; never delete the volume to hide an error. New physical changes use a new version.
 
-Seed runner targets only expiry_dev, acquires a named lock, and executes fixture DML transactionally. Deterministic IDs and conditional inserts retain existing rows; a rerun preserves counts and does not reset edited quantities. Fixtures have2 owners,4 entries,8 initial/use/discard/recount events. Root is used only inside the dedicated container for migration/grants/dump. Application account can SELECT all sandbox tables, INSERT/UPDATE users/entries/requests, INSERT movements, with no history UPDATE/DELETE, DDL or hard-delete.
+Seed runner targets only expiry_dev, acquires a named lock, and executes fixture DML transactionally. Deterministic IDs and conditional inserts retain existing rows; a rerun preserves counts and does not reset edited quantities. Fixtures have2 owners,4 entries,8 initial/use/discard/recount events. Root is used only inside the dedicated container for migration/grants/dump. Application account can SELECT all sandbox tables, INSERT/UPDATE users/entries/requests and auth tables, INSERT movements, with no history UPDATE/DELETE, DDL or hard-delete.
 
 `src/domain.mjs` validates decimal strings, date combinations and input allowlists. `src/repository.mjs` owns command transactions, replay-before-version, owner scope, row locks, version updates, append events, saved JSON result, derived reads and a frozen clock. Quantity is calculated using BigInt milliunits. Duplicate INSERT waits for winner; replay reads immutable result without shared→exclusive lock upgrade. Deadlocks roll back completely and retry the same command at most3 times (4 attempts total). Lock timeout/other DB errors propagate for an eventual HTTP error adapter; no generic success is returned.
 
@@ -46,11 +47,11 @@ Run `node tests/run.mjs` again to obtain clean replay on a new test schema. Real
 
 ## Workbench
 
-Installed launcher found in this session: `/snap/bin/mysql-workbench-community` (8.0.36). Connection: `Expiry Local Docker`, Standard TCP/IP,127.0.0.1,3307,expiry_app,default schema expiry_dev. Enter local MYSQL_PASSWORD from `.env` privately in Workbench; avoid root for normal inspection. Use Test Connection, then SELECT DATABASE(),VERSION(); SHOW TABLES;, then Database→Reverse Engineer→expiry_dev. Model and EER output belong in docs/erd.
+Installed launcher found in this session: `/snap/bin/mysql-workbench-community` (8.0.36). Connection: `Expiry Local Docker`, Standard TCP/IP,127.0.0.1,3307,expiry_app,default schema expiry_dev. The CLI/GRT scripts read the ignored private `.env` in process and do not save the password. Use the native GRT exporter for reproducible model generation and live query evidence. Workbench's table model does not represent MySQL CHECK expressions; migrations and live MySQL checks remain authoritative for those rules.
 
-`workbench_export.py` runs inside the actual Workbench embedded Python/GRT runtime using `--run-script ... --quit-when-done`. It verifies native authenticated SQL, complete table/column/FK parity, generated/descending-index properties, native model ZIP integrity and PNG signature/dimensions. The installed reverse-engineering helper omitted charset registration; a checked native-parser fallback reads unchanged live SHOW CREATE definitions with the full driver registry. The script distinguishes native execution from clicking Test Connection or the wizard. Launch needs the current user's graphical-session DISPLAY/XAUTHORITY/runtime/bus values; do not reuse an old Xauthority path blindly. Rerun may replace only outputs whose hashes still match the previous verified generated files, retaining a backup in ignored evidence/runtime-private; user-edited outputs are refused. See the final report for results and compatibility gaps.
+`workbench_export.py` runs inside the actual Workbench embedded Python/GRT runtime using `--run-script ... --quit-when-done`. It verifies authenticated live SQL, exact table/column/PK/FK parity, live CHECK inventory, generated/descending-index properties, native model ZIP integrity and PNG signature/dimensions. The installed reverse-engineering helper can omit tables when its parser lacks the full charset registry; a checked Workbench native-parser fallback reads unchanged live SHOW CREATE definitions with the driver's charset registry. The script does not claim a GUI Test Connection button or wizard click. Reruns preserve the earlier model, PNG and evidence in ignored `database/mysql/evidence/runtime-private/previous-workbench-export/` and refuse outputs whose hashes do not match the prior successful export.
 
-`workbench_show_model.py` opens the saved native model through Workbench.openModel and activates the actual loaded EER tab after startup. Use `--run-script /home/pro/Downloads/expiry/database/mysql/workbench_show_model.py` with the current graphical session. CLI startup has one open-at-start slot, so combining --model with --run-script does not reliably load both; this script explicitly opens the model. It writes workbench_view_evidence.json only after seeing the five expected tables and the real diagram. The user's separate Untitled/mydb model is not edited.
+`workbench_show_model.py` opens the saved native model through Workbench.openModel and activates the actual loaded EER tab after startup. Use `--run-script /home/pro/Downloads/expiry/database/mysql/workbench_show_model.py` with the current graphical session. CLI startup has one open-at-start slot, so combining `--model` with `--run-script` does not reliably load both; this script explicitly opens the model. It writes `workbench_view_evidence.json` only after seeing all seven expected tables and the actual diagram. The user's separate Untitled/mydb model is not edited.
 
 ## Reference and approval
 

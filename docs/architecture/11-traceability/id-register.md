@@ -90,18 +90,18 @@ Stable identity with canonical definition locations; no inferred approval.
 | F-06 | feature | [03-requirements-features/features.md](../03-requirements-features/features.md) |
 | F-07 | feature | [03-requirements-features/features.md](../03-requirements-features/features.md) |
 | F-08 | feature | [03-requirements-features/features.md](../03-requirements-features/features.md) |
-| UC-00 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-01 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-02 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-03 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-04 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-05 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-06 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-07 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-08 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-09 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-10 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
-| UC-11 | use-case | [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md) |
+| UC-00 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-01 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-02 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-03 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-04 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-05 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-06 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-07 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-08 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-09 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-10 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
+| UC-11 | use-case | [05-use-cases-uml/use-cases.md](../04-user-flows/use-cases.md) |
 | SC-01 | scenario | [04-user-flows/scenarios.md](../04-user-flows/scenarios.md) |
 | SC-02 | scenario | [04-user-flows/scenarios.md](../04-user-flows/scenarios.md) |
 | SC-03 | scenario | [04-user-flows/scenarios.md](../04-user-flows/scenarios.md) |
@@ -128,10 +128,10 @@ Stable identity with canonical definition locations; no inferred approval.
 | UF-09 | user-flow | [04-user-flows/user-flows.md](../04-user-flows/user-flows.md) |
 | UF-10 | user-flow | [04-user-flows/user-flows.md](../04-user-flows/user-flows.md) |
 | UF-11 | user-flow | [04-user-flows/user-flows.md](../04-user-flows/user-flows.md) |
-| ENT-01 | entity | [12-database-schema/entities-and-migrations.md](../12-database-schema/entities-and-migrations.md) |
-| ENT-02 | entity | [12-database-schema/entities-and-migrations.md](../12-database-schema/entities-and-migrations.md) |
-| ENT-03 | entity | [12-database-schema/entities-and-migrations.md](../12-database-schema/entities-and-migrations.md) |
-| ENT-04 | entity | [12-database-schema/entities-and-migrations.md](../12-database-schema/entities-and-migrations.md) |
+| ENT-01 | entity | [12-database-schema/entities-and-migrations.md](../06-data-model/entities-and-migrations.md) |
+| ENT-02 | entity | [12-database-schema/entities-and-migrations.md](../06-data-model/entities-and-migrations.md) |
+| ENT-03 | entity | [12-database-schema/entities-and-migrations.md](../06-data-model/entities-and-migrations.md) |
+| ENT-04 | entity | [12-database-schema/entities-and-migrations.md](../06-data-model/entities-and-migrations.md) |
 | FIELD::users.id | persistent-field | [06-data-model/dictionary.md](../06-data-model/dictionary.md) |
 | FIELD::users.identity_subject | persistent-field | [06-data-model/dictionary.md](../06-data-model/dictionary.md) |
 | FIELD::users.display_name | persistent-field | [06-data-model/dictionary.md](../06-data-model/dictionary.md) |
@@ -214,13 +214,13 @@ Stable identity with canonical definition locations; no inferred approval.
 | ADR-004 | adr | [08-architecture/ADR-004-ocr-boundary.md](../08-architecture/ADR-004-ocr-boundary.md) |
 | ADR-005 | adr | [08-architecture/ADR-005-observability.md](../08-architecture/ADR-005-observability.md) |
 | ADR-006 | adr | [08-architecture/ADR-006-hybrid-architecture.md](../08-architecture/ADR-006-hybrid-architecture.md) |
-| WF-00 | screen | [06-navigation/navigation.md](../06-navigation/navigation.md) |
-| WF-01 | screen | [06-navigation/navigation.md](../06-navigation/navigation.md) |
-| WF-02 | screen | [06-navigation/navigation.md](../06-navigation/navigation.md) |
-| WF-03 | screen | [06-navigation/navigation.md](../06-navigation/navigation.md) |
-| WF-04 | screen | [06-navigation/navigation.md](../06-navigation/navigation.md) |
-| WF-05 | screen | [06-navigation/navigation.md](../06-navigation/navigation.md) |
-| WF-06 | screen | [06-navigation/navigation.md](../06-navigation/navigation.md) |
+| WF-00 | screen | [06-navigation/navigation.md](../05-interaction-design/navigation.md) |
+| WF-01 | screen | [06-navigation/navigation.md](../05-interaction-design/navigation.md) |
+| WF-02 | screen | [06-navigation/navigation.md](../05-interaction-design/navigation.md) |
+| WF-03 | screen | [06-navigation/navigation.md](../05-interaction-design/navigation.md) |
+| WF-04 | screen | [06-navigation/navigation.md](../05-interaction-design/navigation.md) |
+| WF-05 | screen | [06-navigation/navigation.md](../05-interaction-design/navigation.md) |
+| WF-06 | screen | [06-navigation/navigation.md](../05-interaction-design/navigation.md) |
 | DF-01 | data-flow | [06-data-model/data-flows.md](../06-data-model/data-flows.md) |
 | DF-02 | data-flow | [06-data-model/data-flows.md](../06-data-model/data-flows.md) |
 | DF-03 | data-flow | [06-data-model/data-flows.md](../06-data-model/data-flows.md) |
@@ -228,7 +228,7 @@ Stable identity with canonical definition locations; no inferred approval.
 
 Document IDs use DOC-* and are separate from requirement/test/domain artifact IDs. A single graph node defines an ID, references may repeat. Raw source snapshots are historical data and excluded from duplicate definition detection. Never count mention frequency as duplicate definition.
 
-The current [FINAL CHECK persona crosswalk](../03-requirements-features/final-check-persona-alignment.md) qualifies its source IDs by document. FINAL CHECK::FR-03 (update metadata/amount/location), food::FR-03 (attention) and SYS-FR-03 (accepted lifecycle events) keep their distinct definitions. Source IDs in that crosswalk are references to the native document, not replacement graph nodes. P-01/P-02/P-03 correspond to the existing Canva persona nodes P1/P2/P3.
+The current [FINAL CHECK persona crosswalk](../01-personas/final-check-persona-alignment.md) qualifies its source IDs by document. FINAL CHECK::FR-03 (update metadata/amount/location), food::FR-03 (attention) and SYS-FR-03 (accepted lifecycle events) keep their distinct definitions. Source IDs in that crosswalk are references to the native document, not replacement graph nodes. P-01/P-02/P-03 correspond to the existing Canva persona nodes P1/P2/P3.
 
 ## Decisions and rationale
 

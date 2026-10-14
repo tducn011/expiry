@@ -37,7 +37,7 @@ Focused change: tạo documentation workspace mới, giữ source cũ read-only,
 
 ### AUD-11 — Diagram source parser evidence
 
-[A] Mermaid 11.17.2 rejected three inherited sequence sources (`_3.mmd`, `_4.mmd`, `_5.mmd`) because `;` in message labels starts a new statement. Confidence High. Active architecture sequence copies use commas and pass; legacy sources stay read-only. Exact results are in the [verification report](../11-traceability/verification-report.md).
+[A] Mermaid 11.17.2 rejected three inherited sequence sources (`_3.mmd`, `_4.mmd`, `_5.mmd`) because `;` in message labels starts a new statement. Confidence High. Active architecture sequence copies use commas and pass; legacy sources stay read-only. Exact results are in the [verification report](../10-testing/verification-report.md).
 
 ## Decisions and rationale
 

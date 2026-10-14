@@ -49,3 +49,7 @@ Team phát triển tập trung vào tính toàn vẹn dữ liệu của thực p
 
 - Mã nguồn backend chia rõ 3 thư mục `modules/inventory`, `modules/expiry`, `modules/scan`.
 - Không có cross-boundary direct DB queries giữa các module.
+
+## Open questions
+
+Runtime folder locations are current in source; future deployment topology remains separately governed.

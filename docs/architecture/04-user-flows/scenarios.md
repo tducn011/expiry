@@ -31,7 +31,7 @@
 | Successful outcome | Một entry quantity 2 piece |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UF-01/UC-01 |
 
 ### SC-02
@@ -47,7 +47,7 @@
 | Successful outcome | unknown date; không bị chặn |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UF-02/UC-01 |
 
 ### SC-03
@@ -63,7 +63,7 @@
 | Successful outcome | Soon group + reason/date/location |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UF-03/UC-02/03 |
 
 ### SC-04
@@ -79,7 +79,7 @@
 | Successful outcome | Filter/detail trước action; không chỉ bật alert |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UF-04/UC-03/04 |
 
 ### SC-05
@@ -95,7 +95,7 @@
 | Successful outcome | Remaining 750g; movement -250g |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UF-05/UC-04 |
 
 ### SC-06
@@ -111,7 +111,7 @@
 | Successful outcome | Remaining 550g; discard 200g |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UF-06/UC-05 |
 
 ### SC-07
@@ -127,7 +127,7 @@
 | Successful outcome | Adjustment -50g có reason |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UF-07/UC-07 |
 
 ### SC-08
@@ -143,7 +143,7 @@
 | Successful outcome | Retry cùng key/payload replay, chỉ 1 movement |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UF-05/UC-04 |
 
 ### SC-09
@@ -159,7 +159,7 @@
 | Successful outcome | Một success; tab còn lại 409, refetch |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UC-04 |
 
 ### SC-10
@@ -175,7 +175,7 @@
 | Successful outcome | Restore vẫn 500g, không giả đã dùng/bỏ |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UF-09/UC-09/10 |
 
 ### SC-11
@@ -191,7 +191,7 @@
 | Successful outcome | 409, hiển thị dữ liệu hiện tại/draft khác biệt |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UF-08/UC-06 |
 
 ### SC-12
@@ -207,7 +207,7 @@
 | Successful outcome | lifecycle depleted; totals theo movement, không “all consumed” |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UC-04/05/08 |
 
 ### SC-13
@@ -223,7 +223,7 @@
 | Successful outcome | 404; không data leak |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for Tất cả owned UCs |
 
 ### SC-14
@@ -239,7 +239,7 @@
 | Successful outcome | due_today theo timezone owner |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UC-03/11 |
 
 ### SC-15
@@ -255,7 +255,7 @@
 | Successful outcome | past_date + label/source explanation |
 | Alternative outcome | Unknown date/no-op/empty state follows applicable rule, no inferred safety |
 | Failure outcome | Validation, conflict, auth or transport failure must not silently mutate twice |
-| Recovery | 422 fix retained draft; 409 refetch/compare; timeout preserve command key; auth continuation retains draft |
+| Recovery | Where applicable: 422 keeps entered form values; 409 requires fresh-state review; uncertain writes retry the same frozen command. 401 behavior depends on the transition: Add is gated before opening, while an already-open same-owner form can recover and explicitly retry. |
 | Required data | Dictionary + route contract for UC-03 |
 
 ## Decisions and rationale
@@ -264,7 +264,7 @@
 
 ## Dependencies
 
-- [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md)
+- [05-use-cases-uml/use-cases.md](use-cases.md)
 - [04-user-flows/user-flows.md](../04-user-flows/user-flows.md)
 - [10-testing/test-catalog.md](../10-testing/test-catalog.md)
 
@@ -276,7 +276,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
-- [05-use-cases-uml/use-cases.md](../05-use-cases-uml/use-cases.md)
+- [05-use-cases-uml/use-cases.md](use-cases.md)
 - [04-user-flows/user-flows.md](../04-user-flows/user-flows.md)
 - [10-testing/test-catalog.md](../10-testing/test-catalog.md)
 

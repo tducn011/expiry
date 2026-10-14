@@ -29,7 +29,7 @@ Current maturity: reviewable artifacts; no inherited proposal automatically appr
 ## Dependencies
 
 - [12-process/workstreams.md](workstreams.md)
-- [11-traceability/gates.md](../11-traceability/gates.md)
+- [11-traceability/gates.md](gates.md)
 
 ## Open questions
 
@@ -40,7 +40,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [12-process/workstreams.md](workstreams.md)
-- [11-traceability/gates.md](../11-traceability/gates.md)
+- [11-traceability/gates.md](gates.md)
 
 ## Verification criteria
 

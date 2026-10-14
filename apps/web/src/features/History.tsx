@@ -9,11 +9,13 @@ export default function History({
   food,
   movements,
   onClose,
+  active = true,
 }: {
   timezone?: string
   food: FoodEntry
   movements: QuantityMovement[]
   onClose: () => void
+  active?: boolean
 }) {
   const unit = unitLabel[food.unit]
   return (
@@ -24,6 +26,7 @@ export default function History({
       title="Lịch sử số lượng"
       description="Thời điểm là lúc app ghi nhận thay đổi."
       onClose={onClose}
+      active={active}
       footer={
         <ModalActions
           end={

@@ -4,6 +4,10 @@
 - Status: **Approved**
 - Updated: 2026-10-10T18:00:00+07:00
 
+## Current scope clarification [A/D] — 2026-10-13
+
+The current Python implementation runs OCR and deterministic candidate parsing; the scan endpoint returns transient candidates and does not write inventory. The former blanket exclusion of all Deep Learning data is superseded only as a review boundary: a single OCR labeled-sample table may be evaluated as a future dataset-curation proposal. See [schema input/output guide](../06-data-model/schema-input-output.md). That proposal is not an approved schema, training pipeline, model evaluation system, upload feature, or permission to collect production images.
+
 ## Purpose
 
 Thiết lập ranh giới kỹ thuật, phương thức thực thi và phạm vi xử lý cho tính năng Scan (tiền xử lý ảnh, OCR và trích xuất thông tin hạn dùng).
@@ -52,3 +56,7 @@ Thiết lập ranh giới kỹ thuật, phương thức thực thi và phạm vi
 - Gửi ảnh hợp lệ lên `POST /scan` trả về kết quả JSON có cấu trúc `raw_text`, `candidates` và `warnings` trong < 2.0 giây.
 - Python container không chứa thư viện training nặng (PyTorch, TensorFlow, CUDA) hoặc API key gọi LLM.
 - Khởi động Python service hoàn toàn độc lập mà không cần kết nối tới MySQL.
+
+## Open questions
+
+Whether to curate any OCR sample dataset remains a separate review decision; eligibility, consent, access, and retention are unresolved.

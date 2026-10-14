@@ -109,6 +109,8 @@ export function Dialog({
   onClose,
   cancel = true,
   dismissible = true,
+  active = true,
+  actionDisabled = false,
 }: {
   eyebrow?: string
   title: string
@@ -120,6 +122,8 @@ export function Dialog({
   onClose: () => void
   cancel?: boolean
   dismissible?: boolean
+  active?: boolean
+  actionDisabled?: boolean
 }) {
   return (
     <Modal
@@ -128,6 +132,7 @@ export function Dialog({
       title={title}
       onClose={onClose}
       dismissible={dismissible}
+      active={active}
       footer={
         <ModalActions
           start={
@@ -138,7 +143,7 @@ export function Dialog({
             )
           }
           end={
-            <Button variant={actionVariant} onClick={onAction}>
+            <Button variant={actionVariant} onClick={onAction} disabled={actionDisabled}>
               {action}
             </Button>
           }
@@ -156,9 +161,13 @@ export function Dialog({
 export default function StatusDialog({
   mode,
   onClose,
+  onAction,
+  active = true,
 }: {
   mode: StatusMode
   onClose: () => void
+  onAction?: () => void
+  active?: boolean
 }) {
   const c = content[mode]
   return (
@@ -169,7 +178,8 @@ export default function StatusDialog({
       extra={c.extra}
       action={c.action}
       cancel={c.cancel}
-      onAction={onClose}
+      active={active}
+      onAction={onAction || onClose}
       onClose={onClose}
     />
   )
