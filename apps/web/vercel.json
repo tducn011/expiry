@@ -3,7 +3,18 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/health",
+      "destination": "https://bathrooms-boost-breaking-atlas.trycloudflare.com/health"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://bathrooms-boost-breaking-atlas.trycloudflare.com/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
 
