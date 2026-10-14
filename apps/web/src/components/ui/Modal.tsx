@@ -14,7 +14,8 @@ function acquireModalScrollLock() {
   foregroundModalCount += 1
   return () => {
     foregroundModalCount = Math.max(0, foregroundModalCount - 1)
-    if (foregroundModalCount === 0) document.body.style.overflow = previousBodyOverflow
+    if (foregroundModalCount === 0)
+      document.body.style.overflow = previousBodyOverflow
   }
 }
 
@@ -164,7 +165,12 @@ export function RetryAction({
       <p className="note-box" role="alert">
         {error || "Thao tác trước chưa được xác nhận. Hãy thử lại để tiếp tục."}
       </p>
-      <Button type="button" variant="secondary" loading={pending} onClick={onRetry}>
+      <Button
+        type="button"
+        variant="secondary"
+        loading={pending}
+        onClick={onRetry}
+      >
         Thử lại thao tác đang chờ
       </Button>
     </div>

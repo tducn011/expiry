@@ -143,7 +143,11 @@ export function Dialog({
             )
           }
           end={
-            <Button variant={actionVariant} onClick={onAction} disabled={actionDisabled}>
+            <Button
+              variant={actionVariant}
+              onClick={onAction}
+              disabled={actionDisabled}
+            >
               {action}
             </Button>
           }

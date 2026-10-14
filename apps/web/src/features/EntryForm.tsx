@@ -159,8 +159,12 @@ export default function EntryForm({
     }
     if (result && typeof result.then === "function") {
       void result.then(
-        () => { submitInFlight.current = false },
-        () => { submitInFlight.current = false },
+        () => {
+          submitInFlight.current = false
+        },
+        () => {
+          submitInFlight.current = false
+        },
       )
     } else {
       submitInFlight.current = false
@@ -201,7 +205,12 @@ export default function EntryForm({
           ))}
         </ol>
         <div className="form-body">
-          <RetryAction canRetry={canRetry} pending={retryPending} error={retryError} onRetry={onRetry ?? (() => {})} />
+          <RetryAction
+            canRetry={canRetry}
+            pending={retryPending}
+            error={retryError}
+            onRetry={onRetry ?? (() => {})}
+          />
           {step === 0 ? (
             <div className="form-grid" key="basic">
               {!entry && (
@@ -212,7 +221,11 @@ export default function EntryForm({
                   </p>
                   {onScan && (
                     <div>
-                      <Button type="button" variant="outline" onClick={() => setScanOpen((open) => !open)}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setScanOpen((open) => !open)}
+                      >
                         {scanOpen ? "Đóng quét nhãn" : "Gợi ý từ ảnh nhãn"}
                       </Button>
                       {scanOpen && (
@@ -220,7 +233,10 @@ export default function EntryForm({
                           onScan={onScan}
                           onClose={() => setScanOpen(false)}
                           onApply={(result, selectedDate) => {
-                            const mapped = scanToEntryDraft(result, selectedDate)
+                            const mapped = scanToEntryDraft(
+                              result,
+                              selectedDate,
+                            )
                             setForm((current) => ({
                               ...current,
                               name: mapped.name || current.name,
@@ -229,8 +245,12 @@ export default function EntryForm({
                                 : {
                                     expiry_date: mapped.expiry_date,
                                     certainty: mapped.expiry_date_certainty,
-                                    source: mapped.expiry_date_source || "package_label",
-                                    label: mapped.expiry_date_label_type || "unknown",
+                                    source:
+                                      mapped.expiry_date_source ||
+                                      "package_label",
+                                    label:
+                                      mapped.expiry_date_label_type ||
+                                      "unknown",
                                   }),
                             }))
                             setStep(1)
@@ -426,7 +446,11 @@ export default function EntryForm({
                     {entry ? "Ngày & ghi chú →" : "Bổ sung ngày →"}
                   </Button>
                 )}
-                <Button type="submit" variant="cta" disabled={canRetry || retryPending}>
+                <Button
+                  type="submit"
+                  variant="cta"
+                  disabled={canRetry || retryPending}
+                >
                   {entry
                     ? "Lưu thay đổi"
                     : step === 0

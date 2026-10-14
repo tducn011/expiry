@@ -73,7 +73,8 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     queryParams.get("id"),
   )
   const [actionEntryId, setActionEntryId] = useState<string | null>(null)
-  const [actionEntrySnapshot, setActionEntrySnapshot] = useState<FoodEntry | null>(null)
+  const [actionEntrySnapshot, setActionEntrySnapshot] =
+    useState<FoodEntry | null>(null)
   const [modal, setModal] = useState<ModalKind>(() => {
     const m = queryParams.get("modal") as ModalKind
     return m ? m : null
@@ -97,9 +98,18 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   }, [real.session])
 
   // Demo fallback state (only when ?demo=1 or demoMode is explicitly active)
-  const demoEntries = useMemo(() => (isDemo ? mockApi.listEntries() : []), [isDemo, revision])
-  const demoTrash = useMemo(() => (isDemo ? mockApi.listTrash() : []), [isDemo, revision])
-  const demoPrefs = useMemo(() => (isDemo ? mockApi.getPreferences() : null), [isDemo, revision])
+  const demoEntries = useMemo(
+    () => (isDemo ? mockApi.listEntries() : []),
+    [isDemo, revision],
+  )
+  const demoTrash = useMemo(
+    () => (isDemo ? mockApi.listTrash() : []),
+    [isDemo, revision],
+  )
+  const demoPrefs = useMemo(
+    () => (isDemo ? mockApi.getPreferences() : null),
+    [isDemo, revision],
+  )
   const demoSelected = useMemo(
     () => (isDemo && selectedId ? mockApi.getEntry(selectedId) : null),
     [isDemo, selectedId, revision],
@@ -109,7 +119,11 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const entries: FoodEntry[] = isDemo ? demoEntries : real.allFoods
   const trash: FoodEntry[] = isDemo ? demoTrash : real.trash
   const prefs = isDemo
-    ? (demoPrefs ?? { timezone: "Asia/Ho_Chi_Minh", attention_lead_days: 2, version: 1 })
+    ? (demoPrefs ?? {
+        timezone: "Asia/Ho_Chi_Minh",
+        attention_lead_days: 2,
+        version: 1,
+      })
     : (real.prefs ?? {
         timezone: "Asia/Ho_Chi_Minh",
         attention_lead_days: 2,
@@ -118,19 +132,23 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const selected: FoodEntry | null = isDemo
     ? demoSelected
-    : (real.selected || entries.find((e) => e.id === selectedId) || null)
+    : real.selected || entries.find((e) => e.id === selectedId) || null
 
   const modalEntryId = actionEntryId ?? selectedId
   const modalEntry: FoodEntry | null = isDemo
-    ? (modalEntryId ? mockApi.getEntry(modalEntryId) : null)
-    : (entries.find((e) => e.id === modalEntryId) ||
-       trash.find((e) => e.id === modalEntryId) ||
-       selected ||
-       actionEntrySnapshot ||
-       null)
+    ? modalEntryId
+      ? mockApi.getEntry(modalEntryId)
+      : null
+    : entries.find((e) => e.id === modalEntryId) ||
+      trash.find((e) => e.id === modalEntryId) ||
+      selected ||
+      actionEntrySnapshot ||
+      null
 
   const attention = (e: FoodEntry) =>
-    isDemo ? attentionFor(e, prefs.attention_lead_days) : (e.attention ?? "unknown")
+    isDemo
+      ? attentionFor(e, prefs.attention_lead_days)
+      : (e.attention ?? "unknown")
 
   const counts = useMemo(() => {
     const c: Record<Attention, number> = {
@@ -208,11 +226,15 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   )
 
   const displayName = isDemo
-    ? (mockApi.user.display_name || "Bạn (Demo)")
-    : (real.session?.user?.display_name || "Chưa đăng nhập")
-  const settingsOwner = isDemo ? "demo" : real.session?.user.id ?? "guest"
+    ? mockApi.user.display_name || "Bạn (Demo)"
+    : real.session?.user?.display_name || "Chưa đăng nhập"
+  const settingsOwner = isDemo ? "demo" : (real.session?.user.id ?? "guest")
   const settingsSnapshot = isDemo ? prefs : real.prefs
-  const settingsKey = `${settingsOwner}:${settingsSnapshot ? `${settingsSnapshot.version}:${settingsSnapshot.timezone}:${settingsSnapshot.attention_lead_days}` : "loading"}`
+  const settingsKey = `${settingsOwner}:${
+    settingsSnapshot
+      ? `${settingsSnapshot.version}:${settingsSnapshot.timezone}:${settingsSnapshot.attention_lead_days}`
+      : "loading"
+  }`
 
   const navigate = (v: View) => {
     setView(v)
@@ -321,7 +343,11 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         <div style={{ textAlign: "center", maxWidth: "420px", width: "100%" }}>
           <span
             className="wordmark"
-            style={{ fontSize: "2rem", display: "block", marginBottom: "1.5rem" }}
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "1.5rem",
+            }}
           >
             EXPIRY
           </span>
@@ -330,7 +356,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             aria-label="Đang khôi phục phiên"
             style={{ marginBottom: "1.5rem" }}
           >
-            <i style={{ height: "14px", width: "180px", margin: "0 auto 8px" }} />
+            <i
+              style={{ height: "14px", width: "180px", margin: "0 auto 8px" }}
+            />
             <i style={{ height: "10px", width: "120px", margin: "0 auto" }} />
           </div>
           <p
@@ -391,7 +419,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       onAdd={requestAdd}
       displayName={displayName}
       urgentCount={urgentCount}
-      onAuth={!isDemo && !real.session ? () => setAuthModalOpen(true) : undefined}
+      onAuth={
+        !isDemo && !real.session ? () => setAuthModalOpen(true) : undefined
+      }
     >
       {notice && (
         <div className="toast" role="status">
@@ -402,13 +432,24 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
       {/* Global backend error display */}
       {!isDemo && real.error && !authModalOpen && (
-        <div className="toast error" role="alert" style={{ background: "var(--danger, #dc2626)", color: "#fff" }}>
+        <div
+          className="toast error"
+          role="alert"
+          style={{ background: "var(--danger, #dc2626)", color: "#fff" }}
+        >
           <Icon name="alert" />
           {real.error.message}
           {real.canRetry && (
             <button
               type="button"
-              style={{ marginLeft: 8, textDecoration: "underline", color: "#fff", background: "none", border: "none", cursor: "pointer" }}
+              style={{
+                marginLeft: 8,
+                textDecoration: "underline",
+                color: "#fff",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
               onClick={() => void retryPendingCommand()}
             >
               Thử lại
@@ -460,10 +501,15 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             }
 
             if (!real.session) return
-            const cmd = newCommand(real.session.user.id, "PATCH", "/me/preferences", {
-              expected_version: prefs.version,
-              ...patch,
-            })
+            const cmd = newCommand(
+              real.session.user.id,
+              "PATCH",
+              "/me/preferences",
+              {
+                expected_version: prefs.version,
+                ...patch,
+              },
+            )
             const res = await real.run(cmd)
             if (res.ok) {
               setNotice("Đã lưu cài đặt")
@@ -526,22 +572,25 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       )}
 
       {/* Entry creation modal */}
-      {modal === "add" && (isDemo || addOwnerId !== null && (!real.session || real.session.user.id === addOwnerId)) && (
-        <EntryForm
-          initial={pendingCreate}
-          active={!authModalOpen}
-          canRetry={!isDemo && (real.canRetry || retryingCommand)}
-          retryPending={real.busy || retryingCommand}
-          retryError={real.error?.message || ""}
-          onRetry={() => void retryPendingCommand()}
-          onClose={() => {
-            closeModal()
-            setPendingCreate(null)
-          }}
-          onCreate={create}
-          onScan={isDemo ? undefined : (file) => real.scan(file)}
-        />
-      )}
+      {modal === "add" &&
+        (isDemo ||
+          (addOwnerId !== null &&
+            (!real.session || real.session.user.id === addOwnerId))) && (
+          <EntryForm
+            initial={pendingCreate}
+            active={!authModalOpen}
+            canRetry={!isDemo && (real.canRetry || retryingCommand)}
+            retryPending={real.busy || retryingCommand}
+            retryError={real.error?.message || ""}
+            onRetry={() => void retryPendingCommand()}
+            onClose={() => {
+              closeModal()
+              setPendingCreate(null)
+            }}
+            onCreate={create}
+            onScan={isDemo ? undefined : (file) => real.scan(file)}
+          />
+        )}
 
       {/* Auth Modal for real API session */}
       {authModalOpen && (
@@ -559,11 +608,16 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             }
           }}
           onSubmit={async (mode, input) => {
-            const res = await real.authenticate(mode === "reauth" ? "login" : mode, {
-              email: input.email,
-              password: input.password || "",
-              ...(mode === "register" ? { display_name: input.display_name } : {}),
-            })
+            const res = await real.authenticate(
+              mode === "reauth" ? "login" : mode,
+              {
+                email: input.email,
+                password: input.password || "",
+                ...(mode === "register"
+                  ? { display_name: input.display_name }
+                  : {}),
+              },
+            )
             if (res.ok) {
               if (res.changed) {
                 setPendingCreate(null)
@@ -610,7 +664,13 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 const key = mockApi.createCommandKey(modal)
                 try {
                   if (modal === "recount") {
-                    mockApi.recount(key, modalEntry.id, modalEntry.version, amount, why)
+                    mockApi.recount(
+                      key,
+                      modalEntry.id,
+                      modalEntry.version,
+                      amount,
+                      why,
+                    )
                   } else {
                     mockApi.recordMovement(
                       key,
@@ -626,7 +686,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                   setNotice(
                     modal === "recount"
                       ? "Đã cập nhật lượng sau kiểm lại"
-                      : `Đã ghi nhận ${modal === "consume" ? "đã dùng" : "đã bỏ"}`,
+                      : `Đã ghi nhận ${
+                          modal === "consume" ? "đã dùng" : "đã bỏ"
+                        }`,
                   )
                   window.setTimeout(() => setNotice(""), 3000)
                 } catch {
@@ -668,7 +730,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 const res = await real.run(cmd)
                 if (res.ok) {
                   closeModal()
-                  setNotice(`Đã ghi nhận ${modal === "consume" ? "đã dùng" : "đã bỏ"}`)
+                  setNotice(
+                    `Đã ghi nhận ${modal === "consume" ? "đã dùng" : "đã bỏ"}`,
+                  )
                   window.setTimeout(() => setNotice(""), 3000)
                 }
               }
@@ -743,8 +807,17 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           title={`Xóa “${modalEntry.name}”?`}
           body="Món sẽ được chuyển vào thùng rác và có thể khôi phục bất cứ lúc nào."
           active={!authModalOpen}
-          actionDisabled={!isDemo && (real.canRetry || real.busy || retryingCommand)}
-          extra={<RetryAction canRetry={!isDemo && (real.canRetry || retryingCommand)} pending={real.busy || retryingCommand} error={real.error?.message || ""} onRetry={() => void retryPendingCommand()} />}
+          actionDisabled={
+            !isDemo && (real.canRetry || real.busy || retryingCommand)
+          }
+          extra={
+            <RetryAction
+              canRetry={!isDemo && (real.canRetry || retryingCommand)}
+              pending={real.busy || retryingCommand}
+              error={real.error?.message || ""}
+              onRetry={() => void retryPendingCommand()}
+            />
+          }
           action="Xóa vào thùng rác"
           actionVariant="danger"
           onClose={closeModal}
@@ -796,8 +869,17 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           title={`Khôi phục “${modalEntry.name}”?`}
           body="Món sẽ trở lại kho thực phẩm với đầy đủ thông tin ban đầu."
           active={!authModalOpen}
-          actionDisabled={!isDemo && (real.canRetry || real.busy || retryingCommand)}
-          extra={<RetryAction canRetry={!isDemo && (real.canRetry || retryingCommand)} pending={real.busy || retryingCommand} error={real.error?.message || ""} onRetry={() => void retryPendingCommand()} />}
+          actionDisabled={
+            !isDemo && (real.canRetry || real.busy || retryingCommand)
+          }
+          extra={
+            <RetryAction
+              canRetry={!isDemo && (real.canRetry || retryingCommand)}
+              pending={real.busy || retryingCommand}
+              error={real.error?.message || ""}
+              onRetry={() => void retryPendingCommand()}
+            />
+          }
           action="Khôi phục"
           onClose={() => {
             setModal(null)

@@ -89,7 +89,9 @@ export default function MovementForm({
                   : ""
   const reasonError = recount && !why.trim() ? "Nhập lý do kiểm lại." : ""
   const noop = recount && amount !== "" && n === food.remaining_quantity
-  const displayedAfter = Number.isFinite(after) ? Math.min(999999999.999, Math.max(0, after)) : 0
+  const displayedAfter = Number.isFinite(after)
+    ? Math.min(999999999.999, Math.max(0, after))
+    : 0
 
   return (
     <Modal
@@ -105,7 +107,15 @@ export default function MovementForm({
         onSubmit={(e) => {
           e.preventDefault()
           setTried(true)
-          if (saveInFlight.current || canRetry || retryPending || amountError || reasonError || noop) return
+          if (
+            saveInFlight.current ||
+            canRetry ||
+            retryPending ||
+            amountError ||
+            reasonError ||
+            noop
+          )
+            return
           saveInFlight.current = true
           let result: void | Promise<void>
           try {
@@ -116,8 +126,12 @@ export default function MovementForm({
           }
           if (result && typeof result.then === "function") {
             void result.then(
-              () => { saveInFlight.current = false },
-              () => { saveInFlight.current = false },
+              () => {
+                saveInFlight.current = false
+              },
+              () => {
+                saveInFlight.current = false
+              },
             )
           } else {
             saveInFlight.current = false
@@ -125,7 +139,12 @@ export default function MovementForm({
         }}
       >
         <div className="form-body compact">
-          <RetryAction canRetry={canRetry} pending={retryPending} error={retryError} onRetry={onRetry ?? (() => {})} />
+          <RetryAction
+            canRetry={canRetry}
+            pending={retryPending}
+            error={retryError}
+            onRetry={onRetry ?? (() => {})}
+          />
           <Field label={text.amount} error={tried ? amountError : ""}>
             <div className="amount-input">
               <input
