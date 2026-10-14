@@ -19,7 +19,6 @@
     "test:all": "npm run test:api && npm run test:python && npm run test:ui && npm run test:dbops && npm run build:web && npm run test:behavior",
     "review:pr": "node scripts/review-pr.mjs",
     "notify": "node scripts/notify-mobile.mjs",
-    "tui": "./expiry-tui",
     "dev:web": "npm --workspace=apps/web run dev",
     "dev:api": "npm --workspace=apps/api run dev"
   }
