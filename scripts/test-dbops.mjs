@@ -19,14 +19,23 @@ async function main() {
 
   let conn;
   try {
-    conn = await mysql.createConnection({
-      host: DB_HOST,
-      port: DB_PORT,
-      user: DB_USER,
-      password: DB_PASSWORD,
-      database: DB_NAME,
-      timezone: 'Z',
-    });
+    for (let attempt = 1; attempt <= 15; attempt++) {
+      try {
+        conn = await mysql.createConnection({
+          host: DB_HOST,
+          port: DB_PORT,
+          user: DB_USER,
+          password: DB_PASSWORD,
+          database: DB_NAME,
+          timezone: 'Z',
+        });
+        break;
+      } catch (connErr) {
+        if (attempt === 15) throw connErr;
+        console.log(`  ⏳ Đang đợi MySQL sẵn sàng (lần thử ${attempt}/15: ${connErr.message})...`);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
     console.log('  ✅ [STEP 1: CONNECTION] Kết nối thành công tới MySQL 8.4!');
 
     // 1. Verify required tables

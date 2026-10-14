@@ -145,12 +145,15 @@ jobs:
       - name: Start Full-Stack Docker Services
         run: |
           docker compose up -d --build
-          for i in {1..30}; do
-            if curl -s http://127.0.0.1:3001/health | grep -q "ok"; then
-              echo "✅ All Docker services are healthy and responding!"
+          echo "Waiting for MySQL 8.4 database and services to become fully ready..."
+          for i in {1..40}; do
+            MYSQL_READY=$(docker compose exec -T mysql mysqladmin ping -h localhost -uroot -proot_dev_password 2>/dev/null || true)
+            API_READY=$(curl -s http://127.0.0.1:3001/health 2>/dev/null || true)
+            if echo "$MYSQL_READY" | grep -q "alive" && echo "$API_READY" | grep -q "ok"; then
+              echo "✅ MySQL 8.4 is alive and Expiry API is healthy!"
               break
             fi
-            echo "Waiting for services to become healthy ($i/30)..."
+            echo "Waiting for DB & API readiness ($i/40)..."
             sleep 2
           done
 
