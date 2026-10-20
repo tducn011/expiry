@@ -37,6 +37,8 @@ type FormState = {
   label: DateLabelType
   opened_on: string
   note: string
+  barcode?: string
+  barcode_format?: string
 }
 
 /** UI-03 create and UI-08 metadata edit; basics can be saved before optional dates. */
@@ -219,47 +221,83 @@ export default function EntryForm({
                     Tên, lượng và đơn vị là đủ để lưu. Ngày và vị trí có thể bổ
                     sung sau.
                   </p>
-                  {onScan && (
-                    <div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setScanOpen((open) => !open)}
-                      >
-                        {scanOpen ? "Đóng quét nhãn" : "Gợi ý từ ảnh nhãn"}
-                      </Button>
-                      {scanOpen && (
-                        <ScanForm
-                          onScan={onScan}
-                          onClose={() => setScanOpen(false)}
-                          onApply={(result, selectedDate) => {
-                            const mapped = scanToEntryDraft(
-                              result,
-                              selectedDate,
-                            )
-                            setForm((current) => ({
-                              ...current,
-                              name: mapped.name || current.name,
-                              ...(mapped.expiry_date === null
-                                ? {}
-                                : {
-                                    expiry_date: mapped.expiry_date,
-                                    certainty: mapped.expiry_date_certainty,
-                                    source:
-                                      mapped.expiry_date_source ||
-                                      "package_label",
-                                    label:
-                                      mapped.expiry_date_label_type ||
-                                      "unknown",
-                                  }),
-                            }))
-                            setStep(1)
-                            setScanOpen(false)
-                          }}
-                        />
-                      )}
-                    </div>
-                  )}
+                  <div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setScanOpen((open) => !open)}
+                    >
+                      {scanOpen ? "Đóng quét mã / nhãn" : "Quét mã vạch / nhãn"}
+                    </Button>
+                    {scanOpen && (
+                      <ScanForm
+                        onScan={onScan}
+                        onClose={() => setScanOpen(false)}
+                        onApplyBarcode={(barcodeData) => {
+                          setForm((current) => ({
+                            ...current,
+                            barcode: barcodeData.barcode,
+                            barcode_format: barcodeData.barcode_format,
+                            note: current.note
+                              ? current.note.includes(barcodeData.barcode)
+                                ? current.note
+                                : `${current.note} (Mã vạch: ${barcodeData.barcode})`
+                              : `Mã vạch: ${barcodeData.barcode}`,
+                          }))
+                          setScanOpen(false)
+                        }}
+                        onApply={(result, selectedDate) => {
+                          const mapped = scanToEntryDraft(
+                            result,
+                            selectedDate,
+                          )
+                          setForm((current) => ({
+                            ...current,
+                            name: mapped.name || current.name,
+                            ...(mapped.expiry_date === null
+                              ? {}
+                              : {
+                                  expiry_date: mapped.expiry_date,
+                                  certainty: mapped.expiry_date_certainty,
+                                  source:
+                                    mapped.expiry_date_source ||
+                                    "package_label",
+                                  label:
+                                    mapped.expiry_date_label_type ||
+                                    "unknown",
+                                }),
+                          }))
+                          setStep(1)
+                          setScanOpen(false)
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+              {form.barcode && (
+                <div className="span-2">
+                  <div className="barcode-badge">
+                    <Icon name="barcode" />
+                    <span>
+                      Mã vạch: <strong>{form.barcode}</strong> ({form.barcode_format || "1D"})
+                    </span>
+                    <button
+                      type="button"
+                      className="barcode-remove-btn"
+                      onClick={() =>
+                        setForm((curr) => ({
+                          ...curr,
+                          barcode: undefined,
+                          barcode_format: undefined,
+                        }))
+                      }
+                      title="Bỏ mã vạch"
+                      aria-label="Bỏ mã vạch"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
               )}
               <div className="span-2">
