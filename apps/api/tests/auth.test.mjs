@@ -6,6 +6,7 @@ import { createAuthBoundary, createAuthRateLimiter } from '../src/modules/auth/a
 import { AuthRepository } from '../src/modules/auth/auth.repository.mjs';
 import { passwordVerifier, verifyPassword, tokenHash } from '../src/modules/auth/auth.crypto.mjs';
 import { DomainError } from '../src/shared/domain.mjs';
+import { errorHandler } from '../src/shared/middleware.mjs';
 
 const origin = 'http://127.0.0.1:5173';
 const password = 'Một mật khẩu dài 2026!';
@@ -49,7 +50,7 @@ async function harness(options = {}) {
   app.use('/private', boundary.requireAuth, boundary.requireCsrf);
   app.get('/private', (req, res) => res.json({ owner: req.userId }));
   app.post('/private', (req, res) => res.json({ owner: req.userId }));
-  app.use((error, req, res, next) => res.status(error.status ?? 500).json({ title: error.code ?? 'INTERNAL_SERVER_ERROR' }));
+  app.use(options.errorHandler ?? ((error, req, res, next) => res.status(error.status ?? 500).json({ title: error.code ?? 'INTERNAL_SERVER_ERROR' })));
   const server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -146,6 +147,39 @@ test('login rejects wrong and unknown credentials with the same response, rotate
     assert.equal(logout.status, 204);
     assert.match(logout.headers.get('set-cookie'), /Expires=Thu, 01 Jan 1970/);
     assert.equal((await h.request('/private', { cookie })).status, 401);
+  } finally { await h.close(); }
+});
+
+test('concurrent valid logins wait for scrypt capacity instead of failing globally', async () => {
+  const verifier = await passwordVerifier(password);
+  const repository = new AuthFixture();
+  const user = { id: randomUUID(), display_name: 'Owner', email: registration.email.toLowerCase(), timezone: 'Asia/Ho_Chi_Minh', attention_lead_days: 2, version: 1 };
+  repository.users.set(user.email, { user, password_verifier: verifier });
+  const h = await harness({ repository, rateLimit: () => {}, errorHandler });
+  try {
+    const responses = await Promise.all(Array.from({ length: 4 }, () => h.request('/api/v1/auth/login', {
+      method: 'POST',
+      body: { email: user.email, password }
+    })));
+    assert.deepEqual(responses.map(response => response.status), [200, 200, 200, 200]);
+  } finally { await h.close(); }
+});
+
+test('scrypt queue overload responds with Retry-After', async () => {
+  const verifier = await passwordVerifier(password);
+  const repository = new AuthFixture();
+  const user = { id: randomUUID(), display_name: 'Owner', email: registration.email.toLowerCase(), timezone: 'Asia/Ho_Chi_Minh', attention_lead_days: 2, version: 1 };
+  repository.users.set(user.email, { user, password_verifier: verifier });
+  const h = await harness({ repository, rateLimit: () => {}, errorHandler });
+  try {
+    const responses = await Promise.all(Array.from({ length: 12 }, () => h.request('/api/v1/auth/login', {
+      method: 'POST',
+      body: { email: user.email, password }
+    })));
+    const limited = responses.filter(response => response.status === 429);
+    assert.ok(limited.length >= 1);
+    assert.ok(limited.every(response => response.headers.get('retry-after') === '1'));
+    assert.ok(responses.every(response => response.status === 200 || response.status === 429));
   } finally { await h.close(); }
 });
 

@@ -7,15 +7,52 @@ const derive = promisify(scrypt);
 const options = Object.freeze({ N: 131072, r: 8, p: 1, maxmem: 192 * 1024 * 1024 });
 const dummyVerifier = `scrypt$131072$8$1$${randomBytes(16).toString('hex')}$${randomBytes(64).toString('hex')}`;
 let activeDerivations = 0;
+const derivationQueue = [];
+const maxQueuedDerivations = 8;
+const queueTimeoutMs = 2000;
+
+function overloaded() {
+  const error = new DomainError(429, 'AUTH_RATE_LIMITED');
+  error.retryAfter = 1;
+  return error;
+}
+
+async function acquireDerivationSlot() {
+  if (activeDerivations < 2) {
+    activeDerivations += 1;
+    return;
+  }
+  if (derivationQueue.length >= maxQueuedDerivations) throw overloaded();
+  await new Promise((resolve, reject) => {
+    const waiter = {
+      resolve,
+      reject,
+      timeout: setTimeout(() => {
+        const index = derivationQueue.indexOf(waiter);
+        if (index !== -1) derivationQueue.splice(index, 1);
+        reject(overloaded());
+      }, queueTimeoutMs)
+    };
+    derivationQueue.push(waiter);
+  });
+}
+
+function releaseDerivationSlot() {
+  const next = derivationQueue.shift();
+  if (next) {
+    clearTimeout(next.timeout);
+    next.resolve();
+  } else {
+    activeDerivations -= 1;
+  }
+}
 
 async function passwordKey(password, salt) {
-  // Bound the 128 MiB work units; do not queue unbounded attacker-controlled work.
-  if (activeDerivations >= 2) throw new DomainError(429, 'AUTH_RATE_LIMITED');
-  activeDerivations += 1;
+  await acquireDerivationSlot();
   try {
     return await derive(password, salt, 64, options);
   } finally {
-    activeDerivations -= 1;
+    releaseDerivationSlot();
   }
 }
 
