@@ -1265,6 +1265,25 @@
               "maximum": 100,
               "default": 20
             }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "default": ""
+            },
+            "description": "Tìm kiếm theo tên thực phẩm trong thùng rác"
+          },
+          {
+            "in": "query",
+            "name": "location",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "description": "Lọc theo vị trí lưu trữ (storage location)"
           }
         ],
         "responses": {
