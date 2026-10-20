@@ -1,5 +1,6 @@
 import { createApp } from './app.mjs';
 import { loadEnv, closePools } from './shared/connection.mjs';
+import { registerShutdownHandlers } from './shared/server-shutdown.mjs';
 
 async function bootstrap() {
   const env = await loadEnv();
@@ -11,17 +12,7 @@ async function bootstrap() {
     console.log(`[Expiry API] Target MySQL Database: ${env.database} on ${env.host}:${env.port}`);
   });
 
-  const shutdown = () => {
-    console.log('\n[Expiry API] Shutting down gracefully...');
-    server.close(async () => {
-      await closePools();
-      console.log('[Expiry API] Closed all connections.');
-      process.exit(0);
-    });
-  };
-
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
+  registerShutdownHandlers(server, closePools);
 }
 
 bootstrap().catch(err => {
