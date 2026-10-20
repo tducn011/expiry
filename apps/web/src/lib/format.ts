@@ -125,10 +125,26 @@ export const fmtQty = (n: number) =>
   n.toLocaleString("vi-VN", { maximumFractionDigits: 3 })
 
 export const fmtDate = (d: string | null) =>
-  d ? d.split("-").reverse().join("/") : ""
+  d ? d.slice(0, 10).split("-").reverse().join("/") : ""
 
-export const fmtTime = (ts: string, timezone = "Asia/Ho_Chi_Minh") =>
-  new Date(ts).toLocaleString("vi-VN", {
+export const fmtTime = (ts: string, timezone = "Asia/Ho_Chi_Minh") => {
+  const normalized = ts
+
+    .trim()
+
+    .replace(" ", "T")
+
+    .replace(/(\.\d{3})\d+/, "$1")
+
+  const withTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized)
+    ? normalized
+    : `${normalized}Z`
+
+  const date = new Date(withTimezone)
+
+  if (Number.isNaN(date.getTime())) return ""
+
+  return date.toLocaleString("vi-VN", {
     timeZone: timezone,
 
     day: "2-digit",
@@ -141,3 +157,4 @@ export const fmtTime = (ts: string, timezone = "Asia/Ho_Chi_Minh") =>
 
     minute: "2-digit",
   })
+}

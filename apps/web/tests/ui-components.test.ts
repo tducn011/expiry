@@ -48,11 +48,23 @@ describe("UI Domain Formatting & Helpers", () => {
   it("formats ISO date into Vietnamese DD/MM/YYYY", () => {
     expect(fmtDate(null)).toBe("")
     expect(fmtDate("2026-10-15")).toBe("15/10/2026")
+    expect(fmtDate("2026-10-20T00:00:00.000Z")).toBe("20/10/2026")
   })
 
   it("formats timestamps into localized datetime strings", () => {
     const formatted = fmtTime("2026-10-12T07:00:00Z", "UTC")
     expect(formatted).toContain("12/10/2026")
+  })
+
+  it("normalizes SQL timestamps with microseconds before formatting", () => {
+    const formatted = fmtTime("2026-10-20 15:30:00.123456", "UTC")
+    expect(formatted).toContain("20/10/2026")
+    expect(formatted).toContain("15:30")
+  })
+
+  it("returns an empty string for invalid timestamps", () => {
+    expect(() => fmtTime("not-a-timestamp")).not.toThrow()
+    expect(fmtTime("not-a-timestamp")).toBe("")
   })
 })
 
