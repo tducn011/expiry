@@ -30,7 +30,7 @@ export class AuthRepository {
     } catch (error) {
       if (connection) await connection.rollback().catch(() => {});
       if (error instanceof DomainError) throw error;
-      if (error.code === 'ER_DUP_ENTRY') throw new DomainError(409, 'ACCOUNT_UNAVAILABLE');
+      if (error.code === 'ER_DUP_ENTRY') throw new DomainError(409, 'EMAIL_ALREADY_REGISTERED');
       // Missing proposal tables, unavailable DB, and unexpected storage errors cannot bypass auth.
       throw new DomainError(503, 'AUTH_UNAVAILABLE');
     } finally {
