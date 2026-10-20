@@ -46,7 +46,7 @@ export function movementDTO(movement) {
   return {
     id: movement.id, entry_id: movement.entry_id, kind: movement.kind,
     quantity_before: movement.quantity_before, quantity_after: movement.quantity_after,
-    delta: `${delta < 0n ? '-' : ''}${decimal(delta < 0n ? -delta : delta)}`,
+    delta: decimal(delta),
     reason: movement.reason, recorded_at: utcInstant(movement.recorded_at)
   };
 }

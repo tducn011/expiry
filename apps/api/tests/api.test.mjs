@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createApp } from '../src/app.mjs';
 import express from 'express';
 import { idempotencyMiddleware, errorHandler } from '../src/shared/middleware.mjs';
-import { DomainError } from '../src/shared/domain.mjs';
+import { DomainError, decimal } from '../src/shared/domain.mjs';
 
 test('App initialization and healthcheck', async () => {
   const app = createApp();
@@ -114,3 +114,23 @@ test('Production session configuration fails closed without an exact HTTPS origi
   assert.throws(() => createApp({ secureCookies: true, allowedOrigins: [] }), /APP_ORIGIN/);
   assert.throws(() => createApp({ secureCookies: true, allowedOrigins: ['http://localhost:4174'] }), /trusted HTTP/);
 });
+
+test('decimal formats BigInt values correctly for positive, zero, and negative values', () => {
+  assert.equal(decimal(0n), '0.000');
+  assert.equal(decimal(1n), '0.001');
+  assert.equal(decimal(5n), '0.005');
+  assert.equal(decimal(50n), '0.050');
+  assert.equal(decimal(999n), '0.999');
+  assert.equal(decimal(1000n), '1.000');
+  assert.equal(decimal(1500n), '1.500');
+  assert.equal(decimal(-1n), '-0.001');
+  assert.equal(decimal(-5n), '-0.005');
+  assert.equal(decimal(-50n), '-0.050');
+  assert.equal(decimal(-500n), '-0.500');
+  assert.equal(decimal(-1500n), '-1.500');
+  assert.equal(decimal(123456789n), '123456.789');
+  assert.equal(decimal(-123456789n), '-123456.789');
+  assert.throws(() => decimal('1000'), /VALIDATION_ERROR/);
+  assert.throws(() => decimal(1000), /VALIDATION_ERROR/);
+});
+
