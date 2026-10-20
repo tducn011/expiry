@@ -14,7 +14,12 @@ export function milli(value, unit, positive=false) {
   if (positive && amount===0n || unit==='piece' && amount%1000n!==0n) invalid();
   return amount;
 }
-export const decimal = value => `${value/1000n}.${String(value%1000n).padStart(3,'0')}`;
+export function decimal(value) {
+  if (typeof value !== 'bigint') invalid();
+  const sign = value < 0n ? '-' : '';
+  const abs = value < 0n ? -value : value;
+  return `${sign}${abs / 1000n}.${String(abs % 1000n).padStart(3, '0')}`;
+}
 export function date(value) {
   if (value===null) return null;
   if (typeof value!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(value) || value<'1000-01-01' || value>'9999-12-31') invalid();
