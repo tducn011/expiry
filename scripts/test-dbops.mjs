@@ -5,10 +5,42 @@
  * and ledger-entry consistency.
  */
 
-import mysql from '../apps/api/node_modules/mysql2/promise.js';
+import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+let mysqlModule;
+try {
+  mysqlModule = await import('mysql2/promise');
+} catch {
+  mysqlModule = await import('../apps/api/node_modules/mysql2/promise.js');
+}
+const mysql = mysqlModule.default || mysqlModule;
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Tự động load database/mysql/.env nếu chưa có trong process.env
+const envPath = resolve(__dirname, '../database/mysql/.env');
+if (existsSync(envPath)) {
+  try {
+    const content = await readFile(envPath, 'utf8');
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      const idx = trimmed.indexOf('=');
+      if (idx !== -1 && !trimmed.startsWith('#')) {
+        const k = trimmed.slice(0, idx).trim();
+        const v = trimmed.slice(idx + 1).trim();
+        if (!process.env[k]) process.env[k] = v;
+      }
+    }
+  } catch {
+    // Bỏ qua lỗi nếu không đọc được file
+  }
+}
 
 const DB_HOST = process.env.MYSQL_HOST || '127.0.0.1';
-const DB_PORT = Number(process.env.MYSQL_PORT || 3307);
+const DB_PORT = Number(process.env.MYSQL_HOST_PORT || process.env.MYSQL_PORT || 3307);
 const DB_USER = process.env.MYSQL_USER || 'expiry_app';
 const DB_PASSWORD = process.env.MYSQL_PASSWORD || 'app_dev_password';
 const DB_NAME = process.env.MYSQL_DATABASE || 'expiry_dev';
