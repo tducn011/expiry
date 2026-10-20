@@ -17,7 +17,7 @@ class AuthFixture {
   sessions = new Map();
   async findCredential(email) { return this.users.get(email) ?? null; }
   async register(input, session, previousHash) {
-    if (this.users.has(input.email)) throw new DomainError(409, 'ACCOUNT_UNAVAILABLE');
+    if (this.users.has(input.email)) throw new DomainError(409, 'EMAIL_ALREADY_REGISTERED');
     const user = { id: randomUUID(), display_name: input.display_name, email: input.email, timezone: input.timezone, attention_lead_days: 2, version: 1 };
     this.users.set(input.email, { user, password_verifier: input.password_verifier });
     await this.createSession(user.id, session, previousHash);
@@ -244,3 +244,33 @@ test('registration rollback prevents a partial account when credential/session w
   assert.equal(pendingUser, null);
   assert.deepEqual(events, ['begin', 'rollback', 'release']);
 });
+
+test('duplicate registration returns 409 EMAIL_ALREADY_REGISTERED', async () => {
+  const h = await harness();
+  try {
+    const session = await register(h);
+    assert.equal(session.body.user.email, 'owner@example.com');
+    const duplicate = await h.request('/api/v1/auth/register', { method: 'POST', body: registration });
+    assert.equal(duplicate.status, 409);
+    assert.deepEqual(await duplicate.json(), { title: 'EMAIL_ALREADY_REGISTERED' });
+  } finally { await h.close(); }
+});
+
+test('duplicate registration triggers ER_DUP_ENTRY and maps to EMAIL_ALREADY_REGISTERED with rollback', async () => {
+  let rollbacks = 0;
+  let releases = 0;
+  const repository = new AuthRepository('not-connected', { connect: async () => ({
+    beginTransaction: async () => {}, commit: async () => {},
+    execute: async () => { throw Object.assign(new Error('duplicate key'), { code: 'ER_DUP_ENTRY' }); },
+    rollback: async () => { rollbacks += 1; }, end: async () => { releases += 1; }
+  }) });
+  await assert.rejects(
+    repository.register({ email: 'owner@example.com', display_name: 'Owner', timezone: 'Asia/Ho_Chi_Minh', password_verifier: 'fixture' }, {
+      token_hash: 'a'.repeat(64), created_at: new Date('2026-10-11T00:00:00Z'), expires_at: new Date('2026-10-11T08:00:00Z')
+    }),
+    error => error instanceof DomainError && error.status === 409 && error.code === 'EMAIL_ALREADY_REGISTERED'
+  );
+  assert.equal(rollbacks, 1);
+  assert.equal(releases, 1);
+});
+
