@@ -1,108 +1,162 @@
 import { useEffect, useRef, useState } from "react"
+
 import type { ReactNode } from "react"
+
 import Button from "./Button"
+
 import Icon from "./Icon"
 
 let foregroundModalCount = 0
+
 let previousBodyOverflow = ""
 
 function acquireModalScrollLock() {
   if (foregroundModalCount === 0) {
     previousBodyOverflow = document.body.style.overflow
+
     document.body.style.overflow = "hidden"
   }
+
   foregroundModalCount += 1
+
   return () => {
     foregroundModalCount = Math.max(0, foregroundModalCount - 1)
+
     if (foregroundModalCount === 0)
       document.body.style.overflow = previousBodyOverflow
   }
 }
 
 /** Shared dialog with fixed chrome, contained scrolling, and focus restoration. */
+
 export default function Modal({
   eyebrow,
+
   title,
+
   description,
+
   onClose,
+
   footer,
+
   children,
+
   size = "regular",
+
   layout = "flow",
+
   dismissible = true,
+
   active = true,
 }: {
   eyebrow?: string
+
   title: string
+
   description?: string
+
   onClose: () => void
+
   footer?: ReactNode
+
   children?: ReactNode
+
   size?: "compact" | "regular" | "wide"
+
   layout?: "flow" | "form" | "list"
+
   dismissible?: boolean
+
   active?: boolean
 }) {
   const dialogRef = useRef<HTMLElement>(null)
+
   const activeRef = useRef(active)
+
   activeRef.current = active
+
   // Capture before child autoFocus runs during the commit.
+
   const [opener] = useState(() =>
     document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null,
   )
+
   const closeRef = useRef(onClose)
+
   closeRef.current = onClose
 
   useEffect(() => {
     if (!active) return
+
     const dialog = dialogRef.current
+
     if (!dialog) return
+
     const releaseScrollLock = acquireModalScrollLock()
+
     const focusable = () =>
       Array.from(
         dialog.querySelectorAll<HTMLElement>(
           'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex="0"]',
         ),
       ).filter((element) => element.getClientRects().length > 0)
+
     if (!dialog.contains(document.activeElement))
       (focusable()[0] ?? dialog).focus({ preventScroll: true })
 
     const handleKey = (event: KeyboardEvent) => {
       if (!activeRef.current) return
+
       // Portaled controls consume Escape and manage their own keyboard navigation.
+
       if (
         event.defaultPrevented ||
         document.querySelector('[data-ui-popover="true"]')
       )
         return
+
       if (event.key === "Escape" && dismissible) {
         event.preventDefault()
+
         closeRef.current()
       }
+
       if (event.key !== "Tab") return
+
       const controls = focusable()
+
       const first = controls[0]
+
       const last = controls[controls.length - 1]
+
       if (!first || !last) {
         event.preventDefault()
+
         dialog.focus()
       } else if (
         event.shiftKey &&
         (document.activeElement === first || document.activeElement === dialog)
       ) {
         event.preventDefault()
+
         last.focus()
       } else if (!event.shiftKey && document.activeElement === last) {
         event.preventDefault()
+
         first.focus()
       }
     }
+
     document.addEventListener("keydown", handleKey)
+
     return () => {
       document.removeEventListener("keydown", handleKey)
+
       releaseScrollLock()
+
       if (opener?.isConnected) opener.focus({ preventScroll: true })
     }
   }, [active, dismissible, opener])
@@ -150,16 +204,23 @@ export default function Modal({
 
 export function RetryAction({
   canRetry,
+
   pending,
+
   error,
+
   onRetry,
 }: {
   canRetry: boolean
+
   pending: boolean
+
   error: string
+
   onRetry: () => void
 }) {
   if (!canRetry) return null
+
   return (
     <div className="stack" role="status">
       <p className="note-box" role="alert">
@@ -179,9 +240,11 @@ export function RetryAction({
 
 export function ModalActions({
   start,
+
   end,
 }: {
   start?: ReactNode
+
   end: ReactNode
 }) {
   return (

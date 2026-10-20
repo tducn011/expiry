@@ -2,13 +2,19 @@ import { ReactNode } from "react"
 
 export default function PageHeader({
   eyebrow,
+
   title,
+
   description,
+
   action,
 }: {
   eyebrow: string
+
   title: string
+
   description?: string
+
   action?: ReactNode
 }) {
   return (
