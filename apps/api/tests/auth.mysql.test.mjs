@@ -63,8 +63,9 @@ test('approved local-auth migration and HTTP lifecycle against isolated real MyS
     await t.test('the approved additive migration records one stable version and replays without changes', async () => {
       await applyAuthMigration(database);
       const versions = await query('SELECT version,sha256 FROM schema_migrations ORDER BY version');
-      assert.deepEqual(versions.map(row => row.version), [1, 2]);
+      assert.deepEqual(versions.map(row => row.version), [1, 2, 3]);
       assert.match(versions[1].sha256, /^[0-9a-f]{64}$/);
+      assert.match(versions[2].sha256, /^[0-9a-f]{64}$/);
       const users = await query('SELECT COUNT(*) AS count FROM users');
       assert.equal(Number(users[0].count), 0);
     });
@@ -82,6 +83,19 @@ test('approved local-auth migration and HTTP lifecycle against isolated real MyS
       const rawToken = owner.cookie.split('=')[1];
       assert.ok(rows[0].token_hash !== rawToken, 'Raw tokens must not be persisted');
       assert.ok(rows[0].token_hash === tokenHash(rawToken), 'Persisted hash must correspond to the issued opaque token');
+    });
+
+    await t.test('session expiry boundary permits equality in storage and rejects the session cleanly', async () => {
+      const hash = tokenHash(owner.cookie.split('=')[1]);
+      const [sessions] = await query('SELECT last_seen_at,expires_at FROM user_sessions WHERE token_hash=?', [hash]);
+      assert.equal(sessions.length, 1);
+      await query('UPDATE user_sessions SET last_seen_at=expires_at WHERE token_hash=?', [hash]);
+      try {
+        const expiresAt = new Date(`${sessions[0].expires_at.replace(' ', 'T')}Z`);
+        assert.equal(await repository().current(hash, () => expiresAt, 1000), null);
+      } finally {
+        await query('UPDATE user_sessions SET last_seen_at=? WHERE token_hash=?', [sessions[0].last_seen_at, hash]);
+      }
     });
 
     await t.test('a session read queued behind a newer activity update uses the time after acquiring its row lock', async () => {

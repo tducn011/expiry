@@ -52,7 +52,8 @@ if(mode==='migrate-dev') {
     const [tables]=await c.query('SHOW TABLES'); tableNames=tables.map(r=>Object.values(r)[0]).sort(); assert.deepEqual(tableNames,['api_requests','food_entries','local_credentials','schema_migrations','stock_movements','user_sessions','users']);
     [migrationVersions]=await c.query('SELECT version,sha256 FROM schema_migrations ORDER BY version');
     const migration002=await readFile(new URL('../migrations/002_local_auth.sql',import.meta.url));
-    assert.deepEqual(migrationVersions.map(row=>[Number(row.version),row.sha256]),[[1,migration.hash],[2,createHash('sha256').update(migration002).digest('hex')]]);
+    const migration003=await readFile(new URL('../migrations/003_session_expiry_boundary.sql',import.meta.url));
+    assert.deepEqual(migrationVersions.map(row=>[Number(row.version),row.sha256]),[[1,migration.hash],[2,createHash('sha256').update(migration002).digest('hex')],[3,createHash('sha256').update(migration003).digest('hex')]]);
     const [bad]=await c.query('SELECT e.id FROM food_entries e LEFT JOIN stock_movements m ON m.entry_id=e.id GROUP BY e.id,e.remaining_quantity HAVING COUNT(m.id)=0 OR COALESCE(SUM(m.quantity_after-m.quantity_before),0)<>e.remaining_quantity'); assert.equal(bad.length,0);
   } finally {await c.end();}
   const id=await containerId(), env=await environment();

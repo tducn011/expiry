@@ -53,9 +53,8 @@ function barrier(count) {
   }};
 }
 await rootSql(`CREATE DATABASE \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;`);
-const applied=await migrate(database);assert.equal(applied.applied,true);await grants(database);const authApplied=await applyAuthMigration(database);assert.equal(authApplied.applied,true);report.migrations={version001:applied,version002:authApplied};
-
-await check('SCHEMA-STRUCTURE','VT-01/16; RULE-01/03/04/09/10/18','Fresh isolated schema with migrations001 and002','INFORMATION_SCHEMA tables/columns/constraints/statistics','Six migration-defined tables + one migration ledger; all expected columns/keys/checks',async()=>{
+const applied=await migrate(database);assert.equal(applied.applied,true);await grants(database);const authApplied=await applyAuthMigration(database);assert.equal(authApplied.applied,true);report.migrations={version001:applied,auth:authApplied};
+await check('SCHEMA-STRUCTURE','VT-01/16; RULE-01/03/04/09/10/18','Fresh isolated schema with migrations001,002 and003','INFORMATION_SCHEMA tables/columns/constraints/statistics','Six migration-defined tables + one migration ledger; all expected columns/keys/checks',async()=>{
   return db(async c=>{
     const [tables]=await c.query('SELECT TABLE_NAME,ENGINE FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=? ORDER BY TABLE_NAME',[database]);
     assert.deepEqual(tables.map(t=>t.TABLE_NAME),['api_requests','food_entries','local_credentials','schema_migrations','stock_movements','user_sessions','users']);assert(tables.every(t=>t.ENGINE==='InnoDB'));
@@ -74,7 +73,7 @@ await check('SCHEMA-STRUCTURE','VT-01/16; RULE-01/03/04/09/10/18','Fresh isolate
     assert.deepEqual(references.map(r=>[r.TABLE_NAME,r.COLUMN_NAME,r.REFERENCED_TABLE_NAME,r.REFERENCED_COLUMN_NAME]),[['api_requests','user_id','users','id'],['food_entries','user_id','users','id'],['local_credentials','user_id','users','id'],['stock_movements','entry_id','food_entries','id'],['user_sessions','user_id','users','id']]);
     const [constraints]=await c.query('SELECT TABLE_NAME,CONSTRAINT_NAME,CONSTRAINT_TYPE,ENFORCED FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA=? ORDER BY TABLE_NAME,CONSTRAINT_NAME',[database]);
     assert(constraints.filter(v=>v.CONSTRAINT_TYPE==='CHECK').every(v=>v.ENFORCED==='YES'));
-    const migrationSql=(await readFile(new URL('migrations/001_initial_schema.sql',base),'utf8'))+'\n'+(await readFile(new URL('migrations/002_local_auth.sql',base),'utf8'));
+    const migrationSql=(await readFile(new URL('migrations/001_initial_schema.sql',base),'utf8'))+'\n'+(await readFile(new URL('migrations/002_local_auth.sql',base),'utf8'))+'\n'+(await readFile(new URL('migrations/003_session_expiry_boundary.sql',base),'utf8'));
     const declaredChecks=[...migrationSql.matchAll(/CONSTRAINT\s+(\w+)\s+CHECK/g)].map(m=>m[1]).sort();
     const checkConstraints=constraints.filter(v=>v.CONSTRAINT_TYPE==='CHECK');
     assert.equal(checkConstraints.length,30);assert.deepEqual(checkConstraints.map(v=>v.CONSTRAINT_NAME).sort(),declaredChecks);
@@ -86,7 +85,7 @@ await check('SCHEMA-STRUCTURE','VT-01/16; RULE-01/03/04/09/10/18','Fresh isolate
     report.schema={tables,columns,fks,constraints,indexes,check_count:checkConstraints.length};return {table_count:tables.length,column_count:columns.length,fk_count:fks.length,check_count:report.schema.check_count};
   });
 });
-await check('MIGRATION-REPLAY','VT-16; NFR-07','Applied versions001 and002','Replay both checksum-guarded migration runners','No DDL replay or duplicate metadata record',async()=>{const second=await migrate(database);assert.equal(second.applied,false);assert.equal(second.hash,applied.hash);const authSecond=await applyAuthMigration(database);assert.equal(authSecond.applied,false);assert.equal(authSecond.sha256,authApplied.sha256);return {baseline:second,auth:authSecond};});
+await check('MIGRATION-REPLAY','VT-16; NFR-07','Applied versions001,002 and003','Replay all checksum-guarded migration runners','No DDL replay or duplicate metadata record',async()=>{const second=await migrate(database);assert.equal(second.applied,false);assert.equal(second.hash,applied.hash);const authSecond=await applyAuthMigration(database);assert.equal(authSecond.applied,false);assert.equal(authSecond.sha256,authApplied.sha256);return {baseline:second,auth:authSecond};});
 await check('FK-ORPHANS','RULE-01/04; VT-01','Existing owner; random nonexistent owner/entry','Direct INSERT orphan entries, movements, api_requests; administrator DELETE owner','FK rejects all orphans and RESTRICT rejects parent delete',async()=>{
   const owner=await user(),entry=await create(owner);
   await db(async c=>{

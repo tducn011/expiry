@@ -59,8 +59,8 @@ async function administrator(database) {
   };
 }
 
-// Explicitly selected by the operator; the existing baseline migration runner
-// still installs/replays only001. No schema reset, seed, or automatic recovery.
+// Explicitly selected by the operator; the baseline migration runner still
+// installs/replays only001. No schema reset, seed, or automatic recovery.
 export async function applyAuthMigration(database) {
   if (!/^expiry_(dev|test_[a-z0-9_]+)$/.test(database)) throw new Error('Only an explicit Expiry development/test database is allowed');
   const connection = await administrator(database);
@@ -76,10 +76,12 @@ export async function applyAuthMigration(database) {
     if (appliedBaseline !== digest(baseline)) throw new Error('Verified baseline001 is required; preserve the existing database for review');
     const sql = await readFile(new URL('migrations/002_local_auth.sql', base), 'utf8');
     const sha256 = digest(sql);
+    const boundarySql = await readFile(new URL('migrations/003_session_expiry_boundary.sql', base), 'utf8');
+    const boundarySha256 = digest(boundarySql);
     const before = await snapshot(connection);
-    const [record] = await connection.query('SELECT sha256 FROM schema_migrations WHERE version=2');
-    if (record && record !== sha256) throw new Error('Applied migration002 checksum drift; create a new migration');
-    if (!record) {
+    const [record002] = await connection.query('SELECT sha256 FROM schema_migrations WHERE version=2');
+    if (record002 && record002 !== sha256) throw new Error('Applied migration002 checksum drift; create a new migration');
+    if (!record002) {
       const partial = await connection.query("SELECT TABLE_NAME FROM information_schema.tables WHERE table_schema=? AND table_name IN ('local_credentials','user_sessions')", [database]);
       if (partial.length) throw new Error('Unversioned/partial auth schema detected; explicit forward recovery is required');
       const statements = sql.replace(/^--.*$/gm, '').split(';').map(value => value.trim()).filter(Boolean);
@@ -87,13 +89,30 @@ export async function applyAuthMigration(database) {
       for (const statement of statements) await connection.query(statement);
       await connection.query('INSERT INTO schema_migrations(version,sha256) VALUES (2,?)', [sha256]);
     }
+    const [record003] = await connection.query('SELECT sha256 FROM schema_migrations WHERE version=3');
+    if (record003 && record003 !== boundarySha256) throw new Error('Applied migration003 checksum drift');
+    if (!record003) {
+      const [createTable] = await connection.query('SHOW CREATE TABLE user_sessions');
+      if (/last_seen_at`?\s*<=\s*`?expires_at/i.test(createTable)) {
+        // Recover the ledger if the atomic DDL completed but the version insert did not.
+      } else if (/last_seen_at`?\s*<(?![=])\s*`?expires_at/i.test(createTable)) {
+        const statements = boundarySql.replace(/^--.*$/gm, '').split(';').map(value => value.trim()).filter(Boolean);
+        if (statements.length !== 1 || !/^ALTER TABLE user_sessions DROP CHECK sessions_time,\s*ADD CONSTRAINT sessions_time CHECK \(/.test(statements[0])) {
+          throw new Error('Unexpected session-expiry migration shape');
+        }
+        await connection.query(statements[0]);
+      } else {
+        throw new Error('Unrecognized sessions_time constraint; explicit forward recovery is required');
+      }
+      await connection.query('INSERT INTO schema_migrations(version,sha256) VALUES (3,?)', [boundarySha256]);
+    }
     for (const table of ['local_credentials', 'user_sessions']) {
       await connection.query(`GRANT SELECT,INSERT,UPDATE ON \`${database}\`.\`${table}\` TO 'expiry_app'@'%'`);
     }
     const after = await snapshot(connection);
     if (JSON.stringify(before) !== JSON.stringify(after)) throw new Error('Existing domain rows changed during auth migration; inspect before continuing');
     const versions = (await connection.query('SELECT version,sha256 FROM schema_migrations ORDER BY version')).map(row => { const [version, hash] = row.split('\t'); return { version: Number(version), sha256: hash }; });
-    return { database, applied: !record, version: 2, sha256, inventory_preserved: true, before, after, versions };
+    return { database, applied: !record002 || !record003, version: 3, sha256: boundarySha256, inventory_preserved: true, before, after, versions };
   } finally {
     if (locked) await connection.query('SELECT RELEASE_LOCK(?)', [lock]).catch(() => {});
     await connection.end();
