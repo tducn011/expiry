@@ -1,36 +1,55 @@
 import { ReactNode } from "react"
+
 import Icon from "../ui/Icon"
 
 export type View = "inventory" | "attention" | "trash" | "settings"
 
 type NavItem = {
   id: View
+
   label: string
+
   icon: string
+
   badge?: number
 }
 
 export default function Shell({
   view,
+
   setView,
+
   children,
+
   onAdd,
+
   displayName,
+
   urgentCount = 0,
+
   onAuth,
 }: {
   view: View
+
   setView: (v: View) => void
+
   children: ReactNode
+
   onAdd: () => void
+
   displayName: string
+
   urgentCount?: number
+
   onAuth?: () => void
 }) {
   const sidebarNav: NavItem[] = [
     { id: "inventory", label: "Kho thực phẩm", icon: "box" },
+
     { id: "attention", label: "Cần chú ý", icon: "clock", badge: urgentCount },
+
     { id: "trash", label: "Thùng rác", icon: "trash" },
+
     { id: "settings", label: "Cài đặt", icon: "settings" },
   ]
 

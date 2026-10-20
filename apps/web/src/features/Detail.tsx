@@ -1,4 +1,5 @@
 import type { Attention, FoodEntry, QuantityMovement } from "../domain/types"
+
 import {
   attentionGuidance,
   fmtDate,
@@ -9,57 +10,83 @@ import {
   sourceLabel,
   unitLabel,
 } from "../lib/format"
+
 import Grid from "../components/layout/Grid"
+
 import Breadcrumb from "../components/layout/Breadcrumb"
+
 import Badge from "../components/ui/Badge"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import Icon from "../components/ui/Icon"
 
 export type DetailAction = "consume" | "discard" | "recount" | "history" | "edit" | "date" | "delete"
 
 export default function Detail({
   timezone = "Asia/Ho_Chi_Minh",
+
   food,
+
   attention,
+
   movements,
+
   onBack,
+
   parentLabel = "Kho thực phẩm",
+
   onAction,
 }: {
   timezone?: string
+
   food: FoodEntry
+
   attention: Attention
+
   movements: QuantityMovement[]
+
   onBack: () => void
+
   parentLabel?: string
+
   onAction: (a: DetailAction) => void
 }) {
   const unit = unitLabel[food.unit]
+
   const empty = food.remaining_quantity === 0
+
   const guidance = attentionGuidance[attention]
 
   const facts: [string, string, string?][] = [
     ["Vị trí lưu trữ", food.storage_location || "Chưa chọn vị trí"],
+
     ...(food.opened_on
       ? [["Ngày mở bao bì", fmtDate(food.opened_on)] as [string, string]]
       : []),
+
     ...(food.expiry_date_label_type && food.expiry_date_label_type !== "unknown"
       ? [
           [
             "Loại nhãn ngày",
+
             labelTypeLabel[food.expiry_date_label_type],
           ] as [string, string],
         ]
       : []),
+
     ...(food.expiry_date_source
       ? [
           [
             "Nguồn ngày",
+
             sourceLabel[food.expiry_date_source],
           ] as [string, string],
         ]
       : []),
+
     ...(food.note ? [["Ghi chú", food.note] as [string, string]] : []),
   ]
 

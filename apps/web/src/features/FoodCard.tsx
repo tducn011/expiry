@@ -1,18 +1,28 @@
 import type { Attention, FoodEntry } from "../domain/types"
+
 import { attentionLabel, fmtDate, fmtQty, unitLabel } from "../lib/format"
+
 import Badge from "../components/ui/Badge"
+
 import Icon from "../components/ui/Icon"
+
 import type { DetailAction } from "./Detail"
 
 export default function FoodCard({
   food,
+
   attention,
+
   onOpen,
+
   onAction,
 }: {
   food: FoodEntry
+
   attention: Attention
+
   onOpen: () => void
+
   onAction: (action: DetailAction) => void
 }) {
   const dateFormatted = food.expiry_date

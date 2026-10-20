@@ -1,74 +1,120 @@
 import { useRef, useState } from "react"
+
 import type { FoodEntry } from "../domain/types"
+
 import { fmtQty, unitLabel } from "../lib/format"
+
 import Button from "../components/ui/Button"
+
 import Field from "../components/ui/Field"
+
 import Icon from "../components/ui/Icon"
+
 import Modal, { ModalActions, RetryAction } from "../components/ui/Modal"
 
 export type MovementMode = "consume" | "discard" | "recount"
 
 const copy: Record<MovementMode, {
   title: string
+
   amount: string
+
   reason: string
+
   fill?: string
 }> = {
   consume: {
     title: "Ghi nhận đã dùng",
+
     amount: "Lượng đã dùng *",
+
     reason: "Lý do (không bắt buộc)",
+
     fill: "Dùng hết",
   },
+
   discard: {
     title: "Ghi nhận đã bỏ",
+
     amount: "Lượng đã bỏ *",
+
     reason: "Lý do (không bắt buộc)",
+
     fill: "Bỏ hết",
   },
+
   recount: {
     title: "Kiểm lại số lượng",
+
     amount: "Lượng thực tế đang có *",
+
     reason: "Lý do kiểm lại *",
   },
 }
 
 /** UI-05 consume, UI-06 discard, UI-07 recount: one form, `mode` is the variant. */
+
 export default function MovementForm({
   food,
+
   mode,
+
   onClose,
+
   onSave,
+
   active = true,
+
   canRetry = false,
+
   retryPending = false,
+
   retryError = "",
+
   onRetry,
 }: {
   food: FoodEntry
+
   mode: MovementMode
+
   onClose: () => void
+
   onSave: (amount: number, reason: string) => void | Promise<void>
+
   active?: boolean
+
   canRetry?: boolean
+
   retryPending?: boolean
+
   retryError?: string
+
   onRetry?: () => void
 }) {
   const saveInFlight = useRef(false)
+
   const [amount, setAmount] = useState("")
+
   const [why, setWhy] = useState("")
+
   const [tried, setTried] = useState(false)
+
   const text = copy[mode]
+
   const unit = unitLabel[food.unit]
+
   const n = Number(amount)
+
   const recount = mode === "recount"
+
   const amountFormatValid = /^\d+(?:\.\d{1,3})?$/.test(amount)
+
   const after = recount
     ? amount === ""
       ? food.remaining_quantity
       : n
     : +(food.remaining_quantity - (n || 0)).toFixed(3)
+
   const amountError =
     amount === ""
       ? "Nhập lượng."
@@ -87,8 +133,11 @@ export default function MovementForm({
                 : n > food.remaining_quantity
                   ? `Chỉ còn ${fmtQty(food.remaining_quantity)} ${unit}.`
                   : ""
+
   const reasonError = recount && !why.trim() ? "Nhập lý do kiểm lại." : ""
+
   const noop = recount && amount !== "" && n === food.remaining_quantity
+
   const displayedAfter = Number.isFinite(after)
     ? Math.min(999999999.999, Math.max(0, after))
     : 0
@@ -106,7 +155,9 @@ export default function MovementForm({
         noValidate
         onSubmit={(e) => {
           e.preventDefault()
+
           setTried(true)
+
           if (
             saveInFlight.current ||
             canRetry ||
@@ -116,19 +167,25 @@ export default function MovementForm({
             noop
           )
             return
+
           saveInFlight.current = true
+
           let result: void | Promise<void>
+
           try {
             result = onSave(n, why.trim())
           } catch (failure) {
             saveInFlight.current = false
+
             throw failure
           }
+
           if (result && typeof result.then === "function") {
             void result.then(
               () => {
                 saveInFlight.current = false
               },
+
               () => {
                 saveInFlight.current = false
               },
@@ -228,7 +285,9 @@ export default function MovementForm({
             >
               {[
                 "Đếm lại thực tế",
+
                 "Quên ghi nhận lần trước",
+
                 "Nhập sai số lượng",
               ].map((reason) => (
                 <button

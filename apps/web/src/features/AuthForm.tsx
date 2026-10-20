@@ -1,70 +1,106 @@
 import { useState } from "react"
+
 import type { FormEvent } from "react"
+
 import Button from "../components/ui/Button"
+
 import Field from "../components/ui/Field"
+
 import Icon from "../components/ui/Icon"
+
 import Modal, { ModalActions } from "../components/ui/Modal"
 
 export type AuthMode = "login" | "register" | "reauth"
+
 export type AuthSubmitPayload = {
   email: string
+
   password: string
+
   display_name?: string
 }
 
 export default function AuthForm({
   initialMode = "login",
+
   initialEmail = "",
+
   pending,
+
   error,
+
   onSubmit,
+
   onClose,
 }: {
   initialMode?: AuthMode
+
   initialEmail?: string
+
   pending: boolean
+
   error: string
+
   onSubmit: (
     mode: AuthMode,
+
     input: AuthSubmitPayload,
   ) => Promise<boolean | void>
+
   onClose: () => void
 }) {
   const [mode, setMode] = useState<AuthMode>(initialMode)
+
   const [email, setEmail] = useState(initialEmail)
+
   const [password, setPassword] = useState("")
+
   const [name, setName] = useState("")
+
   const [tried, setTried] = useState(false)
+
   const [showPassword, setShowPassword] = useState(false)
+
   const cleanEmail = email.trim()
+
   const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
     ? ""
     : "Vui lòng nhập địa chỉ email hợp lệ."
+
   const passwordError =
     [...password].length >= 15 && [...password].length <= 128
       ? ""
       : "Mật khẩu cần từ 15 đến 128 ký tự."
+
   const nameError =
     mode === "register" && !name.trim() ? "Vui lòng nhập tên hiển thị." : ""
 
   const switchMode = (next: AuthMode) => {
     setMode(next)
+
     setTried(false)
+
     setPassword("")
   }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
+
     setTried(true)
+
     if (pending || emailError || passwordError || nameError) return
+
     await onSubmit(mode, {
       email: cleanEmail,
+
       password,
+
       ...(mode === "register" ? { display_name: name.trim() } : {}),
     })
   }
 
   const reauth = mode === "reauth"
+
   return (
     <Modal
       title={
@@ -124,7 +160,9 @@ export default function AuthForm({
                 <div
                   style={{
                     position: "relative",
+
                     display: "flex",
+
                     alignItems: "center",
                   }}
                 >
@@ -145,12 +183,19 @@ export default function AuthForm({
                     onClick={() => setShowPassword((value) => !value)}
                     style={{
                       position: "absolute",
+
                       right: 8,
+
                       background: "none",
+
                       border: 0,
+
                       cursor: "pointer",
+
                       padding: 6,
+
                       color: "var(--muted, #64748b)",
+
                       display: "flex",
                     }}
                   >

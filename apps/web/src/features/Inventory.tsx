@@ -1,4 +1,5 @@
 import type { Attention, FoodEntry } from "../domain/types"
+
 import {
   attentionGroups,
   attentionGuidance,
@@ -6,79 +7,128 @@ import {
   fmtDate,
   locations,
 } from "../lib/format"
+
 import Grid from "../components/layout/Grid"
+
 import PageHeader from "../components/layout/PageHeader"
+
 import Button from "../components/ui/Button"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import Icon from "../components/ui/Icon"
+
 import Select from "../components/ui/Select"
+
 import FoodCard from "./FoodCard"
+
 import type { DetailAction } from "./Detail"
 
 export type InventoryFilters = {
   query: string
+
   location: string
+
   lifecycle: "Còn hàng" | "Đã hết" | "Tất cả"
+
   attentionFilter: Attention | "all"
 }
 
 export const defaultFilters: InventoryFilters = {
   query: "",
+
   location: "Tất cả vị trí",
+
   lifecycle: "Còn hàng",
+
   attentionFilter: "all",
 }
 
 export default function Inventory({
   mode,
+
   asOfDate,
+
   demo = false,
+
   foods,
+
   allFoods,
+
   counts,
+
   leadDays,
+
   attention,
+
   filters,
+
   setFilters,
+
   onOpen,
+
   onAdd,
+
   onShowAttention,
+
   onShowInventory,
+
   onAction,
 }: {
   asOfDate: string
+
   demo?: boolean
+
   mode: "inventory" | "attention"
+
   foods: FoodEntry[]
+
   allFoods: FoodEntry[]
+
   counts: Record<Attention, number>
+
   leadDays: number
+
   attention: (f: FoodEntry) => Attention
+
   filters: InventoryFilters
+
   setFilters: (f: InventoryFilters) => void
+
   onOpen: (f: FoodEntry) => void
+
   onAdd: () => void
+
   onShowAttention: () => void
+
   onShowInventory: () => void
+
   onAction: (food: FoodEntry, action: DetailAction) => void
 }) {
   const isAttention = mode === "attention"
+
   const activeFoods = allFoods.filter((food) => food.remaining_quantity > 0)
+
   const dateCounts = {
     exact: activeFoods.filter((food) => food.expiry_date_certainty === "exact")
       .length,
+
     estimated: activeFoods.filter(
       (food) => food.expiry_date_certainty === "estimated",
     ).length,
+
     unknown: activeFoods.filter((food) => !food.expiry_date).length,
   }
+
   const set = <K extends keyof InventoryFilters,>(
     k: K,
+
     v: InventoryFilters[K],
   ) => setFilters({ ...filters, [k]: v })
 
   const toggleAttentionFilter = (key: Attention) => {
     if (counts[key] === 0) return
+
     set("attentionFilter", filters.attentionFilter === key ? "all" : key)
   }
 
@@ -94,10 +144,13 @@ export default function Inventory({
     ))
 
   const urgentTotal = counts.past + counts.today + counts.soon
+
   const isFilteredByAttention = filters.attentionFilter !== "all"
+
   const filterKeys: Attention[] = isAttention
     ? ["past", "today", "soon", "unknown"]
     : ["past", "today", "soon", "unknown", "later"]
+
   const hasFilters =
     filters.query !== "" ||
     filters.location !== defaultFilters.location ||
@@ -128,7 +181,9 @@ export default function Inventory({
         >
           {filterKeys.map((key) => {
             const isActive = filters.attentionFilter === key
+
             const isZero = counts[key] === 0
+
             return (
               <button
                 type="button"
@@ -209,6 +264,7 @@ export default function Inventory({
           value={filters.location}
           options={[defaultFilters.location, ...locations].map((value) => ({
             value,
+
             label: value,
           }))}
           onChange={(value) => set("location", value)}
@@ -219,8 +275,10 @@ export default function Inventory({
             value={filters.attentionFilter}
             options={[
               { value: "all", label: "Mọi trạng thái" },
+
               ...filterKeys.map((value) => ({
                 value,
+
                 label: attentionLabel[value],
               })),
             ]}
@@ -234,6 +292,7 @@ export default function Inventory({
             value={filters.lifecycle}
             options={["Còn hàng", "Đã hết", "Tất cả"].map((value) => ({
               value,
+
               label: value,
             }))}
             onChange={(value) =>
@@ -318,6 +377,7 @@ export default function Inventory({
           ) : isAttention ? (
             attentionGroups.map(([key, title]) => {
               const group = foods.filter((f) => attention(f) === key)
+
               return group.length ? (
                 <section className="attention-group" key={key}>
                   <h2>
