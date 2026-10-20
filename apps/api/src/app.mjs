@@ -41,6 +41,13 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
   // API v1 Router
   const v1Router = express.Router();
 
+  // Extraction service
+  const scanService = new ScanService(scanServiceUrl, scanOptions);
+  const scanController = new ScanController(scanService);
+
+  // Public health check for OCR microservice monitoring
+  v1Router.get('/scan/health', scanController.health);
+
   // Credential endpoints precede domain commands. Ownership comes only from a
   // durable verified session; caller identity headers have no authority.
   v1Router.use('/auth', auth.router);
@@ -48,8 +55,6 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
   v1Router.use(auth.requireCsrf);
 
   // Extraction is transient and does not reserve a mutation replay key.
-  const scanService = new ScanService(scanServiceUrl, scanOptions);
-  const scanController = new ScanController(scanService);
   v1Router.use('/', createScanRouter(scanController));
   v1Router.use(idempotencyMiddleware);
 
