@@ -25,6 +25,13 @@ describe("UI Domain Formatting & Helpers", () => {
     expect(certaintyLabel.unknown).toBe("Chưa rõ")
   })
 
+  it("formats every canonical date source label", () => {
+    expect(sourceLabel.printed_label).toBe("Bao bì")
+    expect(sourceLabel.user_entered).toBe("Nhập lại")
+    expect(sourceLabel.user_estimate).toBe("Ước tính")
+    expect(sourceLabel.unknown).toBe("Chưa rõ")
+  })
+
   it("formats movement audit labels accurately", () => {
     expect(movementLabel.initial).toBe("Ban đầu")
     expect(movementLabel.consume).toBe("Đã dùng")
@@ -92,13 +99,13 @@ describe("Scanner UI Adapter (scanToEntryDraft)", () => {
     requires_confirmation: true,
   }
 
-  it("projects exact un-ambiguous expiry date into package_label metadata", async () => {
+  it("projects exact un-ambiguous expiry date into printed_label metadata", async () => {
     const { scanToEntryDraft } = await import("../src/api/client")
     const draft = scanToEntryDraft(baseResult, "2026-12-31")
     expect(draft.name).toBe("Yogurt")
     expect(draft.expiry_date).toBe("2026-12-31")
     expect(draft.expiry_date_certainty).toBe("exact")
-    expect(draft.expiry_date_source).toBe("package_label")
+    expect(draft.expiry_date_source).toBe("printed_label")
     expect(draft.expiry_date_label_type).toBe("use_by")
   })
 

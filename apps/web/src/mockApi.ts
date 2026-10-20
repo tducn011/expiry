@@ -121,8 +121,8 @@ export function normalizeDateMeta<T extends EntryDraft>(draft: T): T {
 
     expiry_date_source:
       draft.expiry_date_source === "user_estimate"
-        ? "package_label"
-        : (draft.expiry_date_source ?? "package_label"),
+        ? "printed_label"
+        : (draft.expiry_date_source ?? "printed_label"),
   }
 }
 
@@ -494,7 +494,7 @@ class MockApiAdapter {
               ? null
               : certainty === "estimated"
                 ? "user_estimate"
-                : "package_label",
+                : "printed_label",
 
           expiry_date_label_type: label,
 
