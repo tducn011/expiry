@@ -23,13 +23,7 @@ import Trash from "./features/Trash"
 import Welcome from "./features/Welcome"
 import AuthForm, { AuthMode } from "./features/AuthForm"
 import { useExpiry } from "./hooks/useExpiry"
-import {
-  ApiError as ClientApiError,
-  createDTO,
-  decimal,
-  draftDTO,
-  newCommand,
-} from "./api/client"
+import { newCommand } from "./api/client"
 
 import DemoApp from "./demo/DemoApp"
 
@@ -312,18 +306,21 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       return
     }
 
-    const cmd = newCommand(
-      real.session.user.id,
-      "POST",
-      "/food-entries",
-      createDTO(payload),
-    )
-    const result = await real.run(cmd)
+    const result = await real.createFood(payload)
     setPendingCreate(null)
     if (result.ok) {
       closeModal()
       setNotice("Đã thêm thực phẩm vào kho")
       window.setTimeout(() => setNotice(""), 3000)
+    } else if (result.error) {
+      if (result.error.status === 401) {
+        setPendingCreate(payload)
+        setAuthModalMode("reauth")
+        setAuthModalOpen(true)
+      } else {
+        setNotice(result.error.message)
+        window.setTimeout(() => setNotice(""), 4000)
+      }
     }
   }
 
@@ -722,42 +719,46 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               }
 
               if (!real.session) return
-              if (modal === "recount") {
-                const cmd = newCommand(
-                  real.session.user.id,
-                  "POST",
-                  `/food-entries/${modalEntry.id}/recounts`,
-                  {
-                    expected_version: modalEntry.version,
-                    actual_quantity: decimal(amount),
-                    reason: why.trim(),
-                  },
+              const res =
+                modal === "recount"
+                  ? await real.recountFood(
+                      modalEntry.id,
+                      modalEntry.version,
+                      amount,
+                      why,
+                    )
+                  : await real.recordMovement(
+                      modalEntry.id,
+                      modalEntry.version,
+                      modal as "consume" | "discard",
+                      amount,
+                      why || null,
+                    )
+              if (res.ok) {
+                closeModal()
+                setNotice(
+                  modal === "recount"
+                    ? "Đã cập nhật lượng sau kiểm lại"
+                    : `Đã ghi nhận ${modal === "consume" ? "đã dùng" : "đã bỏ"}`,
                 )
-                const res = await real.run(cmd)
-                if (res.ok) {
-                  closeModal()
-                  setNotice("Đã cập nhật lượng sau kiểm lại")
-                  window.setTimeout(() => setNotice(""), 3000)
-                }
-              } else {
-                const cmd = newCommand(
-                  real.session.user.id,
-                  "POST",
-                  `/food-entries/${modalEntry.id}/movements`,
-                  {
-                    expected_version: modalEntry.version,
-                    kind: modal,
-                    amount: decimal(amount),
-                    reason: why || null,
-                  },
-                )
-                const res = await real.run(cmd)
-                if (res.ok) {
-                  closeModal()
-                  setNotice(
-                    `Đã ghi nhận ${modal === "consume" ? "đã dùng" : "đã bỏ"}`,
-                  )
-                  window.setTimeout(() => setNotice(""), 3000)
+                window.setTimeout(() => setNotice(""), 3000)
+              } else if (res.error) {
+                if (
+                  res.error.status === 409 &&
+                  (res.error.code === "VERSION_CONFLICT" ||
+                    res.error.code === "CONCURRENT_MODIFICATION")
+                ) {
+                  setModal("conflict")
+                  real.refresh()
+                } else if (res.error.code === "INSUFFICIENT_QUANTITY") {
+                  setModal("insufficient")
+                  real.refresh()
+                } else if (res.error.status === 401) {
+                  setAuthModalMode("reauth")
+                  setAuthModalOpen(true)
+                } else {
+                  setNotice(res.error.message)
+                  window.setTimeout(() => setNotice(""), 4000)
                 }
               }
             }}
@@ -805,20 +806,30 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             }
 
             if (!real.session) return
-            const cmd = newCommand(
-              real.session.user.id,
-              "PATCH",
-              `/food-entries/${modalEntry.id}`,
-              {
-                expected_version: modalEntry.version,
-                ...draftDTO(patch),
-              },
+            const res = await real.updateFood(
+              modalEntry.id,
+              modalEntry.version,
+              patch,
             )
-            const res = await real.run(cmd)
             if (res.ok) {
               closeModal()
               setNotice("Đã cập nhật thông tin")
               window.setTimeout(() => setNotice(""), 3000)
+            } else if (res.error) {
+              if (
+                res.error.status === 409 &&
+                (res.error.code === "VERSION_CONFLICT" ||
+                  res.error.code === "CONCURRENT_MODIFICATION")
+              ) {
+                setModal("conflict")
+                real.refresh()
+              } else if (res.error.status === 401) {
+                setAuthModalMode("reauth")
+                setAuthModalOpen(true)
+              } else {
+                setNotice(res.error.message)
+                window.setTimeout(() => setNotice(""), 4000)
+              }
             }
           }}
         />
@@ -867,12 +878,10 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             }
 
             if (!real.session) return
-            const cmd = newCommand(
-              real.session.user.id,
-              "DELETE",
-              `/food-entries/${modalEntry.id}?expected_version=${modalEntry.version}`,
+            const res = await real.deleteFood(
+              modalEntry.id,
+              modalEntry.version,
             )
-            const res = await real.run(cmd)
             if (res.ok) {
               setModal(null)
               setSelectedId(null)
@@ -881,6 +890,21 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               real.setSelectedId(null)
               setNotice("Đã chuyển vào thùng rác")
               window.setTimeout(() => setNotice(""), 3000)
+            } else if (res.error) {
+              if (
+                res.error.status === 409 &&
+                (res.error.code === "VERSION_CONFLICT" ||
+                  res.error.code === "CONCURRENT_MODIFICATION")
+              ) {
+                setModal("conflict")
+                real.refresh()
+              } else if (res.error.status === 401) {
+                setAuthModalMode("reauth")
+                setAuthModalOpen(true)
+              } else {
+                setNotice(res.error.message)
+                window.setTimeout(() => setNotice(""), 4000)
+              }
             }
           }}
         />
@@ -932,15 +956,10 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             }
 
             if (!real.session) return
-            const cmd = newCommand(
-              real.session.user.id,
-              "POST",
-              `/food-entries/${modalEntry.id}/restore`,
-              {
-                expected_version: modalEntry.version,
-              },
+            const res = await real.restoreFood(
+              modalEntry.id,
+              modalEntry.version,
             )
-            const res = await real.run(cmd)
             if (res.ok) {
               setModal(null)
               setSelectedId(null)
@@ -950,6 +969,21 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               navigate("inventory")
               setNotice("Đã khôi phục thực phẩm")
               window.setTimeout(() => setNotice(""), 3000)
+            } else if (res.error) {
+              if (
+                res.error.status === 409 &&
+                (res.error.code === "VERSION_CONFLICT" ||
+                  res.error.code === "CONCURRENT_MODIFICATION")
+              ) {
+                setModal("conflict")
+                real.refresh()
+              } else if (res.error.status === 401) {
+                setAuthModalMode("reauth")
+                setAuthModalOpen(true)
+              } else {
+                setNotice(res.error.message)
+                window.setTimeout(() => setNotice(""), 4000)
+              }
             }
           }}
         />
@@ -965,6 +999,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               closeModal()
               setAuthModalMode("reauth")
               setAuthModalOpen(true)
+            } else if (modal === "conflict" || modal === "insufficient") {
+              closeModal()
+              if (!isDemo) real.refresh()
             } else {
               closeModal()
             }

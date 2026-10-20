@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ApiClient, ApiError, type Command, type Page } from "../api/client"
+import {
+  ApiClient,
+  ApiError,
+  type Command,
+  type Page,
+  createDTO,
+  draftDTO,
+  decimal,
+  newCommand,
+} from "../api/client"
 import type {
+  CreatePayload,
+  EntryDraft,
   FoodEntry,
   Preferences,
   QuantityMovement,
@@ -248,47 +259,158 @@ export function useExpiry(
     clearData()
     return true
   }
-  const run = async (command: Command) => {
-    const owner = sessionRef.current?.user.id
-    if (!owner || owner !== command.owner) {
-      fail(new ApiError(401, "AUTH_REQUIRED"))
-      return { ok: false }
-    }
-    if (pending.current && pending.current !== command) {
-      fail(new ApiError(409, "COMMAND_PENDING"))
-      return { ok: false }
-    }
-    pending.current = command
-    const ownerEpoch = epoch.current
-    setBusy(true)
-    setError(null)
-    setCanRetry(false)
-    try {
-      const body = await api.execute<unknown>(command)
-      if (
-        ownerEpoch !== epoch.current ||
-        sessionRef.current?.user.id !== command.owner
-      )
-        return { ok: false }
-      pending.current = null
+  const run = useCallback(
+    async (command: Command) => {
+      const owner = sessionRef.current?.user.id
+      if (!owner || owner !== command.owner) {
+        const problem = fail(new ApiError(401, "AUTH_REQUIRED"))
+        return { ok: false, error: problem }
+      }
+      if (pending.current && pending.current !== command) {
+        const problem = fail(new ApiError(409, "COMMAND_PENDING"))
+        return { ok: false, error: problem }
+      }
+      pending.current = command
+      const ownerEpoch = epoch.current
+      setBusy(true)
+      setError(null)
       setCanRetry(false)
-      setRevision((value) => value + 1)
-      return { ok: true, body }
-    } catch (error) {
-      if (ownerEpoch !== epoch.current) return { ok: false }
-      const problem = fail(error)
-      if (problem.uncertain || problem.status === 401 || problem.status === 403)
-        setCanRetry(true)
-      else {
+      try {
+        const body = await api.execute<unknown>(command)
+        if (
+          ownerEpoch !== epoch.current ||
+          sessionRef.current?.user.id !== command.owner
+        )
+          return { ok: false }
         pending.current = null
         setCanRetry(false)
         setRevision((value) => value + 1)
+        return { ok: true, body }
+      } catch (error) {
+        if (ownerEpoch !== epoch.current) return { ok: false }
+        const problem = fail(error)
+        if (problem.uncertain || problem.status === 401 || problem.status === 403)
+          setCanRetry(true)
+        else {
+          pending.current = null
+          setCanRetry(false)
+          setRevision((value) => value + 1)
+        }
+        return { ok: false, error: problem }
+      } finally {
+        setBusy(false)
       }
-      return { ok: false }
-    } finally {
-      setBusy(false)
-    }
-  }
+    },
+    [api, fail],
+  )
+
+  const createFood = useCallback(
+    async (payload: CreatePayload) => {
+      const owner = sessionRef.current?.user.id
+      if (!owner) {
+        const problem = fail(new ApiError(401, "AUTH_REQUIRED"))
+        return { ok: false, error: problem }
+      }
+      const cmd = newCommand(owner, "POST", "/food-entries", createDTO(payload))
+      return run(cmd)
+    },
+    [fail, run],
+  )
+
+  const recordMovement = useCallback(
+    async (
+      id: string,
+      expectedVersion: number,
+      kind: "consume" | "discard",
+      amount: number,
+      reason?: string | null,
+    ) => {
+      const owner = sessionRef.current?.user.id
+      if (!owner) {
+        const problem = fail(new ApiError(401, "AUTH_REQUIRED"))
+        return { ok: false, error: problem }
+      }
+      const cmd = newCommand(owner, "POST", `/food-entries/${id}/movements`, {
+        expected_version: expectedVersion,
+        kind,
+        amount: decimal(amount),
+        reason: reason || null,
+      })
+      return run(cmd)
+    },
+    [fail, run],
+  )
+
+  const recountFood = useCallback(
+    async (
+      id: string,
+      expectedVersion: number,
+      actualQuantity: number,
+      reason: string,
+    ) => {
+      const owner = sessionRef.current?.user.id
+      if (!owner) {
+        const problem = fail(new ApiError(401, "AUTH_REQUIRED"))
+        return { ok: false, error: problem }
+      }
+      const cmd = newCommand(owner, "POST", `/food-entries/${id}/recounts`, {
+        expected_version: expectedVersion,
+        actual_quantity: decimal(actualQuantity),
+        reason: reason.trim(),
+      })
+      return run(cmd)
+    },
+    [fail, run],
+  )
+
+  const updateFood = useCallback(
+    async (id: string, expectedVersion: number, patch: EntryDraft) => {
+      const owner = sessionRef.current?.user.id
+      if (!owner) {
+        const problem = fail(new ApiError(401, "AUTH_REQUIRED"))
+        return { ok: false, error: problem }
+      }
+      const cmd = newCommand(owner, "PATCH", `/food-entries/${id}`, {
+        expected_version: expectedVersion,
+        ...draftDTO(patch),
+      })
+      return run(cmd)
+    },
+    [fail, run],
+  )
+
+  const deleteFood = useCallback(
+    async (id: string, expectedVersion: number) => {
+      const owner = sessionRef.current?.user.id
+      if (!owner) {
+        const problem = fail(new ApiError(401, "AUTH_REQUIRED"))
+        return { ok: false, error: problem }
+      }
+      const cmd = newCommand(
+        owner,
+        "DELETE",
+        `/food-entries/${id}?expected_version=${expectedVersion}`,
+      )
+      return run(cmd)
+    },
+    [fail, run],
+  )
+
+  const restoreFood = useCallback(
+    async (id: string, expectedVersion: number) => {
+      const owner = sessionRef.current?.user.id
+      if (!owner) {
+        const problem = fail(new ApiError(401, "AUTH_REQUIRED"))
+        return { ok: false, error: problem }
+      }
+      const cmd = newCommand(owner, "POST", `/food-entries/${id}/restore`, {
+        expected_version: expectedVersion,
+      })
+      return run(cmd)
+    },
+    [fail, run],
+  )
+
   const retry = () =>
     pending.current ? run(pending.current) : Promise.resolve({ ok: false })
   const refresh = () => {
@@ -310,6 +432,12 @@ export function useExpiry(
     retry,
     canRetry,
     refresh,
+    createFood,
+    recordMovement,
+    recountFood,
+    updateFood,
+    deleteFood,
+    restoreFood,
     allFoods,
     list,
     trash,

@@ -27,6 +27,8 @@ export function errorMessage(status: number, code: string) {
     AUTH_RATE_LIMITED: "Đã thử đăng nhập nhiều lần. Hãy chờ rồi thử lại.",
     VERSION_CONFLICT:
       "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+    CONCURRENT_MODIFICATION:
+      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
     INSUFFICIENT_QUANTITY:
       "Lượng hiện tại không đủ. Kiểm tra lại trước khi xác nhận.",
     IDEMPOTENCY_KEY_REUSED:
