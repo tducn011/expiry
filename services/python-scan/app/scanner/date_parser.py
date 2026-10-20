@@ -12,6 +12,7 @@ MONTH_NAMES = {
     "thg1": 1, "thg2": 2, "thg3": 3, "thg4": 4, "thg5": 5, "thg6": 6,
     "thg7": 7, "thg8": 8, "thg9": 9, "thg10": 10, "thg11": 11, "thg12": 12
 }
+MONTH_NAMES.update({f"tháng{month}": month for month in range(1, 13)})
 
 DATE_PATTERNS = [
     # YYYY-MM-DD or YYYY/MM/DD
@@ -20,8 +21,8 @@ DATE_PATTERNS = [
     (r"\b(0[1-9]|[12]\d|3[01])[-/.](0[1-9]|1[0-2])[-/.](20\d{2})\b", "%d-%m-%Y"),
     # DD-MM-YY or DD/MM/YY
     (r"\b(0[1-9]|[12]\d|3[01])[-/.](0[1-9]|1[0-2])[-/.](\d{2})\b", "%d-%m-%y"),
-    # DD Mon YYYY (e.g. 15 Oct 2026)
-    (r"\b(0[1-9]|[12]\d|3[01])\s+([A-Za-z]{3,4})\s+(20\d{2})\b", "textual"),
+    # DD Mon YYYY (e.g. 15 Oct 2026 or 15 Thg10 2026)
+    (r"\b(0[1-9]|[12]\d|3[01])\s*(?:-|/|\s+)\s*(thg\s*\d{1,2}|tháng\s*\d{1,2}|[A-Za-z]{3,4})\s*(?:-|/|\s+)\s*(20\d{2})\b", "textual"),
 ]
 
 LABEL_PATTERNS = [
@@ -89,7 +90,12 @@ def parse_date_candidates(raw_text: str) -> List[Dict[str, Any]]:
         for match in re.finditer(DATE_PATTERNS[3][0], cleaned_line, re.IGNORECASE):
             label_type = label_before_date(cleaned_line, match.start())
             day_str, mon_str, year_str = match.groups()
-            mon_key = mon_str.lower()[:3]
+            normalized_month = re.sub(r"\s+", "", mon_str.lower())
+            mon_key = (
+                normalized_month
+                if normalized_month.startswith(("thg", "tháng"))
+                else normalized_month[:3]
+            )
             if mon_key in MONTH_NAMES:
                 month_num = MONTH_NAMES[mon_key]
                 try:

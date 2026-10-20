@@ -48,6 +48,20 @@ class TestScannerLogic(unittest.TestCase):
         self.assertEqual(len(parsed), 1)
         self.assertEqual(parsed[0]["parsed_date"], "2026-10-25")
 
+    def test_parse_vietnamese_textual_months(self):
+        cases = (
+            ("HSD 15 Thg10 2026", "2026-10-15", "use_by"),
+            ("BBE 20 Tháng 5 2025", "2025-05-20", "best_before"),
+            ("EXP 01 Thg1 2027", "2027-01-01", "use_by"),
+        )
+
+        for text, expected_date, expected_label in cases:
+            with self.subTest(text=text):
+                parsed = parse_date_candidates(text)
+                self.assertEqual(len(parsed), 1)
+                self.assertEqual(parsed[0]["parsed_date"], expected_date)
+                self.assertEqual(parsed[0]["date_label_type"], expected_label)
+
     def test_ambiguous_expiry_is_not_selected_automatically(self):
         candidates, warnings = normalized_candidates("EXP 05/06/2026")
         expiry = candidates["expiry_date"]
