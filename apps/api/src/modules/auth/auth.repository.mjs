@@ -100,7 +100,9 @@ export class AuthRepository {
       const now = clock();
       if (!row || row.revoked_at !== null || instant(row.expires_at) <= now || instant(row.last_seen_at).getTime() + idleTimeoutMs <= now.getTime()) return null;
       if (instant(row.created_at) > now || instant(row.last_seen_at) > now) throw new DomainError(503, 'AUTH_UNAVAILABLE');
-      await connection.execute('UPDATE user_sessions SET last_seen_at=? WHERE token_hash=?', [sqlDate(now), hash]);
+      const lastSeenAt = sqlDate(now);
+      if (instant(lastSeenAt) >= instant(row.expires_at)) return null;
+      await connection.execute('UPDATE user_sessions SET last_seen_at=? WHERE token_hash=?', [lastSeenAt, hash]);
       return { user: principal(row), expires_at: instant(row.expires_at).toISOString() };
     });
   }

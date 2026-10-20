@@ -166,6 +166,44 @@ test('idle expiry and absolute expiry are enforced against injected server time'
   } finally { await h.close(); }
 });
 
+test('session activity at the absolute expiry boundary is rejected without updating last_seen_at', async () => {
+  const now = new Date('2026-10-11T08:00:00.000Z');
+  const statements = [];
+  const connection = {
+    beginTransaction: async () => {},
+    execute: async sql => {
+      statements.push(sql);
+      if (sql.includes('FROM user_sessions')) {
+        return [[{
+          id: randomUUID(),
+          display_name: 'Owner',
+          timezone: 'Asia/Ho_Chi_Minh',
+          attention_lead_days: 2,
+          version: 1,
+          email_normalized: 'owner@example.com',
+          created_at: '2026-10-11 00:00:00.000',
+          last_seen_at: '2026-10-11 07:59:59.000',
+          expires_at: '2026-10-11 08:00:00.000',
+          revoked_at: null
+        }]];
+      }
+      throw new Error('Unexpected session update at expiry boundary');
+    },
+    commit: async () => {},
+    rollback: async () => {},
+    end: async () => {}
+  };
+  const repository = new AuthRepository('not-connected', { connect: async () => connection });
+  const h = await harness({ repository });
+  try {
+    h.advance(now.getTime() - Date.parse('2026-10-11T00:00:00.000Z'));
+    const response = await h.request('/private', { cookie: `${h.boundary.cookieName}=expiry-boundary-token` });
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { title: 'AUTH_REQUIRED' });
+    assert.equal(statements.filter(sql => sql.startsWith('UPDATE user_sessions')).length, 0);
+  } finally { await h.close(); }
+});
+
 test('production policy requires explicit HTTPS origins and issues a host-only secure cookie', async () => {
   assert.throws(() => createAuthBoundary({ repository: new AuthFixture(), secureCookies: true, allowedOrigins: [origin] }), /trusted HTTP/);
   const h = await harness({ secureCookies: true, allowedOrigins: ['https://expiry.example'] });
@@ -293,4 +331,3 @@ test('duplicate registration triggers ER_DUP_ENTRY and maps to EMAIL_ALREADY_REG
   assert.equal(rollbacks, 1);
   assert.equal(releases, 1);
 });
-
