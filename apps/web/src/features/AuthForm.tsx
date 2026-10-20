@@ -157,17 +157,8 @@ export default function AuthForm({
                 error={tried ? passwordError : ""}
                 hint="Từ 15 đến 128 ký tự."
               >
-                <div
-                  style={{
-                    position: "relative",
-
-                    display: "flex",
-
-                    alignItems: "center",
-                  }}
-                >
+                <div className="auth-password-control">
                   <input
-                    style={{ paddingRight: 42, width: "100%" }}
                     type={showPassword ? "text" : "password"}
                     autoComplete={
                       mode === "register" ? "new-password" : "current-password"
@@ -178,26 +169,10 @@ export default function AuthForm({
                   />
                   <button
                     type="button"
-                    tabIndex={-1}
+                    className="auth-password-toggle"
                     aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    aria-pressed={showPassword}
                     onClick={() => setShowPassword((value) => !value)}
-                    style={{
-                      position: "absolute",
-
-                      right: 8,
-
-                      background: "none",
-
-                      border: 0,
-
-                      cursor: "pointer",
-
-                      padding: 6,
-
-                      color: "var(--muted, #64748b)",
-
-                      display: "flex",
-                    }}
                   >
                     <Icon name={showPassword ? "eye-off" : "eye"} />
                   </button>
