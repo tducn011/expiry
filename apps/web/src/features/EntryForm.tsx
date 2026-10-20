@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+
 import type {
   CreatePayload,
   DateCertainty,
@@ -8,7 +9,9 @@ import type {
   FoodEntry,
   Unit,
 } from "../domain/types"
+
 import { scanToEntryDraft, type ScanResult } from "../api/client"
+
 import {
   certaintyLabel,
   fmtQty,
@@ -17,83 +20,142 @@ import {
   sourceLabel,
   unitLabel,
 } from "../lib/format"
+
 import Button from "../components/ui/Button"
+
 import DatePicker from "../components/ui/DatePicker"
+
 import Field from "../components/ui/Field"
+
 import Icon from "../components/ui/Icon"
+
 import Modal, { ModalActions, RetryAction } from "../components/ui/Modal"
+
 import Segmented from "../components/ui/Segmented"
+
 import Select from "../components/ui/Select"
+
 import ScanForm from "./ScanForm"
 
 type FormState = {
   name: string
+
   quantity: string
+
   unit: Unit
+
   storage_location: string
+
   certainty: DateCertainty
+
   expiry_date: string
+
   source: DateSource
+
   label: DateLabelType
+
   opened_on: string
+
   note: string
 }
 
 /** UI-03 create and UI-08 metadata edit; basics can be saved before optional dates. */
+
 export default function EntryForm({
   entry,
+
   initial,
+
   initialStep = 0,
+
   onClose,
+
   onCreate,
+
   onUpdate,
+
   onScan,
+
   active = true,
+
   canRetry = false,
+
   retryPending = false,
+
   retryError = "",
+
   onRetry,
 }: {
   entry?: FoodEntry
+
   initial?: CreatePayload | null
+
   initialStep?: 0 | 1
+
   onClose: () => void
+
   onCreate?: (p: CreatePayload) => void | Promise<void>
+
   onUpdate?: (p: EntryDraft) => void | Promise<void>
+
   onScan?: (file: File) => Promise<ScanResult>
+
   active?: boolean
+
   canRetry?: boolean
+
   retryPending?: boolean
+
   retryError?: string
+
   onRetry?: () => void
 }) {
   const base = entry ?? initial
+
   const submitInFlight = useRef(false)
+
   const [step, setStep] = useState<0 | 1>(initialStep)
+
   const [scanOpen, setScanOpen] = useState(false)
+
   const [tried, setTried] = useState([false, false])
+
   const [form, setForm] = useState<FormState>({
     name: base?.name ?? "",
+
     quantity: initial ? String(initial.initial_quantity) : "",
+
     unit: base?.unit ?? "piece",
+
     storage_location: base?.storage_location ?? "",
+
     certainty: base?.expiry_date_certainty ?? "unknown",
+
     expiry_date: base?.expiry_date ?? "",
+
     source:
       base?.expiry_date_source && base.expiry_date_source !== "user_estimate"
         ? base.expiry_date_source
         : "package_label",
+
     label: base?.expiry_date_label_type ?? "unknown",
+
     opened_on: base?.opened_on ?? "",
+
     note: base?.note ?? "",
   })
+
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }))
+
   const qty = Number(form.quantity)
+
   const quantityFormatValid = /^\d+(?:\.\d{1,3})?$/.test(form.quantity)
+
   const errors: Record<string, string>[] = [
     {
       name: form.name.trim() ? "" : "Nhập tên thực phẩm.",
+
       quantity: entry
         ? ""
         : !form.quantity
@@ -108,6 +170,7 @@ export default function EntryForm({
                   ? "Đơn vị “cái” chỉ nhận số nguyên."
                   : "",
     },
+
     {
       expiry_date:
         form.certainty !== "unknown" && !form.expiry_date
@@ -115,53 +178,78 @@ export default function EntryForm({
           : "",
     },
   ]
+
   const stepValid = (i: number) => Object.values(errors[i]).every((e) => !e)
+
   const show = (i: number, k: string) => (tried[i] ? errors[i][k] : "")
+
   const next = () => {
     setTried((t) => t.map((v, i) => (i === step ? true : v)))
+
     if (stepValid(step)) setStep(1)
   }
+
   const submit = () => {
     if (submitInFlight.current || canRetry || retryPending) return
+
     setTried([true, true])
+
     if (!stepValid(0)) {
       setStep(0)
+
       return
     }
+
     if (!stepValid(1)) {
       setStep(1)
+
       return
     }
+
     const unknown = form.certainty === "unknown"
+
     const draft: EntryDraft = {
       name: form.name.trim(),
+
       storage_location: form.storage_location.trim() || null,
+
       expiry_date: unknown ? null : form.expiry_date,
+
       expiry_date_certainty: form.certainty,
+
       expiry_date_source: unknown
         ? null
         : form.certainty === "estimated"
           ? "user_estimate"
           : form.source,
+
       expiry_date_label_type: unknown ? null : form.label,
+
       opened_on: form.opened_on || null,
+
       note: form.note.trim() || null,
     }
+
     submitInFlight.current = true
+
     let result: void | Promise<void>
+
     try {
       result = entry
         ? onUpdate?.(draft)
         : onCreate?.({ ...draft, initial_quantity: qty, unit: form.unit })
     } catch (error) {
       submitInFlight.current = false
+
       throw error
     }
+
     if (result && typeof result.then === "function") {
       void result.then(
         () => {
           submitInFlight.current = false
         },
+
         () => {
           submitInFlight.current = false
         },
@@ -170,6 +258,7 @@ export default function EntryForm({
       submitInFlight.current = false
     }
   }
+
   const steps = ["Cơ bản", "Ngày & ghi chú"]
 
   return (
@@ -186,6 +275,7 @@ export default function EntryForm({
         noValidate
         onSubmit={(e) => {
           e.preventDefault()
+
           submit()
         }}
       >
@@ -235,25 +325,34 @@ export default function EntryForm({
                           onApply={(result, selectedDate) => {
                             const mapped = scanToEntryDraft(
                               result,
+
                               selectedDate,
                             )
+
                             setForm((current) => ({
                               ...current,
+
                               name: mapped.name || current.name,
+
                               ...(mapped.expiry_date === null
                                 ? {}
                                 : {
                                     expiry_date: mapped.expiry_date,
+
                                     certainty: mapped.expiry_date_certainty,
+
                                     source:
                                       mapped.expiry_date_source ||
                                       "package_label",
+
                                     label:
                                       mapped.expiry_date_label_type ||
                                       "unknown",
                                   }),
                             }))
+
                             setStep(1)
+
                             setScanOpen(false)
                           }}
                         />
@@ -377,16 +476,20 @@ export default function EntryForm({
                           ? [
                               {
                                 value: "user_estimate",
+
                                 label: sourceLabel.user_estimate,
                               },
                             ]
                           : [
                               {
                                 value: "package_label",
+
                                 label: sourceLabel.package_label,
                               },
+
                               {
                                 value: "user_reentered",
+
                                 label: sourceLabel.user_reentered,
                               },
                             ]
@@ -402,6 +505,7 @@ export default function EntryForm({
                         labelTypeLabel,
                       ) as DateLabelType[]).map((label) => ({
                         value: label,
+
                         label: labelTypeLabel[label],
                       }))}
                     />

@@ -1,20 +1,27 @@
 import { useState } from "react"
+
 import type { ScanDateCandidate, ScanResult } from "../api/client"
+
 import Button from "../components/ui/Button"
+
 import Field from "../components/ui/Field"
+
 import { fmtDate } from "../lib/format"
 
 const warningLabels: Record<string, string> = {
   AMBIGUOUS_EXPIRY_DATE:
     "Ngày theo dõi có nhiều cách đọc. Hãy so sánh các phương án với nhãn gốc.",
+
   AMBIGUOUS_MANUFACTURED_DATE:
     "Ngày sản xuất có nhiều cách đọc. Hãy kiểm tra lại trên nhãn gốc.",
+
   UNLABELLED_DATE:
     "Không thể xác định ý nghĩa của ngày chưa có nhãn. Hãy nhập ngày theo dõi bằng tay nếu cần.",
 }
 
 function warningMessage(warning: string) {
   const code = warning.split(":", 1)[0]
+
   return (
     warningLabels[code] ||
     "Có điểm cần kiểm tra trên ảnh nhãn. Hãy đối chiếu thông tin với bao bì gốc trước khi áp dụng."
@@ -23,21 +30,30 @@ function warningMessage(warning: string) {
 
 export default function ScanForm({
   onScan,
+
   onApply,
+
   onClose,
 }: {
   onScan: (file: File) => Promise<ScanResult>
+
   onApply: (result: ScanResult, selectedDate: string | null) => void
+
   onClose: () => void
 }) {
   const [file, setFile] = useState<File | null>(null)
+
   const [result, setResult] = useState<ScanResult | null>(null)
+
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+
   const [pending, setPending] = useState(false)
+
   const [error, setError] = useState("")
 
   const candidate: ScanDateCandidate | undefined =
     result?.candidates.expiry_date
+
   const choices =
     candidate && candidate.date_label_type !== "manufactured"
       ? [
@@ -74,8 +90,11 @@ export default function ScanForm({
           disabled={pending}
           onChange={(event) => {
             setFile(event.target.files?.[0] ?? null)
+
             setResult(null)
+
             setSelectedDate(null)
+
             setError("")
           }}
         />
@@ -88,21 +107,29 @@ export default function ScanForm({
           disabled={!file || pending}
           onClick={() => {
             if (!file || pending) return
+
             if (
               !file.size ||
               file.size > 5 * 1024 * 1024 ||
               !["image/jpeg", "image/png", "image/webp"].includes(file.type)
             ) {
               setError("Chọn ảnh JPEG, PNG hoặc WebP không quá 5 MB.")
+
               return
             }
+
             setPending(true)
+
             setError("")
+
             void onScan(file)
+
               .then((value) => {
                 setResult(value)
+
                 setSelectedDate(value.candidates.expiry_date.value)
               })
+
               .catch((failure: unknown) =>
                 setError(
                   failure instanceof Error
@@ -110,6 +137,7 @@ export default function ScanForm({
                     : "Không thể quét ảnh. Bạn có thể nhập tay.",
                 ),
               )
+
               .finally(() => setPending(false))
           }}
         >
