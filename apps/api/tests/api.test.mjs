@@ -98,13 +98,36 @@ test('Protected routes reject missing credentials and caller identity headers', 
   const port = server.address().port;
 
   try {
-    for (const path of ['/food-entries', '/me/preferences', '/scan/health']) {
+    for (const path of ['/food-entries', '/me/preferences']) {
       const res = await fetch(`http://127.0.0.1:${port}/api/v1${path}`, {
         headers: { Authorization: 'Bearer 00000000-0000-4000-8000-000000000001', 'X-User-Id': '00000000-0000-4000-8000-000000000001' }
       });
       assert.equal(res.status, 401);
       assert.equal((await res.json()).title, 'AUTH_REQUIRED');
     }
+  } finally {
+    server.close();
+  }
+});
+
+test('Scan healthcheck route is public and accessible without credentials', async () => {
+  const app = createApp({
+    scanOptions: {
+      fetch: async () => ({
+        ok: true,
+        json: async () => ({ status: 'healthy', service: 'python-scan', tesseract_available: true, version: '1.0.0' })
+      })
+    }
+  });
+  const server = app.listen(0);
+  const port = server.address().port;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/v1/scan/health`);
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.status, 'healthy');
+    assert.equal(data.tesseract_available, true);
   } finally {
     server.close();
   }
