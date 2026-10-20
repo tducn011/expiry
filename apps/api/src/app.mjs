@@ -16,6 +16,8 @@ import { createScanRouter } from './modules/scan/scan.routes.mjs';
 export function createApp({ database, scanServiceUrl, authRepository, allowedOrigins, secureCookies = process.env.NODE_ENV === 'production', now, scanOptions = {} } = {}) {
   const app = express();
   app.disable('x-powered-by');
+  // Kích hoạt nhận diện IP client từ X-Forwarded-For của reverse proxy (Vercel, Cloudflare Tunnel, Nginx)
+  app.set('trust proxy', 1);
   const configuredOrigins = allowedOrigins ?? (process.env.APP_ORIGIN
     ? process.env.APP_ORIGIN.split(',').map(value => value.trim()).filter(Boolean)
     : secureCookies ? ['https://expiry.vercel.app', 'https://expiryapp.vercel.app', 'https://demoexpiry.vercel.app'] : ['http://localhost:8443', 'http://127.0.0.1:8443', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4174', 'http://127.0.0.1:4174', 'http://localhost:3001', 'http://127.0.0.1:3001', 'https://expiry.vercel.app', 'https://expiryapp.vercel.app', 'https://demoexpiry.vercel.app']);

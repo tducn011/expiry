@@ -8,6 +8,7 @@ import { DomainError } from '../src/shared/domain.mjs';
 test('App initialization and healthcheck', async () => {
   const app = createApp();
   assert.ok(app, 'App should be created');
+  assert.equal(app.get('trust proxy'), 1, 'Trust proxy should be configured to 1 hop');
 
   // Test via mock request / response using supertest-like fetch or internal dispatch
   const server = app.listen(0);
