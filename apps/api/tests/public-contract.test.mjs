@@ -119,6 +119,14 @@ test('detail/list/trash project exact Entry and EntryList contracts, including o
   const trash = await (await request('/trash/food-entries')).json();
   validate(trash, 'EntryList'); assert.equal(trash.items[0].attention.status, 'inactive');
   assert.equal(trash.items[0].lifecycle, 'depleted'); assert.equal(calls.at(-1)[1].lifecycle, 'all');
+  assert.equal(calls.at(-1)[1].q, '');
+  assert.equal(calls.at(-1)[1].location, undefined);
+
+  const filteredTrash = await (await request('/trash/food-entries?q=chicken&location=freezer')).json();
+  validate(filteredTrash, 'EntryList');
+  assert.equal(calls.at(-1)[1].q, 'chicken');
+  assert.equal(calls.at(-1)[1].location, 'freezer');
+  assert.equal(calls.at(-1)[1].view, 'trash');
 });
 
 test('empty EntryList retains its repository owner-local as_of_date', async t => {

@@ -119,7 +119,11 @@ export class InventoryController {
 
   listTrash = async (req, res, next) => {
     try {
-      const query = paginationQuery(req.query);
+      const query = {
+        ...paginationQuery(req.query),
+        q: req.query.q ?? '',
+        location: req.query.location
+      };
       const result = await this.service.listTrash(req.userId, query);
       return res.status(200).json(result);
     } catch (err) {
