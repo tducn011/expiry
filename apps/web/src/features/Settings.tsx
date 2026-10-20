@@ -14,11 +14,13 @@ type Prefs = {
 export default function Settings({
   prefs,
   displayName,
+  userEmail,
   onSave,
   onLogout,
 }: {
   prefs: Prefs
   displayName: string
+  userEmail?: string
   onSave: (p: Prefs) => void
   onLogout?: () => void
 }) {
@@ -43,7 +45,7 @@ export default function Settings({
             <span className="avatar">{displayName.split(" ").pop()?.[0]}</span>
             <div>
               <strong>{displayName}</strong>
-              <small>Tài khoản cá nhân</small>
+              <small>{userEmail || "Tài khoản cá nhân"}</small>
             </div>
             <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
               {onLogout && (

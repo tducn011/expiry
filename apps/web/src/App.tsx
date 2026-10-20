@@ -31,6 +31,8 @@ import {
   newCommand,
 } from "./api/client"
 
+import DemoApp from "./demo/DemoApp"
+
 type ModalKind = "add" | "restore" | DetailAction | StatusMode | null
 const statusModes: StatusMode[] = [
   "conflict",
@@ -49,7 +51,16 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     return new URLSearchParams(window.location.search)
   }, [])
 
-  const isDemo = demoMode || queryParams.has("demo")
+  const hasDemoParam =
+    queryParams.get("demo") === "1" ||
+    queryParams.get("demo") === "true" ||
+    queryParams.has("demo")
+
+  if (!demoMode && hasDemoParam) {
+    return <DemoApp />
+  }
+
+  const isDemo = demoMode || hasDemoParam
 
   const [started, setStarted] = useState(
     () =>
@@ -91,11 +102,18 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const retryLock = useRef(false)
 
   // Real backend integration via useExpiry hook
-  const real = useExpiry(view, filters, 1)
+  const real = useExpiry(view, filters, 1, !isDemo)
 
   useEffect(() => {
     if (real.session?.user.email) setLastKnownEmail(real.session.user.email)
   }, [real.session])
+
+  // Automatically prompt authentication modal when user is not authenticated in real mode
+  useEffect(() => {
+    if (!isDemo && !real.checking && !real.session) {
+      setAuthModalOpen(true)
+    }
+  }, [isDemo, real.checking, real.session])
 
   // Demo fallback state (only when ?demo=1 or demoMode is explicitly active)
   const demoEntries = useMemo(
@@ -227,7 +245,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const displayName = isDemo
     ? mockApi.user.display_name || "Bạn (Demo)"
-    : real.session?.user?.display_name || "Chưa đăng nhập"
+    : real.session?.user?.display_name || real.session?.user?.email || "Chưa đăng nhập"
   const settingsOwner = isDemo ? "demo" : (real.session?.user.id ?? "guest")
   const settingsSnapshot = isDemo ? prefs : real.prefs
   const settingsKey = `${settingsOwner}:${
@@ -420,7 +438,11 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       displayName={displayName}
       urgentCount={urgentCount}
       onAuth={
-        !isDemo && !real.session ? () => setAuthModalOpen(true) : undefined
+        !isDemo
+          ? !real.session
+            ? () => setAuthModalOpen(true)
+            : () => setView("settings")
+          : undefined
       }
     >
       {notice && (
@@ -487,6 +509,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           key={settingsKey}
           prefs={prefs}
           displayName={displayName}
+          userEmail={!isDemo ? real.session?.user.email : undefined}
           onSave={async (patch) => {
             if (isDemo) {
               mockApi.updatePreferences(
@@ -529,6 +552,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                     setPendingAdd(false)
                     setNotice("Đã đăng xuất")
                     window.setTimeout(() => setNotice(""), 3000)
+                    setAuthModalOpen(true)
                   }
                 }
               : undefined

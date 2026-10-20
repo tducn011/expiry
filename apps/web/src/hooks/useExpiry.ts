@@ -27,6 +27,7 @@ export function useExpiry(
   view: string,
   filters: InventoryFilters,
   page: number,
+  enabled: boolean = true,
 ) {
   const api = useMemo(() => new ApiClient(), [])
   const [session, setSession] = useState<Session | null>(null)
@@ -96,6 +97,10 @@ export function useExpiry(
   )
 
   useEffect(() => {
+    if (!enabled) {
+      setChecking(false)
+      return
+    }
     let active = true
     api
       .session()
@@ -112,7 +117,7 @@ export function useExpiry(
     return () => {
       active = false
     }
-  }, [api, acceptSession, fail])
+  }, [api, acceptSession, fail, enabled])
 
   const query = useMemo(() => {
     const values: Record<string, string | number> = {
@@ -143,7 +148,7 @@ export function useExpiry(
   ])
 
   useEffect(() => {
-    if (!session) return
+    if (!enabled || !session) return
     let active = true
     const ownerEpoch = epoch.current
     setLoading(true)
@@ -172,12 +177,12 @@ export function useExpiry(
     return () => {
       active = false
     }
-  }, [api, session, query, view, revision, fail])
+  }, [api, session, query, view, revision, fail, enabled])
 
   useEffect(() => {
     setSelected(null)
     setHistory([])
-    if (!selectedId || !session) return
+    if (!enabled || !selectedId || !session) return
     let active = true
     const ownerEpoch = epoch.current
     Promise.all([api.entry(selectedId), api.history(selectedId)])
