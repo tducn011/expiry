@@ -1,18 +1,28 @@
 import type { FoodEntry } from "../domain/types"
+
 import { fmtQty, fmtTime, unitLabel } from "../lib/format"
+
 import Grid from "../components/layout/Grid"
+
 import PageHeader from "../components/layout/PageHeader"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import EmptyState from "../components/ui/EmptyState"
 
 export default function Trash({
   timezone = "Asia/Ho_Chi_Minh",
+
   foods,
+
   onRestore,
 }: {
   timezone?: string
+
   foods: FoodEntry[]
+
   onRestore: (f: FoodEntry) => void
 }) {
   return (

@@ -2,20 +2,25 @@ import Icon from "../ui/Icon"
 
 export type BreadcrumbItem = {
   label: string
+
   onNavigate: () => void
 }
 
 export default function Breadcrumb({
   items,
+
   className = "",
 }: {
   items: readonly BreadcrumbItem[]
+
   className?: string
 }) {
   if (items.length === 0) return null
 
   // ponytail: controlled local-state navigation; URL/link ownership stays with the app.
+
   // Current nesting has one parent. Do not add a hidden-level menu without deeper routes.
+
   return (
     <nav aria-label="Đường dẫn" className={`breadcrumb ${className}`}>
       <ol>

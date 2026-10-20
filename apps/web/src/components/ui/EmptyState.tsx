@@ -2,13 +2,19 @@ import { ReactNode } from "react"
 
 export default function EmptyState({
   eyebrow,
+
   title,
+
   body,
+
   action,
 }: {
   eyebrow: string
+
   title: string
+
   body?: string
+
   action?: ReactNode
 }) {
   return (

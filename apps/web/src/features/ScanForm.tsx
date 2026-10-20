@@ -1,31 +1,41 @@
 import { useEffect, useRef, useState } from "react"
+
 import {
   BrowserMultiFormatReader,
   BrowserCodeReader,
   BarcodeFormat,
 } from "@zxing/browser"
+
 import type { ScanDateCandidate, ScanResult } from "../api/client"
+
 import Button from "../components/ui/Button"
+
 import Field from "../components/ui/Field"
+
 import Icon from "../components/ui/Icon"
+
 import { fmtDate } from "../lib/format"
 
 export type BarcodeData = {
   barcode: string
+
   barcode_format: string
 }
 
 const warningLabels: Record<string, string> = {
   AMBIGUOUS_EXPIRY_DATE:
     "Ngày theo dõi có nhiều cách đọc. Hãy so sánh các phương án với nhãn gốc.",
+
   AMBIGUOUS_MANUFACTURED_DATE:
     "Ngày sản xuất có nhiều cách đọc. Hãy kiểm tra lại trên nhãn gốc.",
+
   UNLABELLED_DATE:
     "Không thể xác định ý nghĩa của ngày chưa có nhãn. Hãy nhập ngày theo dõi bằng tay nếu cần.",
 }
 
 function warningMessage(warning: string) {
   const code = warning.split(":", 1)[0]
+
   return (
     warningLabels[code] ||
     "Có điểm cần kiểm tra trên ảnh nhãn. Hãy đối chiếu thông tin với bao bì gốc trước khi áp dụng."
@@ -38,18 +48,31 @@ function playBeep() {
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext
+
     if (!AudioCtx) return
+
     const ctx = new AudioCtx()
+
     const osc = ctx.createOscillator()
+
     const gain = ctx.createGain()
+
     osc.type = "sine"
+
     osc.frequency.setValueAtTime(880, ctx.currentTime)
+
     gain.gain.setValueAtTime(0.15, ctx.currentTime)
+
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12)
+
     osc.connect(gain)
+
     gain.connect(ctx.destination)
+
     osc.start()
+
     osc.stop(ctx.currentTime + 0.12)
+
     setTimeout(() => {
       ctx.close().catch(() => {})
     }, 200)
@@ -60,111 +83,160 @@ function playBeep() {
 
 export default function ScanForm({
   onScan,
+
   onApply,
+
   onApplyBarcode,
+
   onClose,
 }: {
   onScan?: (file: File) => Promise<ScanResult>
+
   onApply: (result: ScanResult, selectedDate: string | null) => void
+
   onApplyBarcode?: (data: BarcodeData) => void
+
   onClose: () => void
 }) {
   const [tab, setTab] = useState<"barcode" | "ocr">("barcode")
 
   // --- Barcode Scanner State ---
+
   const videoRef = useRef<HTMLVideoElement | null>(null)
+
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
+
   const controlsRef = useRef<{ stop: () => void } | null>(null)
+
   const [cameraStarting, setCameraStarting] = useState(false)
+
   const [cameraActive, setCameraActive] = useState(false)
+
   const [cameraError, setCameraError] = useState("")
+
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
+
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("")
+
   const [manualCode, setManualCode] = useState("")
+
   const [scannedResult, setScannedResult] = useState<BarcodeData | null>(null)
 
   // --- OCR State ---
+
   const [file, setFile] = useState<File | null>(null)
+
   const [result, setResult] = useState<ScanResult | null>(null)
+
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+
   const [pending, setPending] = useState(false)
+
   const [error, setError] = useState("")
 
   const stopCamera = () => {
     try {
       if (controlsRef.current) {
         controlsRef.current.stop()
+
         controlsRef.current = null
       }
+
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream
+
         stream.getTracks().forEach((track) => track.stop())
+
         videoRef.current.srcObject = null
       }
     } catch {
       // Ignore cleanup error
     }
+
     setCameraActive(false)
+
     setCameraStarting(false)
   }
 
   // Camera initialization and continuous decode
+
   useEffect(() => {
     if (tab !== "barcode") {
       stopCamera()
+
       return
     }
 
     let active = true
+
     setCameraError("")
+
     setCameraStarting(true)
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setCameraError(
         "Trình duyệt không hỗ trợ truy cập camera. Bạn có thể nhập mã vạch bằng tay bên dưới.",
       )
+
       setCameraStarting(false)
+
       return
     }
 
     // List available video devices
+
     BrowserCodeReader.listVideoInputDevices()
+
       .then((devices) => {
         if (!active) return
+
         setVideoDevices(devices)
+
         if (devices.length > 0 && !selectedDeviceId) {
           // Prefer back/environment camera if available
+
           const backCam = devices.find(
             (d) =>
               d.label.toLowerCase().includes("back") ||
               d.label.toLowerCase().includes("environment") ||
               d.label.toLowerCase().includes("sau"),
           )
+
           setSelectedDeviceId(backCam ? backCam.deviceId : devices[0].deviceId)
         }
       })
+
       .catch(() => {
         // Device listing error is not fatal; decodeFromVideoDevice handles standard camera
       })
 
     const reader = new BrowserMultiFormatReader()
+
     readerRef.current = reader
 
     const videoElem = videoRef.current
+
     if (!videoElem) {
       setCameraStarting(false)
+
       return
     }
 
     reader
+
       .decodeFromVideoDevice(
         selectedDeviceId || undefined,
+
         videoElem,
+
         (scanResult, _err, controls) => {
           if (!active) return
+
           controlsRef.current = controls
+
           if (scanResult) {
             playBeep()
+
             if (
               typeof navigator !== "undefined" &&
               typeof navigator.vibrate === "function"
@@ -178,12 +250,15 @@ export default function ScanForm({
 
             const formatName =
               BarcodeFormat[scanResult.getBarcodeFormat()] || "UNKNOWN"
+
             const barcodeData: BarcodeData = {
               barcode: scanResult.getText(),
+
               barcode_format: formatName,
             }
 
             stopCamera()
+
             setScannedResult(barcodeData)
 
             if (onApplyBarcode) {
@@ -192,20 +267,30 @@ export default function ScanForm({
           }
         },
       )
+
       .then((controls) => {
         if (!active) {
           controls.stop()
+
           return
         }
+
         controlsRef.current = controls
+
         setCameraActive(true)
+
         setCameraStarting(false)
       })
+
       .catch((err: unknown) => {
         if (!active) return
+
         setCameraStarting(false)
+
         setCameraActive(false)
+
         const errName = (err as Error)?.name || ""
+
         if (
           errName === "NotAllowedError" ||
           errName === "PermissionDeniedError"
@@ -213,7 +298,10 @@ export default function ScanForm({
           setCameraError(
             "Quyền camera bị từ chối. Hãy cho phép camera trên thanh địa chỉ hoặc nhập mã bằng tay.",
           )
-        } else if (errName === "NotFoundError" || errName === "DevicesNotFoundError") {
+        } else if (
+          errName === "NotFoundError" ||
+          errName === "DevicesNotFoundError"
+        ) {
           setCameraError(
             "Không tìm thấy camera trên thiết bị. Bạn có thể nhập mã vạch bằng tay.",
           )
@@ -226,17 +314,22 @@ export default function ScanForm({
 
     return () => {
       active = false
+
       stopCamera()
     }
   }, [tab, selectedDeviceId])
 
   const handleManualApply = () => {
     if (!manualCode.trim()) return
+
     const barcodeData: BarcodeData = {
       barcode: manualCode.trim(),
+
       barcode_format: "MANUAL",
     }
+
     stopCamera()
+
     if (onApplyBarcode) {
       onApplyBarcode(barcodeData)
     }
@@ -244,11 +337,13 @@ export default function ScanForm({
 
   const handleClose = () => {
     stopCamera()
+
     onClose()
   }
 
   const candidate: ScanDateCandidate | undefined =
     result?.candidates.expiry_date
+
   const choices =
     candidate && candidate.date_label_type !== "manufactured"
       ? [
@@ -281,6 +376,7 @@ export default function ScanForm({
           className={`scan-tab-btn ${tab === "barcode" ? "active" : ""}`}
           onClick={() => {
             setTab("barcode")
+
             setError("")
           }}
         >
@@ -293,6 +389,7 @@ export default function ScanForm({
             className={`scan-tab-btn ${tab === "ocr" ? "active" : ""}`}
             onClick={() => {
               setTab("ocr")
+
               stopCamera()
             }}
           >
@@ -306,7 +403,8 @@ export default function ScanForm({
       {tab === "barcode" && (
         <div className="stack barcode-scanner-section">
           <p className="inline-hint">
-            Hướng camera vào mã vạch (EAN-13, EAN-8, Code-128, QR Code) để nhận diện tự động.
+            Hướng camera vào mã vạch (EAN-13, EAN-8, Code-128, QR Code) để nhận
+            diện tự động.
           </p>
 
           {videoDevices.length > 1 && (
@@ -315,6 +413,7 @@ export default function ScanForm({
                 value={selectedDeviceId}
                 onChange={(e) => {
                   stopCamera()
+
                   setSelectedDeviceId(e.target.value)
                 }}
               >
@@ -351,10 +450,14 @@ export default function ScanForm({
           )}
 
           {scannedResult && (
-            <div className="note-box" style={{ background: "var(--accent-subtle, #f0fdf4)" }}>
+            <div
+              className="note-box"
+              style={{ background: "var(--accent-subtle, #f0fdf4)" }}
+            >
               <Icon name="check" />
               <span>
-                Đã nhận diện: <strong>{scannedResult.barcode}</strong> ({scannedResult.barcode_format})
+                Đã nhận diện: <strong>{scannedResult.barcode}</strong> (
+                {scannedResult.barcode_format})
               </span>
             </div>
           )}
@@ -366,8 +469,21 @@ export default function ScanForm({
           )}
 
           {/* Manual Barcode fallback */}
-          <div className="stack" style={{ marginTop: "8px", paddingTop: "12px", borderTop: "1px dashed var(--line-2)" }}>
-            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--muted)" }}>
+          <div
+            className="stack"
+            style={{
+              marginTop: "8px",
+              paddingTop: "12px",
+              borderTop: "1px dashed var(--line-2)",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                color: "var(--muted)",
+              }}
+            >
               Hoặc nhập mã vạch thủ công:
             </span>
             <div style={{ display: "flex", gap: "8px" }}>
@@ -395,7 +511,8 @@ export default function ScanForm({
       {tab === "ocr" && onScan && (
         <div className="stack ocr-scanner-section">
           <p className="inline-hint">
-            Ảnh chỉ tạo gợi ý ngày và tên. Xem lại văn bản và chọn ngày trước khi áp dụng vào biểu mẫu; app không tự lưu món.
+            Ảnh chỉ tạo gợi ý ngày và tên. Xem lại văn bản và chọn ngày trước
+            khi áp dụng vào biểu mẫu; app không tự lưu món.
           </p>
           <Field label="Ảnh bao bì" hint="JPEG, PNG hoặc WebP, tối đa 5 MB.">
             <input
@@ -404,8 +521,11 @@ export default function ScanForm({
               disabled={pending}
               onChange={(event) => {
                 setFile(event.target.files?.[0] ?? null)
+
                 setResult(null)
+
                 setSelectedDate(null)
+
                 setError("")
               }}
             />
@@ -418,21 +538,29 @@ export default function ScanForm({
               disabled={!file || pending}
               onClick={() => {
                 if (!file || pending) return
+
                 if (
                   !file.size ||
                   file.size > 5 * 1024 * 1024 ||
                   !["image/jpeg", "image/png", "image/webp"].includes(file.type)
                 ) {
                   setError("Chọn ảnh JPEG, PNG hoặc WebP không quá 5 MB.")
+
                   return
                 }
+
                 setPending(true)
+
                 setError("")
+
                 void onScan(file)
+
                   .then((value) => {
                     setResult(value)
+
                     setSelectedDate(value.candidates.expiry_date.value)
                   })
+
                   .catch((failure: unknown) =>
                     setError(
                       failure instanceof Error
@@ -440,6 +568,7 @@ export default function ScanForm({
                         : "Không thể quét ảnh. Bạn có thể nhập tay.",
                     ),
                   )
+
                   .finally(() => setPending(false))
               }}
             >
@@ -501,8 +630,8 @@ export default function ScanForm({
                 </Field>
               ) : (
                 <p className="inline-hint">
-                  Không có ngày theo dõi đủ rõ để áp dụng. Bạn có thể tiếp tục nhập
-                  tay.
+                  Không có ngày theo dõi đủ rõ để áp dụng. Bạn có thể tiếp tục
+                  nhập tay.
                 </p>
               )}
               {result.raw_text && (
