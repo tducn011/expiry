@@ -163,8 +163,7 @@ export default function MovementForm({
             canRetry ||
             retryPending ||
             amountError ||
-            reasonError ||
-            noop
+            reasonError
           )
             return
 
@@ -265,7 +264,7 @@ export default function MovementForm({
             error={tried ? reasonError : ""}
             hint={
               noop
-                ? "Lượng không đổi — sẽ không tạo thêm lịch sử."
+                ? "Số lượng không đổi — bạn vẫn có thể xác nhận lần kiểm kê này."
                 : `${why.length}/500`
             }
           >
@@ -314,7 +313,7 @@ export default function MovementForm({
               <Button
                 variant={mode === "discard" ? "danger" : "primary"}
                 type="submit"
-                disabled={noop || canRetry || retryPending}
+                disabled={canRetry || retryPending}
               >
                 {mode === "discard"
                   ? "Xác nhận đã bỏ"

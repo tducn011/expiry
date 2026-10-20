@@ -886,6 +886,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             onRetry={() => void retryPendingCommand()}
             onClose={closeModal}
             onSave={async (amount, why) => {
+              const confirmedUnchanged =
+                modal === "recount" && amount === modalEntry.remaining_quantity
+
               if (isDemo) {
                 const key = mockApi.createCommandKey(modal)
 
@@ -924,7 +927,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
                   setNotice(
                     modal === "recount"
-                      ? "Đã cập nhật lượng sau kiểm lại"
+                      ? confirmedUnchanged
+                        ? "Đã xác nhận kiểm kê, số lượng không đổi"
+                        : "Đã cập nhật lượng sau kiểm lại"
                       : `Đã ghi nhận ${
                           modal === "consume" ? "đã dùng" : "đã bỏ"
                         }`,
@@ -968,7 +973,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
                 setNotice(
                   modal === "recount"
-                    ? "Đã cập nhật lượng sau kiểm lại"
+                    ? confirmedUnchanged
+                      ? "Đã xác nhận kiểm kê, số lượng không đổi"
+                      : "Đã cập nhật lượng sau kiểm lại"
                     : `Đã ghi nhận ${
                         modal === "consume" ? "đã dùng" : "đã bỏ"
                       }`,
