@@ -51,7 +51,7 @@ export async function getPool(customDb) {
   const database = customDb || config.database;
   const key = JSON.stringify([config.host, config.port, config.user, config.password, database]);
   if (!pools.has(key)) {
-    pools.set(key, mysql.createPool({
+    const pool = mysql.createPool({
       host: config.host,
       port: config.port,
       user: config.user,
@@ -65,7 +65,16 @@ export async function getPool(customDb) {
       decimalNumbers: false,
       supportBigNumbers: true,
       bigNumberStrings: true
-    }));
+    });
+    pool.on('connection', conn => {
+      conn.query("SET SESSION time_zone='+00:00'", error => {
+        if (error) {
+          console.error('[Expiry API] Failed to set MySQL session time zone to UTC:', error);
+          conn.destroy();
+        }
+      });
+    });
+    pools.set(key, pool);
   }
   return pools.get(key);
 }
@@ -79,15 +88,33 @@ export async function closePools() {
 export async function connect(database) {
   const p = await getPool(database);
   const conn = await p.getConnection();
-  try { await conn.query("SET SESSION time_zone='+00:00'"); }
-  catch (error) { conn.destroy(); throw error; }
-  // Return wrapper with commit/rollback/end matching single connection semantics
+  let inTransaction = false;
   return {
     execute: (sql, values) => conn.execute(sql, values),
     query: (sql, values) => conn.query(sql, values),
-    beginTransaction: () => conn.beginTransaction(),
-    commit: () => conn.commit(),
-    rollback: () => conn.rollback(),
-    end: () => conn.release()
+    beginTransaction: async () => {
+      await conn.beginTransaction();
+      inTransaction = true;
+    },
+    commit: async () => {
+      await conn.commit();
+      inTransaction = false;
+    },
+    rollback: async () => {
+      await conn.rollback();
+      inTransaction = false;
+    },
+    end: async () => {
+      if (inTransaction) {
+        try {
+          await conn.rollback();
+          inTransaction = false;
+        } catch (error) {
+          conn.destroy();
+          throw error;
+        }
+      }
+      conn.release();
+    }
   };
 }
