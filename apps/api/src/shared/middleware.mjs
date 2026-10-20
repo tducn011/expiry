@@ -16,6 +16,7 @@ export function idempotencyMiddleware(req, res, next) {
 
 export function errorHandler(err, req, res, next) {
   if (err instanceof DomainError) {
+    if (Number.isSafeInteger(err.retryAfter) && err.retryAfter > 0) res.set('Retry-After', String(err.retryAfter));
     return res.status(err.status).type('application/problem+json').json({
       type: `https://api.expiry.app/problems/${err.code}`,
       title: err.code,
