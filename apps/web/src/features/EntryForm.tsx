@@ -138,9 +138,9 @@ export default function EntryForm({
     expiry_date: base?.expiry_date ?? "",
 
     source:
-      base?.expiry_date_source && base.expiry_date_source !== "user_estimate"
-        ? base.expiry_date_source
-        : "package_label",
+      base?.expiry_date_source === "user_entered"
+        ? "user_entered"
+        : "printed_label",
 
     label: base?.expiry_date_label_type ?? "unknown",
 
@@ -363,7 +363,7 @@ export default function EntryForm({
 
                                   source:
                                     mapped.expiry_date_source ||
-                                    "package_label",
+                                    "printed_label",
 
                                   label:
                                     mapped.expiry_date_label_type || "unknown",
@@ -528,15 +528,15 @@ export default function EntryForm({
                             ]
                           : [
                               {
-                                value: "package_label",
+                                value: "printed_label",
 
-                                label: sourceLabel.package_label,
+                                label: sourceLabel.printed_label,
                               },
 
                               {
-                                value: "user_reentered",
+                                value: "user_entered",
 
-                                label: sourceLabel.user_reentered,
+                                label: sourceLabel.user_entered,
                               },
                             ]
                       }

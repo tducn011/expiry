@@ -1,6 +1,7 @@
 import type {
   Attention,
   CreatePayload,
+  DateSource,
   EntryDraft,
   FoodEntry,
   Preferences,
@@ -99,7 +100,7 @@ export type EntryDTO = Omit<FoodEntry, "remaining_quantity" | "expiry_date_certa
 
   date_certainty: "known" | "estimated" | "unknown"
 
-  date_source: "printed_label" | "user_entered" | "user_estimate" | "unknown"
+  date_source: DateSource
 
   date_label_type: "use_by" | "best_before" | "unspecified"
 
@@ -219,7 +220,7 @@ export function scanToEntryDraft(
     expiry_date_source: !expiryDate
       ? null
       : exact
-        ? "package_label"
+        ? "printed_label"
         : "user_estimate",
 
     expiry_date_label_type: expiryDate ? label : null,
@@ -291,14 +292,7 @@ export function fromEntry(dto: EntryDTO): FoodEntry {
     expiry_date_certainty:
       dto.date_certainty === "known" ? "exact" : dto.date_certainty,
 
-    expiry_date_source:
-      dto.date_source === "printed_label"
-        ? "package_label"
-        : dto.date_source === "user_entered"
-          ? "user_reentered"
-          : dto.date_source === "user_estimate"
-            ? "user_estimate"
-            : null,
+    expiry_date_source: dto.date_source,
 
     expiry_date_label_type:
       dto.date_label_type === "unspecified" ? "unknown" : dto.date_label_type,
@@ -340,7 +334,7 @@ export function draftDTO(draft: EntryDraft) {
       ? "unknown"
       : draft.expiry_date_certainty === "estimated"
         ? "user_estimate"
-        : draft.expiry_date_source === "user_reentered"
+        : draft.expiry_date_source === "user_entered"
           ? "user_entered"
           : "printed_label",
 

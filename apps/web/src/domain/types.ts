@@ -4,7 +4,7 @@ export type Unit = "piece" | "g" | "ml"
 
 export type DateCertainty = "exact" | "estimated" | "unknown"
 
-export type DateSource = "package_label" | "user_reentered" | "user_estimate"
+export type DateSource = "printed_label" | "user_entered" | "user_estimate" | "unknown"
 
 export type DateLabelType = "use_by" | "best_before" | "unknown"
 

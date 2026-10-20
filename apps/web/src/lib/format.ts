@@ -24,11 +24,13 @@ export const certaintyLabel: Record<DateCertainty, string> = {
 }
 
 export const sourceLabel: Record<DateSource, string> = {
-  package_label: "Bao bì",
+  printed_label: "Bao bì",
 
-  user_reentered: "Nhập lại",
+  user_entered: "Nhập lại",
 
   user_estimate: "Ước tính",
+
+  unknown: "Chưa rõ",
 }
 
 export const labelTypeLabel: Record<DateLabelType, string> = {

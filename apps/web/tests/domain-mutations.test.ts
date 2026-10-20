@@ -51,7 +51,7 @@ describe("Domain Mutation DTO and Command Construction", () => {
       unit: "piece",
       expiry_date: "2026-11-01",
       expiry_date_certainty: "exact",
-      expiry_date_source: "package_label",
+      expiry_date_source: "printed_label",
       expiry_date_label_type: "use_by",
       opened_on: null,
       note: "Hộp 10 quả",
@@ -87,6 +87,21 @@ describe("Domain Mutation DTO and Command Construction", () => {
     expect(dto.date_label_type).toBe("best_before")
     expect(dto.opened_on).toBe("2026-10-20")
     expect(dto.note).toBe("Đã mở 1 hộp")
+  })
+
+  it("preserves canonical user_entered source in draftDTO", () => {
+    const draft: EntryDraft = {
+      name: "Sữa",
+      storage_location: null,
+      expiry_date: "2026-10-30",
+      expiry_date_certainty: "exact",
+      expiry_date_source: "user_entered",
+      expiry_date_label_type: "use_by",
+      opened_on: null,
+      note: null,
+    }
+
+    expect(draftDTO(draft).date_source).toBe("user_entered")
   })
 
   it("serializes decimal quantities according to API validation constraints", () => {
