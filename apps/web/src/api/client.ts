@@ -130,6 +130,18 @@ export type Page<T,> = {
 
 export type EntryPage<T> = Page<T> & { as_of_date: string }
 
+export type Command = Readonly<{
+  method: string
+
+  path: string
+
+  body?: string
+
+  key: string
+
+  owner: string
+}>
+
 export type EntryDraftDTO = {
   name: string
 
@@ -447,6 +459,28 @@ export const fromMovement = (dto: MovementResponseDTO): QuantityMovement => ({
   quantity_after: Number(dto.quantity_after),
 })
 
+export function newCommand(
+  owner: string,
+
+  method: string,
+
+  path: string,
+
+  body?: unknown,
+): Command {
+  return Object.freeze({
+    owner,
+
+    method,
+
+    path,
+
+    body: body === undefined ? undefined : JSON.stringify(body),
+
+    key: crypto.randomUUID(),
+  })
+}
+
 const fromMutationResult = (dto: MutationResultDTO): MutationResult => {
   if (
     !dto ||
@@ -670,7 +704,9 @@ export class ApiClient {
       try {
         return await this.request<T>(
           path,
+
           { method, body: serializedBody },
+
           key,
         )
       } catch (error) {
