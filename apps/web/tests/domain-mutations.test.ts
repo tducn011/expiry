@@ -125,4 +125,38 @@ describe("Domain Mutation DTO and Command Construction", () => {
     expect(capturedHeaders?.get("Idempotency-Key")).toBe(cmd.key)
     expect(capturedHeaders?.get("Content-Type")).toBe("application/json")
   })
+
+  it("formats soft-delete command with expected_version query parameter", () => {
+    const owner = "owner-trash-test"
+    const id = "food-entry-uuid-999"
+    const expectedVersion = 3
+
+    const cmd = newCommand(
+      owner,
+      "DELETE",
+      `/food-entries/${id}?expected_version=${expectedVersion}`,
+    )
+
+    expect(cmd.owner).toBe(owner)
+    expect(cmd.method).toBe("DELETE")
+    expect(cmd.path).toBe(`/food-entries/${id}?expected_version=3`)
+    expect(cmd.body).toBeUndefined()
+    expect(cmd.key).toBeDefined()
+  })
+
+  it("formats restore command with expected_version JSON payload", () => {
+    const owner = "owner-restore-test"
+    const id = "food-entry-uuid-888"
+    const expectedVersion = 4
+
+    const cmd = newCommand(owner, "POST", `/food-entries/${id}/restore`, {
+      expected_version: expectedVersion,
+    })
+
+    expect(cmd.owner).toBe(owner)
+    expect(cmd.method).toBe("POST")
+    expect(cmd.path).toBe(`/food-entries/${id}/restore`)
+    expect(JSON.parse(cmd.body!)).toEqual({ expected_version: 4 })
+    expect(cmd.key).toBeDefined()
+  })
 })
