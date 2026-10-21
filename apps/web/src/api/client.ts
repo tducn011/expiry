@@ -911,7 +911,10 @@ export class ApiClient implements ExpiryApiClient {
     )
   }
 
-  async entries(query: Record<string, string | number> = {}, trash = false) {
+  async entries(
+    query: Record<string, string | number> = {},
+    trash = false,
+  ): Promise<EntryPage<FoodEntry>> {
     const search = new URLSearchParams(
       Object.entries(query).map(([key, value]) => [key, String(value)]),
     )
@@ -930,7 +933,10 @@ export class ApiClient implements ExpiryApiClient {
     return { ...page, items: page.items.map(fromEntry) }
   }
 
-  async allEntries(trash = false) {
+  async allEntries(trash = false): Promise<{
+    items: FoodEntry[]
+    as_of_date?: string
+  }> {
     const items: FoodEntry[] = []
 
     let page = 1
@@ -953,13 +959,13 @@ export class ApiClient implements ExpiryApiClient {
     }
   }
 
-  async entry(id: string) {
+  async entry(id: string): Promise<FoodEntry> {
     return fromEntry(
       await this.request<EntryDTO>(`/food-entries/${encodeURIComponent(id)}`),
     )
   }
 
-  async history(id: string) {
+  async history(id: string): Promise<QuantityMovement[]> {
     const next = await this.request<Page<MovementResponseDTO>>(
       `/food-entries/${encodeURIComponent(id)}/movements?page=1&limit=50`,
     )
@@ -969,11 +975,15 @@ export class ApiClient implements ExpiryApiClient {
     return next.items.map(fromMovement)
   }
 
-  preferences() {
+  preferences(): Promise<Preferences> {
     return this.request<Preferences>("/me/preferences")
   }
 
-  async scan(file: File, barcode?: string, locale?: string) {
+  async scan(
+    file: File,
+    barcode?: string,
+    locale?: string,
+  ): Promise<ScanResult> {
     const body = new FormData()
 
     body.append("image", file)
