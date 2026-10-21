@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { attentionFor, DEMO_DATE, localDay, mockApi } from "./mockApi"
+import { attentionFor, DEMO_DATE, localDay } from "./mockApi"
 
 import type {
   Attention,
@@ -40,7 +40,12 @@ import AuthForm, { AuthMode } from "./features/AuthForm"
 
 import { useExpiry } from "./hooks/useExpiry"
 
+import { useDemoExpiry } from "./hooks/useDemoExpiry"
+
 import DemoApp from "./demo/DemoApp"
+
+// Suppress unused import — DEMO_DATE is referenced via mockApi in demo seed
+void DEMO_DATE
 
 type ModalKind = "add" | "restore" | DetailAction | StatusMode | null
 
@@ -132,85 +137,55 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const [lastKnownEmail, setLastKnownEmail] = useState("")
 
-  const [revision, setRevision] = useState(0)
-
   const [retryingCommand, setRetryingCommand] = useState(false)
 
   const retryLock = useRef(false)
 
-  // Real backend integration via useExpiry hook
+  // ── Hooks (both always called — Rules of Hooks) ───────────────────────────
 
   const real = useExpiry(view, filters, 1, !isDemo)
+
+  const demo = useDemoExpiry(selectedId)
+
+  // Unified API surface — pick demo or real
+  const api = isDemo ? demo : real
+
+  // ── Derived session / email ───────────────────────────────────────────────
 
   useEffect(() => {
     if (real.session?.user.email) setLastKnownEmail(real.session.user.email)
   }, [real.session])
 
-  // Automatically prompt authentication modal when user is not authenticated in real mode
-
+  // Prompt auth when not logged in (real mode only)
   useEffect(() => {
     if (!isDemo && !real.checking && !real.session) {
       setAuthModalOpen(true)
     }
   }, [isDemo, real.checking, real.session])
 
-  // Demo fallback state (only when ?demo=1 or demoMode is explicitly active)
+  // ── Derived data ──────────────────────────────────────────────────────────
 
-  const demoEntries = useMemo(
-    () => (isDemo ? mockApi.listEntries() : []),
+  const entries: FoodEntry[] = api.allFoods
 
-    [isDemo, revision],
-  )
+  const trash: FoodEntry[] = api.trash
 
-  const demoTrash = useMemo(
-    () => (isDemo ? mockApi.listTrash() : []),
+  const prefs = api.prefs ?? {
+    timezone: "Asia/Ho_Chi_Minh",
 
-    [isDemo, revision],
-  )
+    attention_lead_days: 2,
 
-  const demoPrefs = useMemo(
-    () => (isDemo ? mockApi.getPreferences() : null),
-
-    [isDemo, revision],
-  )
-
-  const demoSelected = useMemo(
-    () => (isDemo && selectedId ? mockApi.getEntry(selectedId) : null),
-
-    [isDemo, selectedId, revision],
-  )
-
-  // Active source of truth based on runtime mode
-
-  const entries: FoodEntry[] = isDemo ? demoEntries : real.allFoods
-
-  const trash: FoodEntry[] = isDemo ? demoTrash : real.trash
-
-  const prefs = isDemo
-    ? (demoPrefs ?? {
-        timezone: "Asia/Ho_Chi_Minh",
-
-        attention_lead_days: 2,
-
-        version: 1,
-      })
-    : (real.prefs ?? {
-        timezone: "Asia/Ho_Chi_Minh",
-
-        attention_lead_days: 2,
-
-        version: 1,
-      })
+    version: 1,
+  }
 
   const selected: FoodEntry | null = isDemo
-    ? demoSelected
+    ? demo.selected
     : real.selected || entries.find((e) => e.id === selectedId) || null
 
   const modalEntryId = actionEntryId ?? selectedId
 
   const modalEntry: FoodEntry | null = isDemo
     ? modalEntryId
-      ? mockApi.getEntry(modalEntryId)
+      ? demo.getEntry(modalEntryId)
       : null
     : entries.find((e) => e.id === modalEntryId) ||
       trash.find((e) => e.id === modalEntryId) ||
@@ -222,7 +197,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     ? localDay(new Date(), prefs.timezone)
     : real.asOfDate || localDay(new Date(), prefs.timezone)
 
-  const attention = (e: FoodEntry) =>
+  const attention = (e: FoodEntry): Attention =>
     isDemo
       ? attentionFor(e, prefs.attention_lead_days, activeAsOfDate)
       : (e.attention ?? "unknown")
@@ -249,6 +224,8 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const urgentCount = counts.past + counts.today + counts.soon
 
+  // ── Auth-gate side effects (real mode only) ───────────────────────────────
+
   useEffect(() => {
     if (!isDemo && real.error?.status === 401 && real.session === null) {
       setAuthModalMode("reauth")
@@ -271,6 +248,8 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       setAuthModalOpen(true)
     }
   }, [isDemo, modal, addOwnerId, real.session, real.checking])
+
+  // ── Derived UI ────────────────────────────────────────────────────────────
 
   const visible = useMemo(
     () =>
@@ -321,7 +300,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   )
 
   const displayName = isDemo
-    ? mockApi.user.display_name || "Bạn (Demo)"
+    ? demo.session.user.display_name || "Bạn (Demo)"
     : real.session?.user?.display_name ||
       real.session?.user?.email ||
       "Chưa đăng nhập"
@@ -335,6 +314,8 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       ? `${settingsSnapshot.version}:${settingsSnapshot.timezone}:${settingsSnapshot.attention_lead_days}`
       : "loading"
   }`
+
+  // ── Navigation helpers ────────────────────────────────────────────────────
 
   const navigate = (v: View) => {
     setView(v)
@@ -382,36 +363,46 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     }
   }
 
-  // Unified mutation handler supporting both real backend commands and demo in-memory
+  // ── Unified notice helper ─────────────────────────────────────────────────
+
+  const flash = (msg: string, ms = 3000) => {
+    setNotice(msg)
+
+    window.setTimeout(() => setNotice(""), ms)
+  }
+
+  // ── Error-response dispatcher ─────────────────────────────────────────────
+
+  const handleMutError = (err: {
+    status: number
+    code: string
+    message: string
+  }) => {
+    if (
+      err.status === 409 &&
+      (err.code === "VERSION_CONFLICT" ||
+        err.code === "CONCURRENT_MODIFICATION")
+    ) {
+      setModal("conflict")
+
+      if (!isDemo) real.refresh()
+    } else if (err.code === "INSUFFICIENT_QUANTITY") {
+      setModal("insufficient")
+
+      if (!isDemo) real.refresh()
+    } else if (err.status === 401) {
+      setAuthModalMode("reauth")
+
+      setAuthModalOpen(true)
+    } else {
+      flash(err.message, 4000)
+    }
+  }
+
+  // ── Mutations ─────────────────────────────────────────────────────────────
 
   const create = async (payload: CreatePayload) => {
-    if (isDemo) {
-      try {
-        const id = mockApi.createEntry(
-          mockApi.createCommandKey("create"),
-
-          payload,
-        ).data.id
-
-        setRevision((r) => r + 1)
-
-        setSelectedId(id)
-
-        setModal(null)
-
-        setNotice("Đã thêm thực phẩm vào kho")
-
-        window.setTimeout(() => setNotice(""), 3000)
-
-        return
-      } catch (err) {
-        setModal("read")
-
-        return
-      }
-    }
-
-    if (!real.session) {
+    if (!isDemo && !real.session) {
       setPendingCreate(payload)
 
       setAuthModalOpen(true)
@@ -419,28 +410,29 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       return
     }
 
-    const result = await real.createFood(payload)
+    const result = await api.createFood(payload)
 
     setPendingCreate(null)
 
     if (result.ok) {
       closeModal()
 
-      const created =
-        "body" in result
-          ? result.body as { id?: string } | undefined
+      const createdId =
+        "body" in result &&
+        result.body &&
+        typeof result.body === "object" &&
+        "id" in result.body
+          ? (result.body as { id?: string }).id
           : undefined
 
-      if (created?.id) {
-        setSelectedId(created.id)
+      if (createdId) {
+        setSelectedId(createdId)
 
-        real.setSelectedId(created.id)
+        if (!isDemo) real.setSelectedId(createdId)
       }
 
-      setNotice("Đã thêm thực phẩm vào kho")
-
-      window.setTimeout(() => setNotice(""), 3000)
-    } else if (result.error) {
+      flash("Đã thêm thực phẩm vào kho")
+    } else if ("error" in result && result.error) {
       if (result.error.status === 401) {
         setPendingCreate(payload)
 
@@ -448,9 +440,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
         setAuthModalOpen(true)
       } else {
-        setNotice(result.error.message)
-
-        window.setTimeout(() => setNotice(""), 4000)
+        flash(result.error.message, 4000)
       }
     }
   }
@@ -470,9 +460,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
         setPendingCreate(null)
 
-        setNotice("Đã tiếp tục thao tác trước đó")
-
-        window.setTimeout(() => setNotice(""), 3000)
+        flash("Đã tiếp tục thao tác trước đó")
       }
     } finally {
       retryLock.current = false
@@ -480,6 +468,8 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       setRetryingCommand(false)
     }
   }
+
+  // ── Early returns ─────────────────────────────────────────────────────────
 
   if (!isDemo && real.checking) {
     return (
@@ -586,6 +576,8 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       />
     )
 
+  // ── Main render ───────────────────────────────────────────────────────────
+
   return (
     <Shell
       view={view}
@@ -645,7 +637,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         <Detail
           food={selected}
           attention={attention(selected)}
-          movements={isDemo ? mockApi.listMovements(selected.id) : real.history}
+          movements={isDemo ? demo.getMovements(selected.id) : real.history}
           onBack={() => {
             setSelectedId(null)
 
@@ -675,33 +667,10 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           displayName={displayName}
           userEmail={!isDemo ? real.session?.user.email : undefined}
           onSave={async (patch) => {
-            if (isDemo) {
-              mockApi.updatePreferences(
-                mockApi.createCommandKey("preferences"),
+            const res = await api.updatePreferences(prefs.version, patch)
 
-                prefs.version,
-
-                patch,
-              )
-
-              setRevision((r) => r + 1)
-
-              setNotice("Đã lưu cài đặt")
-
-              window.setTimeout(() => setNotice(""), 3000)
-
-              return
-            }
-
-            if (!real.session) return
-
-            const res = await real.updatePreferences(prefs.version, patch)
-
-            if (res.ok) {
-              setNotice("Đã lưu cài đặt")
-
-              window.setTimeout(() => setNotice(""), 3000)
-            }
+            if (res.ok) flash("Đã lưu cài đặt")
+            else if (res.error) handleMutError(res.error)
           }}
           onLogout={
             !isDemo && real.session
@@ -721,9 +690,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
                     setPendingAdd(false)
 
-                    setNotice("Đã đăng xuất")
-
-                    window.setTimeout(() => setNotice(""), 3000)
+                    flash("Đã đăng xuất")
 
                     setAuthModalOpen(true)
                   }
@@ -890,65 +857,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               const confirmedUnchanged =
                 modal === "recount" && amount === modalEntry.remaining_quantity
 
-              if (isDemo) {
-                const key = mockApi.createCommandKey(modal)
-
-                try {
-                  if (modal === "recount") {
-                    mockApi.recount(
-                      key,
-
-                      modalEntry.id,
-
-                      modalEntry.version,
-
-                      amount,
-
-                      why,
-                    )
-                  } else {
-                    mockApi.recordMovement(
-                      key,
-
-                      modalEntry.id,
-
-                      modalEntry.version,
-
-                      modal,
-
-                      amount,
-
-                      why || null,
-                    )
-                  }
-
-                  setRevision((r) => r + 1)
-
-                  closeModal()
-
-                  setNotice(
-                    modal === "recount"
-                      ? confirmedUnchanged
-                        ? "Đã xác nhận kiểm kê, số lượng không đổi"
-                        : "Đã cập nhật lượng sau kiểm lại"
-                      : `Đã ghi nhận ${
-                          modal === "consume" ? "đã dùng" : "đã bỏ"
-                        }`,
-                  )
-
-                  window.setTimeout(() => setNotice(""), 3000)
-                } catch {
-                  setModal("conflict")
-                }
-
-                return
-              }
-
-              if (!real.session) return
-
               const res =
                 modal === "recount"
-                  ? await real.recountFood(
+                  ? await api.recountFood(
                       modalEntry.id,
 
                       modalEntry.version,
@@ -957,7 +868,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
                       why,
                     )
-                  : await real.recordMovement(
+                  : await api.recordMovement(
                       modalEntry.id,
 
                       modalEntry.version,
@@ -972,7 +883,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               if (res.ok) {
                 closeModal()
 
-                setNotice(
+                flash(
                   modal === "recount"
                     ? confirmedUnchanged
                       ? "Đã xác nhận kiểm kê, số lượng không đổi"
@@ -981,30 +892,8 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                         modal === "consume" ? "đã dùng" : "đã bỏ"
                       }`,
                 )
-
-                window.setTimeout(() => setNotice(""), 3000)
               } else if (res.error) {
-                if (
-                  res.error.status === 409 &&
-                  (res.error.code === "VERSION_CONFLICT" ||
-                    res.error.code === "CONCURRENT_MODIFICATION")
-                ) {
-                  setModal("conflict")
-
-                  real.refresh()
-                } else if (res.error.code === "INSUFFICIENT_QUANTITY") {
-                  setModal("insufficient")
-
-                  real.refresh()
-                } else if (res.error.status === 401) {
-                  setAuthModalMode("reauth")
-
-                  setAuthModalOpen(true)
-                } else {
-                  setNotice(res.error.message)
-
-                  window.setTimeout(() => setNotice(""), 4000)
-                }
+                handleMutError(res.error)
               }
             }}
           />
@@ -1014,7 +903,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       {selected && modal === "history" && (
         <History
           food={selected}
-          movements={isDemo ? mockApi.listMovements(selected.id) : real.history}
+          movements={isDemo ? demo.getMovements(selected.id) : real.history}
           active={!authModalOpen}
           onClose={closeModal}
         />
@@ -1032,35 +921,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onRetry={() => void retryPendingCommand()}
           onClose={closeModal}
           onUpdate={async (patch) => {
-            if (isDemo) {
-              try {
-                mockApi.updateEntry(
-                  mockApi.createCommandKey("update"),
-
-                  modalEntry.id,
-
-                  modalEntry.version,
-
-                  patch,
-                )
-
-                setRevision((r) => r + 1)
-
-                closeModal()
-
-                setNotice("Đã cập nhật thông tin")
-
-                window.setTimeout(() => setNotice(""), 3000)
-              } catch {
-                setModal("conflict")
-              }
-
-              return
-            }
-
-            if (!real.session) return
-
-            const res = await real.updateFood(
+            const res = await api.updateFood(
               modalEntry.id,
 
               modalEntry.version,
@@ -1071,27 +932,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             if (res.ok) {
               closeModal()
 
-              setNotice("Đã cập nhật thông tin")
-
-              window.setTimeout(() => setNotice(""), 3000)
+              flash("Đã cập nhật thông tin")
             } else if (res.error) {
-              if (
-                res.error.status === 409 &&
-                (res.error.code === "VERSION_CONFLICT" ||
-                  res.error.code === "CONCURRENT_MODIFICATION")
-              ) {
-                setModal("conflict")
-
-                real.refresh()
-              } else if (res.error.status === 401) {
-                setAuthModalMode("reauth")
-
-                setAuthModalOpen(true)
-              } else {
-                setNotice(res.error.message)
-
-                window.setTimeout(() => setNotice(""), 4000)
-              }
+              handleMutError(res.error)
             }
           }}
         />
@@ -1101,7 +944,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       {modalEntry && modal === "delete" && (
         <Dialog
           eyebrow="XÓA MÓN"
-          title={`Xóa “${modalEntry.name}”?`}
+          title={`Xóa "${modalEntry.name}"?`}
           body="Món sẽ được chuyển vào thùng rác và có thể khôi phục bất cứ lúc nào."
           active={!authModalOpen}
           actionDisabled={
@@ -1119,43 +962,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           actionVariant="danger"
           onClose={closeModal}
           onAction={async () => {
-            if (isDemo) {
-              try {
-                mockApi.deleteEntry(
-                  mockApi.createCommandKey("delete"),
-
-                  modalEntry.id,
-
-                  modalEntry.version,
-                )
-
-                setRevision((r) => r + 1)
-
-                setModal(null)
-
-                setSelectedId(null)
-
-                setActionEntryId(null)
-
-                setActionEntrySnapshot(null)
-
-                setNotice("Đã chuyển vào thùng rác")
-
-                window.setTimeout(() => setNotice(""), 3000)
-              } catch {
-                setModal("conflict")
-              }
-
-              return
-            }
-
-            if (!real.session) return
-
-            const res = await real.deleteFood(
-              modalEntry.id,
-
-              modalEntry.version,
-            )
+            const res = await api.deleteFood(modalEntry.id, modalEntry.version)
 
             if (res.ok) {
               setModal(null)
@@ -1166,29 +973,11 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
               setActionEntrySnapshot(null)
 
-              real.setSelectedId(null)
+              if (!isDemo) real.setSelectedId(null)
 
-              setNotice("Đã chuyển vào thùng rác")
-
-              window.setTimeout(() => setNotice(""), 3000)
+              flash("Đã chuyển vào thùng rác")
             } else if (res.error) {
-              if (
-                res.error.status === 409 &&
-                (res.error.code === "VERSION_CONFLICT" ||
-                  res.error.code === "CONCURRENT_MODIFICATION")
-              ) {
-                setModal("conflict")
-
-                real.refresh()
-              } else if (res.error.status === 401) {
-                setAuthModalMode("reauth")
-
-                setAuthModalOpen(true)
-              } else {
-                setNotice(res.error.message)
-
-                window.setTimeout(() => setNotice(""), 4000)
-              }
+              handleMutError(res.error)
             }
           }}
         />
@@ -1198,7 +987,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       {modalEntry && modal === "restore" && (
         <Dialog
           eyebrow="KHÔI PHỤC"
-          title={`Khôi phục “${modalEntry.name}”?`}
+          title={`Khôi phục "${modalEntry.name}"?`}
           body="Món sẽ trở lại kho thực phẩm với đầy đủ thông tin ban đầu."
           active={!authModalOpen}
           actionDisabled={
@@ -1225,39 +1014,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             if (!isDemo) real.setSelectedId(null)
           }}
           onAction={async () => {
-            if (isDemo) {
-              try {
-                mockApi.restoreEntry(
-                  mockApi.createCommandKey("restore"),
-
-                  modalEntry.id,
-                )
-
-                setRevision((r) => r + 1)
-
-                setModal(null)
-
-                setSelectedId(null)
-
-                navigate("inventory")
-
-                setNotice("Đã khôi phục thực phẩm")
-
-                window.setTimeout(() => setNotice(""), 3000)
-              } catch {
-                setModal("conflict")
-              }
-
-              return
-            }
-
-            if (!real.session) return
-
-            const res = await real.restoreFood(
-              modalEntry.id,
-
-              modalEntry.version,
-            )
+            const res = await api.restoreFood(modalEntry.id, modalEntry.version)
 
             if (res.ok) {
               setModal(null)
@@ -1268,31 +1025,13 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
               setActionEntrySnapshot(null)
 
-              real.setSelectedId(null)
+              if (!isDemo) real.setSelectedId(null)
 
               navigate("inventory")
 
-              setNotice("Đã khôi phục thực phẩm")
-
-              window.setTimeout(() => setNotice(""), 3000)
+              flash("Đã khôi phục thực phẩm")
             } else if (res.error) {
-              if (
-                res.error.status === 409 &&
-                (res.error.code === "VERSION_CONFLICT" ||
-                  res.error.code === "CONCURRENT_MODIFICATION")
-              ) {
-                setModal("conflict")
-
-                real.refresh()
-              } else if (res.error.status === 401) {
-                setAuthModalMode("reauth")
-
-                setAuthModalOpen(true)
-              } else {
-                setNotice(res.error.message)
-
-                window.setTimeout(() => setNotice(""), 4000)
-              }
+              handleMutError(res.error)
             }
           }}
         />
