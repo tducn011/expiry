@@ -8,11 +8,17 @@ const JPEG_QUALITIES = [0.85, 0.75, 0.65, 0.55, 0.45, 0.35]
 
 const SUPPORTED_IMAGE_TYPES = new Set([
   "image/jpeg",
+
   "image/jpg",
+
   "image/pjpeg",
+
   "image/png",
+
   "image/webp",
+
   "application/octet-stream",
+
   "",
 ])
 
