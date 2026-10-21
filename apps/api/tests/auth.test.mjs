@@ -365,3 +365,33 @@ test('duplicate registration triggers ER_DUP_ENTRY and maps to EMAIL_ALREADY_REG
   assert.equal(rollbacks, 1);
   assert.equal(releases, 1);
 });
+
+test('pruneExpiredSessions executes deletion query and returns affected rows', async () => {
+  let executedSql = '';
+  let executedValues = [];
+  let committed = false;
+  let released = false;
+
+  const repository = new AuthRepository('not-connected', { connect: async () => ({
+    beginTransaction: async () => {},
+    commit: async () => { committed = true; },
+    execute: async (sql, values) => {
+      executedSql = sql;
+      executedValues = values;
+      return [{ affectedRows: 3 }];
+    },
+    rollback: async () => {},
+    end: async () => { released = true; }
+  }) });
+
+  const fixedNow = new Date('2026-10-15T12:00:00.000Z');
+  const count = await repository.pruneExpiredSessions(() => fixedNow);
+
+  assert.equal(count, 3);
+  assert.match(executedSql, /DELETE FROM user_sessions/);
+  assert.equal(committed, true);
+  assert.equal(released, true);
+  assert.equal(executedValues.length, 2);
+  assert.equal(executedValues[0], '2026-10-15 12:00:00.000');
+});
+

@@ -112,4 +112,17 @@ export class AuthRepository {
       await connection.execute('UPDATE user_sessions SET revoked_at=? WHERE token_hash=? AND revoked_at IS NULL', [sqlDate(now), hash]);
     });
   }
+
+  async pruneExpiredSessions(clock = () => new Date()) {
+    return this.transaction(async connection => {
+      const now = sqlDate(clock());
+      const [result] = await connection.execute(
+        `DELETE FROM user_sessions 
+         WHERE expires_at < ? 
+            OR (revoked_at IS NOT NULL AND revoked_at < DATE_SUB(?, INTERVAL 7 DAY))`,
+        [now, now]
+      );
+      return result.affectedRows;
+    });
+  }
 }

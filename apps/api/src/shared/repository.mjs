@@ -164,4 +164,16 @@ export class InventoryRepository {
       return {items:items.map(({attention_status,...entry})=>({...entry,lifecycle:milli(entry.remaining_quantity,entry.unit)===0n?'depleted':'active',attention:attention(entry,user,instant)})),total:Number(total),page,limit,as_of_date:day};
     } finally { await c.end(); }
   }
+  async pruneExpiredIdempotencyKeys(retentionDays = 2) {
+    const c = await connect(this.database);
+    try {
+      const [result] = await c.execute(
+        'DELETE FROM api_requests WHERE created_at < DATE_SUB(UTC_TIMESTAMP(6), INTERVAL ? DAY)',
+        [retentionDays]
+      );
+      return result.affectedRows;
+    } finally {
+      await c.end();
+    }
+  }
 }
