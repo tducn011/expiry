@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react"
 import type { Attention, FoodEntry } from "../domain/types"
 
 import {
@@ -145,6 +146,21 @@ export default function Inventory({
 
   const urgentTotal = counts.past + counts.today + counts.soon
 
+  const [searchInput, setSearchInput] = useState(filters.query)
+
+  useEffect(() => {
+    setSearchInput(filters.query)
+  }, [filters.query])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== filters.query) {
+        set("query", searchInput)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchInput, filters.query, set])
+
   const isFilteredByAttention = filters.attentionFilter !== "all"
 
   const filterKeys: Attention[] = isAttention
@@ -244,16 +260,19 @@ export default function Inventory({
           <Icon name="search" />
           <input
             aria-label="Tìm theo tên"
-            value={filters.query}
-            onChange={(e) => set("query", e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Tìm tên thực phẩm"
           />
-          {filters.query && (
+          {searchInput && (
             <button
               type="button"
               className="clear-search"
               aria-label="Xóa tìm kiếm"
-              onClick={() => set("query", "")}
+              onClick={() => {
+                setSearchInput("")
+                set("query", "")
+              }}
             >
               ×
             </button>
