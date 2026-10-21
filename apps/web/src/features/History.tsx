@@ -60,7 +60,8 @@ export default function History({
               Chưa có biến động số lượng
             </p>
             <p style={{ margin: 0, fontSize: "0.875rem", opacity: 0.8 }}>
-              Khi bạn ghi nhận đã dùng, bỏ bớt hoặc kiểm lại số lượng, các mốc thời gian sẽ hiển thị tại đây.
+              Khi bạn ghi nhận đã dùng, bỏ bớt hoặc kiểm lại số lượng, các mốc
+              thời gian sẽ hiển thị tại đây.
             </p>
           </div>
         ) : (
