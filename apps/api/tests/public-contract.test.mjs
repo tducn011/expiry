@@ -178,6 +178,16 @@ test('history pagination and exact signed decimal delta match MovementList', asy
   assert.equal(movementDTO({ ...movement, quantity_before: '0.000', quantity_after: '0.001' }).delta, '0.001');
 });
 
+test('history route alias /food-entries/:id/history conforms to MovementList schema', async t => {
+  const { request } = await harness(t);
+  const response = await request(`/food-entries/${entryId}/history?page=1&limit=10`);
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  validate(body, 'MovementList');
+  assert.equal(body.items.length, 2);
+  assert.equal(body.items[0].delta, '-250.500');
+});
+
 test('delete version uses query and rejects absent or malformed integers without mutation', async t => {
   const { request, calls } = await harness(t);
   assert.equal(contract.paths['/food-entries/{id}'].delete.parameters.find(parameter => parameter.name === 'expected_version').schema.maximum, 2147483647);

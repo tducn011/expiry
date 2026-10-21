@@ -1,35 +1,52 @@
 import { useMemo, useState } from "react"
+
 import type { FoodEntry } from "../domain/types"
+
 import { fmtQty, fmtTime, locations, unitLabel } from "../lib/format"
+
 import Grid from "../components/layout/Grid"
+
 import PageHeader from "../components/layout/PageHeader"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import Icon from "../components/ui/Icon"
+
 import Select from "../components/ui/Select"
 
 export default function Trash({
   timezone = "Asia/Ho_Chi_Minh",
+
   foods,
+
   onRestore,
 }: {
   timezone?: string
+
   foods: FoodEntry[]
+
   onRestore: (f: FoodEntry) => void
 }) {
   const [query, setQuery] = useState("")
+
   const [location, setLocation] = useState("Tất cả vị trí")
 
   const filteredFoods = useMemo(() => {
     const q = query.trim().toLowerCase()
+
     return foods.filter((f) => {
       const matchQuery =
         !q ||
         f.name.toLowerCase().includes(q) ||
         (f.note && f.note.toLowerCase().includes(q))
+
       const matchLocation =
         location === "Tất cả vị trí" || f.storage_location === location
+
       return matchQuery && matchLocation
     })
   }, [foods, query, location])
@@ -74,6 +91,7 @@ export default function Trash({
             onChange={setLocation}
             options={[
               { value: "Tất cả vị trí", label: "Tất cả vị trí" },
+
               ...locations.map((loc) => ({ value: loc, label: loc })),
             ]}
           />
