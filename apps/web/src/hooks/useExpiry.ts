@@ -248,8 +248,6 @@ export function useExpiry(
     setLoading(true)
 
     Promise.all([
-      api.allEntries(),
-
       api.entries(query),
 
       api.preferences(),
@@ -259,10 +257,10 @@ export function useExpiry(
         : Promise.resolve({ items: [] as FoodEntry[] }),
     ])
 
-      .then(([summary, entries, preferences, deleted]) => {
+      .then(([entries, preferences, deleted]) => {
         if (!active || ownerEpoch !== epoch.current) return
 
-        setAllFoods(summary.items)
+        setAllFoods(entries.items)
 
         setList(entries)
 

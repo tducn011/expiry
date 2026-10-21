@@ -664,23 +664,13 @@ export class ApiClient {
   }
 
   async history(id: string) {
-    const items: QuantityMovement[] = []
+    const next = await this.request<Page<MovementDTO>>(
+      `/food-entries/${encodeURIComponent(id)}/movements?page=1&limit=50`,
+    )
 
-    for (let page = 1; page <= 1000; page++) {
-      const next = await this.request<Page<MovementDTO>>(
-        `/food-entries/${encodeURIComponent(id)}/movements?page=${page}&limit=100`,
-      )
+    if (!Array.isArray(next.items) || !next.pagination) throw contractError()
 
-      if (!Array.isArray(next.items) || !next.pagination) throw contractError()
-
-      items.push(...next.items.map(fromMovement))
-
-      if (page * next.pagination.limit >= next.pagination.total) return items
-
-      if (!next.items.length) throw contractError()
-    }
-
-    throw contractError()
+    return next.items.map(fromMovement)
   }
 
   preferences() {
