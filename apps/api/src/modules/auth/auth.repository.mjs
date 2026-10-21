@@ -5,6 +5,7 @@ import { DomainError } from '../../shared/domain.mjs';
 const sqlDate = value => new Date(value).toISOString().slice(0, 23).replace('T', ' ');
 const instant = value => new Date(typeof value === 'string' && !value.includes('T') ? `${value.replace(' ', 'T')}Z` : value);
 const CLOCK_SKEW_TOLERANCE_MS = 10_000;
+const SESSION_TOUCH_INTERVAL_MS = 60_000;
 const principal = row => ({
   id: row.id,
   display_name: row.display_name,
@@ -92,21 +93,25 @@ export class AuthRepository {
         `SELECT u.id,u.display_name,u.timezone,u.attention_lead_days,u.version,c.email_normalized,
                 s.created_at,s.last_seen_at,s.expires_at,s.revoked_at
          FROM user_sessions s JOIN users u ON u.id=s.user_id
-         JOIN local_credentials c ON c.user_id=u.id WHERE s.token_hash=? FOR UPDATE`,
+         JOIN local_credentials c ON c.user_id=u.id WHERE s.token_hash=?`,
         [hash]
       );
-      // Sample request time after FOR UPDATE returns. A request may have waited
-      // behind a newer legitimate activity update while retaining an older
-      // timestamp captured at middleware entry.
       const now = clock();
       if (!row || row.revoked_at !== null || instant(row.expires_at) <= now || instant(row.last_seen_at).getTime() + idleTimeoutMs <= now.getTime()) return null;
       if (
         instant(row.created_at).getTime() - now.getTime() > CLOCK_SKEW_TOLERANCE_MS
         || instant(row.last_seen_at).getTime() - now.getTime() > CLOCK_SKEW_TOLERANCE_MS
       ) throw new DomainError(503, 'AUTH_UNAVAILABLE');
+      const lastSeen = instant(row.last_seen_at);
       const lastSeenAt = sqlDate(now);
       if (instant(lastSeenAt) >= instant(row.expires_at)) return null;
-      await connection.execute('UPDATE user_sessions SET last_seen_at=? WHERE token_hash=?', [lastSeenAt, hash]);
+      if (now.getTime() - lastSeen.getTime() >= SESSION_TOUCH_INTERVAL_MS) {
+        const staleBefore = sqlDate(new Date(now.getTime() - SESSION_TOUCH_INTERVAL_MS));
+        await connection.execute(
+          'UPDATE user_sessions SET last_seen_at=? WHERE token_hash=? AND revoked_at IS NULL AND last_seen_at<=?',
+          [lastSeenAt, hash, staleBefore]
+        );
+      }
       return { user: principal(row), expires_at: instant(row.expires_at).toISOString() };
     });
   }
