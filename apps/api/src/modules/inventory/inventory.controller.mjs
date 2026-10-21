@@ -61,7 +61,7 @@ export class InventoryController {
 
   remove = async (req, res, next) => {
     try {
-      const input = { expected_version: queryInteger(req.query.expected_version) };
+      const input = { expected_version: queryInteger(req.query.expected_version ?? req.query.version) };
       const result = await this.service.removeEntry(req.userId, req.idempotencyKey, req.params.id, input);
       if (result.replayed) {
         res.setHeader('Idempotency-Replayed', 'true');
@@ -74,7 +74,10 @@ export class InventoryController {
 
   restore = async (req, res, next) => {
     try {
-      const result = await this.service.restoreEntry(req.userId, req.idempotencyKey, req.params.id, req.body || {});
+      const body = req.body && req.body.expected_version === undefined && req.body.version !== undefined
+        ? { expected_version: req.body.version }
+        : (req.body || {});
+      const result = await this.service.restoreEntry(req.userId, req.idempotencyKey, req.params.id, body);
       if (result.replayed) {
         res.setHeader('Idempotency-Replayed', 'true');
       }

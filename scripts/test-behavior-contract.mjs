@@ -323,7 +323,7 @@ async function runBehavioralAndContractSuite() {
     record('STAGE 11: OCR SCAN BRIDGE', 'API kết nối và trích xuất nhãn thực tế thành công qua Python Scan microservice');
   }
 
-  // Stage 12: Soft Delete & Trash Inspection
+  // Stage 12: Soft Delete, Trash Filters & One-Click Restore Lifecycle (CAP-06)
   {
     const res = await fetch(`${API_BASE}/api/v1/food-entries/${createdEntry.id}?expected_version=${updatedEntry.version}`, {
       method: 'DELETE',
@@ -343,7 +343,41 @@ async function runBehavioralAndContractSuite() {
     const trashList = await trashRes.json();
     conform(trashList, 'EntryList');
     assert.ok(trashList.items.some(i => i.id === createdEntry.id));
-    record('STAGE 12: SOFT DELETE & TRASH', 'Xóa mềm thành công và xuất hiện trong thùng rác');
+
+    // Verify filter parameters (q, location)
+    const filterRes = await fetch(`${API_BASE}/api/v1/trash/food-entries?q=${encodeURIComponent(createdEntry.name)}`, {
+      headers: { Cookie: cookie, Origin: ORIGIN }
+    });
+    assert.equal(filterRes.status, 200);
+    const filteredTrash = await filterRes.json();
+    conform(filteredTrash, 'EntryList');
+    assert.ok(filteredTrash.items.some(i => i.id === createdEntry.id));
+
+    // One-Click Restore
+    const restoreRes = await fetch(`${API_BASE}/api/v1/food-entries/${createdEntry.id}/restore`, {
+      method: 'POST',
+      headers: {
+        Origin: ORIGIN,
+        Cookie: cookie,
+        'X-CSRF-Token': csrfToken,
+        'Idempotency-Key': `idemp_${randomUUID()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ expected_version: updatedEntry.version + 1 })
+    });
+    assert.equal(restoreRes.status, 200);
+    const restoredEntry = await restoreRes.json();
+    conform(restoredEntry, 'Entry');
+    assert.equal(restoredEntry.deleted_at, null);
+
+    // Verify removed from trash list
+    const trashAfterRestore = await fetch(`${API_BASE}/api/v1/trash/food-entries`, {
+      headers: { Cookie: cookie, Origin: ORIGIN }
+    });
+    const trashAfterList = await trashAfterRestore.json();
+    assert.ok(!trashAfterList.items.some(i => i.id === createdEntry.id));
+
+    record('STAGE 12: DELETE & RESTORE LIFECYCLE', 'Chu trình xóa mềm, lọc thùng rác và khôi phục 1 chạm thành công 100%');
   }
 
   // Stage 13: Logout & Session Invalidation
