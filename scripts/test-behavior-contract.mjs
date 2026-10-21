@@ -31,7 +31,7 @@ function validateSchema(value, schema, path = 'root') {
     return;
   }
   if (value === null) {
-    const allowsNull = schema.nullable || (Array.isArray(schema.type) && schema.type.includes('null'));
+    const allowsNull = schema.nullable || schema.type === 'null' || (Array.isArray(schema.type) && schema.type.includes('null'));
     assert.ok(allowsNull, `${path}: Received null but schema does not allow null`);
     return;
   }
