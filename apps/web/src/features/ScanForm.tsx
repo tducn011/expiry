@@ -683,8 +683,11 @@ export default function ScanForm({
                     "image/jpg",
 
                     "image/pjpeg",
+
                     "image/png",
+
                     "image/webp",
+
                     "application/octet-stream",
                   ].includes(file.type.toLowerCase())
                 ) {
