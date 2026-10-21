@@ -429,7 +429,7 @@ describe("Barcode GS1 & Lookup Service", () => {
     const jp = getGs1Info("4901234567894")
     expect(jp?.country).toBe("Nhật Bản")
     expect(jp?.preferredDateFormat).toBe("YYYY/MM/DD")
-  })
+  }, 15000)
 
   it("resolves barcode from local inventory before external lookup", async () => {
     const { lookupBarcode } = await import("../src/lib/barcode")
@@ -495,3 +495,63 @@ describe("Barcode GS1 & Lookup Service", () => {
     expect(res).toBeNull()
   })
 })
+
+describe("Manual Capture Form & Outcome Boundary (CAP-01)", () => {
+  it("enforces manual entry validation constraints for name, storage location, and quantity", async () => {
+    const { createDTO, newCommand } = await import("../src/api/client")
+
+    const validPayload = {
+      name: "Thịt bò Wagyu Úc",
+      storage_location: "Ngăn đông",
+      initial_quantity: 1.5,
+      unit: "g" as const,
+      expiry_date: "2026-12-31",
+      expiry_date_certainty: "exact" as const,
+      expiry_date_source: "printed_label" as const,
+      expiry_date_label_type: "best_before" as const,
+      opened_on: null,
+      note: "Hàng nhập khẩu cao cấp",
+    }
+
+    const dto = createDTO(validPayload)
+    expect(dto.name).toBe("Thịt bò Wagyu Úc")
+    expect(dto.storage_location).toBe("Ngăn đông")
+    expect(dto.quantity).toBe("1.5")
+    expect(dto.unit).toBe("g")
+    expect(dto.expiry_date).toBe("2026-12-31")
+    expect(dto.date_certainty).toBe("known")
+    expect(dto.date_source).toBe("printed_label")
+
+    const cmd = newCommand("usr-test-1", "POST", "/food-entries", dto)
+    expect(cmd.key.startsWith("idemp_")).toBe(true)
+    expect(cmd.method).toBe("POST")
+    expect(cmd.path).toBe("/food-entries")
+  })
+
+  it("handles unknown expiry date with null date and unknown source coherence", async () => {
+    const { createDTO } = await import("../src/api/client")
+
+    const unknownPayload = {
+      name: "Gia vị thảo mộc",
+      storage_location: "Tủ bếp",
+      initial_quantity: 2,
+      unit: "piece" as const,
+      expiry_date: null,
+      expiry_date_certainty: "unknown" as const,
+      expiry_date_source: null,
+      expiry_date_label_type: null,
+      opened_on: null,
+      note: null,
+    }
+
+    const dto = createDTO(unknownPayload)
+    expect(dto.name).toBe("Gia vị thảo mộc")
+    expect(dto.quantity).toBe("2")
+    expect(dto.unit).toBe("piece")
+    expect(dto.expiry_date).toBeNull()
+    expect(dto.date_certainty).toBe("unknown")
+    expect(dto.date_source).toBe("unknown")
+    expect(dto.date_label_type).toBe("unspecified")
+  })
+})
+

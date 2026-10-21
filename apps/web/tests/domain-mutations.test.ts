@@ -105,6 +105,21 @@ describe("Domain Error Message Translations", () => {
 })
 
 describe("Domain Mutation DTO and ApiClient Methods", () => {
+  it("generates immutable commands with unique UUID idempotency key", () => {
+    const cmd1 = newCommand("owner-123", "POST", "/food-entries", { name: "Milk" })
+    const cmd2 = newCommand("owner-123", "POST", "/food-entries", { name: "Milk" })
+
+    expect(cmd1.owner).toBe("owner-123")
+    expect(cmd1.method).toBe("POST")
+    expect(cmd1.path).toBe("/food-entries")
+    expect(JSON.parse(cmd1.body!)).toEqual({ name: "Milk" })
+    expect(cmd1.key).toMatch(
+      /^(?:idemp_)?[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    )
+    expect(cmd1.key.startsWith("idemp_")).toBe(true)
+    expect(cmd1.key).not.toBe(cmd2.key)
+    expect(Object.isFrozen(cmd1)).toBe(true)
+  })
   it("formats createDTO with decimal quantity and metadata", () => {
     const payload: CreatePayload = {
       name: "Trứng gà",

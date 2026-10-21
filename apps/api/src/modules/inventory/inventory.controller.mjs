@@ -8,7 +8,14 @@ export class InventoryController {
 
   create = async (req, res, next) => {
     try {
-      const result = await this.service.createEntry(req.userId, req.idempotencyKey, req.body);
+      const body = { ...req.body };
+      if (body.unit === 'gram') body.unit = 'g';
+      if (body.unit === 'milliliter') body.unit = 'ml';
+      if (typeof body.quantity === 'number') body.quantity = String(body.quantity);
+      if (body.quantity === undefined && body.initial_quantity !== undefined) {
+        body.quantity = String(body.initial_quantity);
+      }
+      const result = await this.service.createEntry(req.userId, req.idempotencyKey, body);
       if (result.replayed) {
         res.setHeader('Idempotency-Replayed', 'true');
       }

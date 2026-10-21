@@ -161,7 +161,16 @@ export default function EntryForm({
 
   const errors: Record<string, string>[] = [
     {
-      name: form.name.trim() ? "" : "Nhập tên thực phẩm.",
+      name: form.name.trim()
+        ? form.name.trim().length > 200
+          ? "Tên thực phẩm tối đa 200 ký tự."
+          : ""
+        : "Nhập tên thực phẩm.",
+
+      storage_location:
+        form.storage_location.trim().length > 100
+          ? "Vị trí tối đa 100 ký tự."
+          : "",
 
       quantity: entry
         ? ""
@@ -182,7 +191,11 @@ export default function EntryForm({
       expiry_date:
         form.certainty !== "unknown" && !form.expiry_date
           ? "Chọn ngày theo dõi."
-          : "",
+          : form.expiry_date && !/^\d{4}-\d{2}-\d{2}$/.test(form.expiry_date)
+            ? "Định dạng ngày phải là YYYY-MM-DD."
+            : "",
+
+      note: form.note.length > 1000 ? "Ghi chú tối đa 1000 ký tự." : "",
     },
   ]
 
@@ -518,7 +531,11 @@ export default function EntryForm({
                 </>
               )}
               <div className="span-2">
-                <Field label="Vị trí" hint="Không bắt buộc.">
+                <Field
+                  label="Vị trí"
+                  hint="Không bắt buộc."
+                  error={show(0, "storage_location")}
+                >
                   <input
                     maxLength={100}
                     value={form.storage_location}
@@ -625,7 +642,11 @@ export default function EntryForm({
                   onChange={(value) => set("opened_on", value)}
                 />
               </Field>
-              <Field label="Ghi chú" hint={`${form.note.length}/1000`}>
+              <Field
+                label="Ghi chú"
+                hint={`${form.note.length}/1000`}
+                error={show(1, "note")}
+              >
                 <input
                   maxLength={1000}
                   value={form.note}

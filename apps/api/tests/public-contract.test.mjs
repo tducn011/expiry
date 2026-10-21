@@ -325,8 +325,6 @@ test('pruneExpiredIdempotencyKeys executes deletion query and returns affected r
     end: async () => { released = true; }
   };
 
-  const cModule = await import('../src/shared/connection.mjs');
-  // Run with custom database wrapper or execute mock
   const [result] = await connection.execute(
     'DELETE FROM api_requests WHERE created_at < DATE_SUB(UTC_TIMESTAMP(6), INTERVAL ? DAY)',
     [2]
@@ -335,4 +333,44 @@ test('pruneExpiredIdempotencyKeys executes deletion query and returns affected r
   assert.match(executedSql, /DELETE FROM api_requests/);
   assert.deepEqual(executedValues, [2]);
 });
+
+test('CAP-01 manual capture create normalizes unit aliases, quantity and returns 201 Entry', async t => {
+  const { request, calls } = await harness(t, {
+    create: async (_owner, _key, body) => {
+      calls.push(['create', body]);
+      return {
+        status: 201,
+        body: entryDTO({ ...row, name: body.name, version: 1, remaining_quantity: '1.500', unit: body.unit }, publicAttention(row, preferences, instant)),
+        replayed: false
+      };
+    }
+  });
+
+  const response = await request('/food-entries', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Idempotency-Key': 'idemp_test_create_01'
+    },
+    body: JSON.stringify({
+      name: 'Món test CAP-01',
+      storage_location: 'Ngăn mát',
+      quantity: 1.5,
+      unit: 'gram'
+    })
+  });
+
+  assert.equal(response.status, 201);
+  const created = await response.json();
+  validate(created, 'Entry');
+  assert.equal(created.name, 'Món test CAP-01');
+  assert.equal(created.version, 1);
+  assert.equal(response.headers.get('location'), `/api/v1/food-entries/${entryId}`);
+
+  const createCall = calls.find(([name]) => name === 'create');
+  assert.ok(createCall);
+  assert.equal(createCall[1].unit, 'g');
+  assert.equal(createCall[1].quantity, '1.5');
+});
+
 

@@ -426,6 +426,17 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     if (result.ok) {
       closeModal()
 
+      const created =
+        "body" in result
+          ? (result.body as { id?: string } | undefined)
+          : undefined
+
+      if (created?.id) {
+        setSelectedId(created.id)
+
+        real.setSelectedId(created.id)
+      }
+
       setNotice("Đã thêm thực phẩm vào kho")
 
       window.setTimeout(() => setNotice(""), 3000)
