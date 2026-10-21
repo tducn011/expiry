@@ -38,9 +38,11 @@ export type FoodEntry = {
   opened_on: string | null
 
   note: string | null
+
   barcode?: string | null
 
   barcode_format?: string | null
+
   version: number
 
   deleted_at: string | null
@@ -88,7 +90,9 @@ export type EntryDraft = {
   opened_on: string | null
 
   note: string | null
+
   barcode?: string | null
+
   barcode_format?: string | null
 }
 

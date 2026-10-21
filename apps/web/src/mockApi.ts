@@ -84,16 +84,22 @@ export class ApiError extends Error {
 
 export function localDay(
   date: Date = new Date(),
+
   timezone = "Asia/Ho_Chi_Minh",
 ): string {
   try {
     const parts = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone,
+
       year: "numeric",
+
       month: "2-digit",
+
       day: "2-digit",
     }).formatToParts(date)
+
     const p = Object.fromEntries(parts.map((p) => [p.type, p.value]))
+
     return `${p.year}-${p.month}-${p.day}`
   } catch {
     return date.toISOString().slice(0, 10)

@@ -36,7 +36,9 @@ import Segmented from "../components/ui/Segmented"
 import Select from "../components/ui/Select"
 
 import ScanForm from "./ScanForm"
+
 import BarcodeScannerModal from "../components/ui/BarcodeScannerModal"
+
 import { getGs1Info, lookupBarcode } from "../lib/barcode"
 
 type FormState = {
@@ -59,6 +61,7 @@ type FormState = {
   opened_on: string
 
   note: string
+
   barcode?: string
 
   barcode_format?: string
@@ -102,7 +105,9 @@ export default function EntryForm({
   onCreate?: (p: CreatePayload) => void | Promise<void>
 
   onUpdate?: (p: EntryDraft) => void | Promise<void>
+
   onScan?: (file: File, barcode?: string) => Promise<ScanResult>
+
   active?: boolean
 
   canRetry?: boolean
@@ -120,9 +125,13 @@ export default function EntryForm({
   const [step, setStep] = useState<0 | 1>(initialStep)
 
   const [scanOpen, setScanOpen] = useState(false)
+
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false)
+
   const [barcodeStatus, setBarcodeStatus] = useState("")
+
   const [barcodeLookupLoading, setBarcodeLookupLoading] = useState(false)
+
   const [tried, setTried] = useState([false, false])
 
   const [form, setForm] = useState<FormState>({
@@ -148,7 +157,9 @@ export default function EntryForm({
     opened_on: base?.opened_on ?? "",
 
     note: base?.note ?? "",
+
     barcode: base?.barcode ?? "",
+
     barcode_format: base?.barcode_format ?? "",
   })
 
@@ -248,7 +259,9 @@ export default function EntryForm({
       opened_on: form.opened_on || null,
 
       note: form.note.trim() || null,
+
       barcode: form.barcode?.trim() || null,
+
       barcode_format: form.barcode_format?.trim() || null,
     }
 
@@ -349,38 +362,51 @@ export default function EntryForm({
                           onApplyBarcode={(barcodeData) => {
                             setForm((current) => ({
                               ...current,
+
                               barcode: barcodeData.barcode,
+
                               barcode_format: barcodeData.barcode_format,
+
                               note: current.note
                                 ? current.note.includes(barcodeData.barcode)
                                   ? current.note
                                   : `${current.note} (Mã vạch: ${barcodeData.barcode})`
                                 : `Mã vạch: ${barcodeData.barcode}`,
                             }))
+
                             setScanOpen(false)
                           }}
                           onApply={(result, selectedDate) => {
                             const mapped = scanToEntryDraft(
                               result,
+
                               selectedDate,
                             )
+
                             setForm((current) => ({
                               ...current,
+
                               name: mapped.name || current.name,
+
                               ...(mapped.expiry_date === null
                                 ? {}
                                 : {
                                     expiry_date: mapped.expiry_date,
+
                                     certainty: mapped.expiry_date_certainty,
+
                                     source:
                                       mapped.expiry_date_source ||
                                       "printed_label",
+
                                     label:
                                       mapped.expiry_date_label_type ||
                                       "unknown",
                                   }),
                             }))
+
                             setStep(1)
+
                             setScanOpen(false)
                           }}
                         />
@@ -393,7 +419,9 @@ export default function EntryForm({
                 <div
                   style={{
                     display: "flex",
+
                     gap: "8px",
+
                     alignItems: "flex-end",
                   }}
                 >
@@ -423,19 +451,28 @@ export default function EntryForm({
                     className="barcode-badge-chip"
                     style={{
                       display: "flex",
+
                       alignItems: "center",
+
                       justifyContent: "space-between",
+
                       background: "var(--surface-muted, #f3f4f6)",
+
                       padding: "6px 12px",
+
                       borderRadius: "6px",
+
                       fontSize: "13px",
+
                       marginTop: "4px",
                     }}
                   >
                     <div
                       style={{
                         display: "flex",
+
                         alignItems: "center",
+
                         gap: "6px",
                       }}
                     >
@@ -452,14 +489,20 @@ export default function EntryForm({
                       type="button"
                       onClick={() => {
                         set("barcode", "")
+
                         set("barcode_format", "")
+
                         setBarcodeStatus("")
                       }}
                       style={{
                         background: "none",
+
                         border: "none",
+
                         cursor: "pointer",
+
                         color: "var(--text-muted, #9ca3af)",
+
                         padding: "2px 6px",
                       }}
                       title="Xóa mã vạch"
@@ -473,6 +516,7 @@ export default function EntryForm({
                     className="inline-hint"
                     style={{
                       color: "var(--text-muted, #6b7280)",
+
                       marginTop: "2px",
                     }}
                   >
@@ -484,6 +528,7 @@ export default function EntryForm({
                     className="inline-hint"
                     style={{
                       color: "var(--primary-color, #10b981)",
+
                       marginTop: "2px",
                     }}
                   >
@@ -699,28 +744,40 @@ export default function EntryForm({
         onClose={() => setBarcodeModalOpen(false)}
         onDetected={async (res) => {
           set("barcode", res.text)
+
           set("barcode_format", res.format)
+
           setBarcodeLookupLoading(true)
+
           const gs1 = getGs1Info(res.text)
+
           const gs1Text = gs1
             ? `${gs1.flag} ${gs1.country} (${gs1.preferredDateFormat})`
             : ""
+
           try {
             const lookup = await lookupBarcode(res.text)
+
             if (lookup.found && lookup.product) {
               setForm((prev) => ({
                 ...prev,
+
                 barcode: res.text,
+
                 barcode_format: res.format,
+
                 name: prev.name.trim() ? prev.name : lookup.product!.name,
+
                 storage_location:
                   prev.storage_location ||
                   lookup.product!.suggested_storage_location ||
                   "",
+
                 unit: entry
                   ? prev.unit
                   : lookup.product!.suggested_unit || prev.unit,
               }))
+
               setBarcodeStatus(
                 `Đã tìm thấy: ${lookup.product.name}${
                   gs1Text ? ` · ${gs1Text}` : ""
