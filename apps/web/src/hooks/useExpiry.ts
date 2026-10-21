@@ -257,8 +257,12 @@ export function useExpiry(
       api.preferences(),
 
       view === "trash"
-        ? api.allEntries(true)
-        : Promise.resolve({ items: [] as FoodEntry[] }),
+        ? api.entries(query, true)
+        : Promise.resolve({
+            items: [] as FoodEntry[],
+            pagination: { page: 1, limit: 20, total: 0 },
+            as_of_date: "",
+          }),
     ])
 
       .then(([entries, preferences, deleted]) => {

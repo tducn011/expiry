@@ -875,29 +875,6 @@ export class ApiClient {
     return { ...page, items: page.items.map(fromEntry) }
   }
 
-  async allEntries(trash = false) {
-    const items: FoodEntry[] = []
-
-    let page = 1
-
-    while (true) {
-      const next = await this.entries(
-        trash ? { page, limit: 100 } : { page, limit: 100, lifecycle: "all" },
-
-        trash,
-      )
-
-      items.push(...next.items)
-
-      if (page * next.pagination.limit >= next.pagination.total)
-        return { items, as_of_date: next.as_of_date }
-
-      if (!next.items.length || page >= 1000) throw contractError()
-
-      page++
-    }
-  }
-
   async entry(id: string) {
     return fromEntry(
       await this.request<EntryDTO>(`/food-entries/${encodeURIComponent(id)}`),
