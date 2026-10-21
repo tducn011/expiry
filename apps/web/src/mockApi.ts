@@ -82,15 +82,32 @@ export class ApiError extends Error {
   }
 }
 
-/** ponytail: real date replaces fixed demo date */
-
-const todayDate = () => new Date().toISOString().slice(0, 10)
-
-export const DEMO_DATE = todayDate()
+export function localDay(
+  date: Date = new Date(),
+  timezone = "Asia/Ho_Chi_Minh",
+): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(date)
+    const p = Object.fromEntries(parts.map((p) => [p.type, p.value]))
+    return `${p.year}-${p.month}-${p.day}`
+  } catch {
+    return date.toISOString().slice(0, 10)
+  }
+}
 
 const USER_ID = "usr_demo"
 
 let clock = Date.now()
+
+const todayDate = (timezone = "Asia/Ho_Chi_Minh") =>
+  localDay(new Date(clock), timezone)
+
+export const DEMO_DATE = todayDate()
 
 const now = () => {
   clock += 60000
@@ -130,14 +147,14 @@ export function attentionFor(
   entry: Pick<FoodEntry, "expiry_date">,
 
   leadDays: number,
+
+  asOfDate: string = todayDate(),
 ): Attention {
   if (!entry.expiry_date) return "unknown"
 
-  const today = todayDate()
-
   const days = Math.round(
     (new Date(`${entry.expiry_date}T12:00:00`).getTime() -
-      new Date(`${today}T12:00:00`).getTime()) /
+      new Date(`${asOfDate}T12:00:00`).getTime()) /
       86400000,
   )
 

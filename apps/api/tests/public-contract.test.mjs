@@ -12,6 +12,7 @@ import { publicCommandWork } from '../src/modules/inventory/public-inventory.rep
 import { entryDTO, publicAttention, movementDTO, utcInstant } from '../src/shared/public-dto.mjs';
 import { publicScanResult } from '../src/modules/scan/scan.service.mjs';
 import { InventoryRepository } from '../src/shared/repository.mjs';
+import { attention, localDay } from '../src/shared/domain.mjs';
 
 const contract = JSON.parse(await readFile(new URL('../../../contracts/openapi.json', import.meta.url), 'utf8'));
 const owner = '00000000-0000-4000-8000-000000000001';
@@ -128,6 +129,16 @@ test('detail/list/trash project exact Entry and EntryList contracts, including o
   assert.equal(calls.at(-1)[1].q, 'chicken');
   assert.equal(calls.at(-1)[1].location, 'freezer');
   assert.equal(calls.at(-1)[1].view, 'trash');
+
+  const attentionList = await (await request('/food-entries?view=attention')).json();
+  validate(attentionList, 'EntryList');
+  assert.equal(calls.at(-1)[1].view, 'attention');
+  assert.equal(calls.at(-1)[1].lifecycle, 'active');
+  assert.equal(attentionList.as_of_date, '2026-10-11');
+  assert.equal(attentionList.items[0].attention.status, 'due_today');
+
+  const invalidViewRes = await request('/food-entries?view=invalid_view');
+  assert.equal(invalidViewRes.status, 422);
 });
 
 test('empty EntryList retains its repository owner-local as_of_date', async t => {
@@ -136,6 +147,30 @@ test('empty EntryList retains its repository owner-local as_of_date', async t =>
   validate(list, 'EntryList');
   assert.deepEqual(list.items, []);
   assert.equal(list.as_of_date, '2026-10-11');
+});
+
+test('attention engine projects correct classification across local dates, timezones, and invariants', () => {
+  const instant = '2026-10-11T20:00:00.000Z';
+  const vnUser = { timezone: 'Asia/Ho_Chi_Minh', attention_lead_days: 2 };
+  const utcUser = { timezone: 'UTC', attention_lead_days: 2 };
+
+  // Local calendar day projection across timezone boundary
+  assert.equal(localDay(instant, vnUser.timezone), '2026-10-12');
+  assert.equal(localDay(instant, utcUser.timezone), '2026-10-11');
+
+  // Classification states in Vietnam (as_of_date = 2026-10-12)
+  const base = { remaining_quantity: '1.000', unit: 'piece', deleted_at: null };
+  assert.equal(attention({ ...base, expiry_date: '2026-10-11' }, vnUser, instant).status, 'past_date');
+  assert.equal(attention({ ...base, expiry_date: '2026-10-12' }, vnUser, instant).status, 'due_today');
+  assert.equal(attention({ ...base, expiry_date: '2026-10-13' }, vnUser, instant).status, 'soon');
+  assert.equal(attention({ ...base, expiry_date: '2026-10-14' }, vnUser, instant).status, 'soon');
+  assert.equal(attention({ ...base, expiry_date: '2026-10-15' }, vnUser, instant).status, 'later');
+  assert.equal(attention({ ...base, expiry_date: null }, vnUser, instant).status, 'unknown');
+  assert.equal(attention({ ...base, expiry_date: '2026-10-12', remaining_quantity: '0.000' }, vnUser, instant), null);
+  assert.equal(attention({ ...base, expiry_date: '2026-10-12', deleted_at: '2026-10-11T12:00:00Z' }, vnUser, instant), null);
+
+  // Classification states in UTC (as_of_date = 2026-10-11)
+  assert.equal(attention({ ...base, expiry_date: '2026-10-12' }, utcUser, instant).status, 'soon');
 });
 
 test('public scan adapter output conforms to its explicit nested review contract', () => {
