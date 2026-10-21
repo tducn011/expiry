@@ -301,6 +301,8 @@ export function fromEntry(dto: EntryDTO): FoodEntry {
 
     note: dto.note,
 
+    barcode: (dto as { barcode?: string | null }).barcode ?? null,
+
     version: dto.version,
 
     deleted_at: dto.deleted_at,

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { type ChangeEvent, useEffect, useRef, useState } from "react"
 
 import {
   BrowserMultiFormatReader,
@@ -15,6 +15,11 @@ import Field from "../components/ui/Field"
 import Icon from "../components/ui/Icon"
 
 import { fmtDate } from "../lib/format"
+
+import {
+  MAX_OPTIMIZED_IMAGE_BYTES,
+  optimizeScanImage,
+} from "./image-optimization"
 
 export type BarcodeData = {
   barcode: string
@@ -126,6 +131,18 @@ export default function ScanForm({
 
   const [file, setFile] = useState<File | null>(null)
 
+  const cameraInputRef = useRef<HTMLInputElement | null>(null)
+
+  const libraryInputRef = useRef<HTMLInputElement | null>(null)
+
+  const imageSelectionRef = useRef(0)
+
+  const previewUrlRef = useRef<string | null>(null)
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  const [processingImage, setProcessingImage] = useState(false)
+
   const [result, setResult] = useState<ScanResult | null>(null)
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
@@ -133,6 +150,78 @@ export default function ScanForm({
   const [pending, setPending] = useState(false)
 
   const [error, setError] = useState("")
+
+  useEffect(
+    () => () => {
+      imageSelectionRef.current += 1
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current)
+      }
+    },
+
+    [],
+  )
+
+  const replacePreview = (nextFile: File | null) => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current)
+    }
+
+    const nextUrl = nextFile ? URL.createObjectURL(nextFile) : null
+
+    previewUrlRef.current = nextUrl
+
+    setPreviewUrl(nextUrl)
+  }
+
+  const handleImageSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.currentTarget.files?.[0]
+
+    event.currentTarget.value = ""
+
+    if (!selectedFile) return
+
+    const selectionId = ++imageSelectionRef.current
+
+    setFile(null)
+
+    replacePreview(null)
+
+    setResult(null)
+
+    setSelectedDate(null)
+
+    setError("")
+
+    setProcessingImage(true)
+
+    void optimizeScanImage(selectedFile)
+
+      .then((optimizedFile) => {
+        if (selectionId !== imageSelectionRef.current) return
+
+        setFile(optimizedFile)
+
+        replacePreview(optimizedFile)
+      })
+
+      .catch((failure: unknown) => {
+        if (selectionId !== imageSelectionRef.current) return
+
+        setError(
+          failure instanceof Error
+            ? failure.message
+            : "Không thể tối ưu ảnh. Hãy thử chọn ảnh khác.",
+        )
+      })
+
+      .finally(() => {
+        if (selectionId === imageSelectionRef.current) {
+          setProcessingImage(false)
+        }
+      })
+  }
 
   const stopCamera = () => {
     try {
@@ -518,37 +607,91 @@ export default function ScanForm({
             Ảnh chỉ tạo gợi ý ngày và tên. Xem lại văn bản và chọn ngày trước
             khi áp dụng vào biểu mẫu; app không tự lưu món.
           </p>
-          <Field label="Ảnh bao bì" hint="JPEG, PNG hoặc WebP, tối đa 5 MB.">
+          <Field
+            as="fieldset"
+            label="Ảnh bao bì"
+            hint="Ảnh sẽ được thu nhỏ và nén dưới 1 MB trước khi tải lên."
+          >
             <input
+              ref={cameraInputRef}
               type="file"
-              accept="image/jpeg,image/png,image/webp"
-              disabled={pending}
-              onChange={(event) => {
-                setFile(event.target.files?.[0] ?? null)
-
-                setResult(null)
-
-                setSelectedDate(null)
-
-                setError("")
-              }}
+              accept="image/jpeg,image/jpg,image/pjpeg,image/png,image/webp,application/octet-stream"
+              capture="environment"
+              hidden
+              disabled={pending || processingImage}
+              onChange={handleImageSelection}
+              aria-label="Chụp ảnh bao bì mới"
             />
+            <input
+              ref={libraryInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/pjpeg,image/png,image/webp,application/octet-stream"
+              hidden
+              disabled={pending || processingImage}
+              onChange={handleImageSelection}
+              aria-label="Chọn ảnh bao bì từ thư viện"
+            />
+            <div className="row-actions scan-image-actions">
+              <Button
+                variant="secondary"
+                disabled={pending || processingImage}
+                onClick={() => cameraInputRef.current?.click()}
+              >
+                Chụp ảnh mới
+              </Button>
+              <Button
+                variant="outline"
+                disabled={pending || processingImage}
+                onClick={() => libraryInputRef.current?.click()}
+              >
+                Chọn từ thư viện
+              </Button>
+            </div>
           </Field>
+          {processingImage && (
+            <p className="inline-hint" role="status">
+              Đang tối ưu ảnh...
+            </p>
+          )}
+          {previewUrl && file && (
+            <figure className="scan-image-preview">
+              <img src={previewUrl} alt="Ảnh bao bì đã chọn để quét" />
+              <figcaption>
+                Ảnh xem trước ·{" "}
+                {(file.size / 1024).toLocaleString("vi-VN", {
+                  maximumFractionDigits: 0,
+                })}{" "}
+                KB
+              </figcaption>
+            </figure>
+          )}
           <div className="row-actions">
             <Button
               type="button"
               variant="secondary"
               loading={pending}
-              disabled={!file || pending}
+              disabled={!file || pending || processingImage}
               onClick={() => {
-                if (!file || pending) return
+                if (!file || pending || processingImage) return
 
                 if (
                   !file.size ||
-                  file.size > 5 * 1024 * 1024 ||
-                  !["image/jpeg", "image/png", "image/webp"].includes(file.type)
+                  file.size >= MAX_OPTIMIZED_IMAGE_BYTES ||
+                  ![
+                    "image/jpeg",
+
+                    "image/jpg",
+
+                    "image/pjpeg",
+
+                    "image/png",
+
+                    "image/webp",
+
+                    "application/octet-stream",
+                  ].includes(file.type.toLowerCase())
                 ) {
-                  setError("Chọn ảnh JPEG, PNG hoặc WebP không quá 5 MB.")
+                  setError("Chọn ảnh JPEG, PNG hoặc WebP nhỏ hơn 1 MB.")
 
                   return
                 }

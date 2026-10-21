@@ -61,7 +61,7 @@ export function createAuthBoundary({
   const noStore = (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); };
 
   function requireTrustedOrigin(req, res, next) {
-    if (!safeMethods.has(req.method) && (!origins.has(req.headers.origin) || req.headers['sec-fetch-site'] === 'cross-site')) return next(new DomainError(403, 'CSRF_FAILED'));
+    if (!safeMethods.has(req.method) && !origins.has(req.headers.origin)) return next(new DomainError(403, 'CSRF_FAILED'));
     next();
   }
 

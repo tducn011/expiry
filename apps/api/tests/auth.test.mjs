@@ -58,9 +58,9 @@ async function harness(options = {}) {
     repository,
     boundary,
     advance: milliseconds => { timestamp += milliseconds; },
-    request: (path, { method = 'GET', body, headers = {}, cookie, csrf } = {}) => fetch(`${base}${path}`, {
+    request: (path, { method = 'GET', body, headers = {}, cookie, csrf, omitOrigin = false } = {}) => fetch(`${base}${path}`, {
       method,
-      headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(method !== 'GET' ? { Origin: origin } : {}), ...(cookie ? { Cookie: cookie } : {}), ...(csrf ? { 'X-CSRF-Token': csrf } : {}), ...headers },
+      headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(!omitOrigin && method !== 'GET' ? { Origin: origin } : {}), ...(cookie ? { Cookie: cookie } : {}), ...(csrf ? { 'X-CSRF-Token': csrf } : {}), ...headers },
       ...(body ? { body: JSON.stringify(body) } : {})
     }),
     close: () => new Promise((resolve, reject) => { server.close(error => error ? reject(error) : resolve()); server.closeAllConnections(); })
@@ -116,10 +116,17 @@ test('Origin and per-session CSRF defenses protect login and cookie-authenticate
       assert.equal(denied.status, 403);
     }
     const session = await register(h);
-    for (const options of [{}, { csrf: '0'.repeat(64) }, { csrf: session.body.csrf_token, headers: { Origin: 'http://evil.example' } }, { csrf: session.body.csrf_token, headers: { 'Sec-Fetch-Site': 'cross-site' } }]) {
+    for (const options of [{}, { csrf: '0'.repeat(64) }, { csrf: session.body.csrf_token, headers: { Origin: 'http://evil.example' } }, { csrf: session.body.csrf_token, omitOrigin: true }]) {
       const response = await h.request('/private', { method: 'POST', cookie: session.cookie, ...options });
       assert.equal(response.status, 403);
     }
+    const crossSite = await h.request('/private', {
+      method: 'POST',
+      cookie: session.cookie,
+      csrf: session.body.csrf_token,
+      headers: { 'Sec-Fetch-Site': 'cross-site' }
+    });
+    assert.equal(crossSite.status, 200);
     const accepted = await h.request('/private', { method: 'POST', cookie: session.cookie, csrf: session.body.csrf_token });
     assert.equal(accepted.status, 200);
   } finally { await h.close(); }
@@ -236,6 +243,66 @@ test('session activity at the absolute expiry boundary is rejected without updat
     assert.deepEqual(await response.json(), { title: 'AUTH_REQUIRED' });
     assert.equal(statements.filter(sql => sql.startsWith('UPDATE user_sessions')).length, 0);
   } finally { await h.close(); }
+});
+
+test('session validation tolerates small future timestamp drift', async () => {
+  const now = new Date('2026-10-11T07:00:00.000Z');
+  const row = {
+    id: randomUUID(),
+    display_name: 'Owner',
+    timezone: 'Asia/Ho_Chi_Minh',
+    attention_lead_days: 2,
+    version: 1,
+    email_normalized: 'owner@example.com',
+    created_at: '2026-10-11T07:00:00.500Z',
+    last_seen_at: '2026-10-11T06:59:00.000Z',
+    expires_at: '2026-10-11T08:00:00.000Z',
+    revoked_at: null
+  };
+  const repository = new AuthRepository('not-connected', {
+    connect: async () => ({
+      beginTransaction: async () => {},
+      execute: async sql => sql.includes('FROM user_sessions') ? [[row]] : [{}],
+      commit: async () => {},
+      rollback: async () => {},
+      end: async () => {}
+    })
+  });
+
+  const session = await repository.current('token-hash', () => now, 120_000);
+
+  assert.equal(session.user.id, row.id);
+  assert.equal(session.expires_at, '2026-10-11T08:00:00.000Z');
+});
+
+test('session validation rejects implausibly future timestamps', async () => {
+  const now = new Date('2026-10-11T07:00:00.000Z');
+  const row = {
+    id: randomUUID(),
+    display_name: 'Owner',
+    timezone: 'Asia/Ho_Chi_Minh',
+    attention_lead_days: 2,
+    version: 1,
+    email_normalized: 'owner@example.com',
+    created_at: '2026-10-11T07:01:00.000Z',
+    last_seen_at: '2026-10-11T06:59:00.000Z',
+    expires_at: '2026-10-11T08:00:00.000Z',
+    revoked_at: null
+  };
+  const repository = new AuthRepository('not-connected', {
+    connect: async () => ({
+      beginTransaction: async () => {},
+      execute: async sql => sql.includes('FROM user_sessions') ? [[row]] : [{}],
+      commit: async () => {},
+      rollback: async () => {},
+      end: async () => {}
+    })
+  });
+
+  await assert.rejects(
+    repository.current('token-hash', () => now, 120_000),
+    error => error instanceof DomainError && error.status === 503 && error.code === 'AUTH_UNAVAILABLE'
+  );
 });
 
 test('production policy requires explicit HTTPS origins and issues a host-only secure cookie', async () => {
@@ -394,4 +461,3 @@ test('pruneExpiredSessions executes deletion query and returns affected rows', a
   assert.equal(executedValues.length, 2);
   assert.equal(executedValues[0], '2026-10-15 12:00:00.000');
 });
-
