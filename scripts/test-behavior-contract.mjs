@@ -346,7 +346,107 @@ async function runBehavioralAndContractSuite() {
     assert.equal(noopResult.changed, false);
     assert.equal(noopResult.movement, null);
 
-    record('STAGE 9: STOCK MOVEMENT & PHYSICAL RECOUNT', 'Trừ kho 500g và kiểm kê thực tế 800g kèm khóa lạc quan thành công 100%');
+    const pieceCreate = await fetch(`${API_BASE}/api/v1/food-entries`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: ORIGIN,
+        Cookie: cookie,
+        'X-CSRF-Token': csrfToken,
+        'Idempotency-Key': `idemp_${randomUUID()}`
+      },
+      body: JSON.stringify({
+        name: 'CI piece quantity validation',
+        storage_location: 'CI',
+        quantity: '2.000',
+        unit: 'piece',
+        expiry_date: null,
+        date_certainty: 'unknown',
+        date_source: 'unknown',
+        date_label_type: 'unspecified',
+        note: null
+      })
+    });
+    assert.equal(pieceCreate.status, 201);
+    const pieceEntry = await pieceCreate.json();
+    conform(pieceEntry, 'Entry');
+
+    const movementKey = `idemp_${randomUUID()}`;
+    const invalidMovement = await fetch(`${API_BASE}/api/v1/food-entries/${pieceEntry.id}/movements`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: ORIGIN,
+        Cookie: cookie,
+        'X-CSRF-Token': csrfToken,
+        'Idempotency-Key': movementKey
+      },
+      body: JSON.stringify({
+        kind: 'consume',
+        amount: '1.5',
+        reason: 'Invalid fractional piece',
+        expected_version: pieceEntry.version
+      })
+    });
+    assert.equal(invalidMovement.status, 422);
+    assert.equal((await invalidMovement.json()).code, 'VALIDATION_ERROR');
+
+    const validMovement = await fetch(`${API_BASE}/api/v1/food-entries/${pieceEntry.id}/movements`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: ORIGIN,
+        Cookie: cookie,
+        'X-CSRF-Token': csrfToken,
+        'Idempotency-Key': movementKey
+      },
+      body: JSON.stringify({
+        kind: 'consume',
+        amount: '1',
+        reason: 'Valid whole piece',
+        expected_version: pieceEntry.version
+      })
+    });
+    assert.equal(validMovement.status, 201);
+    const movedPiece = await validMovement.json();
+
+    const recountKey = `idemp_${randomUUID()}`;
+    const invalidRecount = await fetch(`${API_BASE}/api/v1/food-entries/${pieceEntry.id}/recounts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: ORIGIN,
+        Cookie: cookie,
+        'X-CSRF-Token': csrfToken,
+        'Idempotency-Key': recountKey
+      },
+      body: JSON.stringify({
+        actual_quantity: '1.5',
+        reason: 'Invalid fractional piece recount',
+        expected_version: movedPiece.entry.version
+      })
+    });
+    assert.equal(invalidRecount.status, 422);
+    assert.equal((await invalidRecount.json()).code, 'VALIDATION_ERROR');
+
+    const validRecount = await fetch(`${API_BASE}/api/v1/food-entries/${pieceEntry.id}/recounts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: ORIGIN,
+        Cookie: cookie,
+        'X-CSRF-Token': csrfToken,
+        'Idempotency-Key': recountKey
+      },
+      body: JSON.stringify({
+        actual_quantity: '2',
+        reason: 'Valid whole piece recount',
+        expected_version: movedPiece.entry.version
+      })
+    });
+    assert.equal(validRecount.status, 201);
+
+    record('STAGE 9: STOCK MOVEMENT & PHYSICAL RECOUNT', 'Movement, recount, whole-piece validation, and idempotency rollback passed');
   }
 
   // Stage 10: Query Inventory List
