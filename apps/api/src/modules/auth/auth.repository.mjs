@@ -4,6 +4,7 @@ import { DomainError } from '../../shared/domain.mjs';
 
 const sqlDate = value => new Date(value).toISOString().slice(0, 23).replace('T', ' ');
 const instant = value => new Date(typeof value === 'string' && !value.includes('T') ? `${value.replace(' ', 'T')}Z` : value);
+const CLOCK_SKEW_TOLERANCE_MS = 10_000;
 const principal = row => ({
   id: row.id,
   display_name: row.display_name,
@@ -99,7 +100,10 @@ export class AuthRepository {
       // timestamp captured at middleware entry.
       const now = clock();
       if (!row || row.revoked_at !== null || instant(row.expires_at) <= now || instant(row.last_seen_at).getTime() + idleTimeoutMs <= now.getTime()) return null;
-      if (instant(row.created_at) > now || instant(row.last_seen_at) > now) throw new DomainError(503, 'AUTH_UNAVAILABLE');
+      if (
+        instant(row.created_at).getTime() - now.getTime() > CLOCK_SKEW_TOLERANCE_MS
+        || instant(row.last_seen_at).getTime() - now.getTime() > CLOCK_SKEW_TOLERANCE_MS
+      ) throw new DomainError(503, 'AUTH_UNAVAILABLE');
       const lastSeenAt = sqlDate(now);
       if (instant(lastSeenAt) >= instant(row.expires_at)) return null;
       await connection.execute('UPDATE user_sessions SET last_seen_at=? WHERE token_hash=?', [lastSeenAt, hash]);
