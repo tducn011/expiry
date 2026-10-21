@@ -18,6 +18,7 @@ export function createInventoryRouter(controller) {
 
   // /food-entries/:id/recounts
   router.post('/food-entries/:id/recounts', controller.recount);
+  router.post('/food-entries/:id/recount', controller.recount);
 
   // /food-entries/:id/restore
   router.post('/food-entries/:id/restore', controller.restore);

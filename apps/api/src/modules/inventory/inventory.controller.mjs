@@ -49,7 +49,12 @@ export class InventoryController {
 
   edit = async (req, res, next) => {
     try {
-      const result = await this.service.editEntry(req.userId, req.idempotencyKey, req.params.id, req.body);
+      const body = { ...req.body };
+      if (body.version !== undefined && body.expected_version === undefined) {
+        body.expected_version = body.version;
+        delete body.version;
+      }
+      const result = await this.service.editEntry(req.userId, req.idempotencyKey, req.params.id, body);
       if (result.replayed) {
         res.setHeader('Idempotency-Replayed', 'true');
       }
@@ -110,7 +115,20 @@ export class InventoryController {
 
   recount = async (req, res, next) => {
     try {
-      const result = await this.service.recountQuantity(req.userId, req.idempotencyKey, req.params.id, req.body);
+      const body = { ...req.body };
+      if (body.target_quantity !== undefined && body.actual_quantity === undefined) {
+        body.actual_quantity = typeof body.target_quantity === 'number' ? String(body.target_quantity) : body.target_quantity;
+        delete body.target_quantity;
+      }
+      if (body.note !== undefined && body.reason === undefined) {
+        body.reason = body.note;
+        delete body.note;
+      }
+      if (body.version !== undefined && body.expected_version === undefined) {
+        body.expected_version = body.version;
+        delete body.version;
+      }
+      const result = await this.service.recountQuantity(req.userId, req.idempotencyKey, req.params.id, body);
       if (result.replayed) {
         res.setHeader('Idempotency-Replayed', 'true');
       }

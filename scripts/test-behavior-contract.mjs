@@ -275,8 +275,78 @@ async function runBehavioralAndContractSuite() {
     conform(result, 'MutationResult');
     assert.equal(result.entry.remaining_quantity, '1000.000');
     assert.equal(result.movement.kind, 'consume');
-    record('STAGE 9: STOCK MOVEMENT', 'Trừ kho 500g -> tồn kho còn lại 1000.000g');
     updatedEntry = result.entry;
+
+    // CAP-05: Recount Concurrency Control (Conflict on Version Mismatch)
+    const recountConflict = await fetch(`${API_BASE}/api/v1/food-entries/${createdEntry.id}/recounts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: ORIGIN,
+        Cookie: cookie,
+        'X-CSRF-Token': csrfToken,
+        'Idempotency-Key': `idemp_${randomUUID()}`
+      },
+      body: JSON.stringify({
+        actual_quantity: '800.000',
+        reason: 'Cân lại thực tế',
+        expected_version: 999
+      })
+    });
+    assert.equal(recountConflict.status, 409);
+    const conflictErr = await recountConflict.json();
+    conform(conflictErr, 'Problem');
+    assert.equal(conflictErr.code, 'VERSION_CONFLICT');
+
+    // CAP-05: Physical Recount with automatic delta calculation & version bump
+    const recountRes = await fetch(`${API_BASE}/api/v1/food-entries/${createdEntry.id}/recounts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: ORIGIN,
+        Cookie: cookie,
+        'X-CSRF-Token': csrfToken,
+        'Idempotency-Key': `idemp_${randomUUID()}`
+      },
+      body: JSON.stringify({
+        actual_quantity: '800.000',
+        reason: 'Đếm lại thực tế trong tủ',
+        expected_version: updatedEntry.version
+      })
+    });
+    assert.equal(recountRes.status, 201);
+    const recountResult = await recountRes.json();
+    conform(recountResult, 'MutationResult');
+    assert.equal(recountResult.entry.remaining_quantity, '800.000');
+    assert.equal(recountResult.movement.kind, 'adjustment');
+    assert.equal(recountResult.movement.quantity_before, '1000.000');
+    assert.equal(recountResult.movement.quantity_after, '800.000');
+    assert.equal(recountResult.entry.version, updatedEntry.version + 1);
+    updatedEntry = recountResult.entry;
+
+    // CAP-05: Physical Recount No-op (same quantity -> 200, changed=false)
+    const noopRes = await fetch(`${API_BASE}/api/v1/food-entries/${createdEntry.id}/recounts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: ORIGIN,
+        Cookie: cookie,
+        'X-CSRF-Token': csrfToken,
+        'Idempotency-Key': `idemp_${randomUUID()}`
+      },
+      body: JSON.stringify({
+        actual_quantity: '800.000',
+        reason: 'Kiểm kê lại không thay đổi',
+        expected_version: updatedEntry.version
+      })
+    });
+    assert.equal(noopRes.status, 200);
+    const noopResult = await noopRes.json();
+    conform(noopResult, 'MutationResult');
+    assert.equal(noopResult.changed, false);
+    assert.equal(noopResult.movement, null);
+
+    record('STAGE 9: STOCK MOVEMENT & PHYSICAL RECOUNT', 'Trừ kho 500g và kiểm kê thực tế 800g kèm khóa lạc quan thành công 100%');
   }
 
   // Stage 10: Query Inventory List
