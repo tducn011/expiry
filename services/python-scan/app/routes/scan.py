@@ -19,7 +19,7 @@ from app.scanner.datereg_adapter import extract_datereg_text
 router = APIRouter()
 OCR_TIMEOUT_SECONDS = 2.5
 MAX_REQUEST_BYTES = MAX_ENCODED_BYTES + 65536
-SUPPORTED_MEDIA = {"image/jpeg", "image/png", "image/webp"}
+SUPPORTED_MEDIA = {"image/jpeg", "image/png", "image/webp", "image/jpg", "image/pjpeg"}
 
 
 def tesseract_available() -> bool:
@@ -98,7 +98,7 @@ async def scan_image(request: Request):
     elif media_type == "multipart/form-data":
         try:
             async with request.form(max_files=1, max_fields=0, max_part_size=MAX_IMAGE_BYTES + 1) as form:
-                files = form.getlist("file")
+                files = form.getlist("file") or form.getlist("image")
                 if len(files) != 1 or not isinstance(files[0], UploadFile):
                     raise ScanError(400, "INVALID_REQUEST", "One image file is required.")
                 file = files[0]
