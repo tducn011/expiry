@@ -22,7 +22,64 @@ async function snapshot(connection) {
 // Root is deliberately restricted to localhost inside the existing container.
 // Keep one native mysql connection for the advisory lock and every DDL step;
 // do not broaden root's host grants or place administrator secrets in argv.
+async function directAdministrator(database, { host, port, user, password }) {
+  const c = await mysql.createConnection({
+    host,
+    port,
+    user,
+    password,
+    database,
+    timezone: 'Z',
+    dateStrings: true
+  });
+  await c.query("SET SESSION time_zone='+00:00'");
+  let locked = false;
+  try {
+    const [[{ acquired }]] = await c.query("SELECT GET_LOCK('expiry_migration_lock', 30) acquired");
+    if (Number(acquired) === 1) locked = true;
+  } catch {}
+
+  return {
+    async query(sql, parameters = []) {
+      const [rows] = await c.query(sql, parameters);
+      if (Array.isArray(rows)) {
+        return rows.map(r => typeof r === 'object' ? Object.values(r).join('\t') : String(r));
+      }
+      return [];
+    },
+    async end() {
+      if (locked) {
+        try { await c.query("SELECT RELEASE_LOCK('expiry_migration_lock')"); } catch {}
+      }
+      await c.end();
+    }
+  };
+}
+
 async function administrator(database) {
+  const host = process.env.MYSQL_HOST || '127.0.0.1';
+  const port = Number(process.env.MYSQL_HOST_PORT || 3307);
+  const user = process.env.MYSQL_ROOT_USER || 'root';
+  let password = process.env.MYSQL_ROOT_PASSWORD;
+  if (!password) {
+    try {
+      const { MYSQL_ROOT_PASSWORD } = await environment();
+      password = MYSQL_ROOT_PASSWORD;
+    } catch {
+      password = 'root_dev_password';
+    }
+  }
+
+  if (process.env.MYSQL_DIRECT === '1' || process.env.DATABASE_URL) {
+    return directAdministrator(database, { host, port, user, password });
+  }
+
+  try {
+    await containerId();
+  } catch {
+    return directAdministrator(database, { host, port, user, password });
+  }
+
   const child = spawn('docker', ['exec', '-i', await containerId(), 'sh', '-c',
     'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --user=root --batch --raw --silent --skip-column-names --unbuffered "$@"',
     'sh', `--database=${database}`], { stdio: ['pipe', 'pipe', 'pipe'] });

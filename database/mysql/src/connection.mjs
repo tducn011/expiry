@@ -37,11 +37,63 @@ export async function containerId() {
   if (ids.length !== 1) throw new Error('Expected exactly one running dedicated MySQL container');
   return ids[0];
 }
+async function runDirectSql(sql, database, { host, port, user, password }) {
+  const c = await mysql.createConnection({
+    host,
+    port,
+    user,
+    password,
+    database: database || undefined,
+    multipleStatements: true,
+    timezone: 'Z',
+    dateStrings: true
+  });
+  try {
+    await c.query("SET SESSION time_zone='+00:00'");
+    const [rows] = await c.query(sql);
+    if (Array.isArray(rows)) {
+      if (rows.length === 0) return '';
+      if (Array.isArray(rows[0])) {
+        const last = rows[rows.length - 1];
+        if (Array.isArray(last)) {
+          return last.map(r => typeof r === 'object' ? Object.values(r).join('\t') : String(r)).join('\n');
+        }
+        return '';
+      }
+      return rows.map(r => typeof r === 'object' ? Object.values(r).join('\t') : String(r)).join('\n');
+    }
+    return '';
+  } finally {
+    await c.end();
+  }
+}
+
 export async function rootSql(sql, database) {
   if (database && !/^expiry_(dev|test_[a-z0-9_]+)$/.test(database)) throw new Error('Invalid sandbox database');
-  const args = ['exec','-i',await containerId(),'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --user=root --batch --skip-column-names "$@"','sh'];
-  if (database) args.push('--database',database);
-  return run('docker',args, "SET SESSION time_zone='+00:00';\n" + sql);
+  const host = process.env.MYSQL_HOST || '127.0.0.1';
+  const port = Number(process.env.MYSQL_HOST_PORT || process.env.MYSQL_PORT || 3307);
+  const user = process.env.MYSQL_ROOT_USER || 'root';
+  let password = process.env.MYSQL_ROOT_PASSWORD;
+  if (!password) {
+    try {
+      const env = await environment();
+      password = env.MYSQL_ROOT_PASSWORD;
+    } catch {
+      password = 'root_dev_password';
+    }
+  }
+
+  if (process.env.MYSQL_DIRECT === '1' || process.env.DATABASE_URL) {
+    return runDirectSql(sql, database, { host, port, user, password });
+  }
+
+  try {
+    const args = ['exec','-i',await containerId(),'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --user=root --batch --skip-column-names "$@"','sh'];
+    if (database) args.push('--database',database);
+    return await run('docker',args, "SET SESSION time_zone='+00:00';\n" + sql);
+  } catch {
+    return runDirectSql(sql, database, { host, port, user, password });
+  }
 }
 export async function migrate(database) {
   const sql = await readFile(new URL('migrations/001_initial_schema.sql',base),'utf8');
