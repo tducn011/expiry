@@ -514,7 +514,62 @@ const fromMutationResult = (dto: MutationResultDTO): MutationResult => {
   }
 }
 
-export class ApiClient {
+export interface ExpiryApiClient {
+  session(): Promise<Session>
+  authenticate(
+    mode: "login" | "register",
+    input: {
+      email: string
+      password: string
+      display_name?: string
+    },
+  ): Promise<Session>
+  logout(): Promise<void>
+  createEntry(draft: CreateEntryDTO, commandKey?: string): Promise<FoodEntry>
+  recordMovement(
+    id: string,
+    movement: MovementDTO,
+    commandKey?: string,
+  ): Promise<MutationResult>
+  recount(
+    id: string,
+    recount: RecountDTO,
+    commandKey?: string,
+  ): Promise<MutationResult>
+  updateEntry(
+    id: string,
+    patch: EditEntryDTO,
+    commandKey?: string,
+  ): Promise<FoodEntry>
+  deleteEntry(
+    id: string,
+    expectedVersion: number,
+    commandKey?: string,
+  ): Promise<void>
+  restoreEntry(
+    id: string,
+    expectedVersion: number,
+    commandKey?: string,
+  ): Promise<FoodEntry>
+  updatePreferences(
+    prefs: UpdatePreferencesDTO,
+    commandKey?: string,
+  ): Promise<Preferences>
+  entries(
+    query?: Record<string, string | number>,
+    trash?: boolean,
+  ): Promise<EntryPage<FoodEntry>>
+  allEntries(trash?: boolean): Promise<{
+    items: FoodEntry[]
+    as_of_date?: string
+  }>
+  entry(id: string): Promise<FoodEntry>
+  history(id: string): Promise<QuantityMovement[]>
+  preferences(): Promise<Preferences>
+  scan(file: File, barcode?: string, locale?: string): Promise<ScanResult>
+}
+
+export class ApiClient implements ExpiryApiClient {
   csrf = ""
 
   transport: typeof fetch

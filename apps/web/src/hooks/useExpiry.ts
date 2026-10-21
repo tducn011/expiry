@@ -4,6 +4,7 @@ import {
   ApiClient,
   ApiError,
   type Page,
+  type ExpiryApiClient,
   createDTO,
   draftDTO,
   decimal,
@@ -57,9 +58,23 @@ export function useExpiry(
 
   page: number,
 
-  enabled: boolean = true,
+  clientOrEnabled?: ExpiryApiClient | boolean,
+
+  enabledArg: boolean = true,
 ) {
-  const api = useMemo(() => new ApiClient(), [])
+  const isClient =
+    clientOrEnabled !== undefined &&
+    typeof clientOrEnabled === "object" &&
+    clientOrEnabled !== null
+
+  const client = isClient ? clientOrEnabled as ExpiryApiClient : undefined
+
+  const enabled =
+    typeof clientOrEnabled === "boolean" ? clientOrEnabled : enabledArg
+
+  const defaultClient = useMemo(() => new ApiClient(), [])
+
+  const api = client ?? defaultClient
 
   const [session, setSession] = useState<Session | null>(null)
 
