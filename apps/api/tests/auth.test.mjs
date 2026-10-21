@@ -305,6 +305,119 @@ test('session validation rejects implausibly future timestamps', async () => {
   );
 });
 
+test('concurrent session reads avoid row locks and writes inside the touch interval', async () => {
+  const now = new Date('2026-10-11T07:00:00.000Z');
+  const row = {
+    id: randomUUID(),
+    display_name: 'Owner',
+    timezone: 'Asia/Ho_Chi_Minh',
+    attention_lead_days: 2,
+    version: 1,
+    email_normalized: 'owner@example.com',
+    created_at: '2026-10-11T00:00:00.000Z',
+    last_seen_at: '2026-10-11T06:59:30.000Z',
+    expires_at: '2026-10-11T08:00:00.000Z',
+    revoked_at: null
+  };
+  const reads = [];
+  const writes = [];
+  const repository = new AuthRepository('not-connected', {
+    connect: async () => ({
+      beginTransaction: async () => {},
+      execute: async (sql, values) => {
+        if (sql.includes('FROM user_sessions')) {
+          reads.push(sql);
+          return [[row]];
+        }
+        writes.push({ sql, values });
+        return [{ affectedRows: 1 }];
+      },
+      commit: async () => {},
+      rollback: async () => {},
+      end: async () => {}
+    })
+  });
+
+  const sessions = await Promise.all(
+    Array.from({ length: 20 }, () => repository.current('token-hash', () => now, 120_000))
+  );
+
+  assert.equal(sessions.length, 20);
+  assert.ok(sessions.every(session => session.user.id === row.id));
+  assert.equal(reads.length, 20);
+  assert.ok(reads.every(sql => !/FOR UPDATE/i.test(sql)));
+  assert.equal(writes.length, 0);
+});
+
+test('session activity refreshes last_seen_at only after the touch interval', async () => {
+  const now = new Date('2026-10-11T07:00:00.000Z');
+  const row = {
+    id: randomUUID(),
+    display_name: 'Owner',
+    timezone: 'Asia/Ho_Chi_Minh',
+    attention_lead_days: 2,
+    version: 1,
+    email_normalized: 'owner@example.com',
+    created_at: '2026-10-11T00:00:00.000Z',
+    last_seen_at: '2026-10-11T06:58:59.000Z',
+    expires_at: '2026-10-11T08:00:00.000Z',
+    revoked_at: null
+  };
+  let update;
+  const repository = new AuthRepository('not-connected', {
+    connect: async () => ({
+      beginTransaction: async () => {},
+      execute: async (sql, values) => {
+        if (sql.includes('FROM user_sessions')) return [[row]];
+        update = { sql, values };
+        return [{ affectedRows: 1 }];
+      },
+      commit: async () => {},
+      rollback: async () => {},
+      end: async () => {}
+    })
+  });
+
+  await repository.current('token-hash', () => now, 120_000);
+
+  assert.match(update.sql, /last_seen_at<=\?/);
+  assert.deepEqual(update.values, ['2026-10-11 07:00:00.000', 'token-hash', '2026-10-11 06:59:00.000']);
+});
+
+test('idle expiry is enforced without refreshing an inactive session', async () => {
+  const now = new Date('2026-10-11T07:00:00.000Z');
+  const statements = [];
+  const row = {
+    id: randomUUID(),
+    display_name: 'Owner',
+    timezone: 'Asia/Ho_Chi_Minh',
+    attention_lead_days: 2,
+    version: 1,
+    email_normalized: 'owner@example.com',
+    created_at: '2026-10-11T00:00:00.000Z',
+    last_seen_at: '2026-10-11T06:58:00.000Z',
+    expires_at: '2026-10-11T08:00:00.000Z',
+    revoked_at: null
+  };
+  const repository = new AuthRepository('not-connected', {
+    connect: async () => ({
+      beginTransaction: async () => {},
+      execute: async sql => {
+        statements.push(sql);
+        return sql.includes('FROM user_sessions') ? [[row]] : [{}];
+      },
+      commit: async () => {},
+      rollback: async () => {},
+      end: async () => {}
+    })
+  });
+
+  const session = await repository.current('token-hash', () => now, 120_000);
+
+  assert.equal(session, null);
+  assert.equal(statements.some(sql => sql.startsWith('UPDATE user_sessions')), false);
+});
+
 test('production policy requires explicit HTTPS origins and issues a host-only secure cookie', async () => {
   assert.throws(() => createAuthBoundary({ repository: new AuthFixture(), secureCookies: true, allowedOrigins: [origin] }), /trusted HTTP/);
   const h = await harness({ secureCookies: true, allowedOrigins: ['https://expiry.example'] });
