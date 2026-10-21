@@ -174,4 +174,28 @@ describe("Domain Mutation DTO and Command Construction", () => {
     expect(JSON.parse(cmd.body!)).toEqual({ expected_version: 4 })
     expect(cmd.key).toBeDefined()
   })
+
+  it("formats recount command with expected_version, actual_quantity, and reason", () => {
+    const owner = "owner-recount-test"
+    const id = "food-entry-uuid-777"
+    const expectedVersion = 2
+    const actualQuantity = 350
+    const reason = "Cân lại thực tế trong tủ"
+
+    const cmd = newCommand(owner, "POST", `/food-entries/${id}/recounts`, {
+      expected_version: expectedVersion,
+      actual_quantity: decimal(actualQuantity),
+      reason: reason.trim(),
+    })
+
+    expect(cmd.owner).toBe(owner)
+    expect(cmd.method).toBe("POST")
+    expect(cmd.path).toBe(`/food-entries/${id}/recounts`)
+    expect(JSON.parse(cmd.body!)).toEqual({
+      expected_version: 2,
+      actual_quantity: "350",
+      reason: "Cân lại thực tế trong tủ",
+    })
+    expect(cmd.key).toBeDefined()
+  })
 })
