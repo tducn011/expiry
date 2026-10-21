@@ -15,6 +15,7 @@ from app.schemas.scan import ScanResult, ScanError
 from app.scanner.preprocessor import MAX_IMAGE_BYTES, MAX_ENCODED_BYTES, decode_image_bytes, preprocess_image
 from app.scanner.date_parser import normalized_candidates
 from app.scanner.datereg_adapter import extract_datereg_text
+from app.scanner.vision_llm_adapter import extract_vision_llm_candidates
 
 router = APIRouter()
 OCR_TIMEOUT_SECONDS = 2.5
@@ -40,12 +41,17 @@ def extract_ocr_text(image_bytes: bytes) -> str:
         raise ScanError(500, "OCR_FAILED", "The OCR engine could not process the image.") from None
 
 
-def process_scan(raw_bytes: bytes) -> ScanResult:
+def process_scan(
+    raw_bytes: bytes,
+    barcode: Optional[str] = None,
+    locale: Optional[str] = None
+) -> ScanResult:
     started = time.monotonic()
     processed, _warning = preprocess_image(raw_bytes)
     raw_text = ""
     warnings: list[str] = []
 
+    # 1. Fast Path: DateReg (if configured/available)
     try:
         raw_text = extract_datereg_text(processed)
         if not raw_text.strip():
@@ -53,13 +59,48 @@ def process_scan(raw_bytes: bytes) -> ScanResult:
     except Exception as exc:
         warnings.append(f"DateReg unavailable; falling back to Tesseract ({type(exc).__name__})")
 
+    # 2. Fast Path: Tesseract OCR
     if not raw_text.strip():
-        raw_text = extract_ocr_text(processed)
+        try:
+            raw_text = extract_ocr_text(processed)
+        except Exception as ocr_exc:
+            warnings.append(f"Local OCR failed: {ocr_exc}")
 
-    if not raw_text.strip():
+    candidates = None
+    if raw_text.strip():
+        candidates, parsed_warnings = normalized_candidates(raw_text, barcode=barcode, locale=locale)
+        warnings.extend(parsed_warnings)
+
+    # Check whether the Fast Path produced an unambiguous, high-confidence expiry date
+    fast_path_ok = (
+        candidates is not None
+        and candidates.get("expiry_date", {}).get("value") is not None
+        and not candidates.get("expiry_date", {}).get("ambiguous", False)
+    )
+
+    # 3. Fallback Path (Option C): Invoke Vision LLM if fast path failed or is ambiguous
+    if not fast_path_ok:
+        try:
+            vision_res = extract_vision_llm_candidates(raw_bytes)
+            if vision_res is not None:
+                v_candidates, v_raw_text, v_provider = vision_res
+                if v_candidates.get("expiry_date", {}).get("value"):
+                    candidates = v_candidates
+                    warnings.append(f"VISION_FALLBACK_APPLIED: Resolved via {v_provider}.")
+                elif v_candidates.get("food_name") and candidates is not None:
+                    candidates["food_name"] = v_candidates["food_name"]
+                if v_raw_text and not raw_text.strip():
+                    raw_text = v_raw_text
+        except Exception as v_exc:
+            warnings.append(f"Vision LLM fallback failed: {v_exc}")
+
+    if not raw_text.strip() and (not candidates or not candidates.get("expiry_date", {}).get("value")):
         raise ScanError(422, "NO_LEGIBLE_TEXT", "No legible text was detected in the image.")
-    candidates, parsed_warnings = normalized_candidates(raw_text)
-    warnings.extend(parsed_warnings)
+
+    if candidates is None:
+        candidates, parsed_warnings = normalized_candidates(raw_text, barcode=barcode, locale=locale)
+        warnings.extend(parsed_warnings)
+
     return ScanResult(
         raw_text=raw_text,
         candidates=candidates,
@@ -87,6 +128,9 @@ async def scan_image(request: Request):
     # parser reads Request.stream(), which now uses this bounded cached body.
     request._body = bytes(body)
     media_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+    barcode = request.query_params.get("barcode")
+    locale = request.query_params.get("locale") or request.headers.get("accept-language")
+
     if media_type == "application/json":
         try:
             payload = json.loads(body)
@@ -95,6 +139,10 @@ async def scan_image(request: Request):
         if not isinstance(payload, dict):
             raise ScanError(400, "INVALID_REQUEST", "An image_base64 object is required.")
         raw_bytes = decode_image_bytes(payload.get("image_base64"))
+        if not barcode and payload.get("barcode"):
+            barcode = str(payload["barcode"])
+        if not locale and payload.get("locale"):
+            locale = str(payload["locale"])
     elif media_type == "multipart/form-data":
         try:
             async with request.form(max_files=1, max_fields=0, max_part_size=MAX_IMAGE_BYTES + 1) as form:
@@ -110,4 +158,4 @@ async def scan_image(request: Request):
             raise ScanError(400, "INVALID_MULTIPART", "The image upload is malformed.") from None
     else:
         raise ScanError(415, "UNSUPPORTED_MEDIA_TYPE", "Use multipart/form-data or application/json.")
-    return await run_in_threadpool(process_scan, raw_bytes)
+    return await run_in_threadpool(process_scan, raw_bytes, barcode, locale)

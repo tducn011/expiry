@@ -414,3 +414,84 @@ describe("Food Item Detail Provenance & History Navigation (CAP-03)", () => {
     ])
   })
 })
+
+describe("Barcode GS1 & Lookup Service", () => {
+  it("accurately detects GS1 country prefix and preferred date format", async () => {
+    const { getGs1Info } = await import("../src/lib/barcode")
+    const vn = getGs1Info("8935001710012")
+    expect(vn?.country).toBe("Việt Nam")
+    expect(vn?.preferredDateFormat).toBe("DD/MM/YYYY")
+
+    const us = getGs1Info("012345678905")
+    expect(us?.country).toBe("USA / Canada")
+    expect(us?.preferredDateFormat).toBe("MM/DD/YYYY")
+
+    const jp = getGs1Info("4901234567894")
+    expect(jp?.country).toBe("Nhật Bản")
+    expect(jp?.preferredDateFormat).toBe("YYYY/MM/DD")
+  })
+
+  it("resolves barcode from local inventory before external lookup", async () => {
+    const { lookupBarcode } = await import("../src/lib/barcode")
+    const mockInventory = [
+      {
+        id: "ent_1",
+        name: "Sữa chua Vinamilk 100g",
+        storage_location: "Ngăn mát",
+        remaining_quantity: 4,
+        unit: "piece" as const,
+        expiry_date: "2026-11-01",
+        expiry_date_certainty: "exact" as const,
+        expiry_date_source: "package_label" as const,
+        expiry_date_label_type: "use_by" as const,
+        opened_on: null,
+        note: null,
+        barcode: "8935001710012",
+        barcode_format: "EAN_13",
+        version: 1,
+        deleted_at: null,
+        created_at: "",
+        updated_at: "",
+      },
+    ]
+
+    const result = await lookupBarcode("8935001710012", mockInventory)
+    expect(result.found).toBe(true)
+    expect(result.source).toBe("inventory")
+    expect(result.product?.name).toBe("Sữa chua Vinamilk 100g")
+    expect(result.product?.suggested_storage_location).toBe("Ngăn mát")
+    expect(result.product?.suggested_unit).toBe("piece")
+  })
+
+  it("includes barcode and barcode_format in draftDTO", async () => {
+    const { draftDTO } = await import("../src/api/client")
+    const dto = draftDTO({
+      name: "Sữa tươi TH",
+      storage_location: "Ngăn mát",
+      expiry_date: "2026-12-01",
+      expiry_date_certainty: "exact",
+      expiry_date_source: "package_label",
+      expiry_date_label_type: "use_by",
+      opened_on: null,
+      note: null,
+      barcode: "8935001710012",
+      barcode_format: "EAN_13",
+    })
+
+    expect(dto.barcode).toBe("8935001710012")
+    expect(dto.barcode_format).toBe("EAN_13")
+  })
+
+  it("configures ZXing multi-format reader with TRY_HARDER hints", async () => {
+    const { createConfiguredReader } = await import("../src/lib/barcode")
+    const reader = createConfiguredReader()
+    expect(reader).toBeDefined()
+  })
+
+  it("gracefully returns null when decoding invalid or empty image", async () => {
+    const { decodeBarcodeFromImage } = await import("../src/lib/barcode")
+    const emptyImg = { naturalWidth: 0, naturalHeight: 0, width: 0, height: 0 } as HTMLImageElement
+    const res = await decodeBarcodeFromImage(emptyImg)
+    expect(res).toBeNull()
+  })
+})

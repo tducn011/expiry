@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { idempotencyMiddleware, errorHandler } from './shared/middleware.mjs';
+import { connect } from './shared/connection.mjs';
 import { AuthRepository } from './modules/auth/auth.repository.mjs';
 import { createAuthBoundary } from './modules/auth/auth.routes.mjs';
 import { InventoryService } from './modules/inventory/inventory.service.mjs';
@@ -29,13 +30,55 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
   app.use(express.json({ limit: '10mb' }));
 
   // Root healthcheck
-  app.get('/health', (req, res) => {
+  app.get('/health', async (req, res) => {
+    let dbStatus = 'unverified';
+    try {
+      const c = await connect(database);
+      const [rows] = await c.query('SELECT 1 as connected');
+      await c.end();
+      if (Number(rows?.[0]?.connected) === 1) dbStatus = 'connected';
+    } catch {
+      dbStatus = 'unavailable';
+    }
+
     res.json({
       status: 'ok',
       service: 'expiry-api',
       version: '1.0.0',
+      database: dbStatus,
       timestamp: new Date().toISOString()
     });
+  });
+
+  // Dedicated DB check endpoint with live metrics
+  app.get('/health/db', async (req, res) => {
+    try {
+      const c = await connect(database);
+      const [[dbInfo]] = await c.query('SELECT 1 as connected, DATABASE() as db, VERSION() as version');
+      const [[foodCount]] = await c.query('SELECT COUNT(*) as total FROM food_entries WHERE deleted_at IS NULL');
+      const [[userCount]] = await c.query('SELECT COUNT(*) as total FROM users');
+      await c.end();
+      res.json({
+        status: 'ok',
+        database: {
+          connected: true,
+          name: dbInfo.db,
+          mysqlVersion: dbInfo.version,
+          activeFoodEntries: Number(foodCount.total),
+          totalUsers: Number(userCount.total)
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (err) {
+      res.status(503).json({
+        status: 'error',
+        database: {
+          connected: false,
+          error: err.message
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
   });
 
   // API v1 Router
