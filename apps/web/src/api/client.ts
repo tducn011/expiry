@@ -158,6 +158,10 @@ export type EntryDraftDTO = {
   opened_on: string | null
 
   note: string | null
+
+  barcode?: string | null
+
+  barcode_format?: string | null
 }
 
 export type CreateEntryDTO = EntryDraftDTO & {
@@ -375,9 +379,12 @@ export function fromEntry(dto: EntryDTO): FoodEntry {
     opened_on: dto.opened_on,
 
     note: dto.note,
+
     barcode: (dto as Record<string, unknown>).barcode as string | null ?? null,
+
     barcode_format:
       (dto as Record<string, unknown>).barcode_format as string | null ?? null,
+
     version: dto.version,
 
     deleted_at: dto.deleted_at,
@@ -426,10 +433,13 @@ export function draftDTO(draft: EntryDraft): EntryDraftDTO {
 
     note: draft.note,
   }
+
   if (draft.barcode) {
     dto.barcode = draft.barcode
+
     dto.barcode_format = draft.barcode_format ?? "other"
   }
+
   if (Object.prototype.hasOwnProperty.call(draft, "storage_location")) {
     dto.storage_location =
       typeof draft.storage_location === "string" &&
@@ -905,14 +915,20 @@ export class ApiClient {
   preferences() {
     return this.request<Preferences>("/me/preferences")
   }
+
   async scan(file: File, barcode?: string, locale?: string) {
     const body = new FormData()
 
     body.append("image", file)
+
     const params = new URLSearchParams()
+
     if (barcode) params.set("barcode", barcode)
+
     if (locale) params.set("locale", locale)
+
     const qs = params.toString() ? `?${params.toString()}` : ""
+
     const result = await this.request<ScanResult>(`/scans${qs}`, {
       method: "POST",
 
