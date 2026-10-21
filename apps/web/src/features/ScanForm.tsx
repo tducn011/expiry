@@ -473,14 +473,18 @@ export default function ScanForm({
             className="stack"
             style={{
               marginTop: "8px",
+
               paddingTop: "12px",
+
               borderTop: "1px dashed var(--line-2)",
             }}
           >
             <span
               style={{
                 fontSize: "0.875rem",
+
                 fontWeight: 500,
+
                 color: "var(--muted)",
               }}
             >

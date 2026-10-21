@@ -94,12 +94,35 @@ export class InventoryController {
 
   recordMovement = async (req, res, next) => {
     try {
-      const result = await this.service.recordMovement(req.userId, req.idempotencyKey, req.params.id, req.body);
+      const body = { ...req.body };
+      if (body.amount === undefined && body.quantity_delta !== undefined) {
+        const raw = String(body.quantity_delta).trim();
+        body.amount = raw.startsWith('-') ? raw.slice(1) : raw;
+        delete body.quantity_delta;
+      }
+      if (body.kind === undefined && body.movement_type !== undefined) {
+        if (body.movement_type === 'consumed') body.kind = 'consume';
+        else if (body.movement_type === 'discarded') body.kind = 'discard';
+        else body.kind = body.movement_type;
+        delete body.movement_type;
+      }
+      if (body.reason === undefined && body.note !== undefined) {
+        body.reason = body.note;
+        delete body.note;
+      }
+      if (body.expected_version === undefined && body.version !== undefined) {
+        body.expected_version = body.version;
+        delete body.version;
+      }
+      const result = await this.service.recordMovement(req.userId, req.idempotencyKey, req.params.id, body);
       if (result.replayed) {
         res.setHeader('Idempotency-Replayed', 'true');
       }
       return res.status(result.status).json(result.body);
     } catch (err) {
+      if (err.code === 'INSUFFICIENT_QUANTITY') {
+        err.status = 422;
+      }
       next(err);
     }
   };
