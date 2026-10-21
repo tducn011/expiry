@@ -1,10 +1,20 @@
 import mysql from 'mysql2/promise';
-import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// ponytail: standard Node.js env loading without custom file parsers
+export function getDbConfig() {
+  return {
+    host: process.env.MYSQL_HOST || '127.0.0.1',
+    port: Number(process.env.MYSQL_HOST_PORT || process.env.MYSQL_PORT || 3307),
+    user: process.env.MYSQL_USER || 'expiry_app',
+    password: process.env.MYSQL_PASSWORD || '',
+    database: process.env.MYSQL_DATABASE || 'expiry_dev'
+  };
+}
 
 export async function loadEnv() {
   const envCandidates = [
@@ -16,18 +26,7 @@ export async function loadEnv() {
   for (const envPath of envCandidates) {
     if (existsSync(envPath)) {
       try {
-        const content = await readFile(envPath, 'utf8');
-        const lines = content.split('\n').filter(l => l && !l.startsWith('#'));
-        for (const line of lines) {
-          const idx = line.indexOf('=');
-          if (idx !== -1) {
-            const key = line.slice(0, idx).trim();
-            const val = line.slice(idx + 1).trim();
-            if (!process.env[key]) {
-              process.env[key] = val;
-            }
-          }
-        }
+        process.loadEnvFile?.(envPath);
         break;
       } catch {
         // Continue fallback
@@ -35,13 +34,7 @@ export async function loadEnv() {
     }
   }
 
-  return {
-    host: process.env.MYSQL_HOST || '127.0.0.1',
-    port: Number(process.env.MYSQL_HOST_PORT || process.env.MYSQL_PORT || 3307),
-    user: process.env.MYSQL_USER || 'expiry_app',
-    password: process.env.MYSQL_PASSWORD || '',
-    database: process.env.MYSQL_DATABASE || 'expiry_dev'
-  };
+  return getDbConfig();
 }
 
 const pools = new Map();
