@@ -1,9 +1,11 @@
 import base64
 import io
 import sys
+import asyncio
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+from starlette.requests import Request
 
 # Add services/python-scan to sys.path.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -18,7 +20,7 @@ from app.scanner.preprocessor import (  # noqa: E402
     preprocess_image,
 )
 from app.schemas.scan import ScanError, ScanResult  # noqa: E402
-from app.routes.scan import process_scan  # noqa: E402
+from app.routes.scan import process_scan, scan_image  # noqa: E402
 
 
 class TestScannerLogic(unittest.TestCase):
@@ -142,6 +144,52 @@ class TestScanRouteEngineSelection(unittest.TestCase):
 
         self.assertEqual(result.candidates.expiry_date.value, "2026-10-15")
         self.assertTrue(any("falling back to Tesseract" in warning for warning in result.warnings))
+
+
+class TestMultipartScanCompatibility(unittest.TestCase):
+    def _request(self, field: str, media_type: str) -> Request:
+        boundary = "expiry-test-boundary"
+        image = b"\xff\xd8\xff\x00"
+        body = (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="{field}"; filename="capture.jpg"\r\n'
+            f"Content-Type: {media_type}\r\n\r\n"
+        ).encode() + image + f"\r\n--{boundary}--\r\n".encode()
+        sent = False
+
+        async def receive():
+            nonlocal sent
+            if sent:
+                return {"type": "http.disconnect"}
+            sent = True
+            return {"type": "http.request", "body": body, "more_body": False}
+
+        return Request({
+            "type": "http",
+            "asgi": {"version": "3.0"},
+            "http_version": "1.1",
+            "method": "POST",
+            "scheme": "http",
+            "path": "/scan",
+            "raw_path": b"/scan",
+            "query_string": b"",
+            "headers": [
+                (b"content-type", f"multipart/form-data; boundary={boundary}".encode()),
+                (b"content-length", str(len(body)).encode()),
+            ],
+            "client": ("127.0.0.1", 12345),
+            "server": ("testserver", 80),
+        }, receive)
+
+    def test_accepts_image_field_and_legacy_jpeg_media_types(self):
+        for field in ("file", "image"):
+            for media_type in ("image/jpeg", "image/jpg", "image/pjpeg"):
+                with self.subTest(field=field, media_type=media_type):
+                    request = self._request(field, media_type)
+                    with patch("app.routes.scan.run_in_threadpool", new=AsyncMock(return_value="processed")) as process:
+                        result = asyncio.run(scan_image(request))
+                    self.assertEqual(result, "processed")
+                    self.assertEqual(process.call_args.args[1], b"\xff\xd8\xff\x00")
 
 
 if __name__ == "__main__":

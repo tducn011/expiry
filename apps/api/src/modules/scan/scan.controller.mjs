@@ -7,7 +7,7 @@ export class ScanController {
 
   scan = async (req, res, next) => {
     try {
-      const image = req.is('multipart/form-data') ? await readMultipartImage(req, req.path === '/scans' ? 'image' : 'file') : null;
+      const image = req.is('multipart/form-data') ? await readMultipartImage(req) : null;
       const imageBase64 = req.body?.image_base64;
       const correlationId = req.headers['x-correlation-id'] || req.idempotencyKey;
       const result = await this.service.scanImage({ imageBytes: image?.bytes, mediaType: image?.mediaType, imageBase64, correlationId });
@@ -27,4 +27,3 @@ export class ScanController {
   };
 }
 import { readMultipartImage } from './scan.upload.mjs';
-
