@@ -87,6 +87,8 @@ export default function Detail({
         ]
       : []),
 
+    ...(food.barcode ? [["Mã vạch", food.barcode] as [string, string]] : []),
+
     ...(food.note ? [["Ghi chú", food.note] as [string, string]] : []),
   ]
 

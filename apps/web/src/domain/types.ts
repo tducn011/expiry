@@ -39,6 +39,10 @@ export type FoodEntry = {
 
   note: string | null
 
+  barcode?: string | null
+
+  barcode_format?: string | null
+
   version: number
 
   deleted_at: string | null

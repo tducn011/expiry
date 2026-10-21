@@ -51,27 +51,37 @@ export default function History({
       }
     >
       <div className="timeline">
-        {movements.map((m) => {
-          const delta = +(m.quantity_after - m.quantity_before).toFixed(3)
+        {movements.length === 0 ? (
+          <p
+            className="inline-hint"
+            style={{ padding: "1.5rem", textAlign: "center" }}
+          >
+            Chưa có thay đổi nào được ghi nhận.
+          </p>
+        ) : (
+          movements.map((m) => {
+            const delta = +(m.quantity_after - m.quantity_before).toFixed(3)
 
-          return (
-            <div className="timeline-item" key={m.id}>
-              <span className={`timeline-dot ${m.kind}`} />
-              <div>
-                <span>{fmtTime(m.recorded_at, timezone)}</span>
-                <h3>{movementLabel[m.kind]}</h3>
-                {m.reason && <p>{m.reason}</p>}
+            return (
+              <div className="timeline-item" key={m.id}>
+                <span className={`timeline-dot ${m.kind}`} />
+                <div>
+                  <span>{fmtTime(m.recorded_at, timezone)}</span>
+                  <h3>{movementLabel[m.kind]}</h3>
+                  {m.reason && <p>{m.reason}</p>}
+                </div>
+                <strong>
+                  {fmtQty(m.quantity_before)} → {fmtQty(m.quantity_after)}{" "}
+                  {unit}
+                  <small>
+                    {delta > 0 ? "+" : ""}
+                    {fmtQty(delta)} {unit}
+                  </small>
+                </strong>
               </div>
-              <strong>
-                {fmtQty(m.quantity_before)} → {fmtQty(m.quantity_after)} {unit}
-                <small>
-                  {delta > 0 ? "+" : ""}
-                  {fmtQty(delta)} {unit}
-                </small>
-              </strong>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </div>
     </Modal>
   )
