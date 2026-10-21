@@ -477,6 +477,8 @@ export function newCommand(
   path: string,
 
   body?: unknown,
+
+  key?: string,
 ): Command {
   return Object.freeze({
     owner,
@@ -487,7 +489,7 @@ export function newCommand(
 
     body: body === undefined ? undefined : JSON.stringify(body),
 
-    key: crypto.randomUUID(),
+    key: key ?? `idemp_${crypto.randomUUID()}`,
   })
 }
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+
 import type { Attention, FoodEntry } from "../domain/types"
 
 import {
@@ -159,6 +160,7 @@ export default function Inventory({
         set("query", searchInput)
       }
     }, 300)
+
     return () => clearTimeout(timer)
   }, [searchInput, filters.query, set])
 
@@ -205,7 +207,9 @@ export default function Inventory({
             }`}
             onClick={() => {
               if (isAttention) onShowInventory()
+
               set("lifecycle", "Còn hàng")
+
               set("attentionFilter", "all")
             }}
           >
@@ -234,7 +238,9 @@ export default function Inventory({
             }`}
             onClick={() => {
               if (isAttention) onShowInventory()
+
               set("lifecycle", "Đã hết")
+
               set("attentionFilter", "all")
             }}
           >
@@ -326,6 +332,7 @@ export default function Inventory({
               aria-label="Xóa tìm kiếm"
               onClick={() => {
                 setSearchInput("")
+
                 set("query", "")
               }}
             >
