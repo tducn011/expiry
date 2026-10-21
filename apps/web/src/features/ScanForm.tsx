@@ -81,57 +81,98 @@ function playBeep() {
   }
 }
 
+export async function downscaleImageIfNeeded(file: File): Promise<File> {
+  if (typeof document === "undefined" || (!file.type.startsWith("image/") && !/\.(jpe?g|png|webp)$/i.test(file.name))) {
+    return file
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const maxDim = 1920
+      let { width, height } = img
+
+      if (width <= maxDim && height <= maxDim && file.size <= 1024 * 1024) {
+        resolve(file)
+        return
+      }
+
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width)
+          width = maxDim
+        } else {
+          width = Math.round((width * maxDim) / height)
+          height = maxDim
+        }
+      }
+
+      const canvas = document.createElement("canvas")
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext("2d")
+      if (!ctx) {
+        resolve(file)
+        return
+      }
+      ctx.drawImage(img, 0, 0, width, height)
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(file)
+            return
+          }
+          const compressed = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+            type: "image/jpeg",
+            lastModified: Date.now(),
+          })
+          resolve(compressed)
+        },
+        "image/jpeg",
+        0.85,
+      )
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      resolve(file)
+    }
+    img.src = url
+  })
+}
+
 export default function ScanForm({
   onScan,
-
   onApply,
-
   onApplyBarcode,
-
   onClose,
 }: {
   onScan?: (file: File) => Promise<ScanResult>
-
   onApply: (result: ScanResult, selectedDate: string | null) => void
-
   onApplyBarcode?: (data: BarcodeData) => void
-
   onClose: () => void
 }) {
   const [tab, setTab] = useState<"barcode" | "ocr">("barcode")
 
   // --- Barcode Scanner State ---
-
   const videoRef = useRef<HTMLVideoElement | null>(null)
-
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
-
   const controlsRef = useRef<{ stop: () => void } | null>(null)
-
   const [cameraStarting, setCameraStarting] = useState(false)
-
   const [cameraActive, setCameraActive] = useState(false)
-
   const [cameraError, setCameraError] = useState("")
-
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
-
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("")
-
   const [manualCode, setManualCode] = useState("")
-
   const [scannedResult, setScannedResult] = useState<BarcodeData | null>(null)
 
   // --- OCR State ---
-
   const [file, setFile] = useState<File | null>(null)
-
+  const [previewUrl, setPreviewUrl] = useState<string>("")
   const [result, setResult] = useState<ScanResult | null>(null)
-
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
-
   const [pending, setPending] = useState(false)
-
   const [error, setError] = useState("")
 
   const stopCamera = () => {
@@ -518,62 +559,85 @@ export default function ScanForm({
             Ảnh chỉ tạo gợi ý ngày và tên. Xem lại văn bản và chọn ngày trước
             khi áp dụng vào biểu mẫu; app không tự lưu món.
           </p>
-          <Field label="Ảnh bao bì" hint="JPEG, PNG hoặc WebP, tối đa 5 MB.">
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              disabled={pending}
-              onChange={(event) => {
-                setFile(event.target.files?.[0] ?? null)
+          <div className="stack" style={{ gap: "8px" }}>
+            <Field label="Chụp ảnh mới bằng camera" hint="Tự động mở camera sau của điện thoại">
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                disabled={pending}
+                onChange={(event) => {
+                  const f = event.target.files?.[0] ?? null
+                  setFile(f)
+                  if (f) setPreviewUrl(URL.createObjectURL(f))
+                  else setPreviewUrl("")
+                  setResult(null)
+                  setSelectedDate(null)
+                  setError("")
+                }}
+              />
+            </Field>
 
-                setResult(null)
+            <Field label="Hoặc chọn ảnh từ thiết bị" hint="JPEG, PNG hoặc WebP. Ảnh lớn được tự động nén tối ưu.">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/jpg"
+                disabled={pending}
+                onChange={(event) => {
+                  const f = event.target.files?.[0] ?? null
+                  setFile(f)
+                  if (f) setPreviewUrl(URL.createObjectURL(f))
+                  else setPreviewUrl("")
+                  setResult(null)
+                  setSelectedDate(null)
+                  setError("")
+                }}
+              />
+            </Field>
+          </div>
 
-                setSelectedDate(null)
+          {previewUrl && (
+            <div className="scan-preview-thumb" style={{ margin: "8px 0", textAlign: "center" }}>
+              <img
+                src={previewUrl}
+                alt="Xem trước ảnh bao bì"
+                style={{
+                  maxHeight: "200px",
+                  maxWidth: "100%",
+                  objectFit: "contain",
+                  borderRadius: "8px",
+                  border: "1px solid var(--line-2)"
+                }}
+              />
+            </div>
+          )}
 
-                setError("")
-              }}
-            />
-          </Field>
           <div className="row-actions">
             <Button
               type="button"
               variant="secondary"
               loading={pending}
               disabled={!file || pending}
-              onClick={() => {
+              onClick={async () => {
                 if (!file || pending) return
 
-                if (
-                  !file.size ||
-                  file.size > 5 * 1024 * 1024 ||
-                  !["image/jpeg", "image/png", "image/webp"].includes(file.type)
-                ) {
-                  setError("Chọn ảnh JPEG, PNG hoặc WebP không quá 5 MB.")
-
-                  return
-                }
-
                 setPending(true)
-
                 setError("")
 
-                void onScan(file)
-
-                  .then((value) => {
-                    setResult(value)
-
-                    setSelectedDate(value.candidates.expiry_date.value)
-                  })
-
-                  .catch((failure: unknown) =>
-                    setError(
-                      failure instanceof Error
-                        ? failure.message
-                        : "Không thể quét ảnh. Bạn có thể nhập tay.",
-                    ),
+                try {
+                  const readyFile = await downscaleImageIfNeeded(file)
+                  const value = await onScan(readyFile)
+                  setResult(value)
+                  setSelectedDate(value.candidates.expiry_date.value)
+                } catch (failure: unknown) {
+                  setError(
+                    failure instanceof Error
+                      ? failure.message
+                      : "Không thể quét ảnh. Bạn có thể nhập tay.",
                   )
-
-                  .finally(() => setPending(false))
+                } finally {
+                  setPending(false)
+                }
               }}
             >
               Đọc ảnh
