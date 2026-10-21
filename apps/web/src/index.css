@@ -759,7 +759,52 @@
 }
 
 /* Custom selects and date popovers share input geometry and overlay tokens. */
-.select-control,
+.select-control {
+  position: relative;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+}
+
+.select-native {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-h);
+  padding: 9px 36px 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--t-sm);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.select-native:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--ring-focus);
+  outline: none;
+}
+
+.select-native:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  background: var(--fill);
+}
+
+.select-control .select-chevron {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+}
+
 .date-picker {
   min-width: 0;
 }
