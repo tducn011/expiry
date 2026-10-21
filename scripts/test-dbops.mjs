@@ -5,7 +5,6 @@
  * and ledger-entry consistency.
  */
 
-import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,16 +23,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const envPath = resolve(__dirname, '../database/mysql/.env');
 if (existsSync(envPath)) {
   try {
-    const content = await readFile(envPath, 'utf8');
-    for (const line of content.split('\n')) {
-      const trimmed = line.trim();
-      const idx = trimmed.indexOf('=');
-      if (idx !== -1 && !trimmed.startsWith('#')) {
-        const k = trimmed.slice(0, idx).trim();
-        const v = trimmed.slice(idx + 1).trim();
-        if (!process.env[k]) process.env[k] = v;
-      }
-    }
+    process.loadEnvFile?.(envPath);
   } catch {
     // Bỏ qua lỗi nếu không đọc được file
   }
