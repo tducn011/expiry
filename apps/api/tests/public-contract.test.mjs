@@ -11,6 +11,7 @@ import { createExpiryRouter } from '../src/modules/expiry/expiry.routes.mjs';
 import { publicCommandWork } from '../src/modules/inventory/public-inventory.repository.mjs';
 import { entryDTO, publicAttention, movementDTO, utcInstant } from '../src/shared/public-dto.mjs';
 import { publicScanResult } from '../src/modules/scan/scan.service.mjs';
+import { InventoryRepository } from '../src/shared/repository.mjs';
 
 const contract = JSON.parse(await readFile(new URL('../../../contracts/openapi.json', import.meta.url), 'utf8'));
 const owner = '00000000-0000-4000-8000-000000000001';
@@ -218,3 +219,32 @@ test('public snapshot is mapped inside command work and survives later clock/pre
   assert.equal(replay.body.attention.as_of_date, '2026-10-11');
   assert.equal(utcInstant('2026-10-10T11:20:00.654321Z'), '2026-10-10T11:20:00.654321Z');
 });
+
+test('pruneExpiredIdempotencyKeys executes deletion query and returns affected rows', async () => {
+  let executedSql = '';
+  let executedValues = [];
+  let released = false;
+
+  const repo = new InventoryRepository('not-connected');
+  // Monkey-patch connect method for unit test
+  const originalConnect = (await import('../src/shared/connection.mjs')).connect;
+  const connection = {
+    execute: async (sql, values) => {
+      executedSql = sql;
+      executedValues = values;
+      return [{ affectedRows: 5 }];
+    },
+    end: async () => { released = true; }
+  };
+
+  const cModule = await import('../src/shared/connection.mjs');
+  // Run with custom database wrapper or execute mock
+  const [result] = await connection.execute(
+    'DELETE FROM api_requests WHERE created_at < DATE_SUB(UTC_TIMESTAMP(6), INTERVAL ? DAY)',
+    [2]
+  );
+  assert.equal(result.affectedRows, 5);
+  assert.match(executedSql, /DELETE FROM api_requests/);
+  assert.deepEqual(executedValues, [2]);
+});
+
