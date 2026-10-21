@@ -70,10 +70,10 @@ export class InventoryRepository {
     if (mode==='movement') {
       allow(input,['kind','amount','expected_version','reason']);
       if (!['consume','discard'].includes(input.kind)) invalid();
-      payload={...input,amount:decimal(milli(input.amount,'g',true)),reason:reason(input.reason)};
+      payload={...input,amount:decimal(milli(input.amount,null,true)),reason:reason(input.reason)};
     } else if (mode==='recount') {
       allow(input,['actual_quantity','reason','expected_version']);
-      payload={...input,actual_quantity:decimal(milli(input.actual_quantity,'g')),reason:reason(input.reason,true)};
+      payload={...input,actual_quantity:decimal(milli(input.actual_quantity,null)),reason:reason(input.reason,true)};
     } else if (mode==='edit') {
       allow(input,[...metadataFields,'expected_version']);
       if (Object.keys(input).length<2) invalid(); payload=input;
