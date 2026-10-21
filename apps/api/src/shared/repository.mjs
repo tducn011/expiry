@@ -97,7 +97,7 @@ export class InventoryRepository {
       }
       const before=milli(entry.remaining_quantity,entry.unit);
       const qty=milli(mode==='movement'?payload.amount:payload.actual_quantity,entry.unit,mode==='movement');
-      if (mode==='movement' && qty>before) throw new DomainError(409,'INSUFFICIENT_QUANTITY');
+      if (mode==='movement' && qty>before) throw new DomainError(422,'INSUFFICIENT_QUANTITY');
       const after=mode==='movement'?before-qty:qty;
       if (before===after) return {status:200,body:{entry,movement:null,changed:false}};
       await c.execute('UPDATE food_entries SET remaining_quantity=?,version=version+1,updated_at=UTC_TIMESTAMP(6) WHERE id=? AND user_id=?',[decimal(after),id,owner]);

@@ -21,9 +21,9 @@ describe("Domain Error Message Translations", () => {
     expect(msg).toBe("Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.")
   })
 
-  it("translates INSUFFICIENT_QUANTITY to Vietnamese stock insufficiency warning", () => {
-    const msg = errorMessage(409, "INSUFFICIENT_QUANTITY")
-    expect(msg).toBe("Lượng hiện tại không đủ. Kiểm tra lại trước khi xác nhận.")
+  it("translates INSUFFICIENT_QUANTITY to Vietnamese stock insufficiency warning under both 409 and 422", () => {
+    expect(errorMessage(409, "INSUFFICIENT_QUANTITY")).toBe("Lượng hiện tại không đủ. Kiểm tra lại trước khi xác nhận.")
+    expect(errorMessage(422, "INSUFFICIENT_QUANTITY")).toBe("Lượng hiện tại không đủ. Kiểm tra lại trước khi xác nhận.")
   })
 })
 
@@ -197,5 +197,65 @@ describe("Domain Mutation DTO and Command Construction", () => {
       reason: "Cân lại thực tế trong tủ",
     })
     expect(cmd.key).toBeDefined()
+  })
+
+  it("formats consume and discard movement commands with ledger consistency parameters", () => {
+    const owner = "owner-movement-test"
+    const id = "food-entry-uuid-555"
+    const expectedVersion = 3
+    const amount = 250
+    const reason = "Nấu bữa tối"
+
+    const consumeCmd = newCommand(owner, "POST", `/food-entries/${id}/movements`, {
+      expected_version: expectedVersion,
+      kind: "consume",
+      amount: decimal(amount),
+      reason,
+    })
+
+    expect(consumeCmd.owner).toBe(owner)
+    expect(consumeCmd.method).toBe("POST")
+    expect(consumeCmd.path).toBe(`/food-entries/${id}/movements`)
+    expect(JSON.parse(consumeCmd.body!)).toEqual({
+      expected_version: 3,
+      kind: "consume",
+      amount: "250",
+      reason: "Nấu bữa tối",
+    })
+
+    const discardCmd = newCommand(owner, "POST", `/food-entries/${id}/movements`, {
+      expected_version: expectedVersion + 1,
+      kind: "discard",
+      amount: decimal(100),
+      reason: "Hỏng mốc",
+    })
+
+    expect(discardCmd.method).toBe("POST")
+    expect(JSON.parse(discardCmd.body!)).toEqual({
+      expected_version: 4,
+      kind: "discard",
+      amount: "100",
+      reason: "Hỏng mốc",
+    })
+  })
+
+  it("calculates quick half choice and preview balance after deducting quantity delta", () => {
+    // Decimal unit (e.g., grams)
+    const initialGrams = 750
+    const halfGrams = +(initialGrams / 2).toFixed(3)
+    expect(halfGrams).toBe(375)
+    const afterConsumeGrams = +(initialGrams - halfGrams).toFixed(3)
+    expect(afterConsumeGrams).toBe(375)
+
+    // Discrete unit (piece)
+    const initialPieces = 7
+    const halfPieces = Math.floor(initialPieces / 2)
+    expect(halfPieces).toBe(3)
+    const afterConsumePieces = initialPieces - halfPieces
+    expect(afterConsumePieces).toBe(4)
+
+    // Complete depletion
+    const afterDepleted = +(initialGrams - initialGrams).toFixed(3)
+    expect(afterDepleted).toBe(0)
   })
 })

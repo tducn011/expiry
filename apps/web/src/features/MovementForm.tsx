@@ -22,6 +22,8 @@ const copy: Record<MovementMode, {
   reason: string
 
   fill?: string
+
+  half?: string
 }> = {
   consume: {
     title: "Ghi nhận đã dùng",
@@ -31,6 +33,8 @@ const copy: Record<MovementMode, {
     reason: "Lý do (không bắt buộc)",
 
     fill: "Dùng hết",
+
+    half: "Dùng 1 nửa",
   },
 
   discard: {
@@ -41,6 +45,8 @@ const copy: Record<MovementMode, {
     reason: "Lý do (không bắt buộc)",
 
     fill: "Bỏ hết",
+
+    half: "Bỏ 1 nửa",
   },
 
   recount: {
@@ -106,6 +112,11 @@ export default function MovementForm({
   const n = Number(amount)
 
   const recount = mode === "recount"
+
+  const halfQty =
+    food.unit === "piece"
+      ? Math.floor(food.remaining_quantity / 2)
+      : +(food.remaining_quantity / 2).toFixed(3)
 
   const amountFormatValid = /^\d+(?:\.\d{1,3})?$/.test(amount)
 
@@ -217,21 +228,33 @@ export default function MovementForm({
               <span>{unit}</span>
             </div>
           </Field>
-          {text.fill && (
+          {text.fill && food.remaining_quantity > 0 && (
             <div
               className="chips amount-choices"
               aria-label="Chọn nhanh lượng đã xử lý"
             >
-              {food.unit === "piece" && food.remaining_quantity >= 1 && (
+              {halfQty > 0 && halfQty < food.remaining_quantity && (
                 <button
                   type="button"
-                  aria-pressed={amount === "1"}
-                  className={amount === "1" ? "active" : ""}
-                  onClick={() => setAmount("1")}
+                  aria-pressed={amount === String(halfQty)}
+                  className={amount === String(halfQty) ? "active" : ""}
+                  onClick={() => setAmount(String(halfQty))}
                 >
-                  1 {unit}
+                  {text.half || "Dùng 1 nửa"} · {fmtQty(halfQty)} {unit}
                 </button>
               )}
+              {food.unit === "piece" &&
+                food.remaining_quantity > 1 &&
+                halfQty !== 1 && (
+                  <button
+                    type="button"
+                    aria-pressed={amount === "1"}
+                    className={amount === "1" ? "active" : ""}
+                    onClick={() => setAmount("1")}
+                  >
+                    1 {unit}
+                  </button>
+                )}
               <button
                 type="button"
                 aria-pressed={amount === String(food.remaining_quantity)}

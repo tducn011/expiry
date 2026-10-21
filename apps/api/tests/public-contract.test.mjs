@@ -85,7 +85,7 @@ async function harness(t, overrides = {}) {
     edit: async () => command(200, { ...row }),
     restore: async (_owner, _key, _id, body) => { calls.push(['restore', body]); return command(200, { ...row }); },
     remove: async (_owner, _key, _id, body) => { calls.push(['remove', body]); return command(204, null); },
-    consume: async () => command(201, { entry: { ...row }, movement, changed: true }),
+    consume: async (_owner, _key, _id, body) => { calls.push(['consume', body]); return command(201, { entry: { ...row }, movement, changed: true }); },
     recount: async () => command(200, { entry: { ...row }, movement: null, changed: false }),
     setPreferences: async () => ({ status: 200, body: { ...preferences } }),
     ...overrides
@@ -186,6 +186,49 @@ test('history route alias /food-entries/:id/history conforms to MovementList sch
   validate(body, 'MovementList');
   assert.equal(body.items.length, 2);
   assert.equal(body.items[0].delta, '-250.500');
+});
+
+test('stock movement accepts quantity_delta, movement_type, note, version and maps to MovementCommand', async t => {
+  const { request, calls } = await harness(t);
+  const response = await request(`/food-entries/${entryId}/movements`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      quantity_delta: '-250.000',
+      movement_type: 'consumed',
+      note: 'Nấu bữa trưa',
+      version: 1
+    })
+  });
+  assert.equal(response.status, 201);
+  const lastConsumeCall = calls.find(([name]) => name === 'consume');
+  assert.deepEqual(lastConsumeCall[1], {
+    kind: 'consume',
+    amount: '250.000',
+    reason: 'Nấu bữa trưa',
+    expected_version: 1
+  });
+});
+
+test('stock movement rejects overspend with HTTP 422 INSUFFICIENT_QUANTITY', async t => {
+  const { request } = await harness(t, {
+    consume: async () => {
+      const { DomainError } = await import('../src/shared/domain.mjs');
+      throw new DomainError(422, 'INSUFFICIENT_QUANTITY');
+    }
+  });
+  const response = await request(`/food-entries/${entryId}/movements`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      quantity_delta: '-2000.000',
+      movement_type: 'consumed',
+      version: 1
+    })
+  });
+  assert.equal(response.status, 422);
+  const problem = await response.json();
+  assert.equal(problem.code, 'INSUFFICIENT_QUANTITY');
 });
 
 test('delete version uses query and rejects absent or malformed integers without mutation', async t => {
