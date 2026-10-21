@@ -40,8 +40,6 @@ import AuthForm, { AuthMode } from "./features/AuthForm"
 
 import { useExpiry } from "./hooks/useExpiry"
 
-import { newCommand } from "./api/client"
-
 import DemoApp from "./demo/DemoApp"
 
 type ModalKind = "add" | "restore" | DetailAction | StatusMode | null
@@ -686,21 +684,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
             if (!real.session) return
 
-            const cmd = newCommand(
-              real.session.user.id,
-
-              "PATCH",
-
-              "/me/preferences",
-
-              {
-                expected_version: prefs.version,
-
-                ...patch,
-              },
-            )
-
-            const res = await real.run(cmd)
+            const res = await real.updatePreferences(prefs.version, patch)
 
             if (res.ok) {
               setNotice("Đã lưu cài đặt")
