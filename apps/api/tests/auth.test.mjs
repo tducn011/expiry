@@ -58,9 +58,9 @@ async function harness(options = {}) {
     repository,
     boundary,
     advance: milliseconds => { timestamp += milliseconds; },
-    request: (path, { method = 'GET', body, headers = {}, cookie, csrf } = {}) => fetch(`${base}${path}`, {
+    request: (path, { method = 'GET', body, headers = {}, cookie, csrf, omitOrigin = false } = {}) => fetch(`${base}${path}`, {
       method,
-      headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(method !== 'GET' ? { Origin: origin } : {}), ...(cookie ? { Cookie: cookie } : {}), ...(csrf ? { 'X-CSRF-Token': csrf } : {}), ...headers },
+      headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(!omitOrigin && method !== 'GET' ? { Origin: origin } : {}), ...(cookie ? { Cookie: cookie } : {}), ...(csrf ? { 'X-CSRF-Token': csrf } : {}), ...headers },
       ...(body ? { body: JSON.stringify(body) } : {})
     }),
     close: () => new Promise((resolve, reject) => { server.close(error => error ? reject(error) : resolve()); server.closeAllConnections(); })
@@ -116,10 +116,17 @@ test('Origin and per-session CSRF defenses protect login and cookie-authenticate
       assert.equal(denied.status, 403);
     }
     const session = await register(h);
-    for (const options of [{}, { csrf: '0'.repeat(64) }, { csrf: session.body.csrf_token, headers: { Origin: 'http://evil.example' } }, { csrf: session.body.csrf_token, headers: { 'Sec-Fetch-Site': 'cross-site' } }]) {
+    for (const options of [{}, { csrf: '0'.repeat(64) }, { csrf: session.body.csrf_token, headers: { Origin: 'http://evil.example' } }, { csrf: session.body.csrf_token, omitOrigin: true }]) {
       const response = await h.request('/private', { method: 'POST', cookie: session.cookie, ...options });
       assert.equal(response.status, 403);
     }
+    const crossSite = await h.request('/private', {
+      method: 'POST',
+      cookie: session.cookie,
+      csrf: session.body.csrf_token,
+      headers: { 'Sec-Fetch-Site': 'cross-site' }
+    });
+    assert.equal(crossSite.status, 200);
     const accepted = await h.request('/private', { method: 'POST', cookie: session.cookie, csrf: session.body.csrf_token });
     assert.equal(accepted.status, 200);
   } finally { await h.close(); }
@@ -394,4 +401,3 @@ test('pruneExpiredSessions executes deletion query and returns affected rows', a
   assert.equal(executedValues.length, 2);
   assert.equal(executedValues[0], '2026-10-15 12:00:00.000');
 });
-
