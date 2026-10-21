@@ -20,6 +20,7 @@
     "review:pr": "node scripts/review-pr.mjs",
     "notify": "node scripts/notify-mobile.mjs",
     "dev:web": "npm --workspace=apps/web run dev",
-    "dev:api": "npm --workspace=apps/api run dev"
+    "dev:api": "npm --workspace=apps/api run dev",
+    "db:migrate": "node database/mysql/scripts/manage.mjs migrate-dev"
   }
 }
