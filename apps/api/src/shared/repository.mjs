@@ -153,8 +153,17 @@ export class InventoryRepository {
       if(location!==undefined) { where+=' AND storage_location=?'; args.push(location); }
       const cte=`WITH classified AS (SELECT *,CASE WHEN expiry_date IS NULL THEN 'unknown' WHEN expiry_date<? THEN 'past_date' WHEN expiry_date=? THEN 'due_today' WHEN DATEDIFF(expiry_date,?)<=? THEN 'soon' ELSE 'later' END AS attention_status FROM food_entries WHERE ${where})`;
       args.splice(2,0,day);
-      const outer=filter?' WHERE attention_status=?':'';
-      if(filter) args.push(filter);
+      let outer = '';
+      if (filter) {
+        if (view === 'attention' && filter === 'later') {
+          outer = ' WHERE 1=0';
+        } else {
+          outer = ' WHERE attention_status=?';
+          args.push(filter);
+        }
+      } else if (view === 'attention') {
+        outer = " WHERE attention_status != 'later'";
+      }
       const order=view==='trash'?'deleted_at DESC,id':"CASE attention_status WHEN 'past_date' THEN 0 WHEN 'due_today' THEN 1 WHEN 'soon' THEN 2 WHEN 'unknown' THEN 3 ELSE 4 END,expiry_date IS NULL,expiry_date,created_at,id";
       const sql=`${cte} SELECT * FROM classified${outer} ORDER BY ${order} LIMIT ? OFFSET ?`;
       const paged=[...args,limit,(page-1)*limit];

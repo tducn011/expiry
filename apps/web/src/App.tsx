@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { attentionFor, DEMO_DATE, mockApi } from "./mockApi"
+import { attentionFor, DEMO_DATE, localDay, mockApi } from "./mockApi"
 
 import type {
   Attention,
@@ -220,9 +220,13 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       actionEntrySnapshot ||
       null
 
+  const activeAsOfDate = isDemo
+    ? localDay(new Date(), prefs.timezone)
+    : real.asOfDate || localDay(new Date(), prefs.timezone)
+
   const attention = (e: FoodEntry) =>
     isDemo
-      ? attentionFor(e, prefs.attention_lead_days)
+      ? attentionFor(e, prefs.attention_lead_days, activeAsOfDate)
       : (e.attention ?? "unknown")
 
   const counts = useMemo(() => {
@@ -747,7 +751,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       ) : (
         <Inventory
           mode={view === "attention" ? "attention" : "inventory"}
-          asOfDate={isDemo ? DEMO_DATE : real.asOfDate}
+          asOfDate={activeAsOfDate}
           foods={visible}
           allFoods={entries}
           counts={counts}

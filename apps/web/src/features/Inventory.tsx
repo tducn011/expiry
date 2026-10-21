@@ -137,6 +137,7 @@ export default function Inventory({
       <FoodCard
         key={f.id}
         food={f}
+        asOfDate={asOfDate}
         attention={attention(f)}
         onOpen={() => onOpen(f)}
         onAction={(action) => onAction(f, action)}
@@ -171,6 +172,60 @@ export default function Inventory({
           </Button>
         }
       />
+
+      {/* View Tabs: Tất cả / Cần chú ý / Đã dùng hết */}
+      <div className="col-span-full">
+        <nav
+          className="inventory-view-tabs"
+          role="tablist"
+          aria-label="Chế độ xem kho"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!isAttention && filters.lifecycle !== "Đã hết"}
+            className={`inventory-view-tab ${
+              !isAttention && filters.lifecycle !== "Đã hết" ? "is-active" : ""
+            }`}
+            onClick={() => {
+              if (isAttention) onShowInventory()
+              set("lifecycle", "Còn hàng")
+              set("attentionFilter", "all")
+            }}
+          >
+            Tất cả
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={isAttention}
+            className={`inventory-view-tab ${isAttention ? "is-active" : ""}`}
+            onClick={() => {
+              if (!isAttention) onShowAttention()
+            }}
+          >
+            Cần chú ý
+            {urgentTotal > 0 && (
+              <span className="tab-badge">{urgentTotal}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!isAttention && filters.lifecycle === "Đã hết"}
+            className={`inventory-view-tab ${
+              !isAttention && filters.lifecycle === "Đã hết" ? "is-active" : ""
+            }`}
+            onClick={() => {
+              if (isAttention) onShowInventory()
+              set("lifecycle", "Đã hết")
+              set("attentionFilter", "all")
+            }}
+          >
+            Đã dùng hết
+          </button>
+        </nav>
+      </div>
 
       {/* Urgency strip — interactive filters: logically grouped right above the list */}
       <div className="col-span-full">

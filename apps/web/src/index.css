@@ -596,12 +596,12 @@
   height: 14px;
 }
 
-.badge.past {
+.badge.past,
+.badge.today {
   background: var(--danger-bg);
   color: var(--danger);
 }
 
-.badge.today,
 .badge.soon {
   background: var(--warn-bg);
   color: var(--warn);
@@ -613,11 +613,11 @@
   color: var(--muted);
 }
 
-.past {
+.past,
+.today {
   color: var(--danger);
 }
 
-.today,
 .soon {
   color: var(--warn);
 }
@@ -1493,11 +1493,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-.urgency-chip.past strong {
+.urgency-chip.past strong,
+.urgency-chip.today strong {
   color: var(--danger);
 }
 
-.urgency-chip.today strong,
 .urgency-chip.soon strong {
   color: var(--warn);
 }
@@ -1523,6 +1523,57 @@
 .urgency-strip>.text-link {
   grid-column: 1/-1;
   justify-self: end;
+}
+
+.inventory-view-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--fill);
+  padding: 4px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  margin-bottom: 4px;
+}
+
+.inventory-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.inventory-view-tab:hover {
+  color: var(--ink);
+}
+
+.inventory-view-tab.is-active {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.inventory-view-tab .tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .active-filter-bar {

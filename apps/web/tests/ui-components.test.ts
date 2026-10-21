@@ -12,6 +12,7 @@ import {
   fmtDate,
   fmtTime,
 } from "../src/lib/format"
+import { attentionFor, localDay } from "../src/mockApi"
 
 describe("UI Domain Formatting & Helpers", () => {
   it("formats Vietnamese unit labels accurately", () => {
@@ -58,6 +59,24 @@ describe("UI Domain Formatting & Helpers", () => {
     expect(attentionLabel.past).toBe("Đã qua ngày")
 
     expect(attentionGuidance.today.title).toBe("Đến ngày bạn ghi")
+  })
+
+  it("computes attention classification across relative as_of_date dates and lead days", () => {
+    const asOf = "2026-10-12"
+    const leadDays = 2
+
+    expect(attentionFor({ expiry_date: "2026-10-10" }, leadDays, asOf)).toBe("past")
+    expect(attentionFor({ expiry_date: "2026-10-12" }, leadDays, asOf)).toBe("today")
+    expect(attentionFor({ expiry_date: "2026-10-13" }, leadDays, asOf)).toBe("soon")
+    expect(attentionFor({ expiry_date: "2026-10-14" }, leadDays, asOf)).toBe("soon")
+    expect(attentionFor({ expiry_date: "2026-10-15" }, leadDays, asOf)).toBe("later")
+    expect(attentionFor({ expiry_date: null }, leadDays, asOf)).toBe("unknown")
+  })
+
+  it("projects local calendar dates correctly across timezone boundaries", () => {
+    const instant = new Date("2026-10-11T20:00:00.000Z")
+    expect(localDay(instant, "Asia/Ho_Chi_Minh")).toBe("2026-10-12")
+    expect(localDay(instant, "UTC")).toBe("2026-10-11")
   })
 
   it("formats decimal quantities with vi-VN conventions", () => {

@@ -13,6 +13,8 @@ export default function FoodCard({
 
   attention,
 
+  asOfDate,
+
   onOpen,
 
   onAction,
@@ -21,10 +23,32 @@ export default function FoodCard({
 
   attention: Attention
 
+  asOfDate?: string
+
   onOpen: () => void
 
   onAction: (action: DetailAction) => void
 }) {
+  const currentAsOf = food.as_of_date || asOfDate
+
+  const daysRemaining =
+    food.expiry_date && currentAsOf
+      ? Math.round(
+          (Date.parse(`${food.expiry_date}T00:00:00Z`) -
+            Date.parse(`${currentAsOf}T00:00:00Z`)) /
+            86400000,
+        )
+      : null
+
+  const remainingText =
+    daysRemaining === null
+      ? null
+      : daysRemaining < 0
+        ? `Quá hạn ${Math.abs(daysRemaining)} ngày`
+        : daysRemaining === 0
+          ? "Hôm nay"
+          : `Còn ${daysRemaining} ngày`
+
   const dateFormatted = food.expiry_date
     ? `${
         food.expiry_date_certainty === "estimated" ? "Ước tính: " : ""
@@ -41,7 +65,9 @@ export default function FoodCard({
         type="button"
         aria-label={`Xem ${food.name}, đang ghi nhận ${fmtQty(food.remaining_quantity)} ${unitLabel[food.unit]}, ${attentionLabel[attention]}${
           food.storage_location ? `, ${food.storage_location}` : ""
-        }${dateFormatted ? `, ${dateFormatted}` : ""}`}
+        }${dateFormatted ? `, ${dateFormatted}` : ""}${
+          remainingText ? `, ${remainingText}` : ""
+        }`}
       >
         <span className="food-kind-icon">
           <Icon
@@ -56,7 +82,13 @@ export default function FoodCard({
             <span className="loc">
               {food.storage_location || "Chưa chọn vị trí"}
             </span>
-            <span className="date">{dateFormatted || "Chưa ghi ngày"}</span>
+            <span className="date">
+              {dateFormatted
+                ? `${dateFormatted}${
+                    remainingText ? ` • ${remainingText}` : ""
+                  }`
+                : "Chưa ghi ngày"}
+            </span>
           </span>
           <Badge type={attention} />
         </span>
