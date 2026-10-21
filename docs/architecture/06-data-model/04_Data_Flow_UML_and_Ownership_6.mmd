@@ -1,0 +1,6 @@
+stateDiagram-v2
+ [*] --> Active: Create quantity greater than zero
+ Active --> Active: Partial consume or discard / metadata edit
+ Active --> Depleted: Movement leaves zero
+ Depleted --> Active: Recount actual quantity greater than zero
+ Depleted --> Depleted: Metadata edit / recount zero no-op

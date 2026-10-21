@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Expiry System Architecture & Operations Report</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="expiry-styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/" class="back-nav">← Về Homelab AI Control Center</a>
+      <div class="badge">
+        <span class="dot"></span>
+        Hệ thống đang hoạt động ổn định (Up 2+ days)
+      </div>
+      <h1>Expiry Architecture & Operation Report</h1>
+      <p class="lead">Báo cáo chi tiết luồng vận hành toàn diện: Docker, Node.js API, MySQL 8.4, Python OCR Microservice và kết nối Frontend.</p>
+      <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+        <a href="/studio.html" class="status-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #e11d48; color: #fff; padding: 8px 14px; border-radius: 6px; font-weight: 700; font-size: 13px;">🎨 Expiry Web Studio (1 Chạm)</a>
+        <a href="/swagger.html" class="status-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #2563eb; color: #fff; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 13px;">⚡ Swagger UI Tester</a>
+        <a href="/api-docs.html" class="status-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #0f172a; color: #fff; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 13px;">📖 Scalar API Studio</a>
+        <a href="/erd_overview.png" target="_blank" class="status-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #059669; color: #fff; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 13px;">📊 View ERD Diagram</a>
+        <a href="/schema.sql" download class="status-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #4b5563; color: #fff; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 13px;">💾 Download SQL Schema</a>
+        <a href="/downloads/expiry-ctl.exe" download class="status-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #7c3aed; color: #fff; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 13px;">🪟 Download Windows .EXE (v1.0.1)</a>
+        <a href="/downloads/expiry-ctl-linux" download class="status-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #ea580c; color: #fff; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 13px;">🐧 Download Linux Binary (v1.0.1)</a>
+      </div>
+    </header>
+
+    <!-- SECTION 1: LIVE CONTAINER SPECS -->
+    <section class="card">
+      <div class="card-title">
+        <span class="icon">🐳</span>
+        1. Trạng thái các Docker Containers (Mạng nội bộ: <code>expiry_default</code>)
+      </div>
+      <div class="grid-3">
+        <!-- MySQL -->
+        <div class="service-box active">
+          <div class="service-header">
+            <span class="service-name">expiry-mysql84</span>
+            <span class="service-status">HEALTHY</span>
+          </div>
+          <div class="service-meta">
+            <span><b>Image:</b> mysql:8.4 LTS</span>
+            <span><b>Port Host:</b> <code>127.0.0.1:3307</code></span>
+            <span><b>Port Nội bộ:</b> <code>mysql:3306</code></span>
+            <span><b>Dữ liệu:</b> Named Volume <code>expiry_mysql_data</code></span>
+            <span><b>Timezone:</b> UTC (<code>+00:00</code>)</span>
+            <span><b>Database:</b> <code>expiry_dev</code></span>
+          </div>
+        </div>
+
+        <!-- Node API -->
+        <div class="service-box active">
+          <div class="service-header">
+            <span class="service-name">expiry-api</span>
+            <span class="service-status">RUNNING</span>
+          </div>
+          <div class="service-meta">
+            <span><b>Runtime:</b> Node 20 (Alpine) • Express</span>
+            <span><b>Port Host:</b> <code>127.0.0.1:3001</code></span>
+            <span><b>Port Nội bộ:</b> <code>api:3001</code></span>
+            <span><b>MySQL Pool:</b> 10 kết nối, UTC session</span>
+            <span><b>Bảo mật:</b> Session Cookie + CSRF Guard</span>
+            <span><b>Idempotency:</b> Ghi nhớ request qua hash SHA-256</span>
+          </div>
+        </div>
+
+        <!-- Python Scan -->
+        <div class="service-box active">
+          <div class="service-header">
+            <span class="service-name">expiry-python-scan</span>
+            <span class="service-status">HEALTHY</span>
+          </div>
+          <div class="service-meta">
+            <span><b>Runtime:</b> Python 3.12 (Slim) • FastAPI</span>
+            <span><b>Port Host:</b> <code>127.0.0.1:8000</code></span>
+            <span><b>Port Nội bộ:</b> <code>python-scan:8000</code></span>
+            <span><b>OCR:</b> Tesseract 5 (Tiếng Việt + Anh)</span>
+            <span><b>Fallback LLM:</b> Gemini API + Ollama Local</span>
+            <span><b>Tính chất:</b> Stateless (không lưu ảnh)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: TOPOLOGY DIAGRAM -->
+    <section class="card">
+      <div class="card-title">
+        <span class="icon">🗺️</span>
+        2. Sơ đồ luồng kết nối tổng thể (Architecture Flowchart)
+      </div>
+      <div class="mermaid-wrapper">
+        <pre class="mermaid">
+flowchart TD
+    subgraph Frontend["Frontend Client"]
+        FE_Prod["Vercel Production\nhttps://expiry.vercel.app"]
+        FE_Dev["Vite Localhost\nhttp://localhost:8443"]
+        TUI["Expiry TUI (Rust Console)\n~/.local/bin/expiry-tui"]
+    end
+
+    subgraph Tunnel["Cổng kết nối ra ngoài"]
+        CF["Cloudflare Quick Tunnel\ntrycloudflare.com"]
+        ViteP["Vite Reverse Proxy\n(/api -> 3001)"]
+    end
+
+    subgraph Docker["Docker Network (expiry_default)"]
+        API["Node.js Express API\nContainer: expiry-api (:3001)"]
+        DB[("MySQL 8.4 Database\nContainer: expiry-mysql84 (:3306)")]
+        PY["Python Scan Service\nContainer: expiry-python-scan (:8000)"]
+    end
+
+    subgraph AI["Mô hình Vision AI"]
+        TESS["Tesseract OCR\n(Local CPU / eng+vie)"]
+        GEMINI["Google Gemini API\n(generativelanguage.googleapis.com)"]
+        OLLAMA["Local Ollama\n(host.docker.internal:11434)"]
+    end
+
+    FE_Prod -->|1. Vercel Rewrite /api/*| CF
+    CF -->|2. Tunnel HTTP| API
+    FE_Dev -->|Proxy /api/*| ViteP
+    ViteP -->|Direct HTTP| API
+    TUI -->|Health check| API
+    TUI -->|Health check| PY
+
+    API -->|3. Query & Session Pool| DB
+    API -->|4. HTTP POST /scan| PY
+
+    PY -->|Fast Path| TESS
+    PY -.->|Fallback nếu nhãn mờ| GEMINI
+    PY -.->|Fallback offline| OLLAMA
+        </pre>
+      </div>
+    </section>
+
+    <!-- SECTION 3: INTERACTIVE FLOWS & WIRING -->
+    <section class="card">
+      <div class="card-title">
+        <span class="icon">🔌</span>
+        3. Chi tiết cách các thành phần nối với nhau
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-fe-api')">1. FE nối với Node API</button>
+        <button class="tab-btn" onclick="switchTab('tab-api-py')">2. Node API nối với Python Scan</button>
+        <button class="tab-btn" onclick="switchTab('tab-api-db')">3. Node API nối với MySQL</button>
+        <button class="tab-btn" onclick="switchTab('tab-docker')">4. Cơ chế Docker & Port</button>
+      </div>
+
+      <!-- Tab 1: FE to API -->
+      <div id="tab-fe-api" class="tab-content active">
+        <div class="flow-steps">
+          <div class="step-item">
+            <div class="step-num">A</div>
+            <div class="step-text">
+              <h4>Môi trường Local Dev (Vite Dev Server)</h4>
+              <p>Frontend chạy React 19 tại cổng <code>8443</code>. Trong file <code>vite.config.ts</code> có cấu hình proxy:
+              <code>proxy: { "/api": { target: "http://127.0.0.1:3001", changeOrigin: true } }</code>.
+              Trình duyệt gửi request tới <code>/api/v1/...</code>, Vite tự động chuyển tiếp tới cổng <code>3001</code> của container <code>expiry-api</code>.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">B</div>
+            <div class="step-text">
+              <h4>Môi trường Production (Vercel + Cloudflare Tunnel)</h4>
+              <p>Frontend triển khai trên Vercel. Trên homeserver có service <code>cloudflared-tunnel.service</code> tạo đường hầm bảo mật HTTPS <code>trycloudflare.com</code> nối trực tiếp vào <code>http://127.0.0.1:3001</code>. File <code>vercel.json</code> dùng luật rewrite chuyển toàn bộ <code>/api/*</code> sang URL đường hầm này.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">C</div>
+            <div class="step-text">
+              <h4>Xác thực & Bảo mật (Cookie + CSRF + Idempotency)</h4>
+              <p>Phiên đăng nhập được quản lý bằng cookie <code>HttpOnly, SameSite=Lax</code> (<code>__Host-expiry_session</code> trên production). Các thao tác thay đổi dữ liệu (POST/PUT/DELETE) bắt buộc có header <code>X-CSRF-Token</code> và header <code>Idempotency-Key</code> (UUID ngẫu nhiên) để chống ghi đúp dữ liệu khi mạng chập chờn.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: API to Python Scan -->
+      <div id="tab-api-py" class="tab-content">
+        <div class="flow-steps">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <h4>Gửi ảnh từ Node API sang Python Container</h4>
+              <p>Khi người dùng bấm "Quét nhãn", FE gửi ảnh dạng multipart hoặc base64 đến <code>POST /api/v1/scans</code>. Node API gọi sang container Python qua mạng nội bộ Docker: <code>http://python-scan:8000/scan</code> với timeout 10 giây.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <h4>Tầng Fast Path: Tesseract OCR cục bộ</h4>
+              <p>Python tiền xử lý ảnh bằng thư viện Pillow (giới hạn dung lượng 5MB). Sau đó chạy Tesseract OCR với tập ngôn ngữ <code>eng+vie</code> trong thời hạn 2.5 giây. Module <code>date_parser.py</code> phân tích cấu trúc ngày (HSD, NSX, Best Before, Use By).</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <h4>Tầng Fallback: Vision LLM (Gemini / Ollama)</h4>
+              <p>Nếu ảnh mờ, chữ in kim đứt khúc hoặc nhãn có nhiều ngày gây nhập nhằng (ambiguous), hệ thống tự kích hoạt <code>vision_llm_adapter.py</code> gọi Gemini API (hoặc Ollama trên host qua <code>host.docker.internal:11434</code>) để đọc đúng nhãn bao bì và tên món ăn.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: API to MySQL -->
+      <div id="tab-api-db" class="tab-content">
+        <div class="flow-steps">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <h4>Kết nối Connection Pool qua mysql2</h4>
+              <p>Node API khởi tạo pool tối đa 10 kết nối tới <code>mysql:3306</code> (user <code>expiry_app</code>, db <code>expiry_dev</code>). Mỗi kết nối được gán múi giờ chuẩn UTC: <code>SET SESSION time_zone='+00:00'</code>.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <h4>Bảo toàn toàn vẹn qua 6 Bảng chính</h4>
+              <table>
+                <thead>
+                  <tr><th>Bảng</th><th>Nhiệm vụ</th><th>Đặc điểm kỹ thuật</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>users</code></td><td>Hồ sơ người dùng</td><td>UUID id, timezone, số ngày cảnh báo (lead days)</td></tr>
+                  <tr><td><code>local_credentials</code></td><td>Mật khẩu băm</td><td>Thuật toán scrypt chuẩn (N=131072, r=8, p=1)</td></tr>
+                  <tr><td><code>user_sessions</code></td><td>Phiên đăng nhập</td><td>Token băm SHA-256, tự động trượt hạn theo thời gian dùng</td></tr>
+                  <tr><td><code>food_entries</code></td><td>Kho thực phẩm</td><td>Số lượng thập phân DECIMAL(12,3), đơn vị piece/g/ml, ngày hết hạn</td></tr>
+                  <tr><td><code>stock_movements</code></td><td>Sổ cái biến động kho</td><td>Ghi nhận lịch sử initial/consume/discard/adjustment (immutable audit)</td></tr>
+                  <tr><td><code>api_requests</code></td><td>Bộ đệm Idempotency</td><td>Lưu trữ kết quả phản hồi của từng Idempotency-Key để replay an toàn</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Docker & Ports -->
+      <div id="tab-docker" class="tab-content">
+        <p style="color:var(--muted); font-size:14px;">Bảng thông số cổng và ánh xạ giữa mạng máy chủ (Host) và mạng Container:</p>
+        <table>
+          <thead>
+            <tr><th>Container</th><th>Tên dịch vụ</th><th>Host Port</th><th>Mạng Docker (:Cổng)</th><th>Cơ chế phụ thuộc</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>expiry-mysql84</code></td>
+              <td><code>mysql</code></td>
+              <td><code>127.0.0.1:3307</code></td>
+              <td><code>mysql:3306</code></td>
+              <td>Độc lập, khởi động đầu tiên với Healthcheck ping</td>
+            </tr>
+            <tr>
+              <td><code>expiry-python-scan</code></td>
+              <td><code>python-scan</code></td>
+              <td><code>127.0.0.1:8000</code></td>
+              <td><code>python-scan:8000</code></td>
+              <td>Có cờ <code>extra_hosts: host.docker.internal</code> để gọi Ollama máy chủ</td>
+            </tr>
+            <tr>
+              <td><code>expiry-api</code></td>
+              <td><code>api</code></td>
+              <td><code>127.0.0.1:3001</code></td>
+              <td><code>api:3001</code></td>
+              <td><code>depends_on: mysql (healthy), python-scan (started)</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 4: LIVE DIAGNOSTIC & TEST -->
+    <section class="card">
+      <div class="card-title">
+        <span class="icon">🧪</span>
+        4. Kiểm tra sức khỏe dịch vụ trực tiếp (Live Ping)
+      </div>
+      <p style="color:var(--muted); font-size:13px;">Đường hầm Cloudflare hiện tại: <a href="https://bathrooms-boost-breaking-atlas.trycloudflare.com/health" target="_blank" style="color:var(--accent); font-weight:600;">https://bathrooms-boost-breaking-atlas.trycloudflare.com</a></p>
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+        <button class="btn-test" style="background:var(--accent); color:#fff;" onclick="checkHealth('https://bathrooms-boost-breaking-atlas.trycloudflare.com/health', 'res-cf')">⚡ Ping Cloudflare Tunnel (Internet)</button>
+        <button class="btn-test" onclick="checkHealth('http://127.0.0.1:3001/health', 'res-api')">Ping Local API (:3001)</button>
+        <button class="btn-test" onclick="checkHealth('http://127.0.0.1:8000/health', 'res-py')">Ping Local Python (:8000)</button>
+      </div>
+      <div id="res-cf" class="test-result"></div>
+      <div id="res-api" class="test-result"></div>
+      <div id="res-py" class="test-result"></div>
+    </section>
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    async function checkHealth(url, elId) {
+      const el = document.getElementById(elId);
+      el.style.display = 'block';
+      el.className = 'test-result';
+      el.innerText = 'Đang kiểm tra ' + url + '...';
+      try {
+        const res = await fetch(url, { mode: 'cors' });
+        const data = await res.json();
+        el.className = 'test-result ok';
+        el.innerText = 'Phản hồi thành công: ' + JSON.stringify(data);
+      } catch (err) {
+        el.className = 'test-result err';
+        el.innerText = 'Không thể gọi trực tiếp từ trình duyệt (do khác Origin/CORS hoặc chưa mở ra ngoài). Kiểm tra lại bằng lệnh curl trên server.';
+      }
+    }
+  </script>
+</body>
+</html>

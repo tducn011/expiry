@@ -339,10 +339,9 @@ export function useExpiry(
       setBusy(false)
     }
   }
-
-  const scan = async (file: File) => {
+  const scan = async (file: File, barcode?: string, locale?: string) => {
     try {
-      return await api.scan(file)
+      return await api.scan(file, barcode, locale)
     } catch (error) {
       fail(error)
 

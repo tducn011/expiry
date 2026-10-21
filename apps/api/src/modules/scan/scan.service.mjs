@@ -40,7 +40,7 @@ export class ScanService {
   constructor(baseUrl = process.env.SCAN_SERVICE_URL || 'http://127.0.0.1:8000', options = {}) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
     this.fetch = options.fetch ?? globalThis.fetch;
-    this.timeoutMs = options.timeoutMs ?? 3000;
+    this.timeoutMs = options.timeoutMs ?? (process.env.SCAN_TIMEOUT_MS ? parseInt(process.env.SCAN_TIMEOUT_MS, 10) : 10000);
   }
 
   async request(path, options, project) {
@@ -75,12 +75,15 @@ export class ScanService {
     });
   }
 
-  async scanImage({ imageBytes, mediaType, imageBase64, correlationId }) {
+  async scanImage({ imageBytes, mediaType, imageBase64, correlationId, barcode, locale }) {
     const image = imageBytes ? checkedImage(imageBytes, mediaType) : decodeBase64Image(imageBase64);
     const headers = { 'Content-Type': 'application/json' };
     if (typeof correlationId === 'string') headers['X-Correlation-ID'] = correlationId;
+    const bodyObj = { image_base64: image.bytes.toString('base64') };
+    if (barcode) bodyObj.barcode = barcode;
+    if (locale) bodyObj.locale = locale;
     return this.request('/scan', {
-      method: 'POST', headers, body: JSON.stringify({ image_base64: image.bytes.toString('base64') })
+      method: 'POST', headers, body: JSON.stringify(bodyObj)
     }, publicScanResult);
   }
 }

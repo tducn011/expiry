@@ -797,7 +797,9 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               setPendingCreate(null)
             }}
             onCreate={create}
-            onScan={isDemo ? undefined : (file) => real.scan(file)}
+            onScan={
+              isDemo ? undefined : (file, barcode) => real.scan(file, barcode)
+            }
           />
         )}
 

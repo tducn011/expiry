@@ -57,7 +57,7 @@ export class InventoryRepository {
     const payload={...meta,quantity,unit:input.unit};
     return this.execute(owner,key,'create:food-entry',payload,async c=>{
       const id=randomUUID();
-      await c.execute(`INSERT INTO food_entries(id,user_id,${metadataFields.join(',')},remaining_quantity,unit) VALUES (${Array(12).fill('?').join(',')})`,[id,owner,...metadataFields.map(k=>meta[k]),quantity,input.unit]);
+      await c.execute(`INSERT INTO food_entries(id,user_id,${metadataFields.join(',')},remaining_quantity,unit) VALUES (${Array(metadataFields.length + 4).fill('?').join(',')})`,[id,owner,...metadataFields.map(k=>meta[k]),quantity,input.unit]);
       await this.hook('after_entry',{c,id});
       await c.execute("INSERT INTO stock_movements(id,entry_id,kind,quantity_before,quantity_after) VALUES (?,?,'initial',0,?)",[randomUUID(),id,quantity]);
       await this.hook('after_movement',{c,id});

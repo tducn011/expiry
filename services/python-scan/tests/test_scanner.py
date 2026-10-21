@@ -73,6 +73,29 @@ class TestScannerLogic(unittest.TestCase):
         self.assertEqual(expiry["alternatives"], ["2026-06-05", "2026-05-06"])
         self.assertIn("AMBIGUOUS_EXPIRY_DATE", warnings[0])
 
+    def test_barcode_gs1_vietnam_prefers_dmy(self):
+        # 893 prefix is Vietnam -> prefers DMY (05/10/2026 -> 2026-10-05)
+        candidates, _ = normalized_candidates("EXP 05/10/2026", barcode="8935001710012")
+        self.assertEqual(candidates["expiry_date"]["alternatives"][0], "2026-10-05")
+
+    def test_barcode_gs1_us_prefers_mdy(self):
+        # 012 prefix is US (UPC) -> prefers MDY (05/10/2026 -> 2026-05-10)
+        candidates, _ = normalized_candidates("EXP 05/10/2026", barcode="012345678905")
+        self.assertEqual(candidates["expiry_date"]["alternatives"][0], "2026-05-10")
+
+    def test_locale_en_us_prefers_mdy(self):
+        candidates, _ = normalized_candidates("EXP 05/10/2026", locale="en_US")
+        self.assertEqual(candidates["expiry_date"]["alternatives"][0], "2026-05-10")
+
+    def test_day_over_12_is_unambiguous(self):
+        candidates_dmy, _ = normalized_candidates("EXP 25/10/2026")
+        self.assertFalse(candidates_dmy["expiry_date"]["ambiguous"])
+        self.assertEqual(candidates_dmy["expiry_date"]["value"], "2026-10-25")
+
+        candidates_mdy, _ = normalized_candidates("EXP 10/25/2026")
+        self.assertFalse(candidates_mdy["expiry_date"]["ambiguous"])
+        self.assertEqual(candidates_mdy["expiry_date"]["value"], "2026-10-25")
+
     def test_manufactured_date_never_becomes_expiry(self):
         candidates, warnings = normalized_candidates("MFG 2026-03-01\nEXP 2026-12-31")
         self.assertEqual(candidates["manufactured_date"]["value"], "2026-03-01")
@@ -144,6 +167,53 @@ class TestScanRouteEngineSelection(unittest.TestCase):
 
         self.assertEqual(result.candidates.expiry_date.value, "2026-10-15")
         self.assertTrue(any("falling back to Tesseract" in warning for warning in result.warnings))
+
+    def test_falls_back_to_vision_llm_when_ocr_finds_no_text(self):
+        vision_candidates = {
+            "food_name": "Organic Milk",
+            "expiry_date": {
+                "value": "2026-11-20",
+                "date_certainty": "exact",
+                "date_label_type": "use_by",
+                "source_text": "EXP 20/11/2026"
+            },
+            "manufactured_date": {"value": None, "source_text": ""}
+        }
+        with patch("app.routes.scan.extract_datereg_text", return_value=""), patch(
+            "app.routes.scan.extract_ocr_text", return_value=""
+        ), patch(
+            "app.routes.scan.extract_vision_llm_candidates",
+            return_value=(vision_candidates, "EXP 20/11/2026 Organic Milk", "Gemini Vision (gemini-2.5-flash)")
+        ):
+            result = self._scan()
+
+        self.assertEqual(result.candidates.expiry_date.value, "2026-11-20")
+        self.assertEqual(result.candidates.food_name, "Organic Milk")
+        self.assertTrue(any("VISION_FALLBACK_APPLIED" in w for w in result.warnings))
+
+    def test_falls_back_to_vision_llm_when_ocr_date_is_ambiguous(self):
+        vision_candidates = {
+            "food_name": "Greek Yogurt",
+            "expiry_date": {
+                "value": "2026-06-05",
+                "date_certainty": "exact",
+                "date_label_type": "use_by",
+                "source_text": "EXP 05/06/2026"
+            },
+            "manufactured_date": {"value": None, "source_text": ""}
+        }
+        # OCR returns an ambiguous date format (05/06/2026) where month/day could be 5 or 6
+        with patch("app.routes.scan.extract_datereg_text", return_value=""), patch(
+            "app.routes.scan.extract_ocr_text", return_value="EXP 05/06/2026"
+        ), patch(
+            "app.routes.scan.extract_vision_llm_candidates",
+            return_value=(vision_candidates, "EXP 05/06/2026 Greek Yogurt", "Gemini Vision (gemini-2.5-flash)")
+        ):
+            result = self._scan()
+
+        self.assertEqual(result.candidates.expiry_date.value, "2026-06-05")
+        self.assertEqual(result.candidates.food_name, "Greek Yogurt")
+        self.assertTrue(any("VISION_FALLBACK_APPLIED" in w for w in result.warnings))
 
 
 class TestMultipartScanCompatibility(unittest.TestCase):

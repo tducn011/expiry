@@ -46,9 +46,47 @@ def label_before_date(line: str, position: int) -> str:
     return max(labels)[1] if labels else classify_label_type(line)
 
 
-def parse_date_candidates(raw_text: str) -> List[Dict[str, Any]]:
+def resolve_gs1_preference(barcode: Optional[str]) -> Optional[str]:
+    if not barcode:
+        return None
+    clean = re.sub(r"\D", "", barcode)
+    if len(clean) == 12:  # Standard UPC-A is North American (MM/DD)
+        return "MDY"
+    if len(clean) >= 3:
+        p3 = clean[:3]
+        if p3 == "893":
+            return "DMY"  # Vietnam GS1
+        try:
+            num3 = int(p3)
+            if 0 <= num3 <= 139:
+                return "MDY"  # USA & Canada GS1/UPC
+            if 450 <= num3 <= 459 or 490 <= num3 <= 499 or num3 == 880:
+                return "YMD"  # Japan / Korea
+            if (300 <= num3 <= 379 or 400 <= num3 <= 440 or
+                500 <= num3 <= 509 or num3 in (885, 888) or 930 <= num3 <= 939):
+                return "DMY"  # UK, EU, Thailand, Singapore, Australia
+        except ValueError:
+            pass
+    return None
+
+
+def resolve_locale_preference(locale: Optional[str]) -> str:
+    if not locale:
+        return "DMY"
+    loc = locale.lower().replace("-", "_")
+    if "en_us" in loc or loc == "us":
+        return "MDY"
+    return "DMY"
+
+
+def parse_date_candidates(
+    raw_text: str,
+    barcode: Optional[str] = None,
+    locale: Optional[str] = None
+) -> List[Dict[str, Any]]:
     candidates: List[Dict[str, Any]] = []
     seen_dates = set()
+    pref = resolve_gs1_preference(barcode) or resolve_locale_preference(locale)
 
     lines = raw_text.splitlines()
     for line in lines:
@@ -56,37 +94,134 @@ def parse_date_candidates(raw_text: str) -> List[Dict[str, Any]]:
         if not cleaned_line:
             continue
 
-        # 1. Regex numeric patterns
-        for pattern, fmt in DATE_PATTERNS[:3]:
+        # 1. YYYY-MM-DD or YYYY/MM/DD (unambiguous ISO format)
+        for match in re.finditer(DATE_PATTERNS[0][0], cleaned_line, re.IGNORECASE):
+            matched_str = match.group(0)
+            label_type = label_before_date(cleaned_line, match.start())
+            normalized_str = re.sub(r"[/.]", "-", matched_str)
+            try:
+                parsed_dt = datetime.strptime(normalized_str, "%Y-%m-%d")
+                iso_date = parsed_dt.strftime("%Y-%m-%d")
+                identity = (iso_date, label_type, matched_str)
+                if identity not in seen_dates:
+                    seen_dates.add(identity)
+                    candidates.append({
+                        "raw_text": matched_str,
+                        "parsed_date": iso_date,
+                        "certainty": "known",
+                        "confidence": 0.95 if label_type != "unspecified" else 0.85,
+                        "date_label_type": label_type,
+                        "source": "printed_label",
+                        "alternatives": [],
+                        "ambiguous": False
+                    })
+            except ValueError:
+                continue
+
+        # 2. Ambiguous two-number formats: A/B/YYYY or A/B/YY (handles DD/MM vs MM/DD)
+        two_part_patterns = [
+            (r"\b(0[1-9]|[12]\d|3[01])[-/.](0[1-9]|[12]\d|3[01])[-/.](20\d{2})\b", True),
+            (r"\b(0[1-9]|[12]\d|3[01])[-/.](0[1-9]|[12]\d|3[01])[-/.](\d{2})\b", False),
+        ]
+        for pattern, is_4digit in two_part_patterns:
             for match in re.finditer(pattern, cleaned_line, re.IGNORECASE):
                 matched_str = match.group(0)
                 label_type = label_before_date(cleaned_line, match.start())
-                # Standardize separators to '-'
-                normalized_str = re.sub(r"[/.]", "-", matched_str)
-                try:
-                    parsed_dt = datetime.strptime(normalized_str, fmt)
-                    iso_date = parsed_dt.strftime("%Y-%m-%d")
-                    identity = (iso_date, label_type, matched_str)
-                    if identity not in seen_dates:
-                        seen_dates.add(identity)
-                        alternatives = [iso_date]
-                        if fmt != "%Y-%m-%d" and parsed_dt.day <= 12 and parsed_dt.day != parsed_dt.month:
-                            alternatives.append(parsed_dt.replace(month=parsed_dt.day, day=parsed_dt.month).strftime("%Y-%m-%d"))
-                        confidence = 0.95 if label_type != "unspecified" else 0.80
-                        candidates.append({
-                            "raw_text": matched_str,
-                            "parsed_date": iso_date,
-                            "certainty": "known",
-                            "confidence": confidence,
-                            "date_label_type": label_type,
-                            "source": "printed_label",
-                            "alternatives": alternatives if len(alternatives) > 1 else [],
-                            "ambiguous": len(alternatives) > 1
-                        })
-                except ValueError:
-                    continue
+                a_str, b_str, y_str = match.groups()
+                n1, n2 = int(a_str), int(b_str)
+                year = int(y_str) if is_4digit else 2000 + int(y_str)
 
-        # 2. Textual month pattern (e.g., "15 Oct 2026")
+                # Determine if format is definitely DMY, definitely MDY, or ambiguous
+                if n1 > 12 and n2 <= 12:
+                    # n1 is definitely day, n2 is month -> DMY
+                    try:
+                        iso_date = f"{year:04d}-{n2:02d}-{n1:02d}"
+                        datetime.strptime(iso_date, "%Y-%m-%d")
+                        identity = (iso_date, label_type, matched_str)
+                        if identity not in seen_dates:
+                            seen_dates.add(identity)
+                            candidates.append({
+                                "raw_text": matched_str,
+                                "parsed_date": iso_date,
+                                "certainty": "known",
+                                "confidence": 0.95 if label_type != "unspecified" else 0.80,
+                                "date_label_type": label_type,
+                                "source": "printed_label",
+                                "alternatives": [],
+                                "ambiguous": False
+                            })
+                    except ValueError:
+                        pass
+                elif n2 > 12 and n1 <= 12:
+                    # n2 is definitely day, n1 is month -> MDY
+                    try:
+                        iso_date = f"{year:04d}-{n1:02d}-{n2:02d}"
+                        datetime.strptime(iso_date, "%Y-%m-%d")
+                        identity = (iso_date, label_type, matched_str)
+                        if identity not in seen_dates:
+                            seen_dates.add(identity)
+                            candidates.append({
+                                "raw_text": matched_str,
+                                "parsed_date": iso_date,
+                                "certainty": "known",
+                                "confidence": 0.95 if label_type != "unspecified" else 0.80,
+                                "date_label_type": label_type,
+                                "source": "printed_label",
+                                "alternatives": [],
+                                "ambiguous": False
+                            })
+                    except ValueError:
+                        pass
+                elif n1 <= 12 and n2 <= 12:
+                    # Both <= 12: Check if identical (e.g. 05/05)
+                    if n1 == n2:
+                        try:
+                            iso_date = f"{year:04d}-{n1:02d}-{n2:02d}"
+                            datetime.strptime(iso_date, "%Y-%m-%d")
+                            identity = (iso_date, label_type, matched_str)
+                            if identity not in seen_dates:
+                                seen_dates.add(identity)
+                                candidates.append({
+                                    "raw_text": matched_str,
+                                    "parsed_date": iso_date,
+                                    "certainty": "known",
+                                    "confidence": 0.95 if label_type != "unspecified" else 0.80,
+                                    "date_label_type": label_type,
+                                    "source": "printed_label",
+                                    "alternatives": [],
+                                    "ambiguous": False
+                                })
+                        except ValueError:
+                            pass
+                    else:
+                        # Ambiguous! Order depends on GS1 barcode preference or user locale
+                        try:
+                            dmy_iso = f"{year:04d}-{n2:02d}-{n1:02d}"
+                            mdy_iso = f"{year:04d}-{n1:02d}-{n2:02d}"
+                            datetime.strptime(dmy_iso, "%Y-%m-%d")
+                            datetime.strptime(mdy_iso, "%Y-%m-%d")
+
+                            primary = mdy_iso if pref == "MDY" else dmy_iso
+                            secondary = dmy_iso if pref == "MDY" else mdy_iso
+                            alternatives = [primary, secondary]
+
+                            identity = (primary, label_type, matched_str)
+                            if identity not in seen_dates:
+                                seen_dates.add(identity)
+                                candidates.append({
+                                    "raw_text": matched_str,
+                                    "parsed_date": primary,
+                                    "certainty": "known",
+                                    "confidence": 0.85 if label_type != "unspecified" else 0.70,
+                                    "date_label_type": label_type,
+                                    "source": "printed_label",
+                                    "alternatives": alternatives,
+                                    "ambiguous": True
+                                })
+                        except ValueError:
+                            pass
+
+        # 3. Textual month pattern (e.g., "15 Oct 2026" or "15 Thg10 2026")
         for match in re.finditer(DATE_PATTERNS[3][0], cleaned_line, re.IGNORECASE):
             label_type = label_before_date(cleaned_line, match.start())
             day_str, mon_str, year_str = match.groups()
@@ -108,7 +243,7 @@ def parse_date_candidates(raw_text: str) -> List[Dict[str, Any]]:
                             "raw_text": match.group(0),
                             "parsed_date": iso_date,
                             "certainty": "known",
-                            "confidence": 0.90,
+                            "confidence": 0.95 if label_type != "unspecified" else 0.90,
                             "date_label_type": label_type,
                             "source": "printed_label",
                             "alternatives": [],
@@ -120,8 +255,12 @@ def parse_date_candidates(raw_text: str) -> List[Dict[str, Any]]:
     return candidates
 
 
-def normalized_candidates(raw_text: str) -> tuple[dict, list[str]]:
-    parsed = parse_date_candidates(raw_text)
+def normalized_candidates(
+    raw_text: str,
+    barcode: Optional[str] = None,
+    locale: Optional[str] = None
+) -> tuple[dict, list[str]]:
+    parsed = parse_date_candidates(raw_text, barcode=barcode, locale=locale)
     expiry = [candidate for candidate in parsed if candidate["date_label_type"] in {"use_by", "best_before"}]
     manufactured = [candidate for candidate in parsed if candidate["date_label_type"] == "manufactured"]
     warnings = []
