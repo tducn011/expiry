@@ -428,7 +428,7 @@ function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
       const created =
         "body" in result
-          ? (result.body as { id?: string } | undefined)
+          ? result.body as { id?: string } | undefined
           : undefined
 
       if (created?.id) {
