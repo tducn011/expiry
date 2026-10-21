@@ -43,6 +43,7 @@ async function harness(options = {}) {
   let timestamp = Date.parse('2026-10-11T00:00:00.000Z');
   const boundary = createAuthBoundary({ repository, allowedOrigins: [origin], now: () => new Date(timestamp), ...options });
   const app = express();
+  app.set('trust proxy', 1);
   app.use(express.json({ limit: '16kb' }));
   app.use('/api/v1/auth', boundary.router);
   app.use('/private', boundary.requireAuth, boundary.requireCsrf);
@@ -203,6 +204,25 @@ test('rate limiting isolates different client IPs behind reverse proxy using X-F
     const body3 = { email: 'client3@example.com', password };
     assert.equal((await h.request('/api/v1/auth/login', { method: 'POST', body: body3, headers: { 'X-Forwarded-For': '203.0.113.3, 10.0.0.1' } })).status, 401);
     assert.equal((await h.request('/api/v1/auth/login', { method: 'POST', body: body3, headers: { 'X-Forwarded-For': '203.0.113.3, 10.0.0.1' } })).status, 429);
+  } finally { await h.close(); }
+});
+
+test('rate limiting prevents IP spoofing via X-Forwarded-For multi-hop chain', async () => {
+  const h = await harness({ rateLimit: createAuthRateLimiter({ maxIp: 1, maxEmail: 10 }) });
+  try {
+    const body1 = { email: 'client1@example.com', password };
+    assert.equal((await h.request('/api/v1/auth/login', {
+      method: 'POST',
+      body: body1,
+      headers: { 'X-Forwarded-For': '1.1.1.1, 203.0.113.19' }
+    })).status, 401);
+
+    const body2 = { email: 'client2@example.com', password };
+    assert.equal((await h.request('/api/v1/auth/login', {
+      method: 'POST',
+      body: body2,
+      headers: { 'X-Forwarded-For': '2.2.2.2, 203.0.113.19' }
+    })).status, 429);
   } finally { await h.close(); }
 });
 

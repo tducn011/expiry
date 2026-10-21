@@ -93,8 +93,7 @@ export function createAuthBoundary({
     if (!req.is('application/json')) invalid();
     allow(req.body, register ? ['email', 'password', 'display_name', 'timezone'] : ['email', 'password']);
     const email = emailAddress(req.body.email);
-    const forwarded = req.headers['x-forwarded-for'];
-    const clientIp = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : (req.ip || req.socket.remoteAddress || 'unknown');
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
     rateLimit(clientIp, email, now());
     validatePassword(req.body.password);
     return { email, password: req.body.password };
