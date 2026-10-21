@@ -3,12 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ApiClient,
   ApiError,
-  type Command,
   type Page,
   createDTO,
   draftDTO,
   decimal,
-  newCommand,
 } from "../api/client"
 
 import type {
@@ -42,6 +40,12 @@ const attentionQuery = {
   later: "later",
 
   all: "",
+}
+
+type PendingMutation<T = unknown,> = {
+  owner: string
+
+  execute: () => Promise<T>
 }
 
 /** Owner changes invalidate data and in-flight responses. Drafts remain App-owned. */
@@ -91,7 +95,7 @@ export function useExpiry(
 
   const [history, setHistory] = useState<QuantityMovement[]>([])
 
-  const pending = useRef<Command | null>(null)
+  const pending = useRef<PendingMutation | null>(null)
 
   const [canRetry, setCanRetry] = useState(false)
 
@@ -384,7 +388,7 @@ export function useExpiry(
   }
 
   const run = useCallback(
-    async (command: Command) => {
+    async <T>(command: PendingMutation<T>) => {
       const owner = sessionRef.current?.user.id
 
       if (!owner || owner !== command.owner) {
@@ -410,7 +414,7 @@ export function useExpiry(
       setCanRetry(false)
 
       try {
-        const body = await api.execute<unknown>(command)
+        const body = await command.execute()
 
         if (
           ownerEpoch !== epoch.current ||
@@ -450,7 +454,17 @@ export function useExpiry(
       }
     },
 
-    [api, fail],
+    [fail],
+  )
+
+  const runMutation = useCallback(
+    <T>(owner: string, execute: (key: string) => Promise<T>) => {
+      const key = crypto.randomUUID()
+
+      return run({ owner, execute: () => execute(key) })
+    },
+
+    [run],
   )
 
   const createFood = useCallback(
@@ -463,12 +477,12 @@ export function useExpiry(
         return { ok: false, error: problem }
       }
 
-      const cmd = newCommand(owner, "POST", "/food-entries", createDTO(payload))
-
-      return run(cmd)
+      return runMutation(owner, (key) =>
+        api.createEntry(createDTO(payload), key),
+      )
     },
 
-    [fail, run],
+    [api, fail, runMutation],
   )
 
   const recordMovement = useCallback(
@@ -491,20 +505,26 @@ export function useExpiry(
         return { ok: false, error: problem }
       }
 
-      const cmd = newCommand(owner, "POST", `/food-entries/${id}/movements`, {
-        expected_version: expectedVersion,
+      return runMutation(owner, (key) =>
+        api.recordMovement(
+          id,
 
-        kind,
+          {
+            expected_version: expectedVersion,
 
-        amount: decimal(amount),
+            kind,
 
-        reason: reason || null,
-      })
+            amount: decimal(amount),
 
-      return run(cmd)
+            reason: reason || null,
+          },
+
+          key,
+        ),
+      )
     },
 
-    [fail, run],
+    [api, fail, runMutation],
   )
 
   const recountFood = useCallback(
@@ -525,18 +545,24 @@ export function useExpiry(
         return { ok: false, error: problem }
       }
 
-      const cmd = newCommand(owner, "POST", `/food-entries/${id}/recounts`, {
-        expected_version: expectedVersion,
+      return runMutation(owner, (key) =>
+        api.recount(
+          id,
 
-        actual_quantity: decimal(actualQuantity),
+          {
+            expected_version: expectedVersion,
 
-        reason: reason.trim(),
-      })
+            actual_quantity: decimal(actualQuantity),
 
-      return run(cmd)
+            reason: reason.trim(),
+          },
+
+          key,
+        ),
+      )
     },
 
-    [fail, run],
+    [api, fail, runMutation],
   )
 
   const updateFood = useCallback(
@@ -549,16 +575,22 @@ export function useExpiry(
         return { ok: false, error: problem }
       }
 
-      const cmd = newCommand(owner, "PATCH", `/food-entries/${id}`, {
-        expected_version: expectedVersion,
+      return runMutation(owner, (key) =>
+        api.updateEntry(
+          id,
 
-        ...draftDTO(patch),
-      })
+          {
+            expected_version: expectedVersion,
 
-      return run(cmd)
+            ...draftDTO(patch),
+          },
+
+          key,
+        ),
+      )
     },
 
-    [fail, run],
+    [api, fail, runMutation],
   )
 
   const deleteFood = useCallback(
@@ -571,18 +603,12 @@ export function useExpiry(
         return { ok: false, error: problem }
       }
 
-      const cmd = newCommand(
-        owner,
-
-        "DELETE",
-
-        `/food-entries/${id}?expected_version=${expectedVersion}`,
+      return runMutation(owner, (key) =>
+        api.deleteEntry(id, expectedVersion, key),
       )
-
-      return run(cmd)
     },
 
-    [fail, run],
+    [api, fail, runMutation],
   )
 
   const restoreFood = useCallback(
@@ -595,14 +621,38 @@ export function useExpiry(
         return { ok: false, error: problem }
       }
 
-      const cmd = newCommand(owner, "POST", `/food-entries/${id}/restore`, {
-        expected_version: expectedVersion,
-      })
-
-      return run(cmd)
+      return runMutation(owner, (key) =>
+        api.restoreEntry(id, expectedVersion, key),
+      )
     },
 
-    [fail, run],
+    [api, fail, runMutation],
+  )
+
+  const updatePreferences = useCallback(
+    async (
+      expectedVersion: number,
+
+      patch: Pick<Preferences, "timezone" | "attention_lead_days">,
+    ) => {
+      const owner = sessionRef.current?.user.id
+
+      if (!owner) {
+        const problem = fail(new ApiError(401, "AUTH_REQUIRED"))
+
+        return { ok: false, error: problem }
+      }
+
+      return runMutation(owner, (key) =>
+        api.updatePreferences(
+          { expected_version: expectedVersion, ...patch },
+
+          key,
+        ),
+      )
+    },
+
+    [api, fail, runMutation],
   )
 
   const retry = () =>
@@ -635,8 +685,6 @@ export function useExpiry(
 
     logout,
 
-    run,
-
     retry,
 
     canRetry,
@@ -654,6 +702,8 @@ export function useExpiry(
     deleteFood,
 
     restoreFood,
+
+    updatePreferences,
 
     allFoods,
 

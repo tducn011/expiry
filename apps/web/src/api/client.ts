@@ -7,6 +7,7 @@ import type {
   Preferences,
   QuantityMovement,
   Session,
+  Unit,
 } from "../domain/types.ts"
 
 export class ApiError extends Error {
@@ -129,17 +130,79 @@ export type Page<T,> = {
 
 export type EntryPage<T> = Page<T> & { as_of_date: string }
 
-export type Command = Readonly<{
-  method: string
+export type EntryDraftDTO = {
+  name: string
 
-  path: string
+  storage_location?: string
 
-  body?: string
+  expiry_date: string | null
 
-  key: string
+  date_certainty: "known" | "estimated" | "unknown"
 
-  owner: string
-}>
+  date_source: DateSource
+
+  date_label_type: "use_by" | "best_before" | "unspecified"
+
+  opened_on: string | null
+
+  note: string | null
+}
+
+export type CreateEntryDTO = EntryDraftDTO & {
+  quantity: string
+
+  unit: Unit
+}
+
+export type MovementDTO = {
+  expected_version: number
+
+  kind: "consume" | "discard"
+
+  amount: string
+
+  reason?: string | null
+}
+
+export type RecountDTO = {
+  expected_version: number
+
+  actual_quantity: string
+
+  reason: string
+}
+
+export type EditEntryDTO = Partial<EntryDraftDTO> & {
+  expected_version: number
+}
+
+export type UpdatePreferencesDTO = Pick<Preferences, "timezone" | "attention_lead_days"> & {
+  expected_version: number
+}
+
+export type MovementResponseDTO = Omit<QuantityMovement, "kind" | "quantity_before" | "quantity_after"> & {
+  kind: "initial" | "consume" | "discard" | "adjustment"
+
+  quantity_before: string
+
+  quantity_after: string
+}
+
+export type MutationResultDTO = {
+  entry: EntryDTO
+
+  movement: MovementResponseDTO | null
+
+  changed: boolean
+}
+
+export type MutationResult = {
+  entry: FoodEntry
+
+  movement: QuantityMovement | null
+
+  changed: boolean
+}
 
 export type ScanDateCandidate = {
   value: string | null
@@ -319,10 +382,10 @@ export function fromEntry(dto: EntryDTO): FoodEntry {
   }
 }
 
-export function draftDTO(draft: EntryDraft) {
+export function draftDTO(draft: EntryDraft): EntryDraftDTO {
   const unknown = draft.expiry_date_certainty === "unknown"
 
-  const dto: Record<string, unknown> = {
+  const dto: EntryDraftDTO = {
     name: draft.name,
 
     expiry_date: unknown ? null : draft.expiry_date,
@@ -366,7 +429,7 @@ export function draftDTO(draft: EntryDraft) {
   return dto
 }
 
-export const createDTO = (draft: CreatePayload) => ({
+export const createDTO = (draft: CreatePayload): CreateEntryDTO => ({
   ...draftDTO(draft),
 
   quantity: decimal(draft.initial_quantity),
@@ -374,15 +437,7 @@ export const createDTO = (draft: CreatePayload) => ({
   unit: draft.unit,
 })
 
-type MovementDTO = Omit<QuantityMovement, "kind" | "quantity_before" | "quantity_after"> & {
-  kind: "initial" | "consume" | "discard" | "adjustment"
-
-  quantity_before: string
-
-  quantity_after: string
-}
-
-export const fromMovement = (dto: MovementDTO): QuantityMovement => ({
+export const fromMovement = (dto: MovementResponseDTO): QuantityMovement => ({
   ...dto,
 
   kind: dto.kind === "adjustment" ? "recount" : dto.kind,
@@ -392,28 +447,25 @@ export const fromMovement = (dto: MovementDTO): QuantityMovement => ({
   quantity_after: Number(dto.quantity_after),
 })
 
-/** Each immutable command has one key and serialized body, including every retry. */
+const fromMutationResult = (dto: MutationResultDTO): MutationResult => {
+  if (
+    !dto ||
+    typeof dto !== "object" ||
+    !dto.entry ||
+    typeof dto.entry !== "object" ||
+    (dto.movement !== null &&
+      (!dto.movement || typeof dto.movement !== "object")) ||
+    typeof dto.changed !== "boolean"
+  )
+    throw contractError()
 
-export function newCommand(
-  owner: string,
+  return {
+    entry: fromEntry(dto.entry),
 
-  method: string,
+    movement: dto.movement ? fromMovement(dto.movement) : null,
 
-  path: string,
-
-  body?: unknown,
-): Command {
-  return Object.freeze({
-    owner,
-
-    method,
-
-    path,
-
-    body: body === undefined ? undefined : JSON.stringify(body),
-
-    key: crypto.randomUUID(),
-  })
+    changed: dto.changed,
+  }
 }
 
 export class ApiClient {
@@ -601,21 +653,159 @@ export class ApiClient {
     this.csrf = ""
   }
 
-  async execute<T,>(command: Command): Promise<T> {
+  private async mutation<T,>(
+    method: string,
+
+    path: string,
+
+    body?: unknown,
+
+    commandKey?: string,
+  ): Promise<T> {
+    const key = commandKey ?? crypto.randomUUID()
+
+    const serializedBody = body === undefined ? undefined : JSON.stringify(body)
+
     for (let attempt = 0; ; attempt++) {
       try {
         return await this.request<T>(
-          command.path,
-
-          { method: command.method, body: command.body },
-
-          command.key,
+          path,
+          { method, body: serializedBody },
+          key,
         )
       } catch (error) {
         if (!(error instanceof ApiError) || !error.uncertain || attempt >= 1)
           throw error
       }
     }
+  }
+
+  async createEntry(draft: CreateEntryDTO, commandKey?: string) {
+    const entry = await this.mutation<EntryDTO>(
+      "POST",
+
+      "/food-entries",
+
+      draft,
+
+      commandKey,
+    )
+
+    return fromEntry(entry)
+  }
+
+  async recordMovement(
+    id: string,
+
+    movement: MovementDTO,
+
+    commandKey?: string,
+  ): Promise<MutationResult> {
+    return fromMutationResult(
+      await this.mutation<MutationResultDTO>(
+        "POST",
+
+        `/food-entries/${encodeURIComponent(id)}/movements`,
+
+        movement,
+
+        commandKey,
+      ),
+    )
+  }
+
+  async recount(
+    id: string,
+
+    recount: RecountDTO,
+
+    commandKey?: string,
+  ): Promise<MutationResult> {
+    return fromMutationResult(
+      await this.mutation<MutationResultDTO>(
+        "POST",
+
+        `/food-entries/${encodeURIComponent(id)}/recounts`,
+
+        recount,
+
+        commandKey,
+      ),
+    )
+  }
+
+  async updateEntry(
+    id: string,
+
+    patch: EditEntryDTO,
+
+    commandKey?: string,
+  ): Promise<FoodEntry> {
+    return fromEntry(
+      await this.mutation<EntryDTO>(
+        "PATCH",
+
+        `/food-entries/${encodeURIComponent(id)}`,
+
+        patch,
+
+        commandKey,
+      ),
+    )
+  }
+
+  async deleteEntry(
+    id: string,
+
+    expectedVersion: number,
+
+    commandKey?: string,
+  ): Promise<void> {
+    const query = new URLSearchParams({
+      expected_version: String(expectedVersion),
+    })
+
+    await this.mutation<void>(
+      "DELETE",
+
+      `/food-entries/${encodeURIComponent(id)}?${query}`,
+
+      undefined,
+
+      commandKey,
+    )
+  }
+
+  async restoreEntry(
+    id: string,
+
+    expectedVersion: number,
+
+    commandKey?: string,
+  ): Promise<FoodEntry> {
+    return fromEntry(
+      await this.mutation<EntryDTO>(
+        "POST",
+
+        `/food-entries/${encodeURIComponent(id)}/restore`,
+
+        { expected_version: expectedVersion },
+
+        commandKey,
+      ),
+    )
+  }
+
+  updatePreferences(prefs: UpdatePreferencesDTO, commandKey?: string) {
+    return this.mutation<Preferences>(
+      "PATCH",
+
+      "/me/preferences",
+
+      prefs,
+
+      commandKey,
+    )
   }
 
   async entries(query: Record<string, string | number> = {}, trash = false) {
@@ -667,7 +857,7 @@ export class ApiClient {
   }
 
   async history(id: string) {
-    const next = await this.request<Page<MovementDTO>>(
+    const next = await this.request<Page<MovementResponseDTO>>(
       `/food-entries/${encodeURIComponent(id)}/movements?page=1&limit=50`,
     )
 

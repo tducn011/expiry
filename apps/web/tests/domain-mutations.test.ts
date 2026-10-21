@@ -1,24 +1,95 @@
 import { describe, it, expect } from "vitest"
+
 import {
   errorMessage,
-  newCommand,
   createDTO,
   draftDTO,
   decimal,
   ApiClient,
   ApiError,
 } from "../src/api/client"
+
+import type { EntryDTO, MutationResultDTO } from "../src/api/client"
+
 import type { CreatePayload, EntryDraft } from "../src/domain/types"
+
+const entryResponse: EntryDTO = {
+  id: "00000000-0000-4000-8000-000000000001",
+
+  name: "Milk",
+
+  storage_location: "unspecified",
+
+  remaining_quantity: "1.000",
+
+  unit: "g",
+
+  expiry_date: null,
+
+  date_certainty: "unknown",
+
+  date_source: "unknown",
+
+  date_label_type: "unspecified",
+
+  opened_on: null,
+
+  note: null,
+
+  version: 2,
+
+  deleted_at: null,
+
+  created_at: "2026-10-21T00:00:00.000Z",
+
+  updated_at: "2026-10-21T00:00:00.000Z",
+
+  attention: {
+    status: "unknown",
+
+    reason_code: "RECORDED_DATE_UNKNOWN",
+
+    as_of_date: "2026-10-21",
+  },
+}
+
+const mutationResponse: MutationResultDTO = {
+  entry: entryResponse,
+
+  movement: {
+    id: "00000000-0000-4000-8000-000000000002",
+
+    entry_id: entryResponse.id,
+
+    kind: "consume",
+
+    quantity_before: "2.000",
+
+    quantity_after: "1.000",
+
+    reason: null,
+
+    recorded_at: "2026-10-21T00:00:00.000Z",
+  },
+
+  changed: true,
+}
 
 describe("Domain Error Message Translations", () => {
   it("translates VERSION_CONFLICT to Vietnamese data changed advisory", () => {
     const msg = errorMessage(409, "VERSION_CONFLICT")
-    expect(msg).toBe("Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.")
+
+    expect(msg).toBe(
+      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+    )
   })
 
   it("translates CONCURRENT_MODIFICATION to same Vietnamese advisory", () => {
     const msg = errorMessage(409, "CONCURRENT_MODIFICATION")
-    expect(msg).toBe("Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.")
+
+    expect(msg).toBe(
+      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+    )
   })
 
   it("translates INSUFFICIENT_QUANTITY to Vietnamese stock insufficiency warning under both 409 and 422", () => {
@@ -27,77 +98,99 @@ describe("Domain Error Message Translations", () => {
   })
 })
 
-describe("Domain Mutation DTO and Command Construction", () => {
-  it("generates immutable commands with unique UUID idempotency key", () => {
-    const cmd1 = newCommand("owner-123", "POST", "/food-entries", { name: "Milk" })
-    const cmd2 = newCommand("owner-123", "POST", "/food-entries", { name: "Milk" })
-
-    expect(cmd1.owner).toBe("owner-123")
-    expect(cmd1.method).toBe("POST")
-    expect(cmd1.path).toBe("/food-entries")
-    expect(JSON.parse(cmd1.body!)).toEqual({ name: "Milk" })
-    expect(cmd1.key).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-    )
-    expect(cmd1.key).not.toBe(cmd2.key)
-    expect(Object.isFrozen(cmd1)).toBe(true)
-  })
-
+describe("Domain Mutation DTO and ApiClient Methods", () => {
   it("formats createDTO with decimal quantity and metadata", () => {
     const payload: CreatePayload = {
       name: "Trứng gà",
+
       storage_location: "Ngăn mát",
+
       initial_quantity: 10,
+
       unit: "piece",
+
       expiry_date: "2026-11-01",
+
       expiry_date_certainty: "exact",
+
       expiry_date_source: "printed_label",
+
       expiry_date_label_type: "use_by",
+
       opened_on: null,
+
       note: "Hộp 10 quả",
     }
 
     const dto = createDTO(payload)
+
     expect(dto.name).toBe("Trứng gà")
+
     expect(dto.quantity).toBe("10")
+
     expect(dto.unit).toBe("piece")
+
     expect(dto.storage_location).toBe("Ngăn mát")
+
     expect(dto.date_certainty).toBe("known")
+
     expect(dto.date_source).toBe("printed_label")
+
     expect(dto.date_label_type).toBe("use_by")
   })
 
   it("formats draftDTO correctly for PATCH edit mutation", () => {
     const patch: EntryDraft = {
       name: "Sữa chua nếp cẩm",
+
       storage_location: "Tủ lạnh",
+
       expiry_date: "2026-10-30",
+
       expiry_date_certainty: "estimated",
+
       expiry_date_source: "user_estimate",
+
       expiry_date_label_type: "best_before",
+
       opened_on: "2026-10-20",
+
       note: "Đã mở 1 hộp",
     }
 
     const dto = draftDTO(patch)
+
     expect(dto.name).toBe("Sữa chua nếp cẩm")
+
     expect(dto.storage_location).toBe("Tủ lạnh")
+
     expect(dto.date_certainty).toBe("estimated")
+
     expect(dto.date_source).toBe("user_estimate")
+
     expect(dto.date_label_type).toBe("best_before")
+
     expect(dto.opened_on).toBe("2026-10-20")
+
     expect(dto.note).toBe("Đã mở 1 hộp")
   })
 
   it("preserves canonical user_entered source in draftDTO", () => {
     const draft: EntryDraft = {
       name: "Sữa",
+
       storage_location: null,
+
       expiry_date: "2026-10-30",
+
       expiry_date_certainty: "exact",
+
       expiry_date_source: "user_entered",
+
       expiry_date_label_type: "use_by",
+
       opened_on: null,
+
       note: null,
     }
 
@@ -106,97 +199,288 @@ describe("Domain Mutation DTO and Command Construction", () => {
 
   it("serializes decimal quantities according to API validation constraints", () => {
     expect(decimal(1)).toBe("1")
+
     expect(decimal(1.5)).toBe("1.5")
+
     expect(decimal(0.125)).toBe("0.125")
+
     expect(decimal(100.2)).toBe("100.2")
+
     expect(() => decimal(-1)).toThrow(ApiError)
+
     expect(() => decimal(1.0001)).toThrow(ApiError)
   })
 
-  it("delivers Idempotency-Key header on mutation requests via ApiClient", async () => {
-    let capturedHeaders: Headers | undefined
+  it("routes typed mutations, serializes DTOs, and sends CSRF and idempotency headers", async () => {
+    const responses: Array<{
+      body?: unknown
+
+      status: number
+    }> = [
+      { body: entryResponse, status: 201 },
+
+      { body: mutationResponse, status: 201 },
+
+      { body: mutationResponse, status: 201 },
+
+      { body: entryResponse, status: 200 },
+
+      { status: 204 },
+
+      { body: entryResponse, status: 200 },
+
+      {
+        body: {
+          timezone: "Asia/Ho_Chi_Minh",
+
+          attention_lead_days: 2,
+
+          version: 3,
+        },
+
+        status: 200,
+      },
+    ]
+
+    const calls: Array<{
+      url: string
+
+      init: RequestInit
+    }> = []
+
+    let responseIndex = 0
+
     const client = new ApiClient(
-      async (_url, init) => {
-        capturedHeaders = new Headers(init?.headers)
-        return new Response(JSON.stringify({ ok: true, version: 2 }), {
-          status: 200,
+      async (input, init = {}) => {
+        calls.push({ url: String(input), init })
+
+        const response = responses[responseIndex++]
+
+        if (response.status === 204) return new Response(null, { status: 204 })
+
+        return new Response(JSON.stringify(response.body), {
+          status: response.status,
+
           headers: { "Content-Type": "application/json" },
         })
       },
+
       "/api/v1",
+
       1000,
     )
 
-    const cmd = newCommand("user-1", "POST", "/food-entries/123/movements", {
-      expected_version: 1,
-      kind: "consume",
-      amount: "200",
-      reason: "Nấu ăn",
+    client.csrf = "csrf-token"
+
+    const payload: CreatePayload = {
+      name: "Trứng gà",
+
+      storage_location: "Ngăn mát",
+
+      initial_quantity: 10,
+
+      unit: "piece",
+
+      expiry_date: "2026-11-01",
+
+      expiry_date_certainty: "exact",
+
+      expiry_date_source: "printed_label",
+
+      expiry_date_label_type: "use_by",
+
+      opened_on: null,
+
+      note: "Hộp 10 quả",
+    }
+
+    const createBody = createDTO(payload)
+
+    const created = await client.createEntry(createBody)
+
+    const movementBody = {
+      expected_version: 2,
+
+      kind: "consume" as const,
+
+      amount: "1",
+
+      reason: "Ăn một quả",
+    }
+
+    const movement = await client.recordMovement("entry/1", movementBody)
+
+    const recountBody = {
+      expected_version: 2,
+
+      actual_quantity: "3",
+
+      reason: "Kiểm kê",
+    }
+
+    await client.recount("entry/1", recountBody)
+
+    const draft: EntryDraft = {
+      name: "Sữa",
+
+      storage_location: "Tủ lạnh",
+
+      expiry_date: null,
+
+      expiry_date_certainty: "unknown",
+
+      expiry_date_source: null,
+
+      expiry_date_label_type: null,
+
+      opened_on: null,
+
+      note: null,
+    }
+
+    const editBody = { expected_version: 2, ...draftDTO(draft) }
+
+    await client.updateEntry("entry/1", editBody)
+
+    await client.deleteEntry("entry/1", 3)
+
+    await client.restoreEntry("entry/1", 4)
+
+    const preferencesBody = {
+      expected_version: 2,
+
+      timezone: "Asia/Ho_Chi_Minh",
+
+      attention_lead_days: 2,
+    }
+
+    const preferences = await client.updatePreferences(preferencesBody)
+
+    expect(created.remaining_quantity).toBe(1)
+
+    expect(movement.entry.id).toBe(entryResponse.id)
+
+    expect(movement.movement?.quantity_after).toBe(1)
+
+    expect(preferences.version).toBe(3)
+
+    expect(calls.map((call) => call.url)).toEqual([
+      "/api/v1/food-entries",
+
+      "/api/v1/food-entries/entry%2F1/movements",
+
+      "/api/v1/food-entries/entry%2F1/recounts",
+
+      "/api/v1/food-entries/entry%2F1",
+
+      "/api/v1/food-entries/entry%2F1?expected_version=3",
+
+      "/api/v1/food-entries/entry%2F1/restore",
+
+      "/api/v1/me/preferences",
+    ])
+
+    expect(calls.map((call) => call.init.method)).toEqual([
+      "POST",
+
+      "POST",
+
+      "POST",
+
+      "PATCH",
+
+      "DELETE",
+
+      "POST",
+
+      "PATCH",
+    ])
+
+    expect(JSON.parse(calls[0].init.body as string)).toEqual(createBody)
+
+    expect(JSON.parse(calls[1].init.body as string)).toEqual(movementBody)
+
+    expect(JSON.parse(calls[2].init.body as string)).toEqual(recountBody)
+
+    expect(JSON.parse(calls[3].init.body as string)).toEqual(editBody)
+
+    expect(calls[4].init.body).toBeUndefined()
+
+    expect(JSON.parse(calls[5].init.body as string)).toEqual({
+      expected_version: 4,
     })
 
-    const res = await client.execute<{ ok: boolean; version: number }>(cmd)
-    expect(res.ok).toBe(true)
-    expect(res.version).toBe(2)
-    expect(capturedHeaders?.get("Idempotency-Key")).toBe(cmd.key)
-    expect(capturedHeaders?.get("Content-Type")).toBe("application/json")
-  })
+    expect(JSON.parse(calls[6].init.body as string)).toEqual(preferencesBody)
 
-  it("formats soft-delete command with expected_version query parameter", () => {
-    const owner = "owner-trash-test"
-    const id = "food-entry-uuid-999"
-    const expectedVersion = 3
+    for (const call of calls) {
+      const headers = new Headers(call.init.headers)
 
-    const cmd = newCommand(
-      owner,
-      "DELETE",
-      `/food-entries/${id}?expected_version=${expectedVersion}`,
+      expect(headers.get("Idempotency-Key")).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+      )
+
+      expect(headers.get("X-CSRF-Token")).toBe("csrf-token")
+    }
+
+    expect(new Headers(calls[0].init.headers).get("Content-Type")).toBe(
+      "application/json",
     )
 
-    expect(cmd.owner).toBe(owner)
-    expect(cmd.method).toBe("DELETE")
-    expect(cmd.path).toBe(`/food-entries/${id}?expected_version=3`)
-    expect(cmd.body).toBeUndefined()
-    expect(cmd.key).toBeDefined()
+    expect(new Headers(calls[4].init.headers).get("Content-Type")).toBeNull()
   })
 
-  it("formats restore command with expected_version JSON payload", () => {
-    const owner = "owner-restore-test"
-    const id = "food-entry-uuid-888"
-    const expectedVersion = 4
+  it("retries uncertain mutations with the same caller-provided key", async () => {
+    const keys: string[] = []
 
-    const cmd = newCommand(owner, "POST", `/food-entries/${id}/restore`, {
-      expected_version: expectedVersion,
-    })
+    let calls = 0
 
-    expect(cmd.owner).toBe(owner)
-    expect(cmd.method).toBe("POST")
-    expect(cmd.path).toBe(`/food-entries/${id}/restore`)
-    expect(JSON.parse(cmd.body!)).toEqual({ expected_version: 4 })
-    expect(cmd.key).toBeDefined()
-  })
+    const client = new ApiClient(
+      async (_url, init) => {
+        keys.push(new Headers(init?.headers).get("Idempotency-Key") ?? "")
 
-  it("formats recount command with expected_version, actual_quantity, and reason", () => {
-    const owner = "owner-recount-test"
-    const id = "food-entry-uuid-777"
-    const expectedVersion = 2
-    const actualQuantity = 350
-    const reason = "Cân lại thực tế trong tủ"
+        calls++
 
-    const cmd = newCommand(owner, "POST", `/food-entries/${id}/recounts`, {
-      expected_version: expectedVersion,
-      actual_quantity: decimal(actualQuantity),
-      reason: reason.trim(),
-    })
+        if (calls === 1) throw new TypeError("network unavailable")
 
-    expect(cmd.owner).toBe(owner)
-    expect(cmd.method).toBe("POST")
-    expect(cmd.path).toBe(`/food-entries/${id}/recounts`)
-    expect(JSON.parse(cmd.body!)).toEqual({
-      expected_version: 2,
-      actual_quantity: "350",
-      reason: "Cân lại thực tế trong tủ",
-    })
-    expect(cmd.key).toBeDefined()
+        return new Response(JSON.stringify(entryResponse), {
+          status: 201,
+
+          headers: { "Content-Type": "application/json" },
+        })
+      },
+
+      "/api/v1",
+
+      1000,
+    )
+
+    await client.createEntry(
+      createDTO({
+        name: "Milk",
+
+        storage_location: null,
+
+        initial_quantity: 1,
+
+        unit: "g",
+
+        expiry_date: null,
+
+        expiry_date_certainty: "unknown",
+
+        expiry_date_source: null,
+
+        expiry_date_label_type: null,
+
+        opened_on: null,
+
+        note: null,
+      }),
+
+      "stable-command-key",
+    )
+
+    expect(keys).toEqual(["stable-command-key", "stable-command-key"])
   })
 
   it("formats consume and discard movement commands with ledger consistency parameters", () => {
