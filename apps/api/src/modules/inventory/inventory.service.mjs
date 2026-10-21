@@ -24,7 +24,10 @@ export class InventoryService {
 
   async getEntry(owner, id) {
     const entry = await this.repo.get(owner, id, false);
-    return entryDTO(entry, publicAttention(entry, await this.readPreferences(owner), this.clock()));
+    const prefs = (entry.timezone && entry.attention_lead_days !== undefined)
+      ? { timezone: entry.timezone, attention_lead_days: entry.attention_lead_days }
+      : await this.readPreferences(owner);
+    return entryDTO(entry, publicAttention(entry, prefs, this.clock()));
   }
 
   async editEntry(owner, idempotencyKey, id, input) {
@@ -44,6 +47,10 @@ export class InventoryService {
   }
 
   async listMovements(owner, id, { page = 1, limit = 20 } = {}) {
+    if (this.repo.listMovements) {
+      const { events, total } = await this.repo.listMovements(owner, id, { page, limit });
+      return { items: events.map(movementDTO), pagination: { page: Number(page), limit: Number(limit), total } };
+    }
     const movements = await this.repo.get(owner, id, true);
     const start = (page - 1) * limit;
     return { items: movements.slice(start, start + limit).map(movementDTO), pagination: { page, limit, total: movements.length } };
