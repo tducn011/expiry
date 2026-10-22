@@ -4,6 +4,11 @@ import { createApp } from '../src/app.mjs';
 import express from 'express';
 import { idempotencyMiddleware, errorHandler } from '../src/shared/middleware.mjs';
 import { DomainError, decimal } from '../src/shared/domain.mjs';
+import { closePools } from '../src/shared/connection.mjs';
+
+test.after(async () => {
+  await closePools();
+});
 
 test('App initialization and healthcheck', async () => {
   const app = createApp();
