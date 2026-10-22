@@ -1,5 +1,7 @@
-import { DEMO_DATE } from "../mockApi"
-import type { Attention, FoodEntry } from "../mockApi"
+import { useState, useEffect } from "react"
+
+import type { Attention, FoodEntry } from "../domain/types"
+
 import {
   attentionGroups,
   attentionGuidance,
@@ -7,75 +9,128 @@ import {
   fmtDate,
   locations,
 } from "../lib/format"
+
 import Grid from "../components/layout/Grid"
+
 import PageHeader from "../components/layout/PageHeader"
+
 import Button from "../components/ui/Button"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import Icon from "../components/ui/Icon"
+
 import Select from "../components/ui/Select"
+
 import FoodCard from "./FoodCard"
+
 import type { DetailAction } from "./Detail"
 
 export type InventoryFilters = {
   query: string
+
   location: string
+
   lifecycle: "Còn hàng" | "Đã hết" | "Tất cả"
+
   attentionFilter: Attention | "all"
 }
 
 export const defaultFilters: InventoryFilters = {
   query: "",
+
   location: "Tất cả vị trí",
+
   lifecycle: "Còn hàng",
+
   attentionFilter: "all",
 }
 
 export default function Inventory({
   mode,
+
+  asOfDate,
+
+  demo = false,
+
   foods,
+
   allFoods,
+
   counts,
+
   leadDays,
+
   attention,
+
   filters,
+
   setFilters,
+
   onOpen,
+
   onAdd,
+
   onShowAttention,
+
   onShowInventory,
+
   onAction,
 }: {
+  asOfDate: string
+
+  demo?: boolean
+
   mode: "inventory" | "attention"
+
   foods: FoodEntry[]
+
   allFoods: FoodEntry[]
+
   counts: Record<Attention, number>
+
   leadDays: number
+
   attention: (f: FoodEntry) => Attention
+
   filters: InventoryFilters
+
   setFilters: (f: InventoryFilters) => void
+
   onOpen: (f: FoodEntry) => void
+
   onAdd: () => void
+
   onShowAttention: () => void
+
   onShowInventory: () => void
+
   onAction: (food: FoodEntry, action: DetailAction) => void
 }) {
   const isAttention = mode === "attention"
+
   const activeFoods = allFoods.filter((food) => food.remaining_quantity > 0)
+
   const dateCounts = {
     exact: activeFoods.filter((food) => food.expiry_date_certainty === "exact")
       .length,
+
     estimated: activeFoods.filter(
       (food) => food.expiry_date_certainty === "estimated",
     ).length,
+
     unknown: activeFoods.filter((food) => !food.expiry_date).length,
   }
+
   const set = <K extends keyof InventoryFilters,>(
     k: K,
+
     v: InventoryFilters[K],
   ) => setFilters({ ...filters, [k]: v })
 
   const toggleAttentionFilter = (key: Attention) => {
     if (counts[key] === 0) return
+
     set("attentionFilter", filters.attentionFilter === key ? "all" : key)
   }
 
@@ -84,6 +139,7 @@ export default function Inventory({
       <FoodCard
         key={f.id}
         food={f}
+        asOfDate={asOfDate}
         attention={attention(f)}
         onOpen={() => onOpen(f)}
         onAction={(action) => onAction(f, action)}
@@ -91,10 +147,29 @@ export default function Inventory({
     ))
 
   const urgentTotal = counts.past + counts.today + counts.soon
+
+  const [searchInput, setSearchInput] = useState(filters.query)
+
+  useEffect(() => {
+    setSearchInput(filters.query)
+  }, [filters.query])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== filters.query) {
+        set("query", searchInput)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchInput, filters.query, set])
+
   const isFilteredByAttention = filters.attentionFilter !== "all"
+
   const filterKeys: Attention[] = isAttention
     ? ["past", "today", "soon", "unknown"]
     : ["past", "today", "soon", "unknown", "later"]
+
   const hasFilters =
     filters.query !== "" ||
     filters.location !== defaultFilters.location ||
@@ -104,12 +179,10 @@ export default function Inventory({
   return (
     <Grid className="page">
       <PageHeader
-        eyebrow={`Dữ liệu demo · ${fmtDate(DEMO_DATE)}`}
+        eyebrow={fmtDate(asOfDate)}
         title={isAttention ? "Cần chú ý" : "Kho thực phẩm"}
         description={
-          isAttention
-            ? "Bắt đầu từ những thực phẩm cần quyết định, thay vì phải quét toàn bộ kho."
-            : "Xem lại kho trước khi mua thêm. Cập nhật từng món ngay trong danh sách."
+          isAttention ? undefined : "Xem lại kho trước khi mua thêm."
         }
         action={
           <Button variant="cta" onClick={onAdd} icon="plus">
@@ -117,6 +190,64 @@ export default function Inventory({
           </Button>
         }
       />
+
+      {/* View Tabs: Tất cả / Cần chú ý / Đã dùng hết */}
+      <div className="col-span-full">
+        <nav
+          className="inventory-view-tabs"
+          role="tablist"
+          aria-label="Chế độ xem kho"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!isAttention && filters.lifecycle !== "Đã hết"}
+            className={`inventory-view-tab ${
+              !isAttention && filters.lifecycle !== "Đã hết" ? "is-active" : ""
+            }`}
+            onClick={() => {
+              if (isAttention) onShowInventory()
+
+              set("lifecycle", "Còn hàng")
+
+              set("attentionFilter", "all")
+            }}
+          >
+            Tất cả
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={isAttention}
+            className={`inventory-view-tab ${isAttention ? "is-active" : ""}`}
+            onClick={() => {
+              if (!isAttention) onShowAttention()
+            }}
+          >
+            Cần chú ý
+            {urgentTotal > 0 && (
+              <span className="tab-badge">{urgentTotal}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!isAttention && filters.lifecycle === "Đã hết"}
+            className={`inventory-view-tab ${
+              !isAttention && filters.lifecycle === "Đã hết" ? "is-active" : ""
+            }`}
+            onClick={() => {
+              if (isAttention) onShowInventory()
+
+              set("lifecycle", "Đã hết")
+
+              set("attentionFilter", "all")
+            }}
+          >
+            Đã dùng hết
+          </button>
+        </nav>
+      </div>
 
       {/* Urgency strip — interactive filters: logically grouped right above the list */}
       <div className="col-span-full">
@@ -127,7 +258,9 @@ export default function Inventory({
         >
           {filterKeys.map((key) => {
             const isActive = filters.attentionFilter === key
+
             const isZero = counts[key] === 0
+
             return (
               <button
                 type="button"
@@ -188,16 +321,20 @@ export default function Inventory({
           <Icon name="search" />
           <input
             aria-label="Tìm theo tên"
-            value={filters.query}
-            onChange={(e) => set("query", e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Tìm tên thực phẩm"
           />
-          {filters.query && (
+          {searchInput && (
             <button
               type="button"
               className="clear-search"
               aria-label="Xóa tìm kiếm"
-              onClick={() => set("query", "")}
+              onClick={() => {
+                setSearchInput("")
+
+                set("query", "")
+              }}
             >
               ×
             </button>
@@ -208,6 +345,7 @@ export default function Inventory({
           value={filters.location}
           options={[defaultFilters.location, ...locations].map((value) => ({
             value,
+
             label: value,
           }))}
           onChange={(value) => set("location", value)}
@@ -218,8 +356,10 @@ export default function Inventory({
             value={filters.attentionFilter}
             options={[
               { value: "all", label: "Mọi trạng thái" },
+
               ...filterKeys.map((value) => ({
                 value,
+
                 label: attentionLabel[value],
               })),
             ]}
@@ -233,6 +373,7 @@ export default function Inventory({
             value={filters.lifecycle}
             options={["Còn hàng", "Đã hết", "Tất cả"].map((value) => ({
               value,
+
               label: value,
             }))}
             onChange={(value) =>
@@ -253,57 +394,71 @@ export default function Inventory({
             <span>{foods.length} món</span>
           </div>
           {!foods.length ? (
-            <EmptyState
-              eyebrow={
-                hasFilters
-                  ? "KHÔNG CÓ KẾT QUẢ"
-                  : isAttention
-                    ? "ĐÃ XEM HẾT"
-                    : "KHO TRỐNG"
-              }
-              title={
-                hasFilters
-                  ? "Không có món khớp bộ lọc"
-                  : isAttention
-                    ? "Chưa có món cần chú ý theo dữ liệu đã ghi"
-                    : "Thêm thực phẩm đầu tiên"
-              }
-              body={
-                hasFilters
-                  ? "Thử đổi hoặc đặt lại bộ lọc để xem các món khác."
-                  : isAttention
-                    ? "Bạn có thể xem toàn bộ kho trước khi mua thêm. Các món chưa có ngày vẫn cần được kiểm tra thực tế."
-                    : "Tên, lượng và đơn vị là đủ để bắt đầu. Ngày và vị trí có thể bổ sung sau."
-              }
-              action={
-                <Button
-                  variant={
-                    hasFilters
-                      ? "outline"
-                      : isAttention
-                        ? "secondary"
-                        : "cta"
-                  }
-                  icon={!hasFilters && !isAttention ? "plus" : undefined}
-                  onClick={
-                    hasFilters
-                      ? () => setFilters(defaultFilters)
-                      : isAttention
-                        ? onShowInventory
-                        : onAdd
-                  }
-                >
-                  {hasFilters
-                    ? "Đặt lại bộ lọc"
-                    : isAttention
-                      ? "Xem kho thực phẩm"
-                      : "Thêm thực phẩm đầu tiên"}
-                </Button>
-              }
-            />
+            !allFoods.length ? (
+              <EmptyState
+                eyebrow="KHO TRỐNG"
+                title="Chưa có thực phẩm nào"
+                body="Thêm thực phẩm đầu tiên để bắt đầu theo dõi hạn sử dụng."
+                action={
+                  <Button variant="cta" icon="plus" onClick={onAdd}>
+                    Thêm thực phẩm
+                  </Button>
+                }
+              />
+            ) : filters.query &&
+              !isFilteredByAttention &&
+              filters.location === defaultFilters.location ? (
+              <EmptyState
+                eyebrow="TÌM KIẾM"
+                title={`Không tìm thấy "${filters.query}"`}
+                body="Kiểm tra lại chính tả hoặc xóa từ khóa tìm kiếm."
+                action={
+                  <Button variant="outline" onClick={() => set("query", "")}>
+                    Xóa tìm kiếm
+                  </Button>
+                }
+              />
+            ) : hasFilters ? (
+              <EmptyState
+                eyebrow="BỘ LỌC"
+                title="Không có món khớp bộ lọc"
+                body="Thử đổi hoặc đặt lại bộ lọc để xem các món khác."
+                action={
+                  <Button
+                    variant="outline"
+                    onClick={() => setFilters(defaultFilters)}
+                  >
+                    Đặt lại bộ lọc
+                  </Button>
+                }
+              />
+            ) : isAttention ? (
+              <EmptyState
+                eyebrow="HOÀN TẤT"
+                title="Chưa có món cần chú ý"
+                body="Tất cả thực phẩm trong kho đều trong hạn hoặc chưa đến ngày theo dõi."
+                action={
+                  <Button variant="secondary" onClick={onShowInventory}>
+                    Xem kho thực phẩm
+                  </Button>
+                }
+              />
+            ) : (
+              <EmptyState
+                eyebrow="KHO TRỐNG"
+                title="Thêm thực phẩm đầu tiên"
+                body="Tên, lượng và đơn vị là đủ để bắt đầu."
+                action={
+                  <Button variant="cta" icon="plus" onClick={onAdd}>
+                    Thêm thực phẩm đầu tiên
+                  </Button>
+                }
+              />
+            )
           ) : isAttention ? (
             attentionGroups.map(([key, title]) => {
               const group = foods.filter((f) => attention(f) === key)
+
               return group.length ? (
                 <section className="attention-group" key={key}>
                   <h2>
@@ -357,9 +512,6 @@ export default function Inventory({
                 </div>
               </dl>
             </div>
-            <p className="demo-note">
-              Dữ liệu demo trong phiên này. Tải lại trang sẽ đặt lại dữ liệu.
-            </p>
           </aside>
         )}
       </div>

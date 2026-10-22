@@ -30,3 +30,27 @@ Mục lục và trạng thái của các biên bản quyết định kiến trú
 - [08-architecture/07_Architecture_Components_and_Alternatives.md](07_Architecture_Components_and_Alternatives.md)
 - [08-architecture/components.md](components.md)
 - [08-architecture/deployment.md](deployment.md)
+
+## Definitions and assumptions
+
+This index links current authored docs; approval status remains in each referenced artifact.
+
+## Analysis
+
+Use current API contracts and migrations as implementation authority.
+
+## Decisions and rationale
+
+The index does not confer approval on linked proposals.
+
+## Dependencies
+
+- [Documentation layout](../../../.tmb/layouts/docs/LAYOUT.md)
+
+## Open questions
+
+See the linked decisions and dated reconciliation report.
+
+## Verification criteria
+
+All index links must resolve to the current checkout.

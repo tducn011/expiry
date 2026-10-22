@@ -1,10 +1,10 @@
 <!-- trustmebro -->
 # Expiry — Docs Index
 
-> **Phân loại tài liệu theo môn học và chức năng.**  
-> Tất cả docs đã được tổ chức vào `architecture/` theo 15 subfolder.  
-> **Kiến trúc chính thức (Locked Architecture):** Monorepo + Node.js Modular Monolith (`backend/`) + Python Scan Service (`services/python-scan/`) + MySQL (`database/mysql/`). Bỏ toàn bộ ML/DL, training pipeline, model evaluation và LLM.  
-> Cập nhật: 2026-10-10.
+> **Phân loại tài liệu theo môn học và chức năng.**
+> Tất cả docs đã được tổ chức vào `architecture/` theo 15 subfolder.
+> **Runtime hiện được mô tả trong source:** React/Vite (`apps/web/`) + Express (`apps/api/`) + Python Scan (`services/python-scan/`) + MySQL (`database/mysql/`). OCR sample/training table chỉ là đề xuất review ở [schema input/output](architecture/06-data-model/schema-input-output.md), chưa thuộc schema hiện tại.
+> Cập nhật: 2026-10-13. Các snapshot/historical exports giữ nguyên nội dung gốc; trạng thái hiện tại xem [reconciliation report](architecture/10-testing/schema-reconciliation-2026-10-13.md).
 
 ---
 
@@ -81,6 +81,7 @@ docs/architecture/
 | [entities-and-migrations.md](architecture/06-data-model/entities-and-migrations.md) | Entity purpose, schema vật lý và migration plan |
 | [dictionary.md](architecture/06-data-model/dictionary.md) | Data dictionary — định nghĩa mọi trường dữ liệu |
 | [data-flows.md](architecture/06-data-model/data-flows.md) | Logical data movement, stores và DFD |
+| [schema-input-output.md](architecture/06-data-model/schema-input-output.md) | Current API/schema mapping and review-only OCR sample proposal |
 | [04_Data_Flow_UML_and_Ownership.md](architecture/06-data-model/04_Data_Flow_UML_and_Ownership.md) | Data flow, system map, ownership diagram |
 | [erd-workbench/](architecture/06-data-model/erd-workbench/) | MySQL Workbench ERD source files |
 
@@ -115,6 +116,7 @@ docs/architecture/
 | [test-catalog.md](architecture/10-testing/test-catalog.md) | Test cases, E2E và coverage gates |
 | [coverage.md](architecture/10-testing/coverage.md) | End-to-end artifact coverage map |
 | [verification-report.md](architecture/10-testing/verification-report.md) | Kết quả verification theo từng requirement |
+| [schema-reconciliation-2026-10-13.md](architecture/10-testing/schema-reconciliation-2026-10-13.md) | Current schema/forms source reconciliation |
 
 ### 11 — Traceability
 | Doc | Mô tả |
@@ -180,9 +182,9 @@ docs/architecture/
 | [state-and-integration.md](architecture/09-advanced-web/state-and-integration.md) | Frontend state management và API integration |
 | [extension-process.md](architecture/09-advanced-web/extension-process.md) | Browser extension integration process |
 
-> **Cross-references từ Advanced Web:**  
-> • API: [endpoints.md](architecture/07-api/endpoints.md) · [authentication.md](architecture/07-api/authentication.md)  
-> • Testing: [test-catalog.md](architecture/10-testing/test-catalog.md) · [coverage.md](architecture/10-testing/coverage.md)  
+> **Cross-references từ Advanced Web:**
+> • API: [endpoints.md](architecture/07-api/endpoints.md) · [authentication.md](architecture/07-api/authentication.md)
+> • Testing: [test-catalog.md](architecture/10-testing/test-catalog.md) · [coverage.md](architecture/10-testing/coverage.md)
 > • NFR: [nonfunctional-requirements.md](architecture/03-requirements-features/nonfunctional-requirements.md)
 
 ---
@@ -239,6 +241,6 @@ docs/architecture/
 
 ---
 
-> **Source of truth IDs:** [`architecture/11-traceability/registry.json`](architecture/11-traceability/registry.json)  
-> **Root project layout:** [`../LAYOUT.md`](../LAYOUT.md)  
+> **Source of truth IDs:** [`architecture/11-traceability/registry.json`](architecture/11-traceability/registry.json)
+> **Root project layout:** [`../LAYOUT.md`](../LAYOUT.md)
 > **TMB conventions:** [`architecture/12-process/tmb-skills.md`](architecture/12-process/tmb-skills.md)

@@ -27,10 +27,17 @@ function text(value, max, nullable=false) {
   if (typeof value!=='string' || [...value].length>max || !nullable && value.trim().length===0) invalid();
   return value;
 }
-export const metadataFields=['name','storage_location','expiry_date','date_certainty','date_source','date_label_type','opened_on','note'];
+export const barcodeFormats=['EAN_13','EAN_8','CODE_128','CODE_39','ITF','QR_CODE','DATA_MATRIX','PDF_417','AZTEC','other'];
+export const metadataFields=['name','storage_location','expiry_date','date_certainty','date_source','date_label_type','opened_on','note','barcode','barcode_format'];
 export function metadata(value) {
-  const m={name:value.name,storage_location:value.storage_location===undefined?'unspecified':value.storage_location,expiry_date:value.expiry_date??null,date_certainty:value.date_certainty===undefined?'unknown':value.date_certainty,date_source:value.date_source===undefined?'unknown':value.date_source,date_label_type:value.date_label_type===undefined?'unspecified':value.date_label_type,opened_on:value.opened_on??null,note:value.note??null};
+  const m={name:value.name,storage_location:value.storage_location===undefined?'unspecified':value.storage_location,expiry_date:value.expiry_date??null,date_certainty:value.date_certainty===undefined?'unknown':value.date_certainty,date_source:value.date_source===undefined?'unknown':value.date_source,date_label_type:value.date_label_type===undefined?'unspecified':value.date_label_type,opened_on:value.opened_on??null,note:value.note??null,barcode:value.barcode??null,barcode_format:value.barcode_format??null};
   m.name=text(m.name,200).trim(); m.storage_location=text(m.storage_location,100).trim(); text(m.note,1000,true); date(m.expiry_date); date(m.opened_on);
+  if (m.barcode !== null) {
+    if (typeof m.barcode !== 'string' || m.barcode.trim().length === 0 || [...m.barcode].length > 64) invalid();
+    if (m.barcode_format !== null && !barcodeFormats.includes(m.barcode_format)) invalid();
+  } else if (m.barcode_format !== null) {
+    invalid();
+  }
   if (!['known','estimated','unknown'].includes(m.date_certainty) || !['printed_label','user_entered','user_estimate','unknown'].includes(m.date_source) || !['use_by','best_before','unspecified'].includes(m.date_label_type)) invalid();
   if (m.date_certainty==='unknown' && (m.expiry_date!==null || m.date_source!=='unknown' || m.date_label_type!=='unspecified')) invalid();
   if (m.date_certainty==='estimated' && (m.expiry_date===null || m.date_source!=='user_estimate')) invalid();

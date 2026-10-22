@@ -11,7 +11,7 @@ Tạo draft nhu cầu có provenance; không xem persona là stakeholder validat
 ## Evidence sources
 
 - [00-context/source-register.md](../00-context/source-register.md)
-- [Current FINAL CHECK persona crosswalk](final-check-persona-alignment.md)
+- [Current FINAL CHECK persona crosswalk](../01-personas/final-check-persona-alignment.md)
 
 ## Definitions and assumptions
 
@@ -37,7 +37,7 @@ User goals from P1/P2/P3 are NEED-01…03. Product reviewer coordinates scope, H
 
 Nhu cầu công sức hợp lý được đáp ứng trong đường nhập/xem/cập nhật từng sản phẩm; nó không phụ thuộc việc phê duyệt OCR hoặc thao tác hàng loạt. Với P2, lý do ưu tiên và hành động rõ ràng là giả thuyết hỗ trợ quyết định cần thử trong tình huống kế hoạch bữa ăn thay đổi; chưa chứng minh đã giải quyết mọi trở ngại nấu ăn.
 
-Các mã ST-V1-* ở đây là phương án food giữ nguyên nghĩa. FINAL CHECK dùng ST-01…03 cho nhóm stakeholder và SYS-SR-01…07 cho yêu cầu của nhóm; xem [bản đối chiếu](final-check-persona-alignment.md) về quan hệ hỗ trợ, không dùng cùng số để coi hai mã là tương đương.
+Các mã ST-V1-* ở đây là phương án food giữ nguyên nghĩa. FINAL CHECK dùng ST-01…03 cho nhóm stakeholder và SYS-SR-01…07 cho yêu cầu của nhóm; xem [bản đối chiếu](../01-personas/final-check-persona-alignment.md) về quan hệ hỗ trợ, không dùng cùng số để coi hai mã là tương đương.
 
 ## Decisions and rationale
 

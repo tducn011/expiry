@@ -1,34 +1,55 @@
 import { ReactNode } from "react"
+
 import Icon from "../ui/Icon"
 
 export type View = "inventory" | "attention" | "trash" | "settings"
 
 type NavItem = {
   id: View
+
   label: string
+
   icon: string
+
   badge?: number
 }
 
 export default function Shell({
   view,
+
   setView,
+
   children,
+
   onAdd,
+
   displayName,
+
   urgentCount = 0,
+
+  onAuth,
 }: {
   view: View
+
   setView: (v: View) => void
+
   children: ReactNode
+
   onAdd: () => void
+
   displayName: string
+
   urgentCount?: number
+
+  onAuth?: () => void
 }) {
   const sidebarNav: NavItem[] = [
     { id: "inventory", label: "Kho thực phẩm", icon: "box" },
+
     { id: "attention", label: "Cần chú ý", icon: "clock", badge: urgentCount },
+
     { id: "trash", label: "Thùng rác", icon: "trash" },
+
     { id: "settings", label: "Cài đặt", icon: "settings" },
   ]
 
@@ -76,7 +97,12 @@ export default function Shell({
         <p className="sidebar-note">
           Theo ngày bạn đã ghi, không phải đánh giá an toàn thực phẩm.
         </p>
-        <div className="profile">
+        <div
+          className={`profile ${onAuth ? "clickable" : ""}`}
+          onClick={onAuth}
+          role={onAuth ? "button" : undefined}
+          tabIndex={onAuth ? 0 : undefined}
+        >
           <span className="avatar">{displayName.split(" ").pop()?.[0]}</span>
           <span>
             <strong>{displayName}</strong>
@@ -96,7 +122,12 @@ export default function Shell({
           </span>
           <span className="brand-name">Expiry</span>
         </button>
-        <span className="mobile-account" title={displayName}>
+        <span
+          className={`mobile-account ${onAuth ? "clickable" : ""}`}
+          title={displayName}
+          onClick={onAuth}
+          role={onAuth ? "button" : undefined}
+        >
           {displayName}
         </span>
       </header>

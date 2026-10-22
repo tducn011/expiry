@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-10T04:31:15.988Z",
+  "timestamp": "2026-10-13T11:29:58.517Z",
   "identity": {
     "db": "expiry_dev",
     "version": "8.4.11",
@@ -11,34 +11,58 @@
   "tableNames": [
     "api_requests",
     "food_entries",
+    "local_credentials",
     "schema_migrations",
     "stock_movements",
+    "user_sessions",
     "users"
   ],
   "counts": [
     {
       "t": "users",
-      "n": "2"
+      "n": "5"
     },
     {
       "t": "food_entries",
-      "n": "4"
+      "n": "7"
     },
     {
       "t": "stock_movements",
-      "n": "8"
+      "n": "15"
     },
     {
       "t": "api_requests",
-      "n": "0"
+      "n": "14"
+    },
+    {
+      "t": "local_credentials",
+      "n": "3"
+    },
+    {
+      "t": "user_sessions",
+      "n": "3"
+    },
+    {
+      "t": "schema_migrations",
+      "n": "2"
     }
   ],
   "migration": {
     "applied": false,
     "hash": "32f2806e6bc4a2b271e3b93a8978352df6910334d3217501647b0729567b32cc"
   },
-  "seed_fingerprint_before": "f4ccbab03ee484bd097a8f5a48a8f8bfd9adf416f692c69ebabae4ea962dc08b",
-  "seed_fingerprint_after": "f4ccbab03ee484bd097a8f5a48a8f8bfd9adf416f692c69ebabae4ea962dc08b",
+  "migrationVersions": [
+    {
+      "version": 1,
+      "sha256": "32f2806e6bc4a2b271e3b93a8978352df6910334d3217501647b0729567b32cc"
+    },
+    {
+      "version": 2,
+      "sha256": "96bbfdc4b3e1ee6aa454f41eb520fee6b3d12fe71e2c02ae442b887db8833adc"
+    }
+  ],
+  "seed_fingerprint_before": "ccdfe2b9563129c6c587eb67d34f2c390c995d15e038171ab5f04cd81e41a00f",
+  "seed_fingerprint_after": "ccdfe2b9563129c6c587eb67d34f2c390c995d15e038171ab5f04cd81e41a00f",
   "health": "healthy",
   "binding": [
     {

@@ -1,4 +1,5 @@
-import type { Attention, FoodEntry, QuantityMovement } from "../mockApi"
+import type { Attention, FoodEntry, QuantityMovement } from "../domain/types"
+
 import {
   attentionGuidance,
   fmtDate,
@@ -9,68 +10,97 @@ import {
   sourceLabel,
   unitLabel,
 } from "../lib/format"
+
 import Grid from "../components/layout/Grid"
+
+import Breadcrumb from "../components/layout/Breadcrumb"
+
 import Badge from "../components/ui/Badge"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import Icon from "../components/ui/Icon"
 
 export type DetailAction = "consume" | "discard" | "recount" | "history" | "edit" | "date" | "delete"
 
 export default function Detail({
+  timezone = "Asia/Ho_Chi_Minh",
+
   food,
+
   attention,
+
   movements,
+
   onBack,
+
+  parentLabel = "Kho thực phẩm",
+
   onAction,
 }: {
+  timezone?: string
+
   food: FoodEntry
+
   attention: Attention
+
   movements: QuantityMovement[]
+
   onBack: () => void
+
+  parentLabel?: string
+
   onAction: (a: DetailAction) => void
 }) {
   const unit = unitLabel[food.unit]
+
   const empty = food.remaining_quantity === 0
+
   const guidance = attentionGuidance[attention]
 
   const facts: [string, string, string?][] = [
     ["Vị trí lưu trữ", food.storage_location || "Chưa chọn vị trí"],
+
     ...(food.opened_on
       ? [["Ngày mở bao bì", fmtDate(food.opened_on)] as [string, string]]
       : []),
+
     ...(food.expiry_date_label_type && food.expiry_date_label_type !== "unknown"
       ? [
           [
             "Loại nhãn ngày",
+
             labelTypeLabel[food.expiry_date_label_type],
           ] as [string, string],
         ]
       : []),
+
     ...(food.expiry_date_source
       ? [
           [
             "Nguồn ngày",
+
             sourceLabel[food.expiry_date_source],
           ] as [string, string],
         ]
       : []),
+
+    ...(food.barcode ? [["Mã vạch", food.barcode] as [string, string]] : []),
+
     ...(food.note ? [["Ghi chú", food.note] as [string, string]] : []),
   ]
 
   return (
     <Grid className="page">
-      <button
-        className="back-link col-span-full"
-        onClick={onBack}
-        type="button"
-      >
-        <Icon name="back" />
-        Quay lại kho
-      </button>
+      <Breadcrumb
+        className="col-span-full"
+        items={[{ label: parentLabel, onNavigate: onBack }]}
+      />
 
       {/* Main Action Card: Logically together => Physically together */}
-      <Card className="detail-main col-span-full lg:col-span-7">
+      <Card className="detail-main col-span-full xl:col-span-7">
         <div className="detail-title">
           <div>
             <span className={`status-pill ${empty ? "is-empty" : "is-active"}`}>
@@ -138,11 +168,7 @@ export default function Detail({
               : guidance.body}
           </p>
           {attention === "unknown" && !empty && (
-            <Button
-              variant="cta"
-              icon="edit"
-              onClick={() => onAction("date")}
-            >
+            <Button variant="cta" icon="edit" onClick={() => onAction("date")}>
               Bổ sung ngày theo dõi
             </Button>
           )}
@@ -193,7 +219,7 @@ export default function Detail({
       </Card>
 
       {/* Aside: Metadata and Movement Audit Log */}
-      <div className="detail-aside col-span-full lg:col-span-5">
+      <div className="detail-aside col-span-full xl:col-span-5">
         <Card title="Thông tin bổ sung">
           <dl className="facts">
             {facts.map(([k, v, note]) => (
@@ -229,7 +255,7 @@ export default function Detail({
                 </span>
                 <p>
                   <strong>{movementLabel[m.kind]}</strong>
-                  <small>{fmtTime(m.recorded_at)}</small>
+                  <small>{fmtTime(m.recorded_at, timezone)}</small>
                 </p>
                 <em>
                   {fmtQty(m.quantity_before)} → {fmtQty(m.quantity_after)}{" "}

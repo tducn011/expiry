@@ -126,3 +126,19 @@ MYSQL_PASSWORD=secret_password
 - Lệnh `docker compose up --build` khởi động thành công 4 services.
 - Container `backend` có thể kết nối tới `mysql` và `python-scan`.
 - Container `python-scan` không bị lộ port trực tiếp ra Internet khi cấu hình mạng production.
+
+## Definitions and assumptions
+
+Deployment descriptions are design material unless a dated runtime record explicitly verifies a deployment.
+
+## Analysis
+
+Current source composition is local repository evidence, not production deployment evidence.
+
+## Open questions
+
+Production host, operations, and security acceptance remain open.
+
+## Related documents
+
+- [Dated source reconciliation](../10-testing/schema-reconciliation-2026-10-13.md)

@@ -49,7 +49,7 @@ The feedback cycle is a reasoned hypothesis from persona pain/record ownership, 
 
 - [02-challenges/needs-opportunities.md](../02-challenges/needs-opportunities.md)
 - [08-architecture/components.md](../08-architecture/components.md)
-- [17-python-ocr/integration-contract.md](../17-python-ocr/integration-contract.md)
+- [17-python-ocr/integration-contract.md](../07-api/integration-contract.md)
 
 ## Open questions
 
@@ -61,7 +61,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [11-traceability/README.md](../11-traceability/README.md)
 - [02-challenges/needs-opportunities.md](../02-challenges/needs-opportunities.md)
 - [08-architecture/components.md](../08-architecture/components.md)
-- [17-python-ocr/integration-contract.md](../17-python-ocr/integration-contract.md)
+- [17-python-ocr/integration-contract.md](../07-api/integration-contract.md)
 
 ## Verification criteria
 

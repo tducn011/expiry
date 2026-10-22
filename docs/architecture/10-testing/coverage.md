@@ -39,10 +39,10 @@ Unresolved: stakeholder approval, local persona/task validity, legacy scope conf
 
 ## Dependencies
 
-- [traceability/registry.json](registry.json)
+- [traceability/registry.json](../11-traceability/registry.json)
 - [03-requirements-features/system-requirements.md](../03-requirements-features/system-requirements.md)
 - [10-testing/test-catalog.md](../10-testing/test-catalog.md)
-- [11-traceability/gates.md](gates.md)
+- [11-traceability/gates.md](../12-process/gates.md)
 
 ## Open questions
 
@@ -52,10 +52,10 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 
 - [README.md](../README.md)
 - [11-traceability/README.md](README.md)
-- [traceability/registry.json](registry.json)
+- [traceability/registry.json](../11-traceability/registry.json)
 - [03-requirements-features/system-requirements.md](../03-requirements-features/system-requirements.md)
 - [10-testing/test-catalog.md](../10-testing/test-catalog.md)
-- [11-traceability/gates.md](gates.md)
+- [11-traceability/gates.md](../12-process/gates.md)
 
 ## Verification criteria
 

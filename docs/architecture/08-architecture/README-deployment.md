@@ -29,7 +29,7 @@ Current maturity: reviewable artifacts; no inherited proposal automatically appr
 ## Dependencies
 
 - [08-architecture/deployment.md](deployment.md)
-- [22-feature-extension/README.md](../22-feature-extension/README.md)
+- [22-feature-extension/README.md](../09-advanced-web/README.md)
 
 ## Open questions
 
@@ -40,7 +40,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [08-architecture/deployment.md](deployment.md)
-- [22-feature-extension/README.md](../22-feature-extension/README.md)
+- [22-feature-extension/README.md](../09-advanced-web/README.md)
 
 ## Verification criteria
 

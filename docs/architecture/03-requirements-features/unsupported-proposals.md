@@ -48,3 +48,19 @@ Tài liệu ghi nhận các đề xuất tính năng và công nghệ đã bị 
 
 - [00-context/scope.md](../00-context/scope.md)
 - [08-architecture/07_Architecture_Components_and_Alternatives.md](../08-architecture/07_Architecture_Components_and_Alternatives.md)
+
+## Definitions and assumptions
+
+Unsupported means not currently evidenced or accepted; it does not imply a permanent rejection.
+
+## Analysis
+
+Evaluate each proposal against source evidence, product boundary, and delivery capacity.
+
+## Open questions
+
+Reopen a proposal only with new evidence and an explicit owner decision.
+
+## Verification criteria
+
+Check current source and decision status before presenting a proposal as accepted.

@@ -1,12 +1,18 @@
 export default function Segmented<T extends string>({
   options,
+
   value,
+
   onChange,
+
   size = "regular",
 }: {
   options: Record<T, string>
+
   value: T
+
   onChange: (value: T) => void
+
   size?: "regular" | "compact"
 }) {
   return (

@@ -1,78 +1,157 @@
-import { useState } from "react"
-import type { FoodEntry } from "../mockApi"
+import { useRef, useState } from "react"
+
+import type { FoodEntry } from "../domain/types"
+
 import { fmtQty, unitLabel } from "../lib/format"
+
 import Button from "../components/ui/Button"
+
 import Field from "../components/ui/Field"
+
 import Icon from "../components/ui/Icon"
-import Modal, { ModalActions } from "../components/ui/Modal"
+
+import Modal, { ModalActions, RetryAction } from "../components/ui/Modal"
 
 export type MovementMode = "consume" | "discard" | "recount"
 
 const copy: Record<MovementMode, {
   title: string
+
   amount: string
+
   reason: string
+
   fill?: string
+
+  half?: string
 }> = {
   consume: {
     title: "Ghi nhận đã dùng",
+
     amount: "Lượng đã dùng *",
+
     reason: "Lý do (không bắt buộc)",
+
     fill: "Dùng hết",
+
+    half: "Dùng 1 nửa",
   },
+
   discard: {
     title: "Ghi nhận đã bỏ",
+
     amount: "Lượng đã bỏ *",
+
     reason: "Lý do (không bắt buộc)",
+
     fill: "Bỏ hết",
+
+    half: "Bỏ 1 nửa",
   },
+
   recount: {
     title: "Kiểm lại số lượng",
+
     amount: "Lượng thực tế đang có *",
+
     reason: "Lý do kiểm lại *",
   },
 }
 
 /** UI-05 consume, UI-06 discard, UI-07 recount: one form, `mode` is the variant. */
+
 export default function MovementForm({
   food,
+
   mode,
+
   onClose,
+
   onSave,
+
+  active = true,
+
+  canRetry = false,
+
+  retryPending = false,
+
+  retryError = "",
+
+  onRetry,
 }: {
   food: FoodEntry
+
   mode: MovementMode
+
   onClose: () => void
-  onSave: (amount: number, reason: string) => void
+
+  onSave: (amount: number, reason: string) => void | Promise<void>
+
+  active?: boolean
+
+  canRetry?: boolean
+
+  retryPending?: boolean
+
+  retryError?: string
+
+  onRetry?: () => void
 }) {
+  const saveInFlight = useRef(false)
+
   const [amount, setAmount] = useState("")
+
   const [why, setWhy] = useState("")
+
   const [tried, setTried] = useState(false)
+
   const text = copy[mode]
+
   const unit = unitLabel[food.unit]
+
   const n = Number(amount)
+
   const recount = mode === "recount"
+
+  const halfQty =
+    food.unit === "piece"
+      ? Math.floor(food.remaining_quantity / 2)
+      : +(food.remaining_quantity / 2).toFixed(3)
+
+  const amountFormatValid = /^\d+(?:\.\d{1,3})?$/.test(amount)
+
   const after = recount
     ? amount === ""
       ? food.remaining_quantity
       : n
     : +(food.remaining_quantity - (n || 0)).toFixed(3)
+
   const amountError =
     amount === ""
       ? "Nhập lượng."
-      : food.unit === "piece" && !Number.isInteger(n)
-        ? "Đơn vị “cái” chỉ nhận số nguyên."
-        : recount
-          ? n < 0
-            ? "Lượng không thể âm."
-            : ""
-          : n <= 0
-            ? "Lượng phải lớn hơn 0."
-            : n > food.remaining_quantity
-              ? `Chỉ còn ${fmtQty(food.remaining_quantity)} ${unit}.`
-              : ""
+      : !amountFormatValid || !Number.isFinite(n)
+        ? "Nhập lượng dạng số, tối đa 3 chữ số thập phân."
+        : n > 999999999.999
+          ? "Lượng tối đa là 999.999.999,999."
+          : food.unit === "piece" && !Number.isInteger(n)
+            ? "Đơn vị “cái” chỉ nhận số nguyên."
+            : recount
+              ? n < 0
+                ? "Lượng không thể âm."
+                : ""
+              : n <= 0
+                ? "Lượng phải lớn hơn 0."
+                : n > food.remaining_quantity
+                  ? `Chỉ còn ${fmtQty(food.remaining_quantity)} ${unit}.`
+                  : ""
+
   const reasonError = recount && !why.trim() ? "Nhập lý do kiểm lại." : ""
+
   const noop = recount && amount !== "" && n === food.remaining_quantity
+
+  const displayedAfter = Number.isFinite(after)
+    ? Math.min(999999999.999, Math.max(0, after))
+    : 0
 
   return (
     <Modal
@@ -80,17 +159,59 @@ export default function MovementForm({
       eyebrow={food.name}
       title={text.title}
       onClose={onClose}
+      active={active}
     >
       <form
         className="stepped-form"
         noValidate
         onSubmit={(e) => {
           e.preventDefault()
+
           setTried(true)
-          if (!amountError && !reasonError && !noop) onSave(n, why.trim())
+
+          if (
+            saveInFlight.current ||
+            canRetry ||
+            retryPending ||
+            amountError ||
+            reasonError
+          )
+            return
+
+          saveInFlight.current = true
+
+          let result: void | Promise<void>
+
+          try {
+            result = onSave(n, why.trim())
+          } catch (failure) {
+            saveInFlight.current = false
+
+            throw failure
+          }
+
+          if (result && typeof result.then === "function") {
+            void result.then(
+              () => {
+                saveInFlight.current = false
+              },
+
+              () => {
+                saveInFlight.current = false
+              },
+            )
+          } else {
+            saveInFlight.current = false
+          }
         }}
       >
         <div className="form-body compact">
+          <RetryAction
+            canRetry={canRetry}
+            pending={retryPending}
+            error={retryError}
+            onRetry={onRetry ?? (() => {})}
+          />
           <Field label={text.amount} error={tried ? amountError : ""}>
             <div className="amount-input">
               <input
@@ -98,6 +219,7 @@ export default function MovementForm({
                 inputMode="decimal"
                 type="number"
                 min={0}
+                max={999999999.999}
                 step={food.unit === "piece" ? 1 : 0.001}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -106,21 +228,33 @@ export default function MovementForm({
               <span>{unit}</span>
             </div>
           </Field>
-          {text.fill && (
+          {text.fill && food.remaining_quantity > 0 && (
             <div
               className="chips amount-choices"
               aria-label="Chọn nhanh lượng đã xử lý"
             >
-              {food.unit === "piece" && food.remaining_quantity >= 1 && (
+              {halfQty > 0 && halfQty < food.remaining_quantity && (
                 <button
                   type="button"
-                  aria-pressed={amount === "1"}
-                  className={amount === "1" ? "active" : ""}
-                  onClick={() => setAmount("1")}
+                  aria-pressed={amount === String(halfQty)}
+                  className={amount === String(halfQty) ? "active" : ""}
+                  onClick={() => setAmount(String(halfQty))}
                 >
-                  1 {unit}
+                  {text.half || "Dùng 1 nửa"} · {fmtQty(halfQty)} {unit}
                 </button>
               )}
+              {food.unit === "piece" &&
+                food.remaining_quantity > 1 &&
+                halfQty !== 1 && (
+                  <button
+                    type="button"
+                    aria-pressed={amount === "1"}
+                    className={amount === "1" ? "active" : ""}
+                    onClick={() => setAmount("1")}
+                  >
+                    1 {unit}
+                  </button>
+                )}
               <button
                 type="button"
                 aria-pressed={amount === String(food.remaining_quantity)}
@@ -144,7 +278,7 @@ export default function MovementForm({
             <span>
               Sau thao tác
               <strong>
-                {fmtQty(Math.max(0, after))} {unit}
+                {fmtQty(displayedAfter)} {unit}
               </strong>
             </span>
           </div>
@@ -153,7 +287,7 @@ export default function MovementForm({
             error={tried ? reasonError : ""}
             hint={
               noop
-                ? "Lượng không đổi — sẽ không tạo thêm lịch sử."
+                ? "Số lượng không đổi — bạn vẫn có thể xác nhận lần kiểm kê này."
                 : `${why.length}/500`
             }
           >
@@ -173,7 +307,9 @@ export default function MovementForm({
             >
               {[
                 "Đếm lại thực tế",
+
                 "Quên ghi nhận lần trước",
+
                 "Nhập sai số lượng",
               ].map((reason) => (
                 <button
@@ -200,7 +336,7 @@ export default function MovementForm({
               <Button
                 variant={mode === "discard" ? "danger" : "primary"}
                 type="submit"
-                disabled={noop}
+                disabled={canRetry || retryPending}
               >
                 {mode === "discard"
                   ? "Xác nhận đã bỏ"

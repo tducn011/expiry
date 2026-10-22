@@ -1,6 +1,8 @@
 erDiagram
   USERS ||--o{ FOOD_ENTRIES : owns
   USERS ||--o{ API_REQUESTS : deduplicates
+  USERS ||--o| LOCAL_CREDENTIALS : authenticates_with
+  USERS ||--o{ USER_SESSIONS : opens
   FOOD_ENTRIES ||--|{ STOCK_MOVEMENTS : records_after_commit
   USERS {
     UUID id PK
@@ -47,4 +49,24 @@ erDiagram
     integer response_status "nullable reservation"
     JSON response_body "SQL NULL reservation; JSON null 204"
     UTC_instant created_at
+  }
+  LOCAL_CREDENTIALS {
+    UUID user_id PK,FK
+    string email_normalized UK
+    string password_verifier
+    UTC_instant created_at
+    UTC_instant updated_at
+  }
+  USER_SESSIONS {
+    SHA256 token_hash PK
+    UUID user_id FK
+    UTC_instant created_at
+    UTC_instant last_seen_at
+    UTC_instant expires_at
+    UTC_instant revoked_at "nullable"
+  }
+  SCHEMA_MIGRATIONS {
+    integer version PK
+    SHA256 sha256
+    UTC_instant applied_at
   }

@@ -19,7 +19,7 @@ Index, canonical artifacts and downstream reading path.
 ## Analysis
 
 - [04-technology-research/ocr-research.md](ocr-research.md)
-- [04-technology-research/official-references.md](official-references.md)
+- [04-technology-research/official-references.md](../00-context/official-references.md)
 
 Current maturity: reviewable artifacts; no inherited proposal automatically approved. Use dependencies to assess downstream changes, and the gate register to identify blocked acceptance.
 
@@ -30,8 +30,8 @@ Current maturity: reviewable artifacts; no inherited proposal automatically appr
 ## Dependencies
 
 - [04-technology-research/ocr-research.md](ocr-research.md)
-- [04-technology-research/official-references.md](official-references.md)
-- [05-use-cases-uml/README.md](../05-use-cases-uml/README.md)
+- [04-technology-research/official-references.md](../00-context/official-references.md)
+- [05-use-cases-uml/README.md](../04-user-flows/README.md)
 
 ## Open questions
 
@@ -42,8 +42,8 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
 - [04-technology-research/ocr-research.md](ocr-research.md)
-- [04-technology-research/official-references.md](official-references.md)
-- [05-use-cases-uml/README.md](../05-use-cases-uml/README.md)
+- [04-technology-research/official-references.md](../00-context/official-references.md)
+- [05-use-cases-uml/README.md](../04-user-flows/README.md)
 
 ## Verification criteria
 

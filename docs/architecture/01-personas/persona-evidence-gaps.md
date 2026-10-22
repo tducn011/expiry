@@ -32,7 +32,7 @@ Recruit by behavior rather than age/device. With consent, record transcript/sour
 
 ## Dependencies
 
-- [20-testing/research-validation.md](../10-testing/research-validation.md)
+- [20-testing/research-validation.md](../02-challenges/research-validation.md)
 - [02-challenges/needs-opportunities.md](../02-challenges/needs-opportunities.md)
 
 ## Open questions
@@ -43,7 +43,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
-- [10-testing/research-validation.md](../10-testing/research-validation.md)
+- [10-testing/research-validation.md](../02-challenges/research-validation.md)
 - [02-challenges/needs-opportunities.md](../02-challenges/needs-opportunities.md)
 
 ## Verification criteria

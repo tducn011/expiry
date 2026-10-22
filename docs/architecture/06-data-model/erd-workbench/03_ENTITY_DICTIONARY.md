@@ -43,10 +43,21 @@ Status: candidate/review. Food rules retain their original IDs. Physical impleme
 | api_requests.response_status | saved original2xx | INT nullable reservation | RULE-18/19; TX-RESULT/DELETE-RESTORE |
 | api_requests.response_body | saved response snapshot, no latest-state authority | JSON; SQL NULL reservation; JSON null204 | RULE-18/19; CONCURRENT-REPLAY/DELETE-RESTORE |
 | api_requests.created_at | reservation/command instant | DATETIME6 UTC default CURRENT_TIMESTAMP6 | no automatic pruning proposal; RULE-19 |
+| local_credentials.user_id | one local credential record per owner | CHAR36 ascii_bin PK and FK → users.id, RESTRICT | 002_local_auth; credential setup; migration and Workbench parity |
+| local_credentials.email_normalized | unique normalized login identifier | VARCHAR254 ascii_bin UNIQUE, lowercase checked | 002_local_auth; credential setup; CHECK and unique index |
+| local_credentials.password_verifier | encoded scrypt verifier; never plaintext | VARCHAR255 ascii_bin, scrypt format checked | 002_local_auth; credential verification; CHECK |
+| local_credentials.created_at | credential creation instant | DATETIME6 UTC default CURRENT_TIMESTAMP6 | 002_local_auth |
+| local_credentials.updated_at | last credential update instant | DATETIME6 UTC default CURRENT_TIMESTAMP6 | 002_local_auth |
+| user_sessions.token_hash | opaque session token digest, not bearer token | CHAR64 ascii_bin PK, lowercase hex checked | 002_local_auth; session lookup; CHECK |
+| user_sessions.user_id | session owner | CHAR36 ascii_bin FK NOT NULL RESTRICT | 002_local_auth; owner-scoped session lifecycle |
+| user_sessions.created_at | session creation instant | DATETIME6 UTC NOT NULL | 002_local_auth; session lifecycle |
+| user_sessions.last_seen_at | most recent accepted activity | DATETIME6 UTC NOT NULL | 002_local_auth; session lifecycle; time-order CHECK |
+| user_sessions.expires_at | absolute session expiry | DATETIME6 UTC NOT NULL | 002_local_auth; session lifecycle; owner/expiry indexes |
+| user_sessions.revoked_at | explicit revocation instant | DATETIME6 UTC nullable | 002_local_auth; session lifecycle; time-order CHECK |
 | schema_migrations.version | operational migration identity | INT PK | VT-16; MIGRATION-REPLAY |
 | schema_migrations.sha256 | applied file hash | CHAR64 ascii_bin not null | no silent rewrite; MIGRATION-REPLAY |
 | schema_migrations.applied_at | successful full-file application instant | DATETIME6 UTC | VT-16; MIGRATION-REPLAY |
 
-Logical cardinalities are in `04_RELATIONSHIP_MATRIX.md`. Source `docs/dictionary.md` has a stale secondary annotation calling attention_lead_days derived and typos `stock_movements.after`/`api_requests.body`; primary dictionary definitions are used here. No extra columns result from those annotations. `RULE-21` past-date capture with reason versus no capture.reason DTO is recorded as an ambiguity; implementation permits the date and exposes attention explanation rather than inventing a new input requirement.
+Logical cardinalities are in `04_RELATIONSHIP_MATRIX.md`. This dictionary records the current applied development schema, including migration002's local credential/session tables; it does not by itself approve a product authentication policy. Source `docs/dictionary.md` has a stale secondary annotation calling attention_lead_days derived and typos `stock_movements.after`/`api_requests.body`; primary dictionary definitions are used here. No extra columns result from those annotations. `RULE-21` past-date capture with reason versus no capture.reason DTO is recorded as an ambiguity; implementation permits the date and exposes attention explanation rather than inventing a new input requirement.
 
 No persisted attention/lifecycle/safe status. Derived quantity state active/depleted is independent of deleted visibility. Date unknown requires NULL/unknown/unspecified; estimated requires date/user_estimate; known requires date/printed_label or user_entered. Quantity and ledger deliberately denormalize current value for reads, with atomicity and equality audit. Metadata never changes unit/owner/quantity/history. No public history rewrite. No persona-to-role mapping.

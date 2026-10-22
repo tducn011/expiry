@@ -1,13 +1,14 @@
 openapi: 3.1.1
 info:
   title: Expiry private food inventory API
-  version: 0.1.0
-  description: Review draft. Bearer scheme is an adapter example; auth implementation
-    and stack not yet selected. Business/date/unit rules in accompanying specification.
+  version: 0.2.0
+  description: Local email/password and durable server-session contract selected by the user on11October2026. Inventory/date/unit
+    business rules remain in the accompanying specification. Migration002 is explicitly approved.
 servers:
 - url: /api/v1
 security:
-- IdentityBearer: []
+- SessionCookie: []
+- ProductionSessionCookie: []
 paths:
   /food-entries:
     post:
@@ -22,6 +23,14 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: &id001
+          type: string
+          minLength: 32
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact
+          configured Origin.
       responses:
         '201':
           description: Success
@@ -303,6 +312,12 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact
+          configured Origin.
       responses:
         '200':
           description: Success
@@ -399,6 +414,13 @@ paths:
         schema:
           type: integer
           minimum: 1
+          maximum: 2147483647
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact
+          configured Origin.
       responses:
         '204':
           description: Success
@@ -480,6 +502,12 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact
+          configured Origin.
       responses:
         '201':
           description: Success
@@ -655,6 +683,12 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact
+          configured Origin.
       responses:
         '201':
           description: Success
@@ -751,6 +785,19 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
+      - in: query
+        name: q
+        schema:
+          type: string
+          maxLength: 200
+          default: ""
+        description: Tìm kiếm theo tên thực phẩm trong thùng rác
+      - in: query
+        name: location
+        schema:
+          type: string
+          maxLength: 100
+        description: Lọc theo vị trí lưu trữ (storage location)
       responses:
         '200':
           description: Success
@@ -831,6 +878,12 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact
+          configured Origin.
       responses:
         '200':
           description: Success
@@ -981,6 +1034,12 @@ paths:
           minLength: 8
           maxLength: 100
           pattern: ^[A-Za-z0-9_-]+$
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact
+          configured Origin.
       responses:
         '200':
           description: Success
@@ -1070,42 +1129,78 @@ paths:
                   type: string
                   format: binary
                   description: Food package image file (max 5MB, JPEG/PNG/WebP)
+          application/json:
+            schema:
+              type: object
+              required:
+              - image_base64
+              additionalProperties: false
+              properties:
+                image_base64:
+                  type: string
+                  description: Base64 JPEG/PNG/WebP bytes, decoded size at most5MiB.
       responses:
         '200':
-          description: Extraction result with candidate fields for user review and
-            edit
+          description: Extraction result with candidate fields for user review and edit
           content:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
                 required:
                 - raw_text
                 - candidates
+                - warnings
+                - errors
                 - requires_confirmation
                 properties:
                   raw_text:
                     type: string
                   candidates:
                     type: object
+                    additionalProperties: false
+                    required:
+                    - food_name
+                    - expiry_date
+                    - manufactured_date
                     properties:
                       food_name:
-                        type: string
-                        nullable: true
+                        type:
+                        - string
+                        - 'null'
                       expiry_date:
                         type: object
+                        additionalProperties: false
+                        required:
+                        - value
+                        - date_certainty
+                        - date_label_type
+                        - source_text
+                        - alternatives
+                        - ambiguous
+                        - requires_confirmation
                         properties:
                           value:
-                            type: string
+                            type:
+                            - string
+                            - 'null'
                             format: date
-                            nullable: true
                           date_certainty:
-                            type: string
+                            type:
+                            - string
+                            - 'null'
                             enum:
                             - exact
                             - inferred
                             - null
                           date_label_type:
                             type: string
+                            enum:
+                            - expiry
+                            - best_before
+                            - use_by
+                            - manufactured
+                            - unknown
                           source_text:
                             type: string
                           alternatives:
@@ -1116,28 +1211,236 @@ paths:
                           ambiguous:
                             type: boolean
                           requires_confirmation:
+                            const: true
                             type: boolean
+                      manufactured_date:
+                        type: object
+                        additionalProperties: false
+                        required:
+                        - value
+                        - source_text
+                        properties:
+                          value:
+                            type:
+                            - string
+                            - 'null'
+                            format: date
+                          source_text:
+                            type: string
                   warnings:
                     type: array
                     items:
                       type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
                   requires_confirmation:
+                    const: true
                     type: boolean
         '400':
-          description: Malformed image upload
+          description: Malformed image upload or invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '413':
           description: Image exceeds maximum 5MB size limit
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '415':
           description: Unsupported media format
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '504':
           description: Scan service timeout (>3s)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Authentication, CSRF, image/OCR or service failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Authentication, CSRF, image/OCR or service failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: Authentication, CSRF, image/OCR or service failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Authentication, CSRF, image/OCR or service failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      parameters:
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact
+          configured Origin.
+  /auth/register:
+    post:
+      operationId: AUTH-REGISTER
+      summary: Create a local account and session
+      security: []
+      parameters:
+      - &id002
+        in: header
+        name: Origin
+        required: true
+        schema:
+          type: string
+          format: uri
+        description: Exact trusted browser origin configured in APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegistration'
+      responses:
+        '201':
+          description: Authenticated session; opaque credential is set only in an HttpOnly cookie
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '400': &id003
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401': &id004
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403': &id005
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409': &id006
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422': &id007
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429': &id008
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503': &id009
+          description: Rejected request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/login:
+    post:
+      operationId: AUTH-LOGIN
+      summary: Verify local credentials and rotate the browser session
+      security: []
+      parameters:
+      - *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLogin'
+      responses:
+        '200':
+          description: Authenticated session; opaque credential is set only in an HttpOnly cookie
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '400': *id003
+        '401': *id004
+        '403': *id005
+        '409': *id006
+        '422': *id007
+        '429': *id008
+        '503': *id009
+  /auth/session:
+    get:
+      operationId: AUTH-SESSION
+      summary: Read the trusted current principal and per-session CSRF token
+      responses:
+        '200':
+          description: Active durable session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '401': *id004
+        '503': *id009
+  /auth/logout:
+    post:
+      operationId: AUTH-LOGOUT
+      summary: Revoke the current session and clear the credential cookie
+      parameters:
+      - *id002
+      - in: header
+        name: X-CSRF-Token
+        required: true
+        schema: *id001
+        description: Per-session CSRF token obtained from /auth/session. Unsafe requests must also carry an exact
+          configured Origin.
+      responses:
+        '204':
+          description: Session revoked
+        '401': *id004
+        '403': *id005
+        '503': *id009
 components:
   securitySchemes:
-    IdentityBearer:
-      type: http
-      scheme: bearer
-      description: Verified principal provided by selected identity adapter; does
-        not prescribe JWT.
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: expiry_session
+      description: Local development opaque server session. Backend validates the durable session; client identity
+        headers are ignored.
+    ProductionSessionCookie:
+      type: apiKey
+      in: cookie
+      name: __Host-expiry_session
+      description: Production HTTPS, HttpOnly, Secure, SameSite=Lax, host-only opaque session.
   schemas:
     EntryCreate:
       type: object
@@ -1187,8 +1490,8 @@ components:
         quantity:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral;
-            business validation rejects zero for create/consume/discard.
+          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
+            zero for create/consume/discard.
         unit:
           type: string
           enum:
@@ -1200,9 +1503,8 @@ components:
       - quantity
       - unit
       additionalProperties: false
-      description: 'Defaults: location unspecified, date null, certainty/source unknown,
-        label unspecified. Validate normalized full object. quantity>0; piece whole.
-        Date certainty/source coherence is enforced by RULE-09/10.'
+      description: 'Defaults: location unspecified, date null, certainty/source unknown, label unspecified. Validate
+        normalized full object. quantity>0; piece whole. Date certainty/source coherence is enforced by RULE-09/10.'
     EntryPatch:
       type: object
       properties:
@@ -1251,6 +1553,7 @@ components:
         expected_version:
           type: integer
           minimum: 1
+          maximum: 2147483647
       required:
       - expected_version
       additionalProperties: false
@@ -1344,8 +1647,8 @@ components:
         remaining_quantity:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral;
-            business validation rejects zero for create/consume/discard.
+          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
+            zero for create/consume/discard.
         unit:
           type: string
           enum:
@@ -1403,11 +1706,12 @@ components:
         amount:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral;
-            business validation rejects zero for create/consume/discard.
+          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
+            zero for create/consume/discard.
         expected_version:
           type: integer
           minimum: 1
+          maximum: 2147483647
         reason:
           type:
           - string
@@ -1424,8 +1728,8 @@ components:
         actual_quantity:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral;
-            business validation rejects zero for create/consume/discard.
+          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
+            zero for create/consume/discard.
         reason:
           type: string
           minLength: 1
@@ -1433,6 +1737,7 @@ components:
         expected_version:
           type: integer
           minimum: 1
+          maximum: 2147483647
       required:
       - actual_quantity
       - reason
@@ -1444,6 +1749,7 @@ components:
         expected_version:
           type: integer
           minimum: 1
+          maximum: 2147483647
       required:
       - expected_version
       additionalProperties: false
@@ -1466,13 +1772,13 @@ components:
         quantity_before:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral;
-            business validation rejects zero for create/consume/discard.
+          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
+            zero for create/consume/discard.
         quantity_after:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral;
-            business validation rejects zero for create/consume/discard.
+          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
+            zero for create/consume/discard.
         delta:
           type: string
           pattern: ^-?(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
@@ -1537,9 +1843,13 @@ components:
             $ref: '#/components/schemas/Entry'
         pagination:
           $ref: '#/components/schemas/Pagination'
+        as_of_date:
+          type: string
+          format: date
       required:
       - items
       - pagination
+      - as_of_date
       additionalProperties: false
     MovementList:
       type: object
@@ -1585,6 +1895,7 @@ components:
         expected_version:
           type: integer
           minimum: 1
+          maximum: 2147483647
       required:
       - expected_version
       additionalProperties: false
@@ -1619,3 +1930,89 @@ components:
       - title
       - status
       - code
+    AuthUser:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        timezone:
+          type: string
+        attention_lead_days:
+          type: integer
+          minimum: 0
+          maximum: 30
+        version:
+          type: integer
+          minimum: 1
+      required:
+      - id
+      - display_name
+      - email
+      - timezone
+      - attention_lead_days
+      - version
+    AuthLogin:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 15
+          maxLength: 128
+          writeOnly: true
+      required:
+      - email
+      - password
+    AuthRegistration:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 15
+          maxLength: 128
+          writeOnly: true
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        timezone:
+          type: string
+          default: Asia/Ho_Chi_Minh
+      required:
+      - email
+      - password
+      - display_name
+    AuthSession:
+      type: object
+      additionalProperties: false
+      properties:
+        user:
+          $ref: '#/components/schemas/AuthUser'
+        csrf_token:
+          type: string
+          minLength: 32
+        expires_at:
+          type: string
+          format: date-time
+      required:
+      - user
+      - csrf_token
+      - expires_at

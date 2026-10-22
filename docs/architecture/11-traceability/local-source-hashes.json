@@ -80,7 +80,7 @@
   "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_4.mmd": "1bf513ad59b9ae7c3a54c363783cd6324630f7ffa5d01d017af6306673fc84c3",
   "Expiry_System_Design_2026-10-08/diagrams/erd_overview.png": "8dd2973365a39565a808f443cc7b25e244893169ff4f0fca8e81918ea0216c03",
   "Expiry_System_Design_2026-10-08/wireframes/expiry_wireframes.png": "5c63f3d6240f1877e49fa7a467c374a588c1cdae360ddd674e3d0386874e152f",
-  "Expiry_System_Design_2026-10-08/contracts/schema_reference_postgresql.sql": "c9969fc7370916deb29398c0b05f1deab71c38f236d6fad9b25857d28c87da6f",
+  "Expiry_System_Design_2026-10-08/contracts/schema_reference_mysql.sql": "c9969fc7370916deb29398c0b05f1deab71c38f236d6fad9b25857d28c87da6f",
   "Expiry_System_Design_2026-10-08/contracts/fixtures.json": "3399aa5aae0a51451dff2c1c03a7fa96fe44e8a5ad62226572193ea78f870d0e",
   "Expiry_System_Design_2026-10-08/contracts/openapi.json": "3b72da250b837cc5e25d6af2b2746521e3177bf66b150dd9b980db9c7be2057d"
 }

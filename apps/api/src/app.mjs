@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import { authMiddleware, idempotencyMiddleware, errorHandler } from './shared/middleware.mjs';
+import { idempotencyMiddleware, errorHandler } from './shared/middleware.mjs';
+import { connect } from './shared/connection.mjs';
+import { AuthRepository } from './modules/auth/auth.repository.mjs';
+import { createAuthBoundary } from './modules/auth/auth.routes.mjs';
 import { InventoryService } from './modules/inventory/inventory.service.mjs';
 import { InventoryController } from './modules/inventory/inventory.controller.mjs';
 import { createInventoryRouter } from './modules/inventory/inventory.routes.mjs';
@@ -11,29 +14,91 @@ import { ScanService } from './modules/scan/scan.service.mjs';
 import { ScanController } from './modules/scan/scan.controller.mjs';
 import { createScanRouter } from './modules/scan/scan.routes.mjs';
 
-export function createApp({ database, scanServiceUrl } = {}) {
+export function createApp({ database, scanServiceUrl, authRepository, allowedOrigins, secureCookies = process.env.NODE_ENV === 'production', now, scanOptions = {} } = {}) {
   const app = express();
+  app.disable('x-powered-by');
+  // Kích hoạt nhận diện IP client từ X-Forwarded-For của reverse proxy (Vercel, Cloudflare Tunnel, Nginx)
+  app.set('trust proxy', 1);
+  const configuredOrigins = allowedOrigins ?? (process.env.APP_ORIGIN
+    ? process.env.APP_ORIGIN.split(',').map(value => value.trim()).filter(Boolean)
+    : secureCookies ? ['https://expiry.vercel.app', 'https://expiryapp.vercel.app', 'https://demoexpiry.vercel.app'] : ['http://localhost:8443', 'http://127.0.0.1:8443', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4174', 'http://127.0.0.1:4174', 'http://localhost:3001', 'http://127.0.0.1:3001', 'https://expiry.vercel.app', 'https://expiryapp.vercel.app', 'https://demoexpiry.vercel.app']);
+  if (secureCookies && configuredOrigins.length === 0) throw new Error('Production requires APP_ORIGIN with the exact HTTPS frontend origin');
+  const auth = createAuthBoundary({ repository: authRepository ?? new AuthRepository(database), allowedOrigins: configuredOrigins, secureCookies, ...(now ? { now } : {}) });
 
   // Basic middleware
-  app.use(cors());
+  app.use(cors({ credentials: true, origin: (origin, callback) => callback(null, !origin || configuredOrigins.includes(origin)) }));
   app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   // Root healthcheck
-  app.get('/health', (req, res) => {
+  app.get('/health', async (req, res) => {
+    let dbStatus = 'unverified';
+    try {
+      const c = await connect(database);
+      const [rows] = await c.query('SELECT 1 as connected');
+      await c.end();
+      if (Number(rows?.[0]?.connected) === 1) dbStatus = 'connected';
+    } catch {
+      dbStatus = 'unavailable';
+    }
+
     res.json({
       status: 'ok',
       service: 'expiry-api',
       version: '1.0.0',
+      database: dbStatus,
       timestamp: new Date().toISOString()
     });
+  });
+
+  // Dedicated DB check endpoint with live metrics
+  app.get('/health/db', async (req, res) => {
+    try {
+      const c = await connect(database);
+      const [[dbInfo]] = await c.query('SELECT 1 as connected, DATABASE() as db, VERSION() as version');
+      const [[foodCount]] = await c.query('SELECT COUNT(*) as total FROM food_entries WHERE deleted_at IS NULL');
+      const [[userCount]] = await c.query('SELECT COUNT(*) as total FROM users');
+      await c.end();
+      res.json({
+        status: 'ok',
+        database: {
+          connected: true,
+          name: dbInfo.db,
+          mysqlVersion: dbInfo.version,
+          activeFoodEntries: Number(foodCount.total),
+          totalUsers: Number(userCount.total)
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (err) {
+      res.status(503).json({
+        status: 'error',
+        database: {
+          connected: false,
+          error: err.message
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
   });
 
   // API v1 Router
   const v1Router = express.Router();
 
-  // Domain security & idempotency
-  v1Router.use(authMiddleware);
+  // Extraction service
+  const scanService = new ScanService(scanServiceUrl, scanOptions);
+  const scanController = new ScanController(scanService);
+
+  // Public health check for OCR microservice monitoring
+  v1Router.get('/scan/health', scanController.health);
+
+  // Credential endpoints precede domain commands. Ownership comes only from a
+  // durable verified session; caller identity headers have no authority.
+  v1Router.use('/auth', auth.router);
+  v1Router.use(auth.requireAuth);
+  v1Router.use(auth.requireCsrf);
+
+  // Extraction is transient and does not reserve a mutation replay key.
+  v1Router.use('/', createScanRouter(scanController));
   v1Router.use(idempotencyMiddleware);
 
   // Initialize modular services
@@ -45,22 +110,20 @@ export function createApp({ database, scanServiceUrl } = {}) {
   const expiryController = new ExpiryController(expiryService);
   v1Router.use('/', createExpiryRouter(expiryController));
 
-  const scanService = new ScanService(scanServiceUrl);
-  const scanController = new ScanController(scanService);
-  v1Router.use('/', createScanRouter(scanController));
-
   // Mount API v1
   app.use('/api/v1', v1Router);
 
   // Fallback 404
   app.use((req, res) => {
-    res.status(404).json({
+    res.status(404).type('application/problem+json').json({
       type: 'https://api.expiry.app/problems/NOT_FOUND',
       title: 'NOT_FOUND',
       status: 404,
+      code: 'NOT_FOUND',
       detail: `Route ${req.method} ${req.originalUrl} not found.`
     });
   });
+
 
   // Global Error Handler
   app.use(errorHandler);

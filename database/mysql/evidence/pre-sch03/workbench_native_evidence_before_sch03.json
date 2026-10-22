@@ -1,0 +1,476 @@
+{
+  "status": "PASS",
+  "method": "MySQL Workbench embedded Python/GRT",
+  "gui_test_connection_clicked": false,
+  "reverse_engineer_wizard_used": false,
+  "started_at_utc": "2026-10-10T04:18:17.585534+00:00",
+  "server": {
+    "db": "expiry_dev",
+    "version": "8.4.11",
+    "account": "expiry_app@%"
+  },
+  "live_tables": [
+    {
+      "table_name": "api_requests"
+    },
+    {
+      "table_name": "food_entries"
+    },
+    {
+      "table_name": "schema_migrations"
+    },
+    {
+      "table_name": "stock_movements"
+    },
+    {
+      "table_name": "users"
+    }
+  ],
+  "live_foreign_keys": [
+    {
+      "fk": "entries_owner"
+    },
+    {
+      "fk": "movements_entry"
+    },
+    {
+      "fk": "requests_owner"
+    }
+  ],
+  "model_tables": [
+    "api_requests",
+    "food_entries",
+    "schema_migrations",
+    "stock_movements",
+    "users"
+  ],
+  "model_foreign_keys": 3,
+  "original_helper_tables": [
+    "api_requests",
+    "schema_migrations",
+    "users"
+  ],
+  "parser_recovery": "Native parser, full driver charset registry, unchanged live SHOW CREATE TABLE",
+  "native_parser_errors": [],
+  "native_parser_error_count": 0,
+  "charset_registry_count": 40,
+  "live_columns": [
+    {
+      "table_name": "api_requests",
+      "column_name": "user_id"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "operation"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "response_status"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "response_body"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "id"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "user_id"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "name"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "storage_location"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "remaining_quantity"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "unit"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "expiry_date"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "date_certainty"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "date_source"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "date_label_type"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "opened_on"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "note"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "version"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "deleted_at"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "updated_at"
+    },
+    {
+      "table_name": "schema_migrations",
+      "column_name": "version"
+    },
+    {
+      "table_name": "schema_migrations",
+      "column_name": "sha256"
+    },
+    {
+      "table_name": "schema_migrations",
+      "column_name": "applied_at"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "id"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "entry_id"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "kind"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "quantity_before"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "quantity_after"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "reason"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "recorded_at"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "initial_entry_id"
+    },
+    {
+      "table_name": "users",
+      "column_name": "id"
+    },
+    {
+      "table_name": "users",
+      "column_name": "identity_subject"
+    },
+    {
+      "table_name": "users",
+      "column_name": "display_name"
+    },
+    {
+      "table_name": "users",
+      "column_name": "timezone"
+    },
+    {
+      "table_name": "users",
+      "column_name": "attention_lead_days"
+    },
+    {
+      "table_name": "users",
+      "column_name": "version"
+    },
+    {
+      "table_name": "users",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "users",
+      "column_name": "updated_at"
+    }
+  ],
+  "model_columns": [
+    {
+      "table_name": "api_requests",
+      "column_name": "user_id"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "operation"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "response_status"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "response_body"
+    },
+    {
+      "table_name": "api_requests",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "id"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "user_id"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "name"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "storage_location"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "remaining_quantity"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "unit"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "expiry_date"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "date_certainty"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "date_source"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "date_label_type"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "opened_on"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "note"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "version"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "deleted_at"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "food_entries",
+      "column_name": "updated_at"
+    },
+    {
+      "table_name": "schema_migrations",
+      "column_name": "version"
+    },
+    {
+      "table_name": "schema_migrations",
+      "column_name": "sha256"
+    },
+    {
+      "table_name": "schema_migrations",
+      "column_name": "applied_at"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "id"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "entry_id"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "kind"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "quantity_before"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "quantity_after"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "reason"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "recorded_at"
+    },
+    {
+      "table_name": "stock_movements",
+      "column_name": "initial_entry_id"
+    },
+    {
+      "table_name": "users",
+      "column_name": "id"
+    },
+    {
+      "table_name": "users",
+      "column_name": "identity_subject"
+    },
+    {
+      "table_name": "users",
+      "column_name": "display_name"
+    },
+    {
+      "table_name": "users",
+      "column_name": "timezone"
+    },
+    {
+      "table_name": "users",
+      "column_name": "attention_lead_days"
+    },
+    {
+      "table_name": "users",
+      "column_name": "version"
+    },
+    {
+      "table_name": "users",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "users",
+      "column_name": "updated_at"
+    }
+  ],
+  "live_fk_mapping": [
+    {
+      "table_name": "api_requests",
+      "fk": "requests_owner",
+      "column_name": "user_id",
+      "parent": "users",
+      "parent_column": "id"
+    },
+    {
+      "table_name": "food_entries",
+      "fk": "entries_owner",
+      "column_name": "user_id",
+      "parent": "users",
+      "parent_column": "id"
+    },
+    {
+      "table_name": "stock_movements",
+      "fk": "movements_entry",
+      "column_name": "entry_id",
+      "parent": "food_entries",
+      "parent_column": "id"
+    }
+  ],
+  "model_fk_mapping": [
+    {
+      "table_name": "api_requests",
+      "fk": "requests_owner",
+      "column_name": "user_id",
+      "parent": "users",
+      "parent_column": "id"
+    },
+    {
+      "table_name": "food_entries",
+      "fk": "entries_owner",
+      "column_name": "user_id",
+      "parent": "users",
+      "parent_column": "id"
+    },
+    {
+      "table_name": "stock_movements",
+      "fk": "movements_entry",
+      "column_name": "entry_id",
+      "parent": "food_entries",
+      "parent_column": "id"
+    }
+  ],
+  "generated_column": {
+    "generated": 1,
+    "expression": "(case when (`kind` = _ascii'initial') then `entry_id` else NULL end)",
+    "storage": "STORED"
+  },
+  "descending_indexes": [
+    {
+      "table": "food_entries",
+      "index": "entries_owner_trash",
+      "column": "deleted_at"
+    },
+    {
+      "table": "stock_movements",
+      "index": "movements_entry_history",
+      "column": "recorded_at"
+    }
+  ],
+  "check_constraint_modeling": "NOT REPRESENTED by installed Workbench table model; live SQL and DB tests are authority",
+  "diagram_figures": 5,
+  "diagram_connections": 3,
+  "model_file": {
+    "path": "/home/pro/Downloads/expiry/docs/erd/expiry_mysql.mwb",
+    "bytes": 8843,
+    "sha256": "0c48660c450bf182a1413a0153ef38bfadf8c05e7d07d4f1f655a9c396a7e2f5"
+  },
+  "image_file": {
+    "path": "/home/pro/Downloads/expiry/docs/erd/expiry_mysql_eer.png",
+    "bytes": 80665,
+    "sha256": "35109060249a7051d348d492c1ede429cf41a08cf0ef8d47bbac9662eb558c4d",
+    "width": 882,
+    "height": 705
+  },
+  "completed_at_utc": "2026-10-10T04:18:17.813020+00:00"
+}

@@ -25,7 +25,7 @@ Index, canonical artifacts and downstream reading path.
 - [03-requirements-features/stakeholder-requirements.md](stakeholder-requirements.md)
 - [03-requirements-features/system-requirements.md](system-requirements.md)
 - [03-requirements-features/unsupported-proposals.md](unsupported-proposals.md)
-- [Current FINAL CHECK → persona → food/UI alignment](final-check-persona-alignment.md)
+- [Current FINAL CHECK → persona → food/UI alignment](../01-personas/final-check-persona-alignment.md)
 
 Current maturity: reviewable artifacts; no inherited proposal automatically approved. Use dependencies to assess downstream changes, and the gate register to identify blocked acceptance.
 
@@ -42,7 +42,7 @@ Current maturity: reviewable artifacts; no inherited proposal automatically appr
 - [03-requirements-features/stakeholder-requirements.md](stakeholder-requirements.md)
 - [03-requirements-features/system-requirements.md](system-requirements.md)
 - [03-requirements-features/unsupported-proposals.md](unsupported-proposals.md)
-- [04-technology-research/README.md](../04-technology-research/README.md)
+- [04-technology-research/README.md](../02-challenges/README-tech-research.md)
 
 ## Open questions
 
@@ -59,7 +59,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 - [03-requirements-features/stakeholder-requirements.md](stakeholder-requirements.md)
 - [03-requirements-features/system-requirements.md](system-requirements.md)
 - [03-requirements-features/unsupported-proposals.md](unsupported-proposals.md)
-- [04-technology-research/README.md](../04-technology-research/README.md)
+- [04-technology-research/README.md](../02-challenges/README-tech-research.md)
 
 ## Verification criteria
 
