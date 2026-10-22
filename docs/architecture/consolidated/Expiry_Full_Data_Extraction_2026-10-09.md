@@ -102,7 +102,7 @@ Không có quyền đọc toàn bộ lịch sử chat như một bản export. �
 | CTX-05 | Auth xuất hiện tại điểm cần dữ liệu riêng/persist, không mặc định đặt ở đầu toàn journey | [A-F] tracker |
 | CTX-06 | Tồn kho riêng từng tài khoản | [A-U] trả lời hôm nay; đã thay giả định trước đây |
 | CTX-07 | MVP nhập tay, nhắc trong app; OCR/push chưa ở MVP | [A-U] hôm nay |
-| CTX-08 | Stack chưa chốt | [A-U] hôm nay; React/Express/PostgreSQL chỉ [D] |
+| CTX-08 | Stack chưa chốt | [A-U] hôm nay; React/Express/MySQL 8.4 chỉ [D] |
 | CTX-09 | Team khoảng 5 người; task tự claim, có thể đồng đảm nhiệm, review theo dependency | [A-U] context; chưa phân công tên mới |
 | CTX-10 | Food-first từ persona hiện tại | [C/D] nhất quán corpus; mở rộng medicines/cosmetics/warranty cần nghiên cứu riêng |
 
@@ -218,10 +218,10 @@ Nguồn: [SRC-004 — Expiry_System_Design_2026-10-08/01_Research_Personas_and_O
 | RES-01 | Mesiranta et al., CozZo, conference abstract, 2024; https://zenodo.org/records/14164532 | 52 households, 3–6 tuần; stock/expiry awareness và planning có giá trị; maintenance effort, expiry estimate và perceived value là trở ngại | Conference abstract, không chứng minh ba persona VN là market segments; kết quả giảm waste không dùng làm KPI mặc định |
 | RES-02 | Mathisen et al., TotalCtrl/Too Good To Go, 2022; https://formative.jmir.org/2022/9/e38520 ; index https://pmc.ncbi.nlm.nih.gov/articles/PMC9482070/ | Search index nguồn paper: 6 students, nhiều manual operations gây khó duy trì | Full-text hôm nay bị anti-bot; chỉ dùng mức finding đã có trong index + audit cũ; chưa tái đọc full paper |
 | RES-03 | EATiT, Taiwan, Graham-Rowe trong REPORT.md | Visibility, disrupted plans, inconvenience là background hypotheses | Chưa truy lại paper gốc lần này; không dùng sample/quote từ đây làm new verified claim |
-| DOC-01 | PostgreSQL constraints https://www.postgresql.org/docs/current/ddl-constraints.html | PK/FK/UNIQUE/CHECK giữ integrity | Không thay validation/ownership nghiệp vụ |
-| DOC-02 | PostgreSQL locking https://www.postgresql.org/docs/current/explicit-locking.html | FOR UPDATE hỗ trợ serialize cập nhật cùng hàng | Vẫn phải có transaction; thứ tự lock ổn định |
-| DOC-03 | Date/time https://www.postgresql.org/docs/current/datatype-datetime.html | DATE khác timestamp/timezone | Cách ưu tiên hôm nay là rule project |
-| DOC-04 | Numeric https://www.postgresql.org/docs/current/datatype-numeric.html | numeric là exact decimal | Không tự quyết định unit/conversion |
+| DOC-01 | MySQL 8.4 constraints https://dev.mysql.com/doc/refman/8.4/en/create-table-check-constraints.html | PK/FK/UNIQUE/CHECK giữ integrity | Không thay validation/ownership nghiệp vụ |
+| DOC-02 | MySQL 8.4 locking https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html | FOR UPDATE hỗ trợ serialize cập nhật cùng hàng | Vẫn phải có transaction; thứ tự lock ổn định |
+| DOC-03 | Date/time https://dev.mysql.com/doc/refman/8.4/en/time-zone-support.html | DATE khác timestamp/timezone | Cách ưu tiên hôm nay là rule project |
+| DOC-04 | Numeric https://dev.mysql.com/doc/refman/8.4/en/fixed-point-types.html | numeric là exact decimal | Không tự quyết định unit/conversion |
 | DOC-05 | React https://react.dev/learn/sharing-state-between-components | Shared UI state ở common parent gần nhất | Không phải mọi state lên App |
 | DOC-06 | OpenAPI 3.1.1 https://spec.openapis.org/oas/v3.1.1.html | Contract operations, schema, request/response | Không quy định phải map route 1:1 table |
 | DOC-07 | RFC 9457 https://www.rfc-editor.org/rfc/rfc9457 | Problem details cho lỗi HTTP | code/request_id là extension project |
@@ -709,7 +709,7 @@ sequenceDiagram
  UI->>API: POST entry + Idempotency-Key
  API->>API: Authenticate and validate DTO
  API->>S: execute(principal, draft, key)
- S->>DB: Begin; reserve key / check replay
+ S->>DB: Begin, reserve key / check replay
  alt Key already completed, same fingerprint
   DB-->>S: Saved response
  else New command
@@ -735,7 +735,7 @@ sequenceDiagram
  API->>S: principal + validated query
  S->>DB: Read owner settings + scoped entries
  DB-->>S: Metadata and quantities
- S->>S: Derive with clock/timezone; sort before pagination
+ S->>S: Derive with clock/timezone, sort before pagination
  S-->>API: items + reasons + as_of_date + pagination
  API-->>UI: 200
  UI-->>U: Groups and actionable detail links
@@ -753,7 +753,7 @@ sequenceDiagram
  U->>UI: Use / discard amount
  UI->>API: POST movement + expected_version + key
  API->>S: principal + command
- S->>DB: Begin; reserve key
+ S->>DB: Begin, reserve key
  alt Replay with same fingerprint
   DB-->>S: Original response
  else New command
@@ -766,7 +766,7 @@ sequenceDiagram
    API-->>UI: 409 / 422
    UI-->>U: Refetch/review draft
   else Valid
-   S->>DB: Update quantity/version; insert movement; save result
+   S->>DB: Update quantity/version, insert movement, save result
    S->>DB: Commit
    S-->>API: Updated entry + movement
    API-->>UI: 201
@@ -840,7 +840,7 @@ Nguồn: [SRC-008 — Expiry_System_Design_2026-10-08/05_Data_Definitions_and_ER
 4. Phân biệt persisted state, derived projection, transport DTO và UI-only draft.
 5. Viết invariants, event/command shape, lifecycle và transaction boundary.
 6. Xác định functional dependencies và cardinality; sau đó ERD logical.
-7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án PostgreSQL, không khóa stack user.
+7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án MySQL 8.4 (InnoDB).
 
 **Data dictionary không chỉ ghi `date: string`.** Phải ghi đây là calendar date, null khi nào, ai nhập, ai dùng, có tự derive không và timezone nào dùng so sánh.
 
@@ -1244,7 +1244,7 @@ SQL dưới đây là reference proposal, chưa được apply vào database tro
 
 ```sql
 
--- Proposed PostgreSQL reference; app assigns UUIDs. Not applied to any live DB.
+-- MySQL 8.4 reference; app assigns UUIDs. Not applied to any live DB.
 BEGIN;
 CREATE TABLE users (
  id uuid PRIMARY KEY, identity_subject text NOT NULL UNIQUE,
@@ -1322,11 +1322,11 @@ Nguồn: [SRC-010 — Expiry_System_Design_2026-10-08/07_Architecture_Components
 #### S6.2 Stack chưa chốt
 | Candidate | Fit | Trade-off |
 |---|---|---|
-| React + Express + PostgreSQL | Khớp học React/MVC/relational tx; explicit layers dễ học | Express phải tự giữ convention/schema/error/DI; vận hành PostgreSQL |
-| React + NestJS + PostgreSQL | Modules/DI/guards rõ nếu team quen | Decorators/framework learning thêm; chưa có evidence team cần |
+| React + Express + MySQL 8.4 | Khớp học React/MVC/relational tx; explicit layers dễ học | Express phải tự giữ convention/schema/error/DI; vận hành MySQL 8.4 |
+| React + NestJS + MySQL 8.4 | Modules/DI/guards rõ nếu team quen | Decorators/framework learning thêm; chưa có evidence team cần |
 | React + Express + MySQL/InnoDB | Relational+transactions khả thi khi môn/team có kinh nghiệm | SQL/index differences; DDL tham chiếu cần port |
 
-Recommended approach [D]: **modular monolith theo feature + use-case service + repository**, independent domain rules/DTO. React/Express/PostgreSQL là reference stack, không gọi chốt. Why: quantity/history/keys cần cùng tx; group chia task theo feature/contract; ba môn dùng cùng traceability. Do not: central controller chứa mọi rule, microservices vì “chuẩn”, một repository generic bypass owner scope, hoặc route theo từng table.
+Recommended approach [D]: **modular monolith theo feature + use-case service + repository**, independent domain rules/DTO. React/Express/MySQL 8.4 là reference stack, không gọi chốt. Why: quantity/history/keys cần cùng tx; group chia task theo feature/contract; ba môn dùng cùng traceability. Do not: central controller chứa mọi rule, microservices vì “chuẩn”, một repository generic bypass owner scope, hoặc route theo từng table.
 
 #### S3.29 Repo structure đề xuất (monorepo nếu cùng workspace)
 ```text
@@ -1544,9 +1544,9 @@ Version ở trên là range khai báo trong package.json; lockfile đầy đủ 
 | `uidemo/src/App.tsx` | Shell state, snapshots, auth seam | `useState` authenticated; `useMemo` đọc mock theo revision; `commit` tăng revision | Simulated auth/query invalidation; không chứng minh server access control | High |
 | `uidemo/HANDOFF.md` | Bàn giao prototype / giới hạn | Ghi no real backend/database/auth/network/pagination/persistence | Mô tả trạng thái source, không phải acceptance runtime mới | High |
 | `contracts/openapi.json` | Proposed transport contract | 12 operations, 16 schemas; review draft | Không phải server implementation | High |
-| `contracts/schema_reference_postgresql.sql` | Proposed physical schema | `users`, `food_entries`, `stock_movements`, `api_requests`; transaction DDL | Chưa apply/verify DB; CHECK không thay ownership/service transaction | High |
+| `contracts/schema_reference_mysql.sql` | Proposed physical schema | `users`, `food_entries`, `stock_movements`, `api_requests`; transaction DDL | Chưa apply/verify DB; CHECK không thay ownership/service transaction | High |
 
-Nguồn: [SRC-079 — uidemo/src/mockApi.ts](</home/pro/Downloads/expiry/uidemo/src/mockApi.ts>), [SRC-054 — uidemo/src/App.tsx](</home/pro/Downloads/expiry/uidemo/src/App.tsx>), [SRC-049 — uidemo/HANDOFF.md](</home/pro/Downloads/expiry/uidemo/HANDOFF.md>), [SRC-016 — Expiry_System_Design_2026-10-08/contracts/openapi.json](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/openapi.json>), [SRC-017 — Expiry_System_Design_2026-10-08/contracts/schema_reference_postgresql.sql](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/schema_reference_postgresql.sql>).
+Nguồn: [SRC-079 — uidemo/src/mockApi.ts](</home/pro/Downloads/expiry/uidemo/src/mockApi.ts>), [SRC-054 — uidemo/src/App.tsx](</home/pro/Downloads/expiry/uidemo/src/App.tsx>), [SRC-049 — uidemo/HANDOFF.md](</home/pro/Downloads/expiry/uidemo/HANDOFF.md>), [SRC-016 — Expiry_System_Design_2026-10-08/contracts/openapi.json](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/openapi.json>), [SRC-017 — Expiry_System_Design_2026-10-08/contracts/schema_reference_mysql.sql](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/schema_reference_mysql.sql>).
 
 ### 15.3 Toàn bộ seed food entries của demo [A]
 
@@ -1845,7 +1845,7 @@ Nguồn đối chiếu chính: SEBoK: Stakeholder Needs Definition, SEBoK: Syste
 | SRC-014 | [Expiry_System_Design_2026-10-08/Expiry_Complete_System_Design_2026-10-08.md](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/Expiry_Complete_System_Design_2026-10-08.md>) | 94258 | `600dd1c39cfdfa886ff0b6b24ec670d321eb6d78c4304bf0e6cb5e639522f508` | UTF-8 full text |
 | SRC-015 | [Expiry_System_Design_2026-10-08/contracts/fixtures.json](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/fixtures.json>) | 790 | `3399aa5aae0a51451dff2c1c03a7fa96fe44e8a5ad62226572193ea78f870d0e` | UTF-8 full text |
 | SRC-016 | [Expiry_System_Design_2026-10-08/contracts/openapi.json](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/openapi.json>) | 62527 | `3b72da250b837cc5e25d6af2b2746521e3177bf66b150dd9b980db9c7be2057d` | UTF-8 full text |
-| SRC-017 | [Expiry_System_Design_2026-10-08/contracts/schema_reference_postgresql.sql](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/schema_reference_postgresql.sql>) | 3948 | `c9969fc7370916deb29398c0b05f1deab71c38f236d6fad9b25857d28c87da6f` | UTF-8 full text |
+| SRC-017 | [Expiry_System_Design_2026-10-08/contracts/schema_reference_mysql.sql](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/schema_reference_mysql.sql>) | 3948 | `c9969fc7370916deb29398c0b05f1deab71c38f236d6fad9b25857d28c87da6f` | UTF-8 full text |
 | SRC-018 | [Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_1.mmd](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_1.mmd>) | 507 | `d25e49358d7de83a6e546723238f3770b1d10b855bdaba2e50103ea3b17a10eb` | UTF-8 full text |
 | SRC-019 | [Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_2.mmd](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_2.mmd>) | 467 | `327f560f75fa9889503761465198bec209df495c3119abea16eaf9ed341e6381` | UTF-8 full text |
 | SRC-020 | [Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_3.mmd](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_3.mmd>) | 521 | `7616b226fa0df30775f7f8c80f299320bbf8d085bd06c63b8ae7d1dc4a71fcf2` | UTF-8 full text |
@@ -1989,7 +1989,7 @@ Không có quyền đọc toàn bộ lịch sử chat như một bản export. �
 | CTX-05 | Auth xuất hiện tại điểm cần dữ liệu riêng/persist, không mặc định đặt ở đầu toàn journey | [A-F] tracker |
 | CTX-06 | Tồn kho riêng từng tài khoản | [A-U] trả lời hôm nay; đã thay giả định trước đây |
 | CTX-07 | MVP nhập tay, nhắc trong app; OCR/push chưa ở MVP | [A-U] hôm nay |
-| CTX-08 | Stack chưa chốt | [A-U] hôm nay; React/Express/PostgreSQL chỉ [D] |
+| CTX-08 | Stack chưa chốt | [A-U] hôm nay; React/Express/MySQL 8.4 chỉ [D] |
 | CTX-09 | Team khoảng 5 người; task tự claim, có thể đồng đảm nhiệm, review theo dependency | [A-U] context; chưa phân công tên mới |
 | CTX-10 | Food-first từ persona hiện tại | [C/D] nhất quán corpus; mở rộng medicines/cosmetics/warranty cần nghiên cứu riêng |
 
@@ -2058,10 +2058,10 @@ Nguồn: [SRC-004 — Expiry_System_Design_2026-10-08/01_Research_Personas_and_O
 | RES-01 | Mesiranta et al., CozZo, conference abstract, 2024; https://zenodo.org/records/14164532 | 52 households, 3–6 tuần; stock/expiry awareness và planning có giá trị; maintenance effort, expiry estimate và perceived value là trở ngại | Conference abstract, không chứng minh ba persona VN là market segments; kết quả giảm waste không dùng làm KPI mặc định |
 | RES-02 | Mathisen et al., TotalCtrl/Too Good To Go, 2022; https://formative.jmir.org/2022/9/e38520 ; index https://pmc.ncbi.nlm.nih.gov/articles/PMC9482070/ | Search index nguồn paper: 6 students, nhiều manual operations gây khó duy trì | Full-text hôm nay bị anti-bot; chỉ dùng mức finding đã có trong index + audit cũ; chưa tái đọc full paper |
 | RES-03 | EATiT, Taiwan, Graham-Rowe trong REPORT.md | Visibility, disrupted plans, inconvenience là background hypotheses | Chưa truy lại paper gốc lần này; không dùng sample/quote từ đây làm new verified claim |
-| DOC-01 | PostgreSQL constraints https://www.postgresql.org/docs/current/ddl-constraints.html | PK/FK/UNIQUE/CHECK giữ integrity | Không thay validation/ownership nghiệp vụ |
-| DOC-02 | PostgreSQL locking https://www.postgresql.org/docs/current/explicit-locking.html | FOR UPDATE hỗ trợ serialize cập nhật cùng hàng | Vẫn phải có transaction; thứ tự lock ổn định |
-| DOC-03 | Date/time https://www.postgresql.org/docs/current/datatype-datetime.html | DATE khác timestamp/timezone | Cách ưu tiên hôm nay là rule project |
-| DOC-04 | Numeric https://www.postgresql.org/docs/current/datatype-numeric.html | numeric là exact decimal | Không tự quyết định unit/conversion |
+| DOC-01 | MySQL 8.4 constraints https://dev.mysql.com/doc/refman/8.4/en/create-table-check-constraints.html | PK/FK/UNIQUE/CHECK giữ integrity | Không thay validation/ownership nghiệp vụ |
+| DOC-02 | MySQL 8.4 locking https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html | FOR UPDATE hỗ trợ serialize cập nhật cùng hàng | Vẫn phải có transaction; thứ tự lock ổn định |
+| DOC-03 | Date/time https://dev.mysql.com/doc/refman/8.4/en/time-zone-support.html | DATE khác timestamp/timezone | Cách ưu tiên hôm nay là rule project |
+| DOC-04 | Numeric https://dev.mysql.com/doc/refman/8.4/en/fixed-point-types.html | numeric là exact decimal | Không tự quyết định unit/conversion |
 | DOC-05 | React https://react.dev/learn/sharing-state-between-components | Shared UI state ở common parent gần nhất | Không phải mọi state lên App |
 | DOC-06 | OpenAPI 3.1.1 https://spec.openapis.org/oas/v3.1.1.html | Contract operations, schema, request/response | Không quy định phải map route 1:1 table |
 | DOC-07 | RFC 9457 https://www.rfc-editor.org/rfc/rfc9457 | Problem details cho lỗi HTTP | code/request_id là extension project |
@@ -2551,7 +2551,7 @@ sequenceDiagram
  UI->>API: POST entry + Idempotency-Key
  API->>API: Authenticate and validate DTO
  API->>S: execute(principal, draft, key)
- S->>DB: Begin; reserve key / check replay
+ S->>DB: Begin, reserve key / check replay
  alt Key already completed, same fingerprint
   DB-->>S: Saved response
  else New command
@@ -2577,7 +2577,7 @@ sequenceDiagram
  API->>S: principal + validated query
  S->>DB: Read owner settings + scoped entries
  DB-->>S: Metadata and quantities
- S->>S: Derive with clock/timezone; sort before pagination
+ S->>S: Derive with clock/timezone, sort before pagination
  S-->>API: items + reasons + as_of_date + pagination
  API-->>UI: 200
  UI-->>U: Groups and actionable detail links
@@ -2595,7 +2595,7 @@ sequenceDiagram
  U->>UI: Use / discard amount
  UI->>API: POST movement + expected_version + key
  API->>S: principal + command
- S->>DB: Begin; reserve key
+ S->>DB: Begin, reserve key
  alt Replay with same fingerprint
   DB-->>S: Original response
  else New command
@@ -2608,7 +2608,7 @@ sequenceDiagram
    API-->>UI: 409 / 422
    UI-->>U: Refetch/review draft
   else Valid
-   S->>DB: Update quantity/version; insert movement; save result
+   S->>DB: Update quantity/version, insert movement, save result
    S->>DB: Commit
    S-->>API: Updated entry + movement
    API-->>UI: 201
@@ -2684,7 +2684,7 @@ Nguồn: [SRC-008 — Expiry_System_Design_2026-10-08/05_Data_Definitions_and_ER
 4. Phân biệt persisted state, derived projection, transport DTO và UI-only draft.
 5. Viết invariants, event/command shape, lifecycle và transaction boundary.
 6. Xác định functional dependencies và cardinality; sau đó ERD logical.
-7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án PostgreSQL, không khóa stack user.
+7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án MySQL 8.4 (InnoDB).
 
 **Data dictionary không chỉ ghi `date: string`.** Phải ghi đây là calendar date, null khi nào, ai nhập, ai dùng, có tự derive không và timezone nào dùng so sánh.
 
@@ -2959,11 +2959,11 @@ Nguồn: [SRC-010 — Expiry_System_Design_2026-10-08/07_Architecture_Components
 ## S6.2 Stack chưa chốt
 | Candidate | Fit | Trade-off |
 |---|---|---|
-| React + Express + PostgreSQL | Khớp học React/MVC/relational tx; explicit layers dễ học | Express phải tự giữ convention/schema/error/DI; vận hành PostgreSQL |
-| React + NestJS + PostgreSQL | Modules/DI/guards rõ nếu team quen | Decorators/framework learning thêm; chưa có evidence team cần |
+| React + Express + MySQL 8.4 | Khớp học React/MVC/relational tx; explicit layers dễ học | Express phải tự giữ convention/schema/error/DI; vận hành MySQL 8.4 |
+| React + NestJS + MySQL 8.4 | Modules/DI/guards rõ nếu team quen | Decorators/framework learning thêm; chưa có evidence team cần |
 | React + Express + MySQL/InnoDB | Relational+transactions khả thi khi môn/team có kinh nghiệm | SQL/index differences; DDL tham chiếu cần port |
 
-Recommended approach [D]: **modular monolith theo feature + use-case service + repository**, independent domain rules/DTO. React/Express/PostgreSQL là reference stack, không gọi chốt. Why: quantity/history/keys cần cùng tx; group chia task theo feature/contract; ba môn dùng cùng traceability. Do not: central controller chứa mọi rule, microservices vì “chuẩn”, một repository generic bypass owner scope, hoặc route theo từng table.
+Recommended approach [D]: **modular monolith theo feature + use-case service + repository**, independent domain rules/DTO. React/Express/MySQL 8.4 là reference stack, không gọi chốt. Why: quantity/history/keys cần cùng tx; group chia task theo feature/contract; ba môn dùng cùng traceability. Do not: central controller chứa mọi rule, microservices vì “chuẩn”, một repository generic bypass owner scope, hoặc route theo từng table.
 
 ## S3.29 Repo structure đề xuất (monorepo nếu cùng workspace)
 ```text
@@ -3223,7 +3223,7 @@ Không có quyền đọc toàn bộ lịch sử chat như một bản export. �
 | CTX-05 | Auth xuất hiện tại điểm cần dữ liệu riêng/persist, không mặc định đặt ở đầu toàn journey | [A-F] tracker |
 | CTX-06 | Tồn kho riêng từng tài khoản | [A-U] trả lời hôm nay; đã thay giả định trước đây |
 | CTX-07 | MVP nhập tay, nhắc trong app; OCR/push chưa ở MVP | [A-U] hôm nay |
-| CTX-08 | Stack chưa chốt | [A-U] hôm nay; React/Express/PostgreSQL chỉ [D] |
+| CTX-08 | Stack chưa chốt | [A-U] hôm nay; React/Express/MySQL 8.4 chỉ [D] |
 | CTX-09 | Team khoảng 5 người; task tự claim, có thể đồng đảm nhiệm, review theo dependency | [A-U] context; chưa phân công tên mới |
 | CTX-10 | Food-first từ persona hiện tại | [C/D] nhất quán corpus; mở rộng medicines/cosmetics/warranty cần nghiên cứu riêng |
 
@@ -3289,10 +3289,10 @@ Không có blocker cho bộ logical design này. Trước khi gọi ERD/API là 
 | RES-01 | Mesiranta et al., CozZo, conference abstract, 2024; https://zenodo.org/records/14164532 | 52 households, 3–6 tuần; stock/expiry awareness và planning có giá trị; maintenance effort, expiry estimate và perceived value là trở ngại | Conference abstract, không chứng minh ba persona VN là market segments; kết quả giảm waste không dùng làm KPI mặc định |
 | RES-02 | Mathisen et al., TotalCtrl/Too Good To Go, 2022; https://formative.jmir.org/2022/9/e38520 ; index https://pmc.ncbi.nlm.nih.gov/articles/PMC9482070/ | Search index nguồn paper: 6 students, nhiều manual operations gây khó duy trì | Full-text hôm nay bị anti-bot; chỉ dùng mức finding đã có trong index + audit cũ; chưa tái đọc full paper |
 | RES-03 | EATiT, Taiwan, Graham-Rowe trong REPORT.md | Visibility, disrupted plans, inconvenience là background hypotheses | Chưa truy lại paper gốc lần này; không dùng sample/quote từ đây làm new verified claim |
-| DOC-01 | PostgreSQL constraints https://www.postgresql.org/docs/current/ddl-constraints.html | PK/FK/UNIQUE/CHECK giữ integrity | Không thay validation/ownership nghiệp vụ |
-| DOC-02 | PostgreSQL locking https://www.postgresql.org/docs/current/explicit-locking.html | FOR UPDATE hỗ trợ serialize cập nhật cùng hàng | Vẫn phải có transaction; thứ tự lock ổn định |
-| DOC-03 | Date/time https://www.postgresql.org/docs/current/datatype-datetime.html | DATE khác timestamp/timezone | Cách ưu tiên hôm nay là rule project |
-| DOC-04 | Numeric https://www.postgresql.org/docs/current/datatype-numeric.html | numeric là exact decimal | Không tự quyết định unit/conversion |
+| DOC-01 | MySQL 8.4 constraints https://dev.mysql.com/doc/refman/8.4/en/create-table-check-constraints.html | PK/FK/UNIQUE/CHECK giữ integrity | Không thay validation/ownership nghiệp vụ |
+| DOC-02 | MySQL 8.4 locking https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html | FOR UPDATE hỗ trợ serialize cập nhật cùng hàng | Vẫn phải có transaction; thứ tự lock ổn định |
+| DOC-03 | Date/time https://dev.mysql.com/doc/refman/8.4/en/time-zone-support.html | DATE khác timestamp/timezone | Cách ưu tiên hôm nay là rule project |
+| DOC-04 | Numeric https://dev.mysql.com/doc/refman/8.4/en/fixed-point-types.html | numeric là exact decimal | Không tự quyết định unit/conversion |
 | DOC-05 | React https://react.dev/learn/sharing-state-between-components | Shared UI state ở common parent gần nhất | Không phải mọi state lên App |
 | DOC-06 | OpenAPI 3.1.1 https://spec.openapis.org/oas/v3.1.1.html | Contract operations, schema, request/response | Không quy định phải map route 1:1 table |
 | DOC-07 | RFC 9457 https://www.rfc-editor.org/rfc/rfc9457 | Problem details cho lỗi HTTP | code/request_id là extension project |
@@ -3773,7 +3773,7 @@ sequenceDiagram
  UI->>API: POST entry + Idempotency-Key
  API->>API: Authenticate and validate DTO
  API->>S: execute(principal, draft, key)
- S->>DB: Begin; reserve key / check replay
+ S->>DB: Begin, reserve key / check replay
  alt Key already completed, same fingerprint
   DB-->>S: Saved response
  else New command
@@ -3799,7 +3799,7 @@ sequenceDiagram
  API->>S: principal + validated query
  S->>DB: Read owner settings + scoped entries
  DB-->>S: Metadata and quantities
- S->>S: Derive with clock/timezone; sort before pagination
+ S->>S: Derive with clock/timezone, sort before pagination
  S-->>API: items + reasons + as_of_date + pagination
  API-->>UI: 200
  UI-->>U: Groups and actionable detail links
@@ -3817,7 +3817,7 @@ sequenceDiagram
  U->>UI: Use / discard amount
  UI->>API: POST movement + expected_version + key
  API->>S: principal + command
- S->>DB: Begin; reserve key
+ S->>DB: Begin, reserve key
  alt Replay with same fingerprint
   DB-->>S: Original response
  else New command
@@ -3830,7 +3830,7 @@ sequenceDiagram
    API-->>UI: 409 / 422
    UI-->>U: Refetch/review draft
   else Valid
-   S->>DB: Update quantity/version; insert movement; save result
+   S->>DB: Update quantity/version, insert movement, save result
    S->>DB: Commit
    S-->>API: Updated entry + movement
    API-->>UI: 201
@@ -3903,7 +3903,7 @@ classDiagram
 4. Phân biệt persisted state, derived projection, transport DTO và UI-only draft.
 5. Viết invariants, event/command shape, lifecycle và transaction boundary.
 6. Xác định functional dependencies và cardinality; sau đó ERD logical.
-7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án PostgreSQL, không khóa stack user.
+7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án MySQL 8.4 (InnoDB).
 
 **Data dictionary không chỉ ghi `date: string`.** Phải ghi đây là calendar date, null khi nào, ai nhập, ai dùng, có tự derive không và timezone nào dùng so sánh.
 
@@ -4172,11 +4172,11 @@ A reserved null-response row must not commit as success. Error rollback removes 
 ## S6.2 Stack chưa chốt
 | Candidate | Fit | Trade-off |
 |---|---|---|
-| React + Express + PostgreSQL | Khớp học React/MVC/relational tx; explicit layers dễ học | Express phải tự giữ convention/schema/error/DI; vận hành PostgreSQL |
-| React + NestJS + PostgreSQL | Modules/DI/guards rõ nếu team quen | Decorators/framework learning thêm; chưa có evidence team cần |
+| React + Express + MySQL 8.4 | Khớp học React/MVC/relational tx; explicit layers dễ học | Express phải tự giữ convention/schema/error/DI; vận hành MySQL 8.4 |
+| React + NestJS + MySQL 8.4 | Modules/DI/guards rõ nếu team quen | Decorators/framework learning thêm; chưa có evidence team cần |
 | React + Express + MySQL/InnoDB | Relational+transactions khả thi khi môn/team có kinh nghiệm | SQL/index differences; DDL tham chiếu cần port |
 
-Recommended approach [D]: **modular monolith theo feature + use-case service + repository**, independent domain rules/DTO. React/Express/PostgreSQL là reference stack, không gọi chốt. Why: quantity/history/keys cần cùng tx; group chia task theo feature/contract; ba môn dùng cùng traceability. Do not: central controller chứa mọi rule, microservices vì “chuẩn”, một repository generic bypass owner scope, hoặc route theo từng table.
+Recommended approach [D]: **modular monolith theo feature + use-case service + repository**, independent domain rules/DTO. React/Express/MySQL 8.4 là reference stack, không gọi chốt. Why: quantity/history/keys cần cùng tx; group chia task theo feature/contract; ba môn dùng cùng traceability. Do not: central controller chứa mọi rule, microservices vì “chuẩn”, một repository generic bypass owner scope, hoặc route theo từng table.
 
 ## S3.29 Repo structure đề xuất (monorepo nếu cùng workspace)
 ```text
@@ -6833,13 +6833,13 @@ Nguồn: [SRC-016 — Expiry_System_Design_2026-10-08/contracts/openapi.json](</
 }
 ```
 
-### SRC-017 — Expiry_System_Design_2026-10-08/contracts/schema_reference_postgresql.sql
+### SRC-017 — Expiry_System_Design_2026-10-08/contracts/schema_reference_mysql.sql
 
-Nguồn: [SRC-017 — Expiry_System_Design_2026-10-08/contracts/schema_reference_postgresql.sql](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/schema_reference_postgresql.sql>); 3948 bytes; SHA-256 `c9969fc7370916deb29398c0b05f1deab71c38f236d6fad9b25857d28c87da6f`.
+Nguồn: [SRC-017 — Expiry_System_Design_2026-10-08/contracts/schema_reference_mysql.sql](</home/pro/Downloads/expiry/Expiry_System_Design_2026-10-08/contracts/schema_reference_mysql.sql>); 3948 bytes; SHA-256 `c9969fc7370916deb29398c0b05f1deab71c38f236d6fad9b25857d28c87da6f`.
 
 ```sql
 
--- Proposed PostgreSQL reference; app assigns UUIDs. Not applied to any live DB.
+-- MySQL 8.4 reference; app assigns UUIDs. Not applied to any live DB.
 BEGIN;
 CREATE TABLE users (
  id uuid PRIMARY KEY, identity_subject text NOT NULL UNIQUE,
@@ -7004,7 +7004,7 @@ sequenceDiagram
  UI->>API: POST entry + Idempotency-Key
  API->>API: Authenticate and validate DTO
  API->>S: execute(principal, draft, key)
- S->>DB: Begin; reserve key / check replay
+ S->>DB: Begin, reserve key / check replay
  alt Key already completed, same fingerprint
   DB-->>S: Saved response
  else New command
@@ -7033,7 +7033,7 @@ sequenceDiagram
  API->>S: principal + validated query
  S->>DB: Read owner settings + scoped entries
  DB-->>S: Metadata and quantities
- S->>S: Derive with clock/timezone; sort before pagination
+ S->>S: Derive with clock/timezone, sort before pagination
  S-->>API: items + reasons + as_of_date + pagination
  API-->>UI: 200
  UI-->>U: Groups and actionable detail links
@@ -7053,7 +7053,7 @@ sequenceDiagram
  U->>UI: Use / discard amount
  UI->>API: POST movement + expected_version + key
  API->>S: principal + command
- S->>DB: Begin; reserve key
+ S->>DB: Begin, reserve key
  alt Replay with same fingerprint
   DB-->>S: Original response
  else New command
@@ -7066,7 +7066,7 @@ sequenceDiagram
    API-->>UI: 409 / 422
    UI-->>U: Refetch/review draft
   else Valid
-   S->>DB: Update quantity/version; insert movement; save result
+   S->>DB: Update quantity/version, insert movement, save result
    S->>DB: Commit
    S-->>API: Updated entry + movement
    API-->>UI: 201
@@ -16853,7 +16853,7 @@ CTX-07                                                      [A-U] hôm nay
 
                                                             [A-U] hôm nay;
 CTX-08            Stack chưa chốt
-                                                            React/Express/PostgreSQL chỉ [D]
+                                                            React/Express/MySQL 8.4 chỉ [D]
 
                   Team khoảng 5 người; task tự claim, có
 CTX-09            thể đồng đảm nhiệm, review theo           [A-U] context; chưa phân công tên mới
@@ -17034,23 +17034,23 @@ RES-03          Graham-Rowe trong            inconvenience là
                 REPORT.md                    background hypotheses
                                                                             new verified claim
 
-                PostgreSQL constraints                                      Không thay
+                MySQL 8.4 constraints                                      Không thay
                                              PK/FK/UNIQUE/CHECK
-DOC-01          PostgreSQL                                                  validation/ownership nghiệp
+DOC-01          MySQL                                                  validation/ownership nghiệp
                                              giữ integrity
                 documentation                                               vụ
 
-                PostgreSQL locking           FOR UPDATE hỗ trợ
+                MySQL 8.4 locking           FOR UPDATE hỗ trợ
                                                                             Vẫn phải có transaction; thứ
-DOC-02          PostgreSQL                   serialize cập nhật cùng
+DOC-02          MySQL                   serialize cập nhật cùng
                                                                             tự lock ổn định
                 documentation                hàng
 
-                Date/time PostgreSQL         DATE khác                      Cách ưu tiên hôm nay là
+                Date/time MySQL         DATE khác                      Cách ưu tiên hôm nay là
 DOC-03
                 documentation                timestamp/timezone             rule project
 
-                Numeric PostgreSQL                                          Không tự quyết định
+                Numeric MySQL                                          Không tự quyết định
 DOC-04                                       numeric là exact decimal
                 documentation                                               unit/conversion
 ```
@@ -18299,7 +18299,7 @@ Bước               Từ đến                                Thông điệp
 4                  HTTP adapter → CreateEntry service    execute(principal, draft, key)
 
                    CreateEntry service → Transaction /
-5                                                        Begin; reserve key / check replay
+5                                                        Begin, reserve key / check replay
                    repositories
 ```
 
@@ -18403,7 +18403,7 @@ Bước              Từ đến                          Thông điệp
                   service
 
                   RecordMovement service →
-4                                                 Begin; reserve key
+4                                                 Begin, reserve key
                   Transaction / repositories
 
                   Transaction / repositories →
@@ -18535,7 +18535,7 @@ S3 15 Thứ tự định nghĩa data
 5.​ Viết invariants, event/command shape, lifecycle và transaction boundary.
 6.​ Xác định functional dependencies và cardinality; sau đó ERD logical.
 7.​ Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án
-    PostgreSQL, không khóa stack user.
+    MySQL, không khóa stack user.
 Data dictionary không chỉ ghi `date: string`. Phải ghi đây là calendar date, null khi nào, ai
 nhập, ai dùng, có tự derive không và timezone nào dùng so sánh.
 
@@ -19277,12 +19277,12 @@ Candidate            Fit                                        Trade-off
                                                                 Express phải tự giữ
 React + Express +    Khớp học React/MVC/relational tx;
                                                                 convention/schema/error/DI; vận hành
-PostgreSQL           explicit layers dễ học
-                                                                PostgreSQL
+MySQL           explicit layers dễ học
+                                                                MySQL
 
 React + NestJS +                                                Decorators/framework learning thêm;
                      Modules/DI/guards rõ nếu team quen
-PostgreSQL                                                      chưa có evidence team cần
+MySQL                                                      chưa có evidence team cần
 ```
 
 #### SRC-002 — Page 46/58
@@ -19294,7 +19294,7 @@ React + Express +    Relational+transactions khả thi khi       SQL/index diffe
 MySQL/InnoDB         môn/team có kinh nghiệm                   cần port
 
 Recommended approach [D]: modular monolith theo feature + use-case service +
-repository, independent domain rules/DTO. React/Express/PostgreSQL là reference stack,
+repository, independent domain rules/DTO. React/Express/MySQL 8.4 là reference stack,
 không gọi chốt. Why: quantity/history/keys cần cùng tx; group chia task theo feature/contract; ba
 môn dùng cùng traceability. Do not: central controller chứa mọi rule, microservices vì “chuẩn”,
 một repository generic bypass owner scope, hoặc route theo từng table.

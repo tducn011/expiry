@@ -8,7 +8,7 @@ sequenceDiagram
  UI->>API: POST entry + Idempotency-Key
  API->>API: Authenticate and validate DTO
  API->>S: execute(principal, draft, key)
- S->>DB: Begin; reserve key / check replay
+ S->>DB: Begin, reserve key / check replay
  alt Key already completed, same fingerprint
   DB-->>S: Saved response
  else New command

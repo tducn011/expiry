@@ -1,0 +1,21 @@
+{
+  "status": "AUTHORIZED_BACKUP",
+  "scope": "SCH-03 one-time replacement of the exact pre-task Workbench artifacts after preserving them",
+  "files": {
+    "model": {
+      "path": "database/mysql/evidence/pre-sch03/expiry_mysql_before_sch03.mwb",
+      "bytes": 9661,
+      "sha256": "9b24b335105ba2a3a7c701a83065e1eb23f0692d3bfdc96366db4881e0b498da"
+    },
+    "image": {
+      "path": "database/mysql/evidence/pre-sch03/expiry_mysql_eer_before_sch03.png",
+      "bytes": 80665,
+      "sha256": "35109060249a7051d348d492c1ede429cf41a08cf0ef8d47bbac9662eb558c4d"
+    },
+    "evidence": {
+      "path": "database/mysql/evidence/pre-sch03/workbench_native_evidence_before_sch03.json",
+      "bytes": 10289,
+      "sha256": "eb69a29ecba3138415d8e3e11528e6b32c4b4ab146d957f8f228bc3a3a9f2caf"
+    }
+  }
+}

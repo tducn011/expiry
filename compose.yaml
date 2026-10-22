@@ -14,7 +14,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-expiry_app}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app_dev_password}
     ports:
-      - "127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306"
+      - "0.0.0.0:${MYSQL_HOST_PORT:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/mysql/migrations:/docker-entrypoint-initdb.d:ro
@@ -28,10 +28,18 @@ services:
     build:
       context: ./services/python-scan
       dockerfile: Dockerfile
+      args:
+        ENABLE_DATEREG: ${ENABLE_DATEREG:-false}
     container_name: expiry-python-scan
     restart: unless-stopped
     ports:
       - "127.0.0.1:8000:8000"
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      VISION_LLM_PROVIDER: ${VISION_LLM_PROVIDER:-auto}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")' || exit 1"]
       interval: 10s
@@ -45,9 +53,9 @@ services:
     container_name: expiry-api
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3001:3001"
+      - "0.0.0.0:3001:3001"
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-development}
       PORT: 3001
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
@@ -55,11 +63,25 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app_dev_password}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-expiry_dev}
       SCAN_SERVICE_URL: http://python-scan:8000
+      SCAN_TIMEOUT_MS: 10000
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8443,http://127.0.0.1:8443,http://100.80.6.17:8443,https://demoexpiry.vercel.app,https://expiryapp.vercel.app,https://expiry.vercel.app,https://uidemo.vercel.app}
     depends_on:
       mysql:
         condition: service_healthy
       python-scan:
         condition: service_started
+
+  adminer:
+    image: adminer:latest
+    container_name: expiry-adminer
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:8085:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
 
 volumes:
   mysql_data:

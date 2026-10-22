@@ -56,7 +56,7 @@ PR gate [D]: documentation consistency + affected domain/contract tests; DB chan
 
 ## Dependencies
 
-- [traceability/coverage.md](../11-traceability/coverage.md)
+- [traceability/coverage.md](coverage.md)
 - [08-architecture/deployment.md](../08-architecture/deployment.md)
 - [03-requirements-features/nonfunctional-requirements.md](../03-requirements-features/nonfunctional-requirements.md)
 
@@ -68,7 +68,7 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
-- [11-traceability/coverage.md](../11-traceability/coverage.md)
+- [11-traceability/coverage.md](coverage.md)
 - [08-architecture/deployment.md](../08-architecture/deployment.md)
 - [03-requirements-features/nonfunctional-requirements.md](../03-requirements-features/nonfunctional-requirements.md)
 

@@ -60,7 +60,7 @@ ID
 	[A-U] hôm nay
 	CTX-08
 	Stack chưa chốt
-	[A-U] hôm nay; React/Express/PostgreSQL chỉ [D]
+	[A-U] hôm nay; React/Express/MySQL 8.4 chỉ [D]
 	CTX-09
 	Team khoảng 5 người; task tự claim, có thể đồng đảm nhiệm, review theo dependency
 	[A-U] context; chưa phân công tên mới
@@ -180,19 +180,19 @@ Source
 	Visibility, disrupted plans, inconvenience là background hypotheses
 	Chưa truy lại paper gốc lần này; không dùng sample/quote từ đây làm new verified claim
 	DOC-01
-	PostgreSQL constraints PostgreSQL documentation
+	MySQL 8.4 constraints MySQL documentation
 	PK/FK/UNIQUE/CHECK giữ integrity
 	Không thay validation/ownership nghiệp vụ
 	DOC-02
-	PostgreSQL locking PostgreSQL documentation
+	MySQL 8.4 locking MySQL documentation
 	FOR UPDATE hỗ trợ serialize cập nhật cùng hàng
 	Vẫn phải có transaction; thứ tự lock ổn định
 	DOC-03
-	Date/time PostgreSQL documentation
+	Date/time MySQL documentation
 	DATE khác timestamp/timezone
 	Cách ưu tiên hôm nay là rule project
 	DOC-04
-	Numeric PostgreSQL documentation
+	Numeric MySQL documentation
 	numeric là exact decimal
 	Không tự quyết định unit/conversion
 	DOC-05
@@ -1312,7 +1312,7 @@ S3 15 Thứ tự định nghĩa data
 4. Phân biệt persisted state, derived projection, transport DTO và UI-only draft.
 5. Viết invariants, event/command shape, lifecycle và transaction boundary.
 6. Xác định functional dependencies và cardinality; sau đó ERD logical.
-7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án PostgreSQL, không khóa stack user.
+7. Chọn DB để map physical types/index/constraints. DDL dưới đây là phương án MySQL 8.4 (InnoDB).
 Data dictionary không chỉ ghi `date: string`. Phải ghi đây là calendar date, null khi nào, ai nhập, ai dùng, có tự derive không và timezone nào dùng so sánh.
 S3 16 Grain entity decisions
 Entity
@@ -1902,10 +1902,10 @@ S6 2 Stack chưa chốt
 Candidate
 	Fit
 	Trade-off
-	React + Express + PostgreSQL
+	React + Express + MySQL 8.4
 	Khớp học React/MVC/relational tx; explicit layers dễ học
-	Express phải tự giữ convention/schema/error/DI; vận hành PostgreSQL
-	React + NestJS + PostgreSQL
+	Express phải tự giữ convention/schema/error/DI; vận hành MySQL 8.4
+	React + NestJS + MySQL 8.4
 	Modules/DI/guards rõ nếu team quen
 	Decorators/framework learning thêm; chưa có evidence team cần
 	React + Express + MySQL/InnoDB
@@ -1913,7 +1913,7 @@ Candidate
 	SQL/index differences; DDL tham chiếu cần port
 	
 
-Recommended approach [D]: modular monolith theo feature + use-case service + repository, independent domain rules/DTO. React/Express/PostgreSQL là reference stack, không gọi chốt. Why: quantity/history/keys cần cùng tx; group chia task theo feature/contract; ba môn dùng cùng traceability. Do not: central controller chứa mọi rule, microservices vì “chuẩn”, một repository generic bypass owner scope, hoặc route theo từng table.
+Recommended approach [D]: modular monolith theo feature + use-case service + repository, independent domain rules/DTO. React/Express/MySQL 8.4 là reference stack, không gọi chốt. Why: quantity/history/keys cần cùng tx; group chia task theo feature/contract; ba môn dùng cùng traceability. Do not: central controller chứa mọi rule, microservices vì “chuẩn”, một repository generic bypass owner scope, hoặc route theo từng table.
 S3 29 Repo structure đề xuất monorepo nếu cùng workspace
 apps/web/src/app/              router, providers, auth wiring
 apps/web/src/features/inventory/

@@ -57,7 +57,7 @@ export class InventoryRepository {
     const payload={...meta,quantity,unit:input.unit};
     return this.execute(owner,key,'create:food-entry',payload,async c=>{
       const id=randomUUID();
-      await c.execute(`INSERT INTO food_entries(id,user_id,${metadataFields.join(',')},remaining_quantity,unit) VALUES (${Array(12).fill('?').join(',')})`,[id,owner,...metadataFields.map(k=>meta[k]),quantity,input.unit]);
+      await c.execute(`INSERT INTO food_entries(id,user_id,${metadataFields.join(',')},remaining_quantity,unit) VALUES (${Array(metadataFields.length + 4).fill('?').join(',')})`,[id,owner,...metadataFields.map(k=>meta[k]),quantity,input.unit]);
       await this.hook('after_entry',{c,id});
       await c.execute("INSERT INTO stock_movements(id,entry_id,kind,quantity_before,quantity_after) VALUES (?,?,'initial',0,?)",[randomUUID(),id,quantity]);
       await this.hook('after_movement',{c,id});
@@ -70,10 +70,10 @@ export class InventoryRepository {
     if (mode==='movement') {
       allow(input,['kind','amount','expected_version','reason']);
       if (!['consume','discard'].includes(input.kind)) invalid();
-      payload={...input,amount:decimal(milli(input.amount,'g',true)),reason:reason(input.reason)};
+      payload={...input,amount:decimal(milli(input.amount,null,true)),reason:reason(input.reason)};
     } else if (mode==='recount') {
       allow(input,['actual_quantity','reason','expected_version']);
-      payload={...input,actual_quantity:decimal(milli(input.actual_quantity,'g')),reason:reason(input.reason,true)};
+      payload={...input,actual_quantity:decimal(milli(input.actual_quantity,null)),reason:reason(input.reason,true)};
     } else if (mode==='edit') {
       allow(input,[...metadataFields,'expected_version']);
       if (Object.keys(input).length<2) invalid(); payload=input;
@@ -97,7 +97,7 @@ export class InventoryRepository {
       }
       const before=milli(entry.remaining_quantity,entry.unit);
       const qty=milli(mode==='movement'?payload.amount:payload.actual_quantity,entry.unit,mode==='movement');
-      if (mode==='movement' && qty>before) throw new DomainError(409,'INSUFFICIENT_QUANTITY');
+      if (mode==='movement' && qty>before) throw new DomainError(422,'INSUFFICIENT_QUANTITY');
       const after=mode==='movement'?before-qty:qty;
       if (before===after) return {status:200,body:{entry,movement:null,changed:false}};
       await c.execute('UPDATE food_entries SET remaining_quantity=?,version=version+1,updated_at=UTC_TIMESTAMP(6) WHERE id=? AND user_id=?',[decimal(after),id,owner]);
@@ -117,10 +117,36 @@ export class InventoryRepository {
   async get(owner,id,history=false) {
     this.principal(owner); uuid(id); const c=await connect(this.database);
     try {
-      const [[entry]]=await c.execute(`SELECT * FROM food_entries WHERE id=? AND user_id=? ${history?'':'AND deleted_at IS NULL'}`,[id,owner]);
-      if (!entry) throw new DomainError(404,'ENTRY_NOT_FOUND');
-      if (!history) return entry;
-      const [events]=await c.execute('SELECT id,entry_id,kind,quantity_before,quantity_after,reason,recorded_at FROM stock_movements WHERE entry_id=? ORDER BY recorded_at DESC,id',[id]); return events;
+      if (!history) {
+        const [[entry]] = await c.execute(
+          `SELECT e.*, u.timezone, u.attention_lead_days 
+           FROM food_entries e 
+           JOIN users u ON u.id = e.user_id 
+           WHERE e.id = ? AND e.user_id = ? AND e.deleted_at IS NULL`,
+          [id, owner]
+        );
+        if (!entry) throw new DomainError(404, 'ENTRY_NOT_FOUND');
+        return entry;
+      }
+      const [[entry]] = await c.execute(`SELECT * FROM food_entries WHERE id=? AND user_id=?`, [id, owner]);
+      if (!entry) throw new DomainError(404, 'ENTRY_NOT_FOUND');
+      const [events] = await c.execute('SELECT id,entry_id,kind,quantity_before,quantity_after,reason,recorded_at FROM stock_movements WHERE entry_id=? ORDER BY recorded_at DESC,id', [id]);
+      return events;
+    } finally { await c.end(); }
+  }
+  async listMovements(owner, id, { page = 1, limit = 20 } = {}) {
+    this.principal(owner); uuid(id); const c = await connect(this.database);
+    try {
+      const [[entry]] = await c.execute('SELECT id FROM food_entries WHERE id=? AND user_id=?', [id, owner]);
+      if (!entry) throw new DomainError(404, 'ENTRY_NOT_FOUND');
+      const [[countRow]] = await c.execute('SELECT COUNT(*) total FROM stock_movements WHERE entry_id=?', [id]);
+      const total = Number(countRow.total);
+      const offset = (Number(page) - 1) * Number(limit);
+      const [events] = await c.query(
+        'SELECT id,entry_id,kind,quantity_before,quantity_after,reason,recorded_at FROM stock_movements WHERE entry_id=? ORDER BY recorded_at DESC,id LIMIT ? OFFSET ?',
+        [id, Number(limit), Number(offset)]
+      );
+      return { events, total };
     } finally { await c.end(); }
   }
   async setPreferences(owner,key,input) {
@@ -153,15 +179,46 @@ export class InventoryRepository {
       if(location!==undefined) { where+=' AND storage_location=?'; args.push(location); }
       const cte=`WITH classified AS (SELECT *,CASE WHEN expiry_date IS NULL THEN 'unknown' WHEN expiry_date<? THEN 'past_date' WHEN expiry_date=? THEN 'due_today' WHEN DATEDIFF(expiry_date,?)<=? THEN 'soon' ELSE 'later' END AS attention_status FROM food_entries WHERE ${where})`;
       args.splice(2,0,day);
-      const outer=filter?' WHERE attention_status=?':'';
-      if(filter) args.push(filter);
+      let outer = '';
+      if (filter) {
+        if (view === 'attention' && filter === 'later') {
+          outer = ' WHERE 1=0';
+        } else {
+          outer = ' WHERE attention_status=?';
+          args.push(filter);
+        }
+      } else if (view === 'attention') {
+        outer = " WHERE attention_status != 'later'";
+      }
       const order=view==='trash'?'deleted_at DESC,id':"CASE attention_status WHEN 'past_date' THEN 0 WHEN 'due_today' THEN 1 WHEN 'soon' THEN 2 WHEN 'unknown' THEN 3 ELSE 4 END,expiry_date IS NULL,expiry_date,created_at,id";
       const sql=`${cte} SELECT * FROM classified${outer} ORDER BY ${order} LIMIT ? OFFSET ?`;
       const paged=[...args,limit,(page-1)*limit];
       if(explain) { const [plan]=await c.query('EXPLAIN FORMAT=JSON '+sql,paged); return {sql,parameters:paged,plan}; }
-      const [[{total}]]=await c.query(`${cte} SELECT COUNT(*) total FROM classified${outer}`,args);
-      const [items]=await c.query(sql,paged);
-      return {items:items.map(({attention_status,...entry})=>({...entry,lifecycle:milli(entry.remaining_quantity,entry.unit)===0n?'depleted':'active',attention:attention(entry,user,instant)})),total:Number(total),page,limit,as_of_date:day};
+      let total;
+      if (!filter) {
+        const whereArgs = [owner];
+        if (q) whereArgs.push('%' + q.replace(/[!%_]/g, c => '!' + c) + '%');
+        if (location !== undefined) whereArgs.push(location);
+        const [[countRow]] = await c.query(`SELECT COUNT(*) total FROM food_entries WHERE ${where}`, whereArgs);
+        total = Number(countRow.total);
+      } else {
+        const [[countRow]] = await c.query(`${cte} SELECT COUNT(*) total FROM classified${outer}`, args);
+        total = Number(countRow.total);
+      }
+      const [items] = await c.query(sql, paged);
+      return { items: items.map(({ attention_status, ...entry }) => ({ ...entry, lifecycle: milli(entry.remaining_quantity, entry.unit) === 0n ? 'depleted' : 'active', attention: attention(entry, user, instant) })), total, page, limit, as_of_date: day };
     } finally { await c.end(); }
+  }
+  async pruneExpiredIdempotencyKeys(retentionDays = 2) {
+    const c = await connect(this.database);
+    try {
+      const [result] = await c.execute(
+        'DELETE FROM api_requests WHERE created_at < DATE_SUB(UTC_TIMESTAMP(6), INTERVAL ? DAY)',
+        [retentionDays]
+      );
+      return result.affectedRows;
+    } finally {
+      await c.end();
+    }
   }
 }

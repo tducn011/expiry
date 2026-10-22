@@ -38,10 +38,10 @@ try:
                 'connection_name': connection.name, 'connection_saved': True,
                 'password_saved': False, 'db': result.stringByName('db'),
                 'version': result.stringByName('version'), 'gui_button_clicked': False,
-                'model_open_command': '--model docs/erd/expiry_mysql.mwb',
+                'model_open_command': '--model docs/architecture/06-data-model/erd-workbench/expiry_mysql.mwb',
                 'open_model_tables': [t.name for m in grt.root.wb.doc.physicalModels for s in m.catalog.schemata for t in s.tables] if grt.root.wb.doc else [],
                 'model_load_at_script_time': 'loaded' if grt.root.wb.doc else 'pending startup model load'}
-    (root / 'docs/erd/workbench_open_evidence.json').write_text(json.dumps(evidence, indent=2)+'\n')
+    (root / 'docs/architecture/06-data-model/erd-workbench/workbench_open_evidence.json').write_text(json.dumps(evidence, indent=2)+'\n')
     print(json.dumps(evidence))
 finally:
     native.disconnect()

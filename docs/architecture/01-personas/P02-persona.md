@@ -11,7 +11,7 @@ Khôi phục persona gốc; phân biệt nội dung card và inference.
 ## Evidence sources
 
 - [00-context/source-register.md](../00-context/source-register.md)
-- [00-context/sources/canva-personas.txt](../00-context/sources/canva-personas.txt)
+- [00-context/sources/canva-personas.txt](canva-personas.txt)
 
 ## Definitions and assumptions
 

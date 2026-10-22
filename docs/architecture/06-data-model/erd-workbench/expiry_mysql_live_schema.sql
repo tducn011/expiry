@@ -67,6 +67,22 @@ CREATE TABLE `food_entries` (
   CONSTRAINT `entries_version` CHECK ((`version` >= 1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `local_credentials`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `local_credentials` (
+  `user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `email_normalized` varchar(254) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `password_verifier` varchar(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `credentials_email` (`email_normalized`),
+  CONSTRAINT `credentials_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `credentials_email_shape` CHECK (((char_length(`email_normalized`) between 3 and 254) and (`email_normalized` = lower(`email_normalized`)))),
+  CONSTRAINT `credentials_verifier` CHECK (regexp_like(`password_verifier`,_latin1'^scrypt[$]131072[$]8[$]1[$][0-9a-f]{32}[$][0-9a-f]{128}$',_latin1'c'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `schema_migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -98,6 +114,25 @@ CREATE TABLE `stock_movements` (
   CONSTRAINT `movements_kind` CHECK ((`kind` in (_latin1'initial',_latin1'consume',_latin1'discard',_latin1'adjustment'))),
   CONSTRAINT `movements_reason` CHECK (((`reason` is null) or (char_length(`reason`) <= 500))),
   CONSTRAINT `movements_shape` CHECK ((((`kind` = _latin1'initial') and (`quantity_before` = 0) and (`quantity_after` > 0)) or ((`kind` in (_latin1'consume',_latin1'discard')) and (`quantity_after` < `quantity_before`)) or ((`kind` = _latin1'adjustment') and (`quantity_after` <> `quantity_before`) and (`reason` is not null) and (char_length(trim(`reason`)) > 0))))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `user_sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_sessions` (
+  `token_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `last_seen_at` datetime(6) NOT NULL,
+  `expires_at` datetime(6) NOT NULL,
+  `revoked_at` datetime(6) DEFAULT NULL,
+  PRIMARY KEY (`token_hash`),
+  KEY `sessions_owner` (`user_id`,`revoked_at`,`expires_at`),
+  KEY `sessions_expiry` (`expires_at`),
+  CONSTRAINT `sessions_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `sessions_hash` CHECK (regexp_like(`token_hash`,_latin1'^[0-9a-f]{64}$',_latin1'c')),
+  CONSTRAINT `sessions_revocation` CHECK (((`revoked_at` is null) or (`revoked_at` >= `created_at`))),
+  CONSTRAINT `sessions_time` CHECK (((`last_seen_at` >= `created_at`) and (`last_seen_at` < `expires_at`) and (`expires_at` > `created_at`)))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `users`;

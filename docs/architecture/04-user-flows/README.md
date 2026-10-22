@@ -18,7 +18,7 @@ Index, canonical artifacts and downstream reading path.
 
 ## Analysis
 
-- [05-use-cases-uml/diagrams.md](diagrams.md)
+- [05-use-cases-uml/diagrams.md](../05-interaction-design/diagrams.md)
 - [05-use-cases-uml/use-cases.md](use-cases.md)
 
 Current maturity: reviewable artifacts; no inherited proposal automatically approved. Use dependencies to assess downstream changes, and the gate register to identify blocked acceptance.
@@ -29,9 +29,9 @@ Current maturity: reviewable artifacts; no inherited proposal automatically appr
 
 ## Dependencies
 
-- [05-use-cases-uml/diagrams.md](diagrams.md)
+- [05-use-cases-uml/diagrams.md](../05-interaction-design/diagrams.md)
 - [05-use-cases-uml/use-cases.md](use-cases.md)
-- [06-navigation/README.md](../06-navigation/README.md)
+- [06-navigation/README.md](../05-interaction-design/README.md)
 
 ## Open questions
 
@@ -41,9 +41,9 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
-- [05-use-cases-uml/diagrams.md](diagrams.md)
+- [05-use-cases-uml/diagrams.md](../05-interaction-design/diagrams.md)
 - [05-use-cases-uml/use-cases.md](use-cases.md)
-- [06-navigation/README.md](../06-navigation/README.md)
+- [06-navigation/README.md](../05-interaction-design/README.md)
 
 ## Verification criteria
 

@@ -2,16 +2,15 @@ openapi: 3.1.0
 info:
   title: Expiry Python Scan Service API
   version: 1.0.0
-  description: >
-    Internal HTTP contract between Node.js Backend and Python Scan Service.
-    Stateless worker for image preprocessing, OCR, and expiry date/name heuristic parsing.
-    No direct database access.
-servers:
-  - url: http://python-scan:8000
-    description: Internal Docker service URL
-  - url: http://localhost:8000
-    description: Local development URL
+  description: 'Internal HTTP contract between Node.js Backend and Python Scan Service. Stateless worker for image
+    preprocessing, OCR, and expiry date/name heuristic parsing. No direct database access.
 
+    '
+servers:
+- url: http://python-scan:8000
+  description: Internal Docker service URL
+- url: http://localhost:8000
+  description: Local development URL
 paths:
   /health:
     get:
@@ -24,18 +23,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
-
   /scan:
     post:
       summary: Preprocess image, execute OCR, and parse candidate dates and names
       operationId: scanImage
       parameters:
-        - name: X-Correlation-ID
-          in: header
-          required: false
-          schema:
-            type: string
-          description: Traceability correlation ID across services
+      - name: X-Correlation-ID
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Traceability correlation ID across services
       requestBody:
         required: true
         content:
@@ -43,7 +41,7 @@ paths:
             schema:
               type: object
               required:
-                - file
+              - file
               properties:
                 file:
                   type: string
@@ -53,7 +51,7 @@ paths:
             schema:
               type: object
               required:
-                - image_base64
+              - image_base64
               properties:
                 image_base64:
                   type: string
@@ -95,16 +93,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
 components:
   schemas:
     HealthResponse:
       type: object
       required:
-        - status
-        - service
-        - version
-        - tesseract_available
+      - status
+      - service
+      - version
+      - tesseract_available
       properties:
         status:
           type: string
@@ -118,74 +115,114 @@ components:
         tesseract_available:
           type: boolean
           example: true
-
     ExpiryCandidate:
       type: object
       properties:
         value:
-          type: string
+          type:
+          - string
+          - 'null'
           format: date
-          nullable: true
-          example: "2026-12-25"
+          example: '2026-12-25'
+          default: null
         date_certainty:
-          type: string
-          enum: [exact, inferred, null]
+          type:
+          - string
+          - 'null'
+          enum:
+          - exact
+          - inferred
+          - null
           example: exact
         date_label_type:
           type: string
-          enum: [expiry, best_before, use_by, manufactured, unknown]
+          enum:
+          - expiry
+          - best_before
+          - use_by
+          - manufactured
+          - unknown
           example: expiry
+          default: unknown
         source_text:
           type: string
-          example: "25/12/2026"
+          example: 25/12/2026
+          default: ''
         alternatives:
           type: array
           items:
             type: string
             format: date
           example: []
+          default: []
         ambiguous:
           type: boolean
           example: false
+          default: false
         requires_confirmation:
           type: boolean
-          example: true
-
+          const: true
+      required:
+      - value
+      - date_certainty
+      - date_label_type
+      - source_text
+      - alternatives
+      - ambiguous
+      - requires_confirmation
+      additionalProperties: false
     ManufacturedCandidate:
       type: object
       properties:
         value:
-          type: string
+          type:
+          - string
+          - 'null'
           format: date
-          nullable: true
-          example: "2026-10-10"
+          example: '2026-10-10'
+          default: null
         source_text:
           type: string
-          example: "10/10/2026"
-
+          example: 10/10/2026
+          default: ''
+      required:
+      - value
+      - source_text
+      additionalProperties: false
     Candidates:
       type: object
       properties:
         food_name:
-          type: string
-          nullable: true
+          type:
+          - string
+          - 'null'
           example: null
+          default: null
         expiry_date:
           $ref: '#/components/schemas/ExpiryCandidate'
         manufactured_date:
           $ref: '#/components/schemas/ManufacturedCandidate'
-
+      required:
+      - food_name
+      - expiry_date
+      - manufactured_date
+      additionalProperties: false
     ScanResponse:
       type: object
       required:
-        - raw_text
-        - candidates
-        - warnings
-        - errors
+      - raw_text
+      - candidates
+      - warnings
+      - errors
+      - execution_time_ms
       properties:
         raw_text:
           type: string
-          example: "NSX: 10/10/2026\nHSD: 25/12/2026\nLOT: 884B"
+          example: 'NSX: 10/10/2026
+
+            HSD: 25/12/2026
+
+            LOT: 884B'
         candidates:
           $ref: '#/components/schemas/Candidates'
         warnings:
@@ -193,20 +230,23 @@ components:
           items:
             type: string
           example: []
+          default: []
         errors:
           type: array
           items:
             type: string
           example: []
+          default: []
         execution_time_ms:
           type: integer
           example: 380
-
+          minimum: 0
+      additionalProperties: false
     ErrorResponse:
       type: object
       required:
-        - code
-        - message
+      - code
+      - message
       properties:
         code:
           type: string

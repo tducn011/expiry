@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
+
 import type {
   CreatePayload,
   DateCertainty,
@@ -7,7 +8,10 @@ import type {
   EntryDraft,
   FoodEntry,
   Unit,
-} from "../mockApi"
+} from "../domain/types"
+
+import { scanToEntryDraft, type ScanResult } from "../api/client"
+
 import {
   certaintyLabel,
   fmtQty,
@@ -16,117 +20,280 @@ import {
   sourceLabel,
   unitLabel,
 } from "../lib/format"
+
 import Button from "../components/ui/Button"
+
 import DatePicker from "../components/ui/DatePicker"
+
 import Field from "../components/ui/Field"
+
 import Icon from "../components/ui/Icon"
-import Modal, { ModalActions } from "../components/ui/Modal"
+
+import Modal, { ModalActions, RetryAction } from "../components/ui/Modal"
+
 import Segmented from "../components/ui/Segmented"
+
 import Select from "../components/ui/Select"
+
+import ScanForm from "./ScanForm"
+
+import BarcodeScannerModal from "../components/ui/BarcodeScannerModal"
+
+import { getGs1Info, lookupBarcode } from "../lib/barcode"
 
 type FormState = {
   name: string
+
   quantity: string
+
   unit: Unit
+
   storage_location: string
+
   certainty: DateCertainty
+
   expiry_date: string
+
   source: DateSource
+
   label: DateLabelType
+
   opened_on: string
+
   note: string
+
+  barcode?: string
+
+  barcode_format?: string
 }
 
 /** UI-03 create and UI-08 metadata edit; basics can be saved before optional dates. */
+
 export default function EntryForm({
   entry,
+
   initial,
+
   initialStep = 0,
+
   onClose,
+
   onCreate,
+
   onUpdate,
+
+  onScan,
+
+  active = true,
+
+  canRetry = false,
+
+  retryPending = false,
+
+  retryError = "",
+
+  onRetry,
 }: {
   entry?: FoodEntry
+
   initial?: CreatePayload | null
+
   initialStep?: 0 | 1
+
   onClose: () => void
-  onCreate?: (p: CreatePayload) => void
-  onUpdate?: (p: EntryDraft) => void
+
+  onCreate?: (p: CreatePayload) => void | Promise<void>
+
+  onUpdate?: (p: EntryDraft) => void | Promise<void>
+
+  onScan?: (file: File, barcode?: string) => Promise<ScanResult>
+
+  active?: boolean
+
+  canRetry?: boolean
+
+  retryPending?: boolean
+
+  retryError?: string
+
+  onRetry?: () => void
 }) {
   const base = entry ?? initial
+
+  const submitInFlight = useRef(false)
+
   const [step, setStep] = useState<0 | 1>(initialStep)
+
+  const [scanOpen, setScanOpen] = useState(false)
+
+  const [barcodeModalOpen, setBarcodeModalOpen] = useState(false)
+
+  const [barcodeStatus, setBarcodeStatus] = useState("")
+
+  const [barcodeLookupLoading, setBarcodeLookupLoading] = useState(false)
+
   const [tried, setTried] = useState([false, false])
+
   const [form, setForm] = useState<FormState>({
     name: base?.name ?? "",
+
     quantity: initial ? String(initial.initial_quantity) : "",
+
     unit: base?.unit ?? "piece",
+
     storage_location: base?.storage_location ?? "",
+
     certainty: base?.expiry_date_certainty ?? "unknown",
+
     expiry_date: base?.expiry_date ?? "",
+
     source:
-      base?.expiry_date_source && base.expiry_date_source !== "user_estimate"
-        ? base.expiry_date_source
-        : "package_label",
+      base?.expiry_date_source === "user_entered"
+        ? "user_entered"
+        : "printed_label",
+
     label: base?.expiry_date_label_type ?? "unknown",
+
     opened_on: base?.opened_on ?? "",
+
     note: base?.note ?? "",
+
+    barcode: base?.barcode ?? "",
+
+    barcode_format: base?.barcode_format ?? "",
   })
+
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }))
+
   const qty = Number(form.quantity)
+
+  const quantityFormatValid = /^\d+(?:\.\d{1,3})?$/.test(form.quantity)
+
   const errors: Record<string, string>[] = [
     {
-      name: form.name.trim() ? "" : "Nhập tên thực phẩm.",
+      name: form.name.trim()
+        ? form.name.trim().length > 200
+          ? "Tên thực phẩm tối đa 200 ký tự."
+          : ""
+        : "Nhập tên thực phẩm.",
+
+      storage_location:
+        form.storage_location.trim().length > 100
+          ? "Vị trí tối đa 100 ký tự."
+          : "",
+
       quantity: entry
         ? ""
-        : !form.quantity || qty <= 0
+        : !form.quantity
           ? "Lượng phải lớn hơn 0."
-          : form.unit === "piece" && !Number.isInteger(qty)
-            ? "Đơn vị “cái” chỉ nhận số nguyên."
-            : "",
+          : !quantityFormatValid || !Number.isFinite(qty)
+            ? "Nhập lượng dạng số, tối đa 3 chữ số thập phân."
+            : qty > 999999999.999
+              ? "Lượng tối đa là 999.999.999,999."
+              : qty <= 0
+                ? "Lượng phải lớn hơn 0."
+                : form.unit === "piece" && !Number.isInteger(qty)
+                  ? "Đơn vị “cái” chỉ nhận số nguyên."
+                  : "",
     },
+
     {
       expiry_date:
         form.certainty !== "unknown" && !form.expiry_date
           ? "Chọn ngày theo dõi."
-          : "",
+          : form.expiry_date && !/^\d{4}-\d{2}-\d{2}$/.test(form.expiry_date)
+            ? "Định dạng ngày phải là YYYY-MM-DD."
+            : "",
+
+      note: form.note.length > 1000 ? "Ghi chú tối đa 1000 ký tự." : "",
     },
   ]
+
   const stepValid = (i: number) => Object.values(errors[i]).every((e) => !e)
+
   const show = (i: number, k: string) => (tried[i] ? errors[i][k] : "")
+
   const next = () => {
     setTried((t) => t.map((v, i) => (i === step ? true : v)))
+
     if (stepValid(step)) setStep(1)
   }
+
   const submit = () => {
+    if (submitInFlight.current || canRetry || retryPending) return
+
     setTried([true, true])
+
     if (!stepValid(0)) {
       setStep(0)
+
       return
     }
+
     if (!stepValid(1)) {
       setStep(1)
+
       return
     }
+
     const unknown = form.certainty === "unknown"
+
     const draft: EntryDraft = {
       name: form.name.trim(),
+
       storage_location: form.storage_location.trim() || null,
+
       expiry_date: unknown ? null : form.expiry_date,
+
       expiry_date_certainty: form.certainty,
+
       expiry_date_source: unknown
         ? null
         : form.certainty === "estimated"
           ? "user_estimate"
           : form.source,
+
       expiry_date_label_type: unknown ? null : form.label,
+
       opened_on: form.opened_on || null,
+
       note: form.note.trim() || null,
+
+      barcode: form.barcode?.trim() || null,
+
+      barcode_format: form.barcode_format?.trim() || null,
     }
-    entry
-      ? onUpdate?.(draft)
-      : onCreate?.({ ...draft, initial_quantity: qty, unit: form.unit })
+
+    submitInFlight.current = true
+
+    let result: void | Promise<void>
+
+    try {
+      result = entry
+        ? onUpdate?.(draft)
+        : onCreate?.({ ...draft, initial_quantity: qty, unit: form.unit })
+    } catch (error) {
+      submitInFlight.current = false
+
+      throw error
+    }
+
+    if (result && typeof result.then === "function") {
+      void result.then(
+        () => {
+          submitInFlight.current = false
+        },
+
+        () => {
+          submitInFlight.current = false
+        },
+      )
+    } else {
+      submitInFlight.current = false
+    }
   }
+
   const steps = ["Cơ bản", "Ngày & ghi chú"]
 
   return (
@@ -136,12 +303,14 @@ export default function EntryForm({
       eyebrow={entry ? "THÔNG TIN BẢN GHI" : "BẢN GHI MỚI"}
       title={entry ? "Sửa thực phẩm" : "Thêm thực phẩm"}
       onClose={onClose}
+      active={active}
     >
       <form
         className="stepped-form"
         noValidate
         onSubmit={(e) => {
           e.preventDefault()
+
           submit()
         }}
       >
@@ -161,24 +330,211 @@ export default function EntryForm({
           ))}
         </ol>
         <div className="form-body">
+          <RetryAction
+            canRetry={canRetry}
+            pending={retryPending}
+            error={retryError}
+            onRetry={onRetry ?? (() => {})}
+          />
           {step === 0 ? (
             <div className="form-grid" key="basic">
               {!entry && (
-                <p className="inline-hint span-2">
-                  Tên, lượng và đơn vị là đủ để lưu. Ngày và vị trí có thể bổ
-                  sung sau.
-                </p>
+                <div className="span-2 stack">
+                  <p className="inline-hint">
+                    Tên, lượng và đơn vị là đủ để lưu. Ngày và vị trí có thể bổ
+                    sung sau.
+                  </p>
+                  {onScan && (
+                    <div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setScanOpen((open) => !open)}
+                      >
+                        {scanOpen
+                          ? "Đóng quét mã / nhãn"
+                          : "Quét mã vạch / nhãn"}
+                      </Button>
+                      {scanOpen && (
+                        <ScanForm
+                          onScan={(file) => onScan(file, form.barcode)}
+                          onClose={() => setScanOpen(false)}
+                          onApplyBarcode={(barcodeData) => {
+                            setForm((current) => ({
+                              ...current,
+
+                              barcode: barcodeData.barcode,
+
+                              barcode_format: barcodeData.barcode_format,
+
+                              note: current.note
+                                ? current.note.includes(barcodeData.barcode)
+                                  ? current.note
+                                  : `${current.note} (Mã vạch: ${barcodeData.barcode})`
+                                : `Mã vạch: ${barcodeData.barcode}`,
+                            }))
+
+                            setScanOpen(false)
+                          }}
+                          onApply={(result, selectedDate) => {
+                            const mapped = scanToEntryDraft(
+                              result,
+
+                              selectedDate,
+                            )
+
+                            setForm((current) => ({
+                              ...current,
+
+                              name: mapped.name || current.name,
+
+                              ...(mapped.expiry_date === null
+                                ? {}
+                                : {
+                                    expiry_date: mapped.expiry_date,
+
+                                    certainty: mapped.expiry_date_certainty,
+
+                                    source:
+                                      mapped.expiry_date_source ||
+                                      "printed_label",
+
+                                    label:
+                                      mapped.expiry_date_label_type ||
+                                      "unknown",
+                                  }),
+                            }))
+
+                            setStep(1)
+
+                            setScanOpen(false)
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
-              <div className="span-2">
-                <Field label="Tên thực phẩm *" error={show(0, "name")}>
-                  <input
-                    autoFocus
-                    maxLength={200}
-                    value={form.name}
-                    onChange={(e) => set("name", e.target.value)}
-                    placeholder="Ví dụ: Sữa tươi"
-                  />
-                </Field>
+              <div className="span-2 stack">
+                <div
+                  style={{
+                    display: "flex",
+
+                    gap: "8px",
+
+                    alignItems: "flex-end",
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <Field label="Tên thực phẩm *" error={show(0, "name")}>
+                      <input
+                        autoFocus
+                        maxLength={200}
+                        value={form.name}
+                        onChange={(e) => set("name", e.target.value)}
+                        placeholder="Ví dụ: Sữa tươi"
+                      />
+                    </Field>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setBarcodeModalOpen(true)}
+                    ariaLabel="Quét mã vạch sản phẩm"
+                  >
+                    <Icon name="scan-barcode" />
+                    <span>Mã vạch</span>
+                  </Button>
+                </div>
+                {form.barcode && (
+                  <div
+                    className="barcode-badge-chip"
+                    style={{
+                      display: "flex",
+
+                      alignItems: "center",
+
+                      justifyContent: "space-between",
+
+                      background: "var(--surface-muted, #f3f4f6)",
+
+                      padding: "6px 12px",
+
+                      borderRadius: "6px",
+
+                      fontSize: "13px",
+
+                      marginTop: "4px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+
+                        alignItems: "center",
+
+                        gap: "6px",
+                      }}
+                    >
+                      <Icon name="barcode" />
+                      <strong>{form.barcode}</strong>
+                      {getGs1Info(form.barcode) && (
+                        <span style={{ color: "var(--text-muted, #6b7280)" }}>
+                          ({getGs1Info(form.barcode)?.flag}{" "}
+                          {getGs1Info(form.barcode)?.country})
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        set("barcode", "")
+
+                        set("barcode_format", "")
+
+                        setBarcodeStatus("")
+                      }}
+                      style={{
+                        background: "none",
+
+                        border: "none",
+
+                        cursor: "pointer",
+
+                        color: "var(--text-muted, #9ca3af)",
+
+                        padding: "2px 6px",
+                      }}
+                      title="Xóa mã vạch"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+                {barcodeLookupLoading && (
+                  <p
+                    className="inline-hint"
+                    style={{
+                      color: "var(--text-muted, #6b7280)",
+
+                      marginTop: "2px",
+                    }}
+                  >
+                    Đang tìm kiếm thông tin sản phẩm...
+                  </p>
+                )}
+                {barcodeStatus && !barcodeLookupLoading && (
+                  <p
+                    className="inline-hint"
+                    style={{
+                      color: "var(--primary-color, #10b981)",
+
+                      marginTop: "2px",
+                    }}
+                  >
+                    {barcodeStatus}
+                  </p>
+                )}
               </div>
               {entry ? (
                 <div className="readonly-row span-2">
@@ -198,6 +554,7 @@ export default function EntryForm({
                       inputMode="decimal"
                       type="number"
                       min="0.001"
+                      max="999999999.999"
                       step={form.unit === "piece" ? 1 : 0.001}
                       value={form.quantity}
                       onChange={(e) => set("quantity", e.target.value)}
@@ -219,7 +576,11 @@ export default function EntryForm({
                 </>
               )}
               <div className="span-2">
-                <Field label="Vị trí" hint="Không bắt buộc.">
+                <Field
+                  label="Vị trí"
+                  hint="Không bắt buộc."
+                  error={show(0, "storage_location")}
+                >
                   <input
                     maxLength={100}
                     value={form.storage_location}
@@ -283,17 +644,21 @@ export default function EntryForm({
                           ? [
                               {
                                 value: "user_estimate",
+
                                 label: sourceLabel.user_estimate,
                               },
                             ]
                           : [
                               {
-                                value: "package_label",
-                                label: sourceLabel.package_label,
+                                value: "printed_label",
+
+                                label: sourceLabel.printed_label,
                               },
+
                               {
-                                value: "user_reentered",
-                                label: sourceLabel.user_reentered,
+                                value: "user_entered",
+
+                                label: sourceLabel.user_entered,
                               },
                             ]
                       }
@@ -308,6 +673,7 @@ export default function EntryForm({
                         labelTypeLabel,
                       ) as DateLabelType[]).map((label) => ({
                         value: label,
+
                         label: labelTypeLabel[label],
                       }))}
                     />
@@ -321,7 +687,11 @@ export default function EntryForm({
                   onChange={(value) => set("opened_on", value)}
                 />
               </Field>
-              <Field label="Ghi chú" hint={`${form.note.length}/1000`}>
+              <Field
+                label="Ghi chú"
+                hint={`${form.note.length}/1000`}
+                error={show(1, "note")}
+              >
                 <input
                   maxLength={1000}
                   value={form.note}
@@ -352,7 +722,11 @@ export default function EntryForm({
                     {entry ? "Ngày & ghi chú →" : "Bổ sung ngày →"}
                   </Button>
                 )}
-                <Button type="submit" variant="cta">
+                <Button
+                  type="submit"
+                  variant="cta"
+                  disabled={canRetry || retryPending}
+                >
                   {entry
                     ? "Lưu thay đổi"
                     : step === 0
@@ -364,6 +738,63 @@ export default function EntryForm({
           />
         </footer>
       </form>
+
+      <BarcodeScannerModal
+        isOpen={barcodeModalOpen}
+        onClose={() => setBarcodeModalOpen(false)}
+        onDetected={async (res) => {
+          set("barcode", res.text)
+
+          set("barcode_format", res.format)
+
+          setBarcodeLookupLoading(true)
+
+          const gs1 = getGs1Info(res.text)
+
+          const gs1Text = gs1
+            ? `${gs1.flag} ${gs1.country} (${gs1.preferredDateFormat})`
+            : ""
+
+          try {
+            const lookup = await lookupBarcode(res.text)
+
+            if (lookup.found && lookup.product) {
+              setForm((prev) => ({
+                ...prev,
+
+                barcode: res.text,
+
+                barcode_format: res.format,
+
+                name: prev.name.trim() ? prev.name : lookup.product!.name,
+
+                storage_location:
+                  prev.storage_location ||
+                  lookup.product!.suggested_storage_location ||
+                  "",
+
+                unit: entry
+                  ? prev.unit
+                  : lookup.product!.suggested_unit || prev.unit,
+              }))
+
+              setBarcodeStatus(
+                `Đã tìm thấy: ${lookup.product.name}${
+                  gs1Text ? ` · ${gs1Text}` : ""
+                }`,
+              )
+            } else {
+              setBarcodeStatus(
+                `Đã lưu mã vạch: ${res.text}${gs1Text ? ` · ${gs1Text}` : ""}`,
+              )
+            }
+          } catch {
+            setBarcodeStatus(`Đã quét mã: ${res.text}`)
+          } finally {
+            setBarcodeLookupLoading(false)
+          }
+        }}
+      />
     </Modal>
   )
 }

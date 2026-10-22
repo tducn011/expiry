@@ -10,7 +10,7 @@ import grt
 from workbench.db_utils import MySQLConnection
 
 ROOT = Path('/home/pro/Downloads/expiry')
-OUT = ROOT / 'docs/erd'
+OUT = ROOT / 'docs/architecture/06-data-model/erd-workbench'
 MODEL = OUT / 'expiry_mysql.mwb'
 PNG = OUT / 'expiry_mysql_eer.png'
 EVIDENCE = OUT / 'workbench_native_evidence.json'
@@ -22,6 +22,7 @@ native = None
 connection = None
 reverse_connected = False
 config = {}
+write_evidence = False
 
 def rows(sql, fields):
     result = native.executeQuery(sql)
@@ -43,17 +44,41 @@ try:
         raise ValueError('Unexpected sandbox configuration')
     port = int(config['MYSQL_HOST_PORT'])
     OUT.mkdir(parents=True, exist_ok=True)
-    if MODEL.exists() or PNG.exists():
-        previous = json.loads(EVIDENCE.read_text())
-        if previous.get('status') != 'PASS':
-            raise FileExistsError('Existing outputs are not from a verified export')
-        for target, key in [(MODEL, 'model_file'), (PNG, 'image_file')]:
-            if not target.exists() or hashlib.sha256(target.read_bytes()).hexdigest() != previous[key]['sha256']:
-                raise FileExistsError('Existing output has changed; preserve user edits')
+    if MODEL.exists() or PNG.exists() or EVIDENCE.exists():
+        previous = json.loads(EVIDENCE.read_text()) if EVIDENCE.exists() else {}
+        verified_previous = previous.get('status') == 'PASS'
+        if verified_previous:
+            for target, key in [(MODEL, 'model_file'), (PNG, 'image_file')]:
+                if not target.exists() or hashlib.sha256(target.read_bytes()).hexdigest() != previous[key]['sha256']:
+                    verified_previous = False
+                    break
+        one_time_replacement = False
+        if not verified_previous:
+            manifest_path = ROOT / 'database/mysql/evidence/pre-sch03/backup-manifest.json'
+            if not manifest_path.exists():
+                raise FileExistsError('Existing outputs differ from their evidence and have no authorized backup manifest')
+            manifest = json.loads(manifest_path.read_text())
+            if manifest.get('status') != 'AUTHORIZED_BACKUP' or 'SCH-03' not in manifest.get('scope', ''):
+                raise FileExistsError('Authorized backup manifest is invalid')
+            for key, target in [('model', MODEL), ('image', PNG), ('evidence', EVIDENCE)]:
+                preserved = ROOT / manifest['files'][key]['path']
+                expected = manifest['files'][key]['sha256']
+                valid_target = target.exists() and hashlib.sha256(target.read_bytes()).hexdigest() == expected
+                if key == 'evidence' and target.exists() and not valid_target:
+                    failed_attempt = json.loads(target.read_text())
+                    valid_target = failed_attempt.get('replaced_preserved_artifacts') == manifest['files'] and failed_attempt.get('status') == 'FAIL'
+                if not valid_target or not preserved.exists() or hashlib.sha256(preserved.read_bytes()).hexdigest() != expected:
+                    raise FileExistsError('Current Workbench outputs no longer match their preserved SCH-03 backup')
+            one_time_replacement = True
+            evidence['replaced_preserved_artifacts'] = manifest['files']
         backup = ROOT / 'database/mysql/evidence/runtime-private/previous-workbench-export'
         backup.mkdir(parents=True, exist_ok=True)
         for target in [MODEL, PNG, EVIDENCE]:
-            shutil.copy2(str(target), str(backup / target.name))
+            if target.exists():
+                shutil.copy2(str(target), str(backup / target.name))
+        if not one_time_replacement:
+            evidence['previous_verified_export'] = previous.get('completed_at_utc')
+    write_evidence = True
     stage = 'connection'
     management = grt.root.wb.rdbmsMgmt
     driver = next(d for r in management.rdbms for d in r.drivers if d.name == 'MysqlNative')
@@ -126,9 +151,19 @@ try:
     if any(t.isStub for t in schema.tables):
         raise RuntimeError('Unresolved native table stub')
     evidence['live_columns'] = rows("SELECT TABLE_NAME table_name,COLUMN_NAME column_name FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='expiry_dev' ORDER BY TABLE_NAME,ORDINAL_POSITION", ['table_name', 'column_name'])
+    evidence['primary_key_mapping'] = rows("SELECT TABLE_NAME table_name,COLUMN_NAME column_name,ORDINAL_POSITION position FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA='expiry_dev' AND CONSTRAINT_NAME='PRIMARY' ORDER BY TABLE_NAME,ORDINAL_POSITION", ['table_name','column_name','position'])
+    evidence['live_check_constraints'] = rows("SELECT tc.TABLE_NAME table_name,tc.CONSTRAINT_NAME constraint_name,cc.CHECK_CLAUSE check_clause FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.CHECK_CONSTRAINTS cc USING (CONSTRAINT_SCHEMA, CONSTRAINT_NAME) WHERE tc.CONSTRAINT_SCHEMA='expiry_dev' AND tc.CONSTRAINT_TYPE='CHECK' ORDER BY tc.TABLE_NAME,tc.CONSTRAINT_NAME", ['table_name','constraint_name','check_clause'])
+    if len(evidence['live_tables']) != 7 or len(evidence['live_columns']) != 53 or len(evidence['live_foreign_keys']) != 5 or len(evidence['live_check_constraints']) != 30:
+        raise RuntimeError('Live schema differs from the reviewed 7-table/53-column/5-FK/30-CHECK target')
+    expected_tables = ['api_requests','food_entries','local_credentials','schema_migrations','stock_movements','user_sessions','users']
+    if sorted(t['table_name'] for t in evidence['live_tables']) != expected_tables:
+        raise RuntimeError('Unexpected live table set')
     evidence['model_columns'] = [{'table_name': t.name, 'column_name': c.name} for t in schema.tables for c in t.columns]
     if sorted((c['table_name'], c['column_name']) for c in evidence['live_columns']) != sorted((c['table_name'], c['column_name']) for c in evidence['model_columns']):
         raise RuntimeError('Native model column set differs from live SQL')
+    evidence['model_primary_key_columns'] = [{'table_name': t.name, 'column_name': c.referencedColumn.name, 'position': i + 1} for t in schema.tables if t.primaryKey for i, c in enumerate(t.primaryKey.columns)]
+    if sorted((row['table_name'], row['column_name'], int(row['position'])) for row in evidence['primary_key_mapping']) != sorted((row['table_name'], row['column_name'], row['position']) for row in evidence['model_primary_key_columns']):
+        raise RuntimeError('Native model primary key columns differ from live SQL')
     evidence['live_fk_mapping'] = rows("SELECT TABLE_NAME table_name,CONSTRAINT_NAME fk,COLUMN_NAME column_name,REFERENCED_TABLE_NAME parent,REFERENCED_COLUMN_NAME parent_column FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA='expiry_dev' AND REFERENCED_TABLE_NAME IS NOT NULL ORDER BY TABLE_NAME,CONSTRAINT_NAME,ORDINAL_POSITION", ['table_name','fk','column_name','parent','parent_column'])
     evidence['model_fk_mapping'] = [{'table_name': t.name, 'fk': f.name, 'column_name': c.name, 'parent': f.referencedTable.name, 'parent_column': p.name} for t in schema.tables for f in t.foreignKeys for c, p in zip(f.columns, f.referencedColumns)]
     if sorted(tuple(sorted(f.items())) for f in evidence['live_fk_mapping']) != sorted(tuple(sorted(f.items())) for f in evidence['model_fk_mapping']):
@@ -151,14 +186,21 @@ try:
     diagram.name = 'Expiry live MySQL schema'
     grt.modules.WbModel.autolayout(diagram)
     # Source-owned native layout: three actual FK chains avoid unrelated tables.
-    positions = {'users': (20, 20), 'food_entries': (340, 20),
-                 'stock_movements': (690, 20), 'api_requests': (20, 360),
-                 'schema_migrations': (340, 580)}
+    # Keep the auth/API row below the full-height food_entries figure. The
+    # migration ledger sits below that relationship row with clear whitespace.
+    positions = {'users': (20, 20), 'food_entries': (380, 20),
+                 'stock_movements': (760, 20), 'local_credentials': (20, 540),
+                 'user_sessions': (380, 540), 'api_requests': (760, 540),
+                 'schema_migrations': (380, 900)}
     for figure in diagram.figures:
         figure.left, figure.top = positions[figure.table.name]
     grt.modules.Workbench.activateDiagram(diagram)
     evidence['diagram_figures'] = len(diagram.figures)
     evidence['diagram_connections'] = len(diagram.connections)
+    evidence['diagram_figure_positions'] = [
+        {'table': figure.table.name, 'left': int(figure.left), 'top': int(figure.top)}
+        for figure in sorted(diagram.figures, key=lambda item: item.table.name)
+    ]
     stage = 'native_serialization'
     grt.modules.Workbench.saveModelAs(str(MODEL))
     with zipfile.ZipFile(str(MODEL)) as archive:
@@ -193,5 +235,6 @@ finally:
         except Exception:
             pass
     evidence['completed_at_utc'] = datetime.now(timezone.utc).isoformat()
-    EVIDENCE.write_text(json.dumps(evidence, ensure_ascii=False, indent=2)+'\n')
+    if write_evidence:
+        EVIDENCE.write_text(json.dumps(evidence, ensure_ascii=False, indent=2)+'\n')
     print(json.dumps(evidence, ensure_ascii=False))

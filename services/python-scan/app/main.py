@@ -1,26 +1,20 @@
-from __future__ import annotations
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from app.routes.health import router as health_router
+from app.routes.scan import router as scan_router
+from app.schemas.scan import ScanError
 
-try:
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-    from app.routes.health import router as health_router
-    from app.routes.scan import router as scan_router
+app = FastAPI(
+    title="Expiry Python Scan Service",
+    description="Internal stateless image preprocessing, OCR and candidate extraction.",
+    version="1.0.0",
+)
 
-    app = FastAPI(
-        title="Expiry Python Scan Service",
-        description="Internal image preprocessing, OCR, and expiry date parsing service.",
-        version="1.0.0"
-    )
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+@app.exception_handler(ScanError)
+async def scan_error_handler(_request, error: ScanError):
+    return JSONResponse(status_code=error.status, content={"code": error.code, "message": error.message})
 
-    app.include_router(health_router)
-    app.include_router(scan_router)
-except ImportError:
-    app = None
+
+app.include_router(health_router)
+app.include_router(scan_router)

@@ -1,129 +1,471 @@
 {
   "version": "11.17.2",
-  "total": 24,
-  "passed": 21,
+  "total": 93,
+  "passed": 93,
   "results": [
     {
-      "file": "docs/architecture/06-navigation/navigation.md",
+      "file": "docs/architecture/02-challenges/DEEP_RESEARCH.md",
       "index": 1,
       "status": "PASS"
     },
     {
-      "file": "docs/architecture/08-consequences/impact-analysis.md",
-      "index": 1,
-      "status": "PASS"
-    },
-    {
-      "file": "docs/architecture/10-data-flows/data-flows.md",
-      "index": 1,
-      "status": "PASS"
-    },
-    {
-      "file": "docs/architecture/10-data-flows/data-flows.md",
+      "file": "docs/architecture/02-challenges/DEEP_RESEARCH.md",
       "index": 2,
       "status": "PASS"
     },
     {
-      "file": "docs/architecture/13-erd/erd.md",
-      "index": 1,
-      "status": "PASS"
-    },
-    {
-      "file": "docs/architecture/14-system-architecture/components.md",
-      "index": 1,
-      "status": "PASS"
-    },
-    {
-      "file": "docs/architecture/14-system-architecture/sequences.md",
-      "index": 1,
-      "status": "PASS"
-    },
-    {
-      "file": "docs/architecture/14-system-architecture/sequences.md",
-      "index": 2,
-      "status": "PASS"
-    },
-    {
-      "file": "docs/architecture/14-system-architecture/sequences.md",
+      "file": "docs/architecture/02-challenges/DEEP_RESEARCH.md",
       "index": 3,
       "status": "PASS"
     },
     {
-      "file": "docs/architecture/14-system-architecture/sequences.md",
-      "index": 4,
-      "status": "PASS"
-    },
-    {
-      "file": "docs/architecture/18-auth-security/authentication.md",
+      "file": "docs/architecture/02-challenges/REPORT.md",
       "index": 1,
       "status": "PASS"
     },
     {
-      "file": "docs/architecture/18-auth-security/authentication.md",
+      "file": "docs/architecture/02-challenges/REPORT.md",
       "index": 2,
       "status": "PASS"
     },
     {
-      "file": "docs/architecture/21-deployment/deployment.md",
+      "file": "docs/architecture/02-challenges/REPORT.md",
+      "index": 3,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/02-challenges/REPORT.md",
+      "index": 4,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/02-challenges/REPORT.md",
+      "index": 5,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/02-challenges/REPORT.md",
+      "index": 6,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/02-challenges/REPORT.md",
+      "index": 7,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/03-requirements-features/impact-analysis.md",
       "index": 1,
       "status": "PASS"
     },
     {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_1.mmd",
+      "file": "docs/architecture/04-user-flows/03_User_Flows_Scenarios_and_Use_Cases.md",
       "index": 1,
       "status": "PASS"
     },
     {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_2.mmd",
+      "file": "docs/architecture/04-user-flows/03_User_Flows_Scenarios_and_Use_Cases.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/04-user-flows/03_User_Flows_Scenarios_and_Use_Cases.md",
+      "index": 3,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/05-interaction-design/navigation.md",
       "index": 1,
       "status": "PASS"
     },
     {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/03_User_Flows_Scenarios_and_Use_Cases_3.mmd",
+      "file": "docs/architecture/05-interaction-design/sequences.md",
       "index": 1,
       "status": "PASS"
     },
     {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_1.mmd",
+      "file": "docs/architecture/05-interaction-design/sequences.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/05-interaction-design/sequences.md",
+      "index": 3,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/05-interaction-design/sequences.md",
+      "index": 4,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/06-data-model/04_Data_Flow_UML_and_Ownership.md",
       "index": 1,
       "status": "PASS"
     },
     {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_2.mmd",
+      "file": "docs/architecture/06-data-model/04_Data_Flow_UML_and_Ownership.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/06-data-model/04_Data_Flow_UML_and_Ownership.md",
+      "index": 3,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/06-data-model/04_Data_Flow_UML_and_Ownership.md",
+      "index": 4,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/06-data-model/04_Data_Flow_UML_and_Ownership.md",
+      "index": 5,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/06-data-model/04_Data_Flow_UML_and_Ownership.md",
+      "index": 6,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/06-data-model/04_Data_Flow_UML_and_Ownership.md",
+      "index": 7,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/06-data-model/05_Data_Definitions_and_ERD.md",
       "index": 1,
       "status": "PASS"
     },
     {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_3.mmd",
-      "index": 1,
-      "status": "FAIL",
-      "error": "Error: Parse error on line 11:\n...e key / check replay alt Key already co\n-----------------------^\nExpecting '()', 'SOLID_OPEN_ARROW', 'DOTTED_OPEN_ARROW', 'SOLID_ARROW', 'SOLID_ARROW_TOP', 'SOLID_ARROW_BOTTOM', 'STICK_ARROW_TOP', 'STICK_ARROW_BOTTOM', 'SOLID_ARROW_TOP_DOTTED', 'SOLID_ARROW_BOTTOM_DOTTED', 'STICK_ARROW_TOP_DOTTED', 'STICK_ARROW_BOTTOM_DOTTED', 'SOLID_ARROW_TOP_REVERSE', 'SOLID_ARROW_BOTTOM_REVERSE', 'STICK_ARROW_TOP_REVERSE', 'STICK_ARROW_BOTTOM_REVERSE', 'SOLID_ARROW_TOP_REVERSE_DOTTED', 'SOLID_ARROW_BOTTOM_REVERSE_DOTTED', 'STICK_ARROW_TOP_REVERSE_DOTTED', 'STICK_ARROW_BOTTOM_REVERSE_DOTTED', 'BIDIRECTIONAL_SOLID_ARROW', 'DOTTED_ARROW', 'BIDIRECTIONAL_DOTTED_ARROW', 'SOLID_CROSS', 'DOTTED_CROSS', 'SOLID_POINT', 'DOTTED_POINT', got 'NEWLINE'"
-    },
-    {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_4.mmd",
-      "index": 1,
-      "status": "FAIL",
-      "error": "Error: Parse error on line 12:\n...rt before pagination S-->>API: items + \n-----------------------^\nExpecting '()', 'SOLID_OPEN_ARROW', 'DOTTED_OPEN_ARROW', 'SOLID_ARROW', 'SOLID_ARROW_TOP', 'SOLID_ARROW_BOTTOM', 'STICK_ARROW_TOP', 'STICK_ARROW_BOTTOM', 'SOLID_ARROW_TOP_DOTTED', 'SOLID_ARROW_BOTTOM_DOTTED', 'STICK_ARROW_TOP_DOTTED', 'STICK_ARROW_BOTTOM_DOTTED', 'SOLID_ARROW_TOP_REVERSE', 'SOLID_ARROW_BOTTOM_REVERSE', 'STICK_ARROW_TOP_REVERSE', 'STICK_ARROW_BOTTOM_REVERSE', 'SOLID_ARROW_TOP_REVERSE_DOTTED', 'SOLID_ARROW_BOTTOM_REVERSE_DOTTED', 'STICK_ARROW_TOP_REVERSE_DOTTED', 'STICK_ARROW_BOTTOM_REVERSE_DOTTED', 'BIDIRECTIONAL_SOLID_ARROW', 'DOTTED_ARROW', 'BIDIRECTIONAL_DOTTED_ARROW', 'SOLID_CROSS', 'DOTTED_CROSS', 'SOLID_POINT', 'DOTTED_POINT', got 'NEWLINE'"
-    },
-    {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_5.mmd",
-      "index": 1,
-      "status": "FAIL",
-      "error": "Error: Parse error on line 10:\n...: Begin; reserve key alt Replay with sa\n-----------------------^\nExpecting '()', 'SOLID_OPEN_ARROW', 'DOTTED_OPEN_ARROW', 'SOLID_ARROW', 'SOLID_ARROW_TOP', 'SOLID_ARROW_BOTTOM', 'STICK_ARROW_TOP', 'STICK_ARROW_BOTTOM', 'SOLID_ARROW_TOP_DOTTED', 'SOLID_ARROW_BOTTOM_DOTTED', 'STICK_ARROW_TOP_DOTTED', 'STICK_ARROW_BOTTOM_DOTTED', 'SOLID_ARROW_TOP_REVERSE', 'SOLID_ARROW_BOTTOM_REVERSE', 'STICK_ARROW_TOP_REVERSE', 'STICK_ARROW_BOTTOM_REVERSE', 'SOLID_ARROW_TOP_REVERSE_DOTTED', 'SOLID_ARROW_BOTTOM_REVERSE_DOTTED', 'STICK_ARROW_TOP_REVERSE_DOTTED', 'STICK_ARROW_BOTTOM_REVERSE_DOTTED', 'BIDIRECTIONAL_SOLID_ARROW', 'DOTTED_ARROW', 'BIDIRECTIONAL_DOTTED_ARROW', 'SOLID_CROSS', 'DOTTED_CROSS', 'SOLID_POINT', 'DOTTED_POINT', got 'NEWLINE'"
-    },
-    {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_6.mmd",
+      "file": "docs/architecture/06-data-model/data-flows.md",
       "index": 1,
       "status": "PASS"
     },
     {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/04_Data_Flow_UML_and_Ownership_7.mmd",
+      "file": "docs/architecture/06-data-model/data-flows.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/06-data-model/erd.md",
       "index": 1,
       "status": "PASS"
     },
     {
-      "file": "Expiry_System_Design_2026-10-08/diagrams/05_Data_Definitions_and_ERD_1.mmd",
+      "file": "docs/architecture/07-api/06_API_Routes_and_Contracts.md",
       "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/07-api/authentication.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/07-api/authentication.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/08-architecture/07_Architecture_Components_and_Alternatives.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/08-architecture/07_Architecture_Components_and_Alternatives.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/08-architecture/components.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/08-architecture/deployment.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/11-traceability/tracking.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 3,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 4,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 5,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 6,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 7,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 8,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 9,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 10,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Complete_System_Design_2026-10-08.md",
+      "index": 11,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 1,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 2,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 3,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 4,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 5,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 6,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 7,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 8,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 9,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 10,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 11,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 12,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 13,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 14,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 15,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 16,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 17,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 18,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 19,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 20,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 21,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 22,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 23,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 24,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 25,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 26,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 27,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 28,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 29,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 30,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 31,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 32,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 33,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 34,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 35,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 36,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 37,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 38,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 39,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 40,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 41,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 42,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 43,
+      "status": "PASS"
+    },
+    {
+      "file": "docs/architecture/consolidated/Expiry_Full_Data_Extraction_2026-10-09.md",
+      "index": 44,
       "status": "PASS"
     }
   ],

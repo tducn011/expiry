@@ -28,6 +28,7 @@ Thumbs.db
 *.tsbuildinfo
 .vite/
 
+
 # Python
 __pycache__/
 *.py[cod]
@@ -35,3 +36,27 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+
+# TrustMeBro local architecture/context outputs (requested 2026-10-11)
+/AGENTS.md
+/LAYOUT.md
+/PLAN.md
+/ROADMAP.md
+/.tmb/
+
+# Local TMB subsystem entrypoints (relative symlinks into ignored .tmb)
+/docs/LAYOUT.md
+/docs/ROADMAP.md
+/apps/LAYOUT.md
+/apps/ROADMAP.md
+/apps/web/LAYOUT.md
+/apps/web/ROADMAP.md
+/apps/api/LAYOUT.md
+/apps/api/ROADMAP.md
+/database/mysql/LAYOUT.md
+/database/mysql/ROADMAP.md
+/services/python-scan/LAYOUT.md
+/services/python-scan/ROADMAP.md
+
+# Local task orchestration ledgers
+/.unlazy/

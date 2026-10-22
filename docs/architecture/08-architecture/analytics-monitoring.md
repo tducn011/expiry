@@ -38,8 +38,8 @@ Alert candidates: elevated unexpected5xx, migration/backup failures and dependen
 
 ## Dependencies
 
-- [04-technology-research/official-references.md](../04-technology-research/official-references.md)
-- [adr/ADR-005-observability.md](../adr/ADR-005-observability.md)
+- [04-technology-research/official-references.md](../00-context/official-references.md)
+- [adr/ADR-005-observability.md](../08-architecture/ADR-005-observability.md)
 - [10-testing/test-catalog.md](../10-testing/test-catalog.md)
 - [08-architecture/deployment.md](../08-architecture/deployment.md)
 
@@ -51,8 +51,8 @@ Chốt các quyết định liên quan trong decision ledger trước khi đổi
 
 - [README.md](../README.md)
 - [11-traceability/README.md](../11-traceability/README.md)
-- [04-technology-research/official-references.md](../04-technology-research/official-references.md)
-- [adr/ADR-005-observability.md](../adr/ADR-005-observability.md)
+- [04-technology-research/official-references.md](../00-context/official-references.md)
+- [adr/ADR-005-observability.md](../08-architecture/ADR-005-observability.md)
 - [10-testing/test-catalog.md](../10-testing/test-catalog.md)
 - [08-architecture/deployment.md](../08-architecture/deployment.md)
 

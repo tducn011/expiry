@@ -12,12 +12,14 @@ export function createInventoryRouter(controller) {
   router.patch('/food-entries/:id', controller.edit);
   router.delete('/food-entries/:id', controller.remove);
 
-  // /food-entries/:id/movements
+  // /food-entries/:id/movements and /food-entries/:id/history
   router.post('/food-entries/:id/movements', controller.recordMovement);
   router.get('/food-entries/:id/movements', controller.listMovements);
+  router.get('/food-entries/:id/history', controller.listMovements);
 
   // /food-entries/:id/recounts
   router.post('/food-entries/:id/recounts', controller.recount);
+  router.post('/food-entries/:id/recount', controller.recount);
 
   // /food-entries/:id/restore
   router.post('/food-entries/:id/restore', controller.restore);

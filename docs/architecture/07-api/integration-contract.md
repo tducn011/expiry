@@ -1,81 +1,60 @@
-# DOC-SCAN-CONTRACT — Python Scan Service Integration Contract
+# DOC-SCAN-CONTRACT — Current OCR scan integration contract
 
 - Document ID: `DOC-SCAN-CONTRACT`
-- Status: **Approved**
-- Updated: 2026-10-10T18:00:00+07:00
+- Status: **Review**
+- Updated: 2026-10-13
 
 ## Purpose
 
-Quy định hợp đồng kỹ thuật và giao diện API nội bộ (`contracts/scan-api.yaml`) giữa **Node.js Backend (Modular Monolith)** và **Python Scan Service (FastAPI)** phục vụ chức năng tiền xử lý ảnh, OCR và trích xuất dữ liệu hạn dùng.
+Describe the current public Node API and internal Python service contract for explicit OCR scan assistance in the Add form. This is a source-aligned interface description, not an SLA, model-quality claim, data-collection approval, or production acceptance.
 
 ## Evidence sources
 
-- [00-context/source-register.md](../00-context/source-register.md)
-- [08-architecture/07_Architecture_Components_and_Alternatives.md](../08-architecture/07_Architecture_Components_and_Alternatives.md)
-- [08-architecture/ADR-004-ocr-boundary.md](../08-architecture/ADR-004-ocr-boundary.md)
-- [08-architecture/ADR-006-hybrid-architecture.md](../08-architecture/ADR-006-hybrid-architecture.md)
+- [Public API OpenAPI](../../../contracts/public-api.yaml), operation `API-13`
+- [Internal Python scan OpenAPI](../../../contracts/scan-api.yaml)
+- [Node scan controller and routes](../../../apps/api/src/modules/scan/scan.controller.mjs)
+- [Node scan service and image validation](../../../apps/api/src/modules/scan/scan.service.mjs)
+- [Python scan routes and OCR implementation](../../../services/python-scan/app/routes/scan.py)
+- [Python response types](../../../services/python-scan/app/schemas/scan.py)
+- [Current client-side scan projection](../../../apps/web/src/api/client.ts)
+- [Review-only schema proposal and current boundaries](../06-data-model/schema-input-output.md)
 
-## Architecture Boundary & Invariants
+## Definitions and assumptions
+
+**[A]** The browser calls the authenticated public Node endpoint, not Python directly. In the current `ApiClient`, the UI sends one multipart file as field `image` to `POST /api/v1/scans`. The public OpenAPI also describes JSON `image_base64`; the Node controller accepts that request form for its `/scan` handler. The Node service validates/decodes the image and sends JSON `{ "image_base64": "..." }` to Python `/scan`, with an optional `X-Correlation-ID`. The Python service also supports multipart field `file` for direct internal callers.
+
+**[A]** Python health reports `status`, `service`, `version`, and `tesseract_available`. Node projects that to the public health shape with `status` equal to `healthy` or `unavailable`, and includes service/version/availability. `healthy` is conditional on the Tesseract binary being available.
+
+## Analysis
+
+### Request and ownership flow
 
 ```text
-[React UI] 
-   │  (Upload multipart image)
-   ▼
-[Node.js Backend: modules/scan]
-   │  (Internal HTTP call: POST http://python-scan:8000/scan)
-   ▼
-[Python Scan Service: FastAPI]
-   ├── 1. preprocess.py (Làm sạch, xoay, tăng tương phản)
-   ├── 2. ocr.py (Tesseract OCR Engine)
-   └── 3. parser.py (Regex match ngày hết hạn & tên)
-   │
-   ▼  (JSON response: candidates & raw text)
-[Node.js Backend]
-   │  (Trả ScanResult về UI để User Review & Edit)
-   ▼
-[React UI] (User kiểm tra -> Bấm Confirm -> Gọi POST /api/v1/food-entries lưu vào MySQL)
+EntryForm file selection
+  → ApiClient POST /api/v1/scans (multipart field `image`, cookie + CSRF token)
+  → Node checks one file, 5 MiB limit and JPEG/PNG/WebP bytes
+  → Node POSTs JSON image_base64 + optional correlation ID to Python /scan
+  → Python decodes, preprocesses, runs Tesseract and deterministic date parsing
+  → Node validates and projects the nested candidate response
+  → UI displays raw text/candidates for explicit review and apply
+  → user separately submits the ordinary create command
 ```
 
-> [!IMPORTANT]
-> **Quy tắc bất biến:**
-> 1. **Stateless:** Python Scan Service hoàn toàn phi trạng thái. Không lưu ảnh trên đĩa cứng lâu dài.
-> 2. **Không chạm Database:** Python Scan Service **không kết nối tới MySQL**. Mọi thao tác lưu dữ liệu đều do Node.js Backend đảm nhận sau khi người dùng xác nhận.
-> 3. **Không ML/DL/LLM:** Dịch vụ không chứa pipeline huấn luyện, không tải mô hình AI cồng kềnh, không gọi external LLM API. Chỉ dùng OpenCV/Pillow, Tesseract và regex heuristics có thể kiểm thử xác định.
+The scan endpoint returns transient text/candidates. Python has no MySQL connection; no scan result creates inventory, movement, or training data. The selected Add form candidate is still editable. Manufactured-date values remain distinct from expiry selection; a candidate labeled `manufactured` is not silently treated as an expiry date.
 
----
+### Public request and response
 
-## Contract Endpoints
+Public operation: `POST /api/v1/scans` (`API-13`). The current browser uses `multipart/form-data` with exactly one file field named `image`; supported image types are JPEG, PNG, WebP and decoded image bytes are limited to 5 MiB. The public contract also defines JSON with required `image_base64`. Unsafe public requests require the session `X-CSRF-Token` and configured exact `Origin`; session cookies are included by the client. This request is available only in the authenticated Add flow.
 
-### 1. `GET /health`
-- **Mục đích:** Health check (Liveness & Readiness probe) cho Docker Compose và Node.js adapter.
-- **Request:** Không có tham số.
-- **Response (200 OK):**
-  ```json
-  {
-    "status": "healthy",
-    "service": "python-scan",
-    "version": "1.0.0",
-    "tesseract_available": true
-  }
-  ```
+A successful response has required top-level `raw_text` (string), `candidates` (strict object), `warnings` (string array), `errors` (string array), and `requires_confirmation: true`. `candidates` requires `food_name` (string or null), `expiry_date`, and `manufactured_date`. Expiry candidate fields are `value` (ISO calendar-date string or null), `date_certainty` (`exact`, `inferred`, or null), `date_label_type` (`expiry`, `best_before`, `use_by`, `manufactured`, or `unknown`), `source_text` (string), `alternatives` (calendar-date strings), `ambiguous` (boolean), and `requires_confirmation: true`. Manufactured candidate contains `value` (calendar-date string or null) and `source_text` (string). There is no confidence percentage in this response.
 
-### 2. `POST /scan`
-- **Mục đích:** Nhận dữ liệu ảnh, tiền xử lý, chạy OCR và trích xuất các trường ứng viên.
-- **Content-Type:** `multipart/form-data` (form field `file`) hoặc `application/json` (với `image_base64`).
-- **Headers:**
-  - `X-Correlation-ID`: Chuỗi UUID để correlate log giữa Node.js và Python.
-- **Giới hạn đầu vào:**
-  - Kích thước tối đa: 5MB.
-  - Định dạng: JPEG, PNG, WebP.
-  - Độ phân giải khuyến nghị: tối thiểu 800x600, tối đa 4000x4000.
-- **SLA thời gian:**
-  - Mục tiêu: < 1500ms.
-  - Hard timeout phía Node.js: 3000ms.
+The current successful public response intentionally omits Python `execution_time_ms`; it adds public `requires_confirmation: true`. Node rejects malformed internal results as `INVALID_SCAN_RESPONSE`; it nulls the expiry `value` when the date is ambiguous or the candidate label is `manufactured`. Warnings communicate parser conditions such as ambiguous expiry/manufactured dates or unlabeled dates; successful `errors` is currently an empty string array from Python. Candidate values can be null while their object and supporting fields remain present.
 
-#### Schema Phản hồi Thành công (200 OK):
+Example shape (illustrative values, no promise of OCR accuracy):
+
 ```json
 {
-  "raw_text": "NSX: 10/10/2026\nHSD: 25/12/2026\nLOT: 884B",
+  "raw_text": "MFG 10/10/2026\nEXP 25/12/2026",
   "candidates": {
     "food_name": null,
     "expiry_date": {
@@ -94,70 +73,39 @@ Quy định hợp đồng kỹ thuật và giao diện API nội bộ (`contract
   },
   "warnings": [],
   "errors": [],
-  "execution_time_ms": 420
+  "requires_confirmation": true
 }
 ```
 
-#### Schema Phản hồi khi ngày bị nhập nhằng (Ambiguous Date - 200 OK):
-```json
-{
-  "raw_text": "EXP 03/04/26",
-  "candidates": {
-    "food_name": null,
-    "expiry_date": {
-      "value": null,
-      "date_certainty": "inferred",
-      "date_label_type": "expiry",
-      "source_text": "03/04/26",
-      "alternatives": [
-        "2026-04-03",
-        "2026-03-04"
-      ],
-      "ambiguous": true,
-      "requires_confirmation": true
-    }
-  },
-  "warnings": [
-    "AMBIGUOUS_DATE_FORMAT_DAY_MONTH_REVERSIBLE"
-  ],
-  "errors": [],
-  "execution_time_ms": 380
-}
-```
+### Internal request/response and errors
 
-#### Mã lỗi (Error Responses):
-| HTTP Status | Error Code | Ý nghĩa |
-| :--- | :--- | :--- |
-| `400 Bad Request` | `INVALID_IMAGE_BYTES` | Dữ liệu tải lên bị hỏng hoặc không thể giải mã hình ảnh. |
-| `413 Payload Too Large` | `IMAGE_TOO_LARGE` | Dung lượng ảnh vượt quá 5MB. |
-| `415 Unsupported Media` | `UNSUPPORTED_FORMAT` | Không hỗ trợ định dạng ảnh (chỉ chấp nhận JPEG, PNG, WebP). |
-| `422 Unprocessable` | `NO_TEXT_DETECTED` | Ảnh quá mờ, không tìm thấy ký tự văn bản nào. |
-| `500 Server Error` | `OCR_ENGINE_ERROR` | Lỗi nội bộ trong quá trình thực thi Tesseract. |
+The Node worker call uses `POST /scan` with JSON `{ "image_base64": "..." }`. Direct internal multipart requests use field `file`; they are not the browser's public field name. Internal Python response also has integer `execution_time_ms` and does not have public `requires_confirmation`. The Node projector validates the internal result and exposes the public shape above.
 
----
+Current source handles these failure classes: malformed/base64/image bytes or malformed multipart (400); image too large (413); unsupported type (415); no legible text (422 `NO_LEGIBLE_TEXT`); unavailable OCR engine (503 `OCR_ENGINE_UNAVAILABLE`); Python OCR deadline (504 `OCR_TIMEOUT`); OCR processing failure (500 `OCR_FAILED`). Node may surface unavailable worker as 503 `SCAN_SERVICE_UNAVAILABLE`, its worker deadline as 504 `SCAN_TIMEOUT`, or invalid internal response as 502 `INVALID_SCAN_RESPONSE`. The public OpenAPI represents these through `Problem` responses. HTTP 401/403 can also arise at the public authentication/CSRF boundary before scanning. Exact public problem envelopes are owned by the API contract.
 
-## File Machine-Readable
-
-Contract OpenAPI chuẩn định dạng YAML được lưu trữ tại:
-```text
-contracts/scan-api.yaml
-```
+The Python OCR process timeout is 2.5 seconds; the Node-to-Python scan request deadline defaults to 3,000 ms. These are implementation timeouts, not user-facing latency guarantees or SLA. Browser-to-Node `ApiClient` uses its general 15-second request timeout. No claim is made about a measured latency distribution.
 
 ## Decisions and rationale
 
-[D] Quyết định tách biệt Python Scan Service và chuẩn hóa qua `scan-api.yaml` đảm bảo sự độc lập tuyệt đối giữa 2 service:
-1. Node.js backend không bị phụ thuộc vào môi trường Python/C-bindings.
-2. Python Scan Service có thể kiểm thử tự động độc lập bằng pytest và fixtures ảnh giả lập.
-3. Người dùng luôn là người kiểm duyệt cuối cùng trước khi ghi nhận bất kỳ dữ liệu nào vào database.
+**[A]** This current narrative replaces the old response examples and health/SLA claims with the checked-in Node/Python contract. Python owns decoding, preprocessing, OCR, parsing, and internal response types; Node owns public image validation, internal request projection, and the public response boundary; the UI owns human review and the separate create action. **[D]** Any training/evaluation dataset requires a separate source eligibility, consent, retention, and storage decision. The proposed `ocr_training_samples` table remains Review-only and does not change this interface.
 
 ## Dependencies
 
-- [08-architecture/ADR-004-ocr-boundary.md](../08-architecture/ADR-004-ocr-boundary.md)
-- [08-architecture/ADR-006-hybrid-architecture.md](../08-architecture/ADR-006-hybrid-architecture.md)
-- [07-api/06_API_Routes_and_Contracts.md](06_API_Routes_and_Contracts.md)
+- [OCR boundary ADR](../08-architecture/ADR-004-ocr-boundary.md)
+- [Hybrid architecture ADR](../08-architecture/ADR-006-hybrid-architecture.md)
+- [Current schema input/output guide](../06-data-model/schema-input-output.md)
+- [Dated source and runtime reconciliation](../10-testing/schema-reconciliation-2026-10-13.md)
+
+## Open questions
+
+Operational latency distribution, OCR accuracy by language/package type, persistent sample retention, contributor consent/withdrawal, and any model-training workflow are not established by these contracts and remain open for separate review.
+
+## Related documents
+
+- [Public API OpenAPI](../../../contracts/public-api.yaml)
+- [Internal scan OpenAPI](../../../contracts/scan-api.yaml)
+- [Current schema input/output guide](../06-data-model/schema-input-output.md)
 
 ## Verification criteria
 
-- Endpoint `/health` trả về `{"status":"healthy"}`.
-- Kiểm thử unit test `test_scan_endpoint` với ảnh mẫu test fixture trả về kết quả đúng cấu trúc `candidates` và `warnings`.
-- Khi Python service mất kết nối, Node.js fallback an toàn thông báo người dùng nhập tay mà không làm crash server.
+Current statements should match the named contracts and source. A passing contract/documentation check is not evidence of recognition quality, user acceptance, SLA, data eligibility, or production readiness. Status remains Review.

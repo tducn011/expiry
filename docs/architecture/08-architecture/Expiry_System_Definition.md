@@ -56,13 +56,13 @@ Ví dụ này giải thích vòng thông tin–hành động–phản hồi; kh�
 
 ## 7. Quan hệ với requirements và scope
 
-Định nghĩa trả lời hệ thống là gì và có mục đích gì. [Business/System Requirements](Expiry_System_Requirements_Summary.md) chuyển mục đích thành kết quả và hành vi/điều kiện cần kiểm tra. Scope chọn miền sản phẩm, đối tượng và năng lực triển khai. Use case, UI, API, schema và công nghệ cụ thể hóa yêu cầu đã chọn.
+Định nghĩa trả lời hệ thống là gì và có mục đích gì. [Business/System Requirements](../03-requirements-features/Expiry_System_Requirements_Summary.md) chuyển mục đích thành kết quả và hành vi/điều kiện cần kiểm tra. Scope chọn miền sản phẩm, đối tượng và năng lực triển khai. Use case, UI, API, schema và công nghệ cụ thể hóa yêu cầu đã chọn.
 
-UI demo là một phương án thể hiện và nguồn quan sát giải pháp hiện tại, không là căn cứ đóng toàn bộ requirements. Bộ [architecture hiện tại](architecture/README.md) mô tả một phương án food inventory chi tiết để review; cần đọc kèm phạm vi của phương án đó.
+UI demo là một phương án thể hiện và nguồn quan sát giải pháp hiện tại, không là căn cứ đóng toàn bộ requirements. Bộ [architecture hiện tại](../README.md) mô tả một phương án food inventory chi tiết để review; cần đọc kèm phạm vi của phương án đó.
 
 ## 8. Căn cứ biên soạn
 
-- **[A] Phương pháp:** [Slide System Engineering.pdf](../doc/SystemEngineer/Slide%20System%20Engineering.pdf), trang PDF 3 và 6 về hệ thống; 63–67 về phân tích vấn đề/lợi ích; 69–76 về phân tầng requirements. Các trang liên quan đã được đọc trực quan.
+- **[A] Phương pháp:** [Slide System Engineering.pdf](../consolidated/Slide System Engineering.pdf), trang PDF 3 và 6 về hệ thống; 63–67 về phân tích vấn đề/lợi ích; 69–76 về phân tầng requirements. Các trang liên quan đã được đọc trực quan.
 - **[A] Nội dung nguồn:** tab “Định nghĩa hệ thống” và các tab phân tích/Scope trong [System Engineering Gr2](https://docs.google.com/document/d/1js1KBfrVrgDn9EVC4_sNGIvUlWQNlLRC66nyTeAvBmA/edit?tab=t.cvfhfbppty7u), đọc trực tiếp trước khi chỉnh.
-- **[A] Nguồn tổng hợp bài toán:** [food-expiry.md](../doc/SystemEngineer/food-expiry.md), [REPORT.md](../doc/SystemEngineer/REPORT.md), [DEEP RESEARCH.md](../doc/SystemEngineer/rawdocs/DEEP%20RESEARCH.md). Chúng cung cấp nội dung và giới hạn chứng cứ, không là phỏng vấn người dùng mới trong lần chỉnh này.
+- **[A] Nguồn tổng hợp bài toán:** [food-expiry.md](../02-challenges/food-expiry.md), [REPORT.md](../02-challenges/REPORT.md), [DEEP RESEARCH.md](../02-challenges/DEEP_RESEARCH.md). Chúng cung cấp nội dung và giới hạn chứng cứ, không là phỏng vấn người dùng mới trong lần chỉnh này.
 - **[C] Bản làm rõ:** phát biểu riêng cho Expiry được tổng hợp/diễn giải để review. Slide là tài liệu học phần; bản này không tuyên bố chứng nhận ISO/IEEE hay nghiệm thu sản phẩm.

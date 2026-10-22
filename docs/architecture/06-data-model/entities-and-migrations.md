@@ -1,81 +1,85 @@
-# DOC-SCHEMA — Entity purpose, physical reference and migration plan
+# DOC-SCHEMA — Current entity ownership and migration state
 
 - Document ID: `DOC-SCHEMA`
 - Status: **Review**
-- Updated: 2026-10-09T18:37:36+07:00
+- Updated: 2026-10-13
 
 ## Purpose
 
-Grain/use cases/owners justify every persistent table.
+Record each current persisted entity’s grain, owner, creation path, and actual MySQL migration state. This is an applied-schema description, not a new migration plan.
 
 ## Evidence sources
 
-- [00-context/source-register.md](../00-context/source-register.md)
+- [Migration 001: core MySQL schema](../../../database/mysql/migrations/001_initial_schema.sql)
+- [Migration 002: local-auth schema](../../../database/mysql/migrations/002_local_auth.sql)
+- [Migration runner and schema evidence](../../../database/mysql/README.md)
+- [Current MySQL ERD](erd.md)
+- [Current field dictionary](dictionary.md)
+- [Schema input/output guide](schema-input-output.md)
 
 ## Definitions and assumptions
 
-[C] Các proposal dưới đây cần review trước implementation; không có nhãn Approved trong lần authoring này.
+**[A]** In the checked candidate development database, migrations 001 and 002 are applied; the migration runner also manages `schema_migrations`. The SQL files are immutable applied artifacts. Migration 002’s source header retains historical “proposal only” wording, which does not describe the later checked application/evidence state. This document remains Review and does not approve production deployment or an auth policy.
 
 ## Analysis
 
-| Entity | Một row đại diện | Identity | Vì sao cần từ flow |
+### Entity grain and ownership
+
+| Entity | One row represents | Identity / owner | Created by / purpose |
 |---|---|---|---|
-| users | Một owner đã xác thực cùng settings | UUID, identity_subject unique | Mọi private UC + UC-11 |
-| food_entries | Một nhóm lượng thực phẩm cùng điều kiện theo dõi | UUID; tên/date không unique | UC-01/02/03; không auto merge chỉ vì cùng tên |
-| stock_movements | Một thay đổi quantity được commit | UUID | UC-04/05/07/08; create luôn initial event |
-| api_requests | Một command write có key trong scope owner | Composite (user_id,idempotency_key) | Retry SC-08, toàn writes |
+| `users` (ENT-01) | One private inventory account and its attention preferences | Server-assigned `CHAR(36)` ID; auth/identity boundary | Registration/bootstrap; owner root for entries, requests, credentials, sessions |
+| `food_entries` (ENT-02) | One tracked quantity group with shared unit, location, and date context | Server-assigned ID; immutable `user_id` from authenticated principal | Explicit reviewed create command; current amount is read source, but every quantity change is also recorded |
+| `stock_movements` (ENT-03) | One committed initial, consume, discard, or adjustment event | Server-assigned movement ID; exactly one parent entry | Create transaction or a confirmed movement/recount; append-only history |
+| `api_requests` (ENT-04) | One write-command replay record for owner + idempotency key | Composite `(user_id, idempotency_key)` primary key | Write transaction reserves/saves original result for safe replay |
+| `local_credentials` (ENT-05) | One local credential set for a user | `user_id` PK/FK to `users`; normalized email unique | Local registration; stores verifier, never plaintext password |
+| `user_sessions` (ENT-06) | One persisted session-token digest and lifecycle | `token_hash` PK; `user_id` FK to `users` | Login/session creation; expiry and revocation gate private access |
+| `schema_migrations` (ENT-07) | One successfully applied migration version and checksum | Migration `version` primary key | Migration runner records checksum/time after applying file |
 
-Không có products/catalog ở MVP: chưa có use case catalog, hai món tên giống không chắc cùng product. Không có household/membership theo DEC-01. Không có notifications/jobs/outbox theo DEC-02. Movement bắt buộc khi quantity thay đổi, không “optional history” gây hai đường ghi mâu thuẫn.
+No products/catalog, household/membership, notification/outbox, or OCR sample table exists in the current migrations. Same-name food entries are not merged. The `ocr_training_samples` candidate in the schema guide is **[D] proposal only**, not an entity in this applied model.
 
-| Entity ID | Table | Meaning / why | Creation | Owner | Use cases |
-|---|---|---|---|---|---|
-| ENT-01 | users | Authenticated owner identity/settings | Verified identity bootstrap and UC-11 | Accounts service/auth adapter | UC-00, UC-11 |
-| ENT-02 | food_entries | Quantity with common unit/date/location/opening context | UC-01 | Inventory service | UC-01…07, UC-09/10 |
-| ENT-03 | stock_movements | One committed quantity change | Initial create or UC-04/05/07 | Inventory services, append-only public interface | UC-01, UC-04/05/07/08 |
-| ENT-04 | api_requests | One write command replay scope per owner/key | All domain writes | Mutation executor in same transaction | All mutating UCs |
+### Current migration state
 
-### Physical SQL reference
+| Version | Current role | Evidence boundary |
+|---|---|---|
+| `001_initial_schema.sql` | Creates core `users`, `food_entries`, `stock_movements`, and `api_requests`, including indexes/CHECKs and transaction invariants represented in services/tests | Applied in candidate dev schema; file remains immutable |
+| `002_local_auth.sql` | Adds `local_credentials` and `user_sessions` with FK/CHECK/index constraints | Applied in candidate dev schema; file remains immutable despite historical header wording |
+| `schema_migrations` | Records applied version, SHA-256, and timestamp | Runner-managed metadata table; no domain owner/FK |
 
-[Proposed PostgreSQL DDL](../../../Expiry_System_Design_2026-10-08/contracts/schema_reference_postgresql.sql); not a deployed migration. PK/FK/check/index clauses are the readable source. ORM decision ADR-002 remains open; no ORM models claimed installed.
+The observed current model has seven tables, 53 columns, five FKs, and 30 CHECK constraints according to the current Workbench/dictionary evidence. No new DDL or migration is part of this documentation reconciliation. The local MySQL verification report describes its exact sandbox gates; it is not production migration approval.
 
-### Migration plan [D]
+### Persistence and transaction ownership
 
-1. Pin DB/ORM/runtime after transaction spike; introduce versioned migrations for users, entries, movements and command results.
-2. Test fresh install and transaction invariants in disposable DB, not mock arrays.
-3. Establish lock/version/key ordering in repositories; transaction connection passed explicitly to every participating write.
-4. Verify FK restrictive delete, one-initial unique index, quantity/date consistency checks and owner query indexes. Owner auth and parent-has-initial invariants belong to service tests.
-5. Backfill before tightening a constraint; forbid silent coercion of unknown dates or fractional piece.
-6. Use expand/contract changes for compatibility; restore backup in staging before destructive migration. Down migration may lose data, so rollback can be forward fix or validated restore.
-7. Deploy schema compatible with current and next app revisions, then application; record migration lock/version and before/after row invariants.
+- Create writes `food_entries`, its initial `stock_movements` event, and `api_requests` result atomically.
+- Use/discard/recount locks the owner-scoped entry, validates version/quantity, then updates quantity/version and appends a movement when there is a real change; replay state is saved in the same transaction.
+- Metadata edit changes allowed metadata and version only; quantity and unit are excluded.
+- Soft delete/restore updates visibility/version without creating a use/discard movement.
+- Preference changes update owner settings/version and an idempotency result.
+- Auth persists credential/session rows in the MySQL boundary. Server-derived principal/IDs/timestamps remain server-owned.
 
-### ORM mapping acceptance
-
-UUID/string IDs; DATE is calendar string; exact decimal domain/DTO strings; TIMESTAMPTZ ISO instant; enum mappings follow dictionary, not mock synonyms. Explicit relation scopes and transaction handles; no generic all-table CRUD. SQL CHECK may round numeric scale, so pre-insert validation remains necessary. Test ORM lock capability/generated SQL and replay concurrency before selection.
+ORM selection/implementation status belongs to ADR-002 and runtime evidence. The SQL layer uses explicit repositories/transactions; this document does not claim an ORM model or generic all-table CRUD.
 
 ## Decisions and rationale
 
-[D] Giữ phạm vi food inventory cá nhân, manual capture và attention trong app theo source context. Approval kỹ thuật là riêng với việc kiểm tra cấu trúc tài liệu.
+**[A]** The former migration plan is replaced by the current applied-state inventory. Migration compatibility, locking, and replay behavior have local candidate-database evidence; those checks do not establish production backup/restore readiness. **[D]** Any future schema evolution should be a separately reviewed migration with compatibility and restore planning before execution.
 
 ## Dependencies
 
-- [11-data-dictionary/dictionary.md](../06-data-model/dictionary.md)
-- [06-data-model/erd.md](../06-data-model/erd.md)
-- [adr/ADR-002-storage-orm.md](../adr/ADR-002-storage-orm.md)
-- [10-testing/test-catalog.md](../10-testing/test-catalog.md)
+- [Storage and ORM ADR](../08-architecture/ADR-002-storage-orm.md)
+- [Database verification report](erd-workbench/07_DB_VERIFICATION_REPORT.md)
+- [Testing catalog](../10-testing/test-catalog.md)
+- [Traceability registry](../11-traceability/registry.json)
 
 ## Open questions
 
-Chốt các quyết định liên quan trong decision ledger trước khi đổi contract hoặc triển khai.
+Production migration, backup/restore, and data-retention procedures require separate deployment review. OCR sample storage, source eligibility, consent, reviewer access, and release membership remain proposals/open questions, not current entities.
 
 ## Related documents
 
-- [README.md](../README.md)
-- [11-traceability/README.md](../11-traceability/README.md)
-- [06-data-model/dictionary.md](../06-data-model/dictionary.md)
-- [06-data-model/erd.md](../06-data-model/erd.md)
-- [adr/ADR-002-storage-orm.md](../adr/ADR-002-storage-orm.md)
-- [10-testing/test-catalog.md](../10-testing/test-catalog.md)
+- [Current ERD](erd.md)
+- [Current dictionary](dictionary.md)
+- [Schema input/output guide](schema-input-output.md)
+- [Reconciliation report](../10-testing/schema-reconciliation-2026-10-13.md)
 
 ## Verification criteria
 
-Đối chiếu nguồn, ID và downstream links; acceptance runtime chỉ được ghi pass sau khi thực chạy.
+The seven entity/table names and migration versions must match the immutable SQL files and current candidate database evidence. Do not add any proposed OCR table to this list unless a separately authorized migration is actually applied and documented.
