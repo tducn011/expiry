@@ -1,37 +1,45 @@
-import { ReactNode } from "react"
+import type { ReactNode } from "react"
 
-/** Surface primitive: every white panel in the app is a Card with an optional titled header. */
-
-export default function Card({
-  title,
-
-  action,
-
-  children,
-
-  tone = "default",
-
-  className = "",
-}: {
-  title?: string
-
-  action?: ReactNode
-
+export interface CardProps {
   children: ReactNode
-
-  tone?: "default" | "muted"
-
   className?: string
-}) {
+  role?: string
+  title?: string
+  action?: ReactNode
+  muted?: boolean
+  onClick?: () => void
+}
+
+export function Card({
+  children,
+  className = "",
+  role,
+  title,
+  action,
+  muted = false,
+  onClick,
+}: CardProps) {
   return (
-    <section className={`card ${tone} ${className}`}>
-      {title && (
-        <header className="card-header">
-          <h2>{title}</h2>
-          {action}
+    <section
+      role={role}
+      onClick={onClick}
+      className={`rounded-corner-lg border border-border-primary/60 p-5 shadow-xs transition-colors ${
+        muted ? "bg-bg-subtle" : "bg-surface-bg"
+      } ${onClick ? "cursor-pointer hover:bg-surface-hover" : ""} ${className}`}
+    >
+      {(title || action) && (
+        <header className="mb-4 flex items-center justify-between gap-4">
+          {title && (
+            <h2 className="text-base font-semibold text-text-primary">
+              {title}
+            </h2>
+          )}
+          {action && <div>{action}</div>}
         </header>
       )}
       {children}
     </section>
   )
 }
+
+export default Card
