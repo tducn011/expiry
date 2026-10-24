@@ -1,21 +1,28 @@
 export type StatusFilter = "all" | "soon" | "expired" | "unknown"
 
-export const defaultFilterChips: { v: StatusFilter label: string }[] = [
+export interface FilterChipItem {
+  v: StatusFilter
+  label: string
+}
+
+export const defaultFilterChips: FilterChipItem[] = [
   { v: "all", label: "Tất cả" },
   { v: "soon", label: "Sắp HSD" },
   { v: "expired", label: "Quá HSD" },
   { v: "unknown", label: "Chưa rõ HSD" },
 ]
 
+export interface FilterChipsProps {
+  value: StatusFilter
+  onChange: (v: StatusFilter) => void
+  chips?: FilterChipItem[]
+}
+
 export function FilterChips({
   value,
   onChange,
   chips = defaultFilterChips,
-}: {
-  value: StatusFilter
-  onChange: (v: StatusFilter) => void
-  chips?: { v: StatusFilter label: string }[]
-}) {
+}: FilterChipsProps) {
   return (
     <div className="relative -mx-4 px-4 md:mx-0 md:px-0">
       <div

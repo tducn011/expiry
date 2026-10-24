@@ -28,7 +28,13 @@ export type DetailAction = "consume" | "discard" | "recount" | "history" | "edit
 
 type QtyKind = "consume" | "discard" | "adjust"
 
-const qtyCopy: Record<QtyKind, { t: string label: string verb: string }> = {
+interface QtyCopyConfig {
+  t: string
+  label: string
+  verb: string
+}
+
+const qtyCopy: Record<QtyKind, QtyCopyConfig> = {
   consume: { t: "Ghi nhận đã dùng", label: "Lượng đã dùng", verb: "Đã dùng" },
   discard: { t: "Ghi nhận đã bỏ", label: "Lượng đã bỏ", verb: "Đã bỏ" },
   adjust: {

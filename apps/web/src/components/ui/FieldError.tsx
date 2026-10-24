@@ -1,6 +1,11 @@
 import { CircleAlert } from "./Icon"
 
-export function FieldError({ id, msg }: { id?: string msg?: string }) {
+export interface FieldErrorProps {
+  id?: string
+  msg?: string
+}
+
+export function FieldError({ id, msg }: FieldErrorProps) {
   if (!msg) return null
   return (
     <p
