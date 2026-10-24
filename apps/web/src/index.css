@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* Collection ancestors only; the current food name remains the detail h1. */
@@ -19,12 +20,41 @@
 /* Expiry UI — option A: grouped attention, flat surfaces, shared controls. */
 :root {
   color-scheme: light;
-  --app-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --app-font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --brand-primary: #015d67; /* Forest Green */
+  --brand-hover: #014a52;
+  --brand-dark: #013d44;
+  --brand-secondary: #87e4db; /* Mint */
+  --brand-muted: #00acb1; /* Kelly Green */
+  --brand-tertiary: #f1f8f7;
+  --expiry-accent: #caf0c1; /* Pistachio */
+  --corner-sm: 8px;
+  --corner-md: 12px;
+  --corner-lg: 16px;
+  --corner-full: 9999px;
+  --surface-bg: #ffffff;
+  --surface-dark: #1e293b;
+  --surface-darkest: #0f172a;
+  --surface-hover: #f8fafc;
+  --bg-subtle: #f1f5f9;
+  --bg-faint: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --border-primary: #e2e8f0;
+  --on-brand: #ffffff;
+  --status-ok: #047857;
+  --status-ok-bg: #ecfdf5;
+  --status-soon: #9a3412;
+  --status-soon-bg: #fffbeb;
+  --status-expired: #b91c1c;
+  --status-expired-bg: #fef2f2;
+
   --ink: #18212b;
   --ink-2: #2c3641;
   --foreground: var(--ink);
   --muted: #586572;
-  --canvas: #f6f8fa;
+  --canvas: var(--brand-tertiary);
   --surface: #fff;
   --fill: #eef1f4;
   --fill-2: #e4e9ee;
@@ -40,12 +70,12 @@
   --ok-bg: #ebf8f1;
   --neutral: #586572;
   --neutral-bg: #eef1f4;
-  /* Brand: existing blue roles, darkened one step for readable small text. */
-  --accent: #075fad;
-  --accent-hover: #0a6dd6;
-  --accent-soft: #e8f2fd;
+  /* Brand: Forest Green */
+  --accent: #015d67;
+  --accent-hover: #014a52;
+  --accent-soft: #e8f5f4;
   --link: var(--accent);
-  --ring-focus: rgb(10 109 214 / .12);
+  --ring-focus: rgb(1 93 103 / .18);
   --elevation-popover: 0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1);
   --elevation-modal: 0 20px 25px -5px rgb(0 0 0 / .1), 0 8px 10px -6px rgb(0 0 0 / .1);
   --shadow-segment-track: inset 0 0 0 1px rgb(0 0 0 / .05), inset 0 1px 2px rgb(0 0 0 / .04);
@@ -80,14 +110,58 @@
   --dock-clearance: calc(6.5rem + env(safe-area-inset-bottom));
   font-family: var(--app-font);
   font-size: 100%;
-  color: var(--ink);
-  background: var(--canvas);
+  color: var(--text-primary);
+  background: var(--brand-tertiary);
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
 }
 
 @theme {
   --font-sans: var(--app-font);
+
+  /* Brand Tokens */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-muted: var(--brand-muted);
+  --color-brand-tertiary: var(--brand-tertiary);
+  --color-brand-accent: var(--expiry-accent);
+  --color-surface-bg: var(--surface-bg);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-darkest: var(--surface-darkest);
+  --color-surface-hover: var(--surface-hover);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-bg-faint: var(--bg-faint);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-border-primary: var(--border-primary);
+  --color-on-brand: var(--on-brand);
+  --color-status-ok: var(--status-ok);
+  --color-status-ok-bg: var(--status-ok-bg);
+  --color-status-soon: var(--status-soon);
+  --color-status-soon-bg: var(--status-soon-bg);
+  --color-status-expired: var(--status-expired);
+  --color-status-expired-bg: var(--status-expired-bg);
+
+  --radius-corner-sm: var(--corner-sm);
+  --radius-corner-md: var(--corner-md);
+  --radius-corner-lg: var(--corner-lg);
+  --radius-corner-full: var(--corner-full);
+
+  /* Containers & Max Width Scale */
+  --container-xs: 20rem;
+  --container-sm: 24rem;
+  --container-md: 28rem;
+  --container-lg: 32rem;
+  --container-xl: 36rem;
+  --container-2xl: 42rem;
+  --container-3xl: 48rem;
+  --container-4xl: 56rem;
+  --container-5xl: 64rem;
+  --container-6xl: 72rem;
+  --container-7xl: 80rem;
 
   /* Colors */
   --color-ink: var(--ink);
@@ -121,12 +195,24 @@
   --color-ring-focus: var(--ring-focus);
 
   /* Typography Scale */
-  --text-xs: var(--t-xs);
-  --text-sm: var(--t-sm);
-  --text-base: var(--t-base);
-  --text-md: var(--t-md);
-  --text-lg: var(--t-lg);
-  --text-xl: var(--t-xl);
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-md: 1.125rem;
+  --text-md--line-height: 1.625rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
 
   /* Radius */
   --radius-sm: var(--r-sm);
@@ -287,11 +373,14 @@
   background: color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
-.scrollbar-clean {
+.scrollbar-clean,
+.scrollbar-none {
   scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.scrollbar-clean::-webkit-scrollbar {
+.scrollbar-clean::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
   display: none;
 }
 

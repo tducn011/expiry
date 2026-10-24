@@ -1,1066 +1,569 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
+import {
+  attention,
+  notifications,
+  useAppStore,
+  type Food,
+  type State,
+} from "./store/appStore"
+import {
+  emptyDraft,
+  draftFrom,
+  type Draft,
+  type FormMode,
+} from "./features/FoodForm"
+import {
+  Bell,
+  CircleAlert,
+  History as HistoryIcon,
+  Home,
+  Leaf,
+  LogIn,
+  LogOut,
+  Plus,
+  Settings as SettingsIcon,
+} from "./components/ui/Icon"
+import Button from "./components/ui/Button"
+import Card from "./components/ui/Card"
+import Modal from "./components/ui/Modal"
+import Toast, { type ToastProps } from "./components/ui/Toast"
+import {
+  SidebarButton,
+  SidebarNavigation,
+} from "./components/ui/SidebarNavigation"
 
-import { attentionFor, DEMO_DATE, localDay } from "./mockApi"
-
-import type {
-  Attention,
-  CreatePayload,
-  EntryDraft,
-  FoodEntry,
-} from "./domain/types"
-
-import Shell, { View } from "./components/layout/Shell"
-
-import Icon from "./components/ui/Icon"
-
-import { RetryAction } from "./components/ui/Modal"
-
-import Detail, { DetailAction } from "./features/Detail"
-
-import EntryForm from "./features/EntryForm"
-
+// Feature screens
+import Inventory from "./features/Inventory"
+import Attention from "./features/Attention"
+import AddEntry from "./features/AddEntry"
+import Scanner from "./features/Scanner"
+import FoodForm from "./features/FoodForm"
+import Detail from "./features/Detail"
 import History from "./features/History"
-
-import Inventory, {
-  defaultFilters,
-  InventoryFilters,
-} from "./features/Inventory"
-
-import MovementForm, { MovementMode } from "./features/MovementForm"
-
-import Settings from "./features/Settings"
-
-import StatusDialog, { Dialog, StatusMode } from "./features/StatusDialog"
-
 import Trash from "./features/Trash"
+import Notifications from "./features/Notifications"
+import Settings from "./features/Settings"
+import AuthForm from "./features/AuthForm"
+import Onboarding from "./features/Onboarding"
 
-import Welcome from "./features/Welcome"
+export type Route = { name: "inventory" } | { name: "attention" } | {
+  name: "add"
+} | { name: "scan" } | {
+  name: "form"
+  mode: FormMode
+  draft: Draft
+  image?: string
+} | {
+  name: "detail"
+  id: string
+} | { name: "history" } | { name: "trash" } | {
+  name: "notifications"
+} | { name: "settings" }
 
-import AuthForm, { AuthMode } from "./features/AuthForm"
-
-import { useExpiry } from "./hooks/useExpiry"
-
-import { useDemoExpiry } from "./hooks/useDemoExpiry"
-
-import DemoApp from "./demo/DemoApp"
-
-// Suppress unused import — DEMO_DATE is referenced via mockApi in demo seed
-void DEMO_DATE
-
-type ModalKind = "add" | "restore" | DetailAction | StatusMode | null
-
-const statusModes: StatusMode[] = [
-  "conflict",
-
-  "timeout",
-
-  "loading",
-
-  "read",
-
-  "notfound",
-
-  "rate",
-
-  "session",
-
-  "insufficient",
-]
-
-function App({ demoMode = false }: { demoMode?: boolean } = {}) {
-  const queryParams = useMemo(() => {
-    if (typeof window === "undefined") return new URLSearchParams()
-
-    return new URLSearchParams(window.location.search)
-  }, [])
-
-  const hasDemoParam =
-    queryParams.get("demo") === "1" ||
-    queryParams.get("demo") === "true" ||
-    queryParams.has("demo")
-
-  if (!demoMode && hasDemoParam) {
-    return <DemoApp />
-  }
-
-  const isDemo = demoMode || hasDemoParam
-
-  const [started, setStarted] = useState(
-    () =>
-      isDemo ||
-      queryParams.has("started") ||
-      localStorage.getItem("expiry_onboarding_done") === "1",
-  )
-
-  const markStarted = () => {
-    localStorage.setItem("expiry_onboarding_done", "1")
-
-    setStarted(true)
-  }
-
-  const [view, setView] = useState<View>(() => {
-    const v = queryParams.get("view") as View
-
-    return v && ["inventory", "attention", "trash", "settings"].includes(v)
-      ? v
-      : "attention"
+export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
+  const { state, dispatch, problem, retry, reset } = useAppStore()
+  const [confirmReset, setConfirmReset] = useState(false)
+  const [stack, setStack] = useState<Route[]>(() => {
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search)
+      const v = q.get("view")
+      const id = q.get("id")
+      if (id) return [{ name: "inventory" }, { name: "detail", id }]
+      if (v === "attention") return [{ name: "attention" }]
+      if (v === "trash") return [{ name: "trash" }]
+      if (v === "settings") return [{ name: "settings" }]
+      if (v === "history") return [{ name: "history" }]
+    }
+    return [{ name: "inventory" }]
   })
 
-  const [filters, setFilters] = useState<InventoryFilters>(defaultFilters)
-
-  const [selectedId, setSelectedId] = useState<string | null>(() =>
-    queryParams.get("id"),
-  )
-
-  const [actionEntryId, setActionEntryId] = useState<string | null>(null)
-
-  const [actionEntrySnapshot, setActionEntrySnapshot] =
-    useState<FoodEntry | null>(null)
-
-  const [modal, setModal] = useState<ModalKind>(() => {
-    const m = queryParams.get("modal") as ModalKind
-
-    return m ? m : null
-  })
-
-  const [notice, setNotice] = useState("")
-
-  const [pendingCreate, setPendingCreate] = useState<CreatePayload | null>(null)
-
-  const [pendingAdd, setPendingAdd] = useState(false)
-
-  const [addOwnerId, setAddOwnerId] = useState<string | null>(null)
-
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-
-  const [authModalMode, setAuthModalMode] = useState<AuthMode>("login")
-
-  const [lastKnownEmail, setLastKnownEmail] = useState("")
-
-  const [retryingCommand, setRetryingCommand] = useState(false)
-
-  const retryLock = useRef(false)
-
-  // ── Hooks (both always called — Rules of Hooks) ───────────────────────────
-
-  const real = useExpiry(view, filters, 1, !isDemo)
-
-  const demo = useDemoExpiry(selectedId)
-
-  // Unified API surface — pick demo or real
-  const api = isDemo ? demo : real
-
-  // ── Derived session / email ───────────────────────────────────────────────
-
-  useEffect(() => {
-    if (real.session?.user.email) setLastKnownEmail(real.session.user.email)
-  }, [real.session])
-
-  // Prompt auth when not logged in (real mode only)
-  useEffect(() => {
-    if (!isDemo && !real.checking && !real.session) {
-      setAuthModalOpen(true)
-    }
-  }, [isDemo, real.checking, real.session])
-
-  // ── Derived data ──────────────────────────────────────────────────────────
-
-  const entries: FoodEntry[] = api.allFoods
-
-  const trash: FoodEntry[] = api.trash
-
-  const prefs = api.prefs ?? {
-    timezone: "Asia/Ho_Chi_Minh",
-
-    attention_lead_days: 2,
-
-    version: 1,
-  }
-
-  const selected: FoodEntry | null = isDemo
-    ? demo.selected
-    : real.selected || entries.find((e) => e.id === selectedId) || null
-
-  const modalEntryId = actionEntryId ?? selectedId
-
-  const modalEntry: FoodEntry | null = isDemo
-    ? modalEntryId
-      ? demo.getEntry(modalEntryId)
-      : null
-    : entries.find((e) => e.id === modalEntryId) ||
-      trash.find((e) => e.id === modalEntryId) ||
-      selected ||
-      actionEntrySnapshot ||
-      null
-
-  const activeAsOfDate = isDemo
-    ? localDay(new Date(), prefs.timezone)
-    : real.asOfDate || localDay(new Date(), prefs.timezone)
-
-  const attention = (e: FoodEntry): Attention =>
-    isDemo
-      ? attentionFor(e, prefs.attention_lead_days, activeAsOfDate)
-      : (e.attention ?? "unknown")
-
-  const counts = useMemo(() => {
-    const c: Record<Attention, number> = {
-      past: 0,
-
-      today: 0,
-
-      soon: 0,
-
-      unknown: 0,
-
-      later: 0,
-    }
-
-    entries.forEach((e) => {
-      if (e.remaining_quantity > 0) c[attention(e)] += 1
-    })
-
-    return c
-  }, [entries, prefs])
-
-  const urgentCount = counts.past + counts.today + counts.soon
-
-  // ── Auth-gate side effects (real mode only) ───────────────────────────────
-
-  useEffect(() => {
-    if (!isDemo && real.error?.status === 401 && real.session === null) {
-      setAuthModalMode("reauth")
-
-      setAuthModalOpen(true)
-    }
-  }, [isDemo, real.error, real.session])
-
-  useEffect(() => {
-    if (isDemo || modal !== "add" || addOwnerId) return
-
-    if (real.session) setAddOwnerId(real.session.user.id)
-    else if (!real.checking) {
-      setModal(null)
-
-      setPendingAdd(true)
-
-      setAuthModalMode("login")
-
-      setAuthModalOpen(true)
-    }
-  }, [isDemo, modal, addOwnerId, real.session, real.checking])
-
-  // ── Derived UI ────────────────────────────────────────────────────────────
-
-  const visible = useMemo(
-    () =>
-      entries.filter((f) => {
-        if (
-          view === "attention" &&
-          (attention(f) === "later" || f.remaining_quantity === 0)
-        )
-          return false
-
-        if (
-          filters.attentionFilter &&
-          filters.attentionFilter !== "all" &&
-          attention(f) !== filters.attentionFilter
-        )
-          return false
-
-        if (
-          filters.query &&
-          !f.name.toLowerCase().includes(filters.query.toLowerCase())
-        )
-          return false
-
-        if (
-          filters.location !== "Tất cả vị trí" &&
-          f.storage_location !== filters.location
-        )
-          return false
-
-        if (
-          view !== "attention" &&
-          filters.lifecycle === "Còn hàng" &&
-          f.remaining_quantity === 0
-        )
-          return false
-
-        if (
-          view !== "attention" &&
-          filters.lifecycle === "Đã hết" &&
-          f.remaining_quantity > 0
-        )
-          return false
-
-        return true
-      }),
-
-    [entries, view, filters, prefs],
-  )
-
-  const displayName = isDemo
-    ? demo.session.user.display_name || "Bạn (Demo)"
-    : real.session?.user?.display_name ||
-      real.session?.user?.email ||
-      "Chưa đăng nhập"
-
-  const settingsOwner = isDemo ? "demo" : (real.session?.user.id ?? "guest")
-
-  const settingsSnapshot = isDemo ? prefs : real.prefs
-
-  const settingsKey = `${settingsOwner}:${
-    settingsSnapshot
-      ? `${settingsSnapshot.version}:${settingsSnapshot.timezone}:${settingsSnapshot.attention_lead_days}`
-      : "loading"
-  }`
-
-  // ── Navigation helpers ────────────────────────────────────────────────────
-
-  const navigate = (v: View) => {
-    setView(v)
-
-    setSelectedId(null)
-
-    setActionEntryId(null)
-
-    setActionEntrySnapshot(null)
-
-    if (!isDemo) real.setSelectedId(null)
-
-    if (v === "inventory" || v === "attention") setFilters(defaultFilters)
-  }
-
-  const closeModal = () => {
-    setModal(null)
-
-    setActionEntryId(null)
-
-    setActionEntrySnapshot(null)
-
-    setAddOwnerId(null)
-
-    setPendingAdd(false)
-  }
-
-  const requestAdd = () => {
-    if (isDemo) {
-      setAddOwnerId(null)
-
-      setModal("add")
-    } else if (real.session) {
-      setAddOwnerId(real.session.user.id)
-
-      setModal("add")
-    } else {
-      setPendingAdd(true)
-
-      setModal(null)
-
-      setAuthModalMode("login")
-
-      setAuthModalOpen(true)
-    }
-  }
-
-  // ── Unified notice helper ─────────────────────────────────────────────────
-
-  const flash = (msg: string, ms = 3000) => {
-    setNotice(msg)
-
-    window.setTimeout(() => setNotice(""), ms)
-  }
-
-  // ── Error-response dispatcher ─────────────────────────────────────────────
-
-  const handleMutError = (err: {
-    status: number
-    code: string
+  const [toast, setToast] = useState<{
     message: string
-  }) => {
-    if (
-      err.status === 409 &&
-      (err.code === "VERSION_CONFLICT" ||
-        err.code === "CONCURRENT_MODIFICATION")
-    ) {
-      setModal("conflict")
+    variant?: ToastProps["variant"]
+  } | null>(null)
+  const [discard, setDiscard] = useState<null | (() => void)>(null)
+  const [pendingAuth, setPendingAuth] = useState<Route | null>(null)
 
-      if (!isDemo) real.refresh()
-    } else if (err.code === "INSUFFICIENT_QUANTITY") {
-      setModal("insufficient")
+  const route = stack[stack.length - 1] || { name: "inventory" }
 
-      if (!isDemo) real.refresh()
-    } else if (err.status === 401) {
-      setAuthModalMode("reauth")
+  const go = (r: Route) => setStack((s) => [...s, r])
+  const tab = (r: Route) => setStack([r])
+  const back = () => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s))
 
-      setAuthModalOpen(true)
-    } else {
-      flash(err.message, 4000)
-    }
+  const notify = (
+    message: string,
+    variant: ToastProps["variant"] = "success",
+  ) => {
+    setToast({ message, variant })
+    setTimeout(() => setToast(null), 3200)
   }
 
-  // ── Mutations ─────────────────────────────────────────────────────────────
-
-  const create = async (payload: CreatePayload) => {
-    if (!isDemo && !real.session) {
-      setPendingCreate(payload)
-
-      setAuthModalOpen(true)
-
-      return
-    }
-
-    const result = await api.createFood(payload)
-
-    setPendingCreate(null)
-
-    if (result.ok) {
-      closeModal()
-
-      const createdId =
-        "body" in result &&
-        result.body &&
-        typeof result.body === "object" &&
-        "id" in result.body
-          ? (result.body as { id?: string }).id
-          : undefined
-
-      if (createdId) {
-        setSelectedId(createdId)
-
-        if (!isDemo) real.setSelectedId(createdId)
-      }
-
-      flash("Đã thêm thực phẩm vào kho")
-    } else if ("error" in result && result.error) {
-      if (result.error.status === 401) {
-        setPendingCreate(payload)
-
-        setAuthModalMode("reauth")
-
-        setAuthModalOpen(true)
-      } else {
-        flash(result.error.message, 4000)
-      }
-    }
-  }
-
-  const retryPendingCommand = async () => {
-    if (retryLock.current || real.busy || !real.canRetry) return
-
-    retryLock.current = true
-
-    setRetryingCommand(true)
-
-    try {
-      const result = await real.retry()
-
-      if (result.ok) {
-        closeModal()
-
-        setPendingCreate(null)
-
-        flash("Đã tiếp tục thao tác trước đó")
-      }
-    } finally {
-      retryLock.current = false
-
-      setRetryingCommand(false)
-    }
-  }
-
-  // ── Early returns ─────────────────────────────────────────────────────────
-
-  if (!isDemo && real.checking) {
+  // Handle unreadable storage error recovery
+  if (problem === "read") {
     return (
-      <div
-        className="welcome"
-        style={{
-          display: "flex",
-
-          flexDirection: "column",
-
-          alignItems: "center",
-
-          justifyContent: "center",
-
-          minHeight: "100vh",
-
-          padding: "2rem",
-        }}
-      >
-        <div style={{ textAlign: "center", maxWidth: "420px", width: "100%" }}>
-          <span
-            className="wordmark"
-            style={{
-              fontSize: "2rem",
-
-              display: "block",
-
-              marginBottom: "1.5rem",
-            }}
-          >
-            EXPIRY
-          </span>
-          <div
-            className="skeleton-stack"
-            aria-label="Đang khôi phục phiên"
-            style={{ marginBottom: "1.5rem" }}
-          >
-            <i
-              style={{ height: "14px", width: "180px", margin: "0 auto 8px" }}
-            />
-            <i style={{ height: "10px", width: "120px", margin: "0 auto" }} />
-          </div>
-          <p
-            style={{
-              color: "var(--muted, #64748b)",
-
-              fontSize: "0.95rem",
-
-              marginBottom: "1.5rem",
-            }}
-          >
-            Đang kiểm tra và khôi phục phiên làm việc...
+      <div className="flex min-h-dvh items-center justify-center p-6 bg-brand-tertiary">
+        <Card
+          className="flex w-full max-w-md flex-col gap-5 shadow-lg"
+          role="alert"
+        >
+          <CircleAlert
+            size={36}
+            aria-hidden="true"
+            className="text-status-expired"
+          />
+          <h1 className="text-xl font-bold text-text-primary">
+            Không đọc được dữ liệu
+          </h1>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Dữ liệu lưu trên thiết bị của bạn bị lỗi hoặc không truy cập được.
+            Dữ liệu cũ vẫn chưa bị xóa.
           </p>
-          <button
-            type="button"
-            style={{
-              background: "none",
+          <div className="flex flex-col gap-2.5 pt-2">
+            <Button variant="primary" onClick={retry}>
+              Thử lại
+            </Button>
+            <Button variant="neutral" onClick={() => setConfirmReset(true)}>
+              Bắt đầu lại với kho trống
+            </Button>
+          </div>
+        </Card>
 
-              border: "none",
-
-              color: "var(--primary, #2563eb)",
-
-              textDecoration: "underline",
-
-              cursor: "pointer",
-
-              fontSize: "0.875rem",
-            }}
-            onClick={() => {
-              const url = new URL(window.location.href)
-
-              url.searchParams.set("demo", "1")
-
-              window.location.href = url.toString()
-            }}
-          >
-            Vào nhanh chế độ xem thử (Demo)
-          </button>
-        </div>
+        <Modal
+          isOpen={confirmReset}
+          onClose={() => setConfirmReset(false)}
+          title="Xóa dữ liệu trên thiết bị?"
+          size="small"
+          footer={
+            <>
+              <Button variant="neutral" onClick={() => setConfirmReset(false)}>
+                Giữ nguyên
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  reset()
+                  setConfirmReset(false)
+                }}
+              >
+                Xóa và bắt đầu lại
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-text-secondary">
+            Toàn bộ thực phẩm và lịch sử đang lưu trên thiết bị này sẽ bị xóa
+            hoàn toàn.
+          </p>
+        </Modal>
       </div>
     )
   }
 
-  if (!started)
+  // Auth flow
+  if (state.mode !== "account" && pendingAuth) {
     return (
-      <Welcome
-        onStart={() => {
-          markStarted()
-
-          requestAdd()
-        }}
-        onSkip={() => {
-          markStarted()
-        }}
-        onDemo={() => {
-          markStarted()
-
-          const url = new URL(window.location.href)
-
-          url.searchParams.set("demo", "1")
-
-          window.location.href = url.toString()
-        }}
-      />
+      <AuthForm dispatch={dispatch} onCancel={() => setPendingAuth(null)} />
     )
+  }
 
-  // ── Main render ───────────────────────────────────────────────────────────
+  // Onboarding flow
+  if (state.mode === "account" && !state.onboarded) {
+    return <Onboarding onDone={() => dispatch({ type: "onboarded" })} />
+  }
+
+  if (pendingAuth && state.mode === "account") {
+    const target = pendingAuth
+    setPendingAuth(null)
+    setStack([target])
+  }
+
+  const attnCount = attention(state).length
+  const unreadCount = notifications(state).filter(
+    (n) => !state.readNotifs.includes(n.id),
+  ).length
+
+  const navItems: {
+    r: Route["name"]
+    label: string
+    icon: ReactNode
+    badge?: number
+  }[] = [
+    { r: "inventory", label: "Thực phẩm", icon: <Home size={22} /> },
+    {
+      r: "attention",
+      label: "Cần chú ý",
+      icon: <CircleAlert size={22} />,
+      badge: attnCount,
+    },
+    { r: "add", label: "Thêm", icon: <Plus size={22} /> },
+    { r: "history", label: "Lịch sử", icon: <HistoryIcon size={22} /> },
+    { r: "settings", label: "Cài đặt", icon: <SettingsIcon size={22} /> },
+  ]
+
+  const isAddFlow =
+    route.name === "add" ||
+    route.name === "scan" ||
+    (route.name === "form" && route.mode !== "edit")
+
+  const rootName = isAddFlow ? "add" : stack[0].name
+
+  async function handleSaveDraft(d: Draft, mode: FormMode) {
+    dispatch({
+      type: "save",
+      food: {
+        id: mode === "edit" ? d.id : undefined,
+        name: d.name.trim(),
+        quantity: Number(d.quantity),
+        unit: d.unit || "cái",
+        mfgDate: d.mfgDate || undefined,
+        expDate: d.expDate || undefined,
+        location: d.location || undefined,
+        finishedAt: undefined,
+      },
+    })
+    notify(
+      mode === "edit"
+        ? "Đã lưu thay đổi"
+        : d.expDate
+          ? `Đã lưu ${d.name.trim()}`
+          : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
+    )
+    setStack([{ name: "inventory" }])
+  }
+
+  let screenContent: ReactNode
+  switch (route.name) {
+    case "inventory":
+      screenContent = (
+        <Inventory
+          state={state}
+          onOpenDetail={(id) => go({ name: "detail", id })}
+          onAdd={() => go({ name: "add" })}
+          onNavigateAttention={() => tab({ name: "attention" })}
+          onOpenNotifications={() => go({ name: "notifications" })}
+          unreadNotificationsCount={unreadCount}
+        />
+      )
+      break
+
+    case "attention":
+      screenContent = (
+        <Attention
+          state={state}
+          onOpenDetail={(id) => go({ name: "detail", id })}
+          onNavigateInventory={() => tab({ name: "inventory" })}
+          onAdd={() => go({ name: "add" })}
+        />
+      )
+      break
+
+    case "add":
+      screenContent = (
+        <AddEntry
+          onScan={() => go({ name: "scan" })}
+          onManual={() =>
+            go({ name: "form", mode: "manual", draft: emptyDraft() })
+          }
+          onBack={back}
+        />
+      )
+      break
+
+    case "scan":
+      screenContent = (
+        <Scanner
+          onBack={back}
+          onManual={() =>
+            setStack((s) => [
+              ...s.slice(0, -1),
+              { name: "form", mode: "manual", draft: emptyDraft() },
+            ])
+          }
+          onReview={(image) =>
+            setStack((s) => [
+              ...s.slice(0, -1),
+              { name: "form", mode: "ocr", draft: emptyDraft(), image },
+            ])
+          }
+        />
+      )
+      break
+
+    case "form":
+      screenContent = (
+        <FoodForm
+          key={stack.length}
+          mode={route.mode}
+          initial={route.draft}
+          capturedImage={route.image}
+          locations={state.locations}
+          onAddLocation={(name) => dispatch({ type: "addLocation", name })}
+          onSubmit={(d) => handleSaveDraft(d, route.mode)}
+          onCancel={(dirty) => (dirty ? setDiscard(() => back) : back())}
+        />
+      )
+      break
+
+    case "detail":
+      screenContent = (
+        <Detail
+          state={state}
+          id={route.id}
+          dispatch={dispatch}
+          onEdit={(f) =>
+            go({ name: "form", mode: "edit", draft: draftFrom(f) })
+          }
+          onBack={back}
+          notify={notify}
+        />
+      )
+      break
+
+    case "history":
+      screenContent = (
+        <History
+          state={state}
+          onOpenDetail={(id) => go({ name: "detail", id })}
+          onReadd={(f) =>
+            go({
+              name: "form",
+              mode: "readd",
+              draft: {
+                ...draftFrom(f, false),
+                id: undefined,
+                mfgDate: "",
+                expDate: "",
+              },
+            })
+          }
+        />
+      )
+      break
+
+    case "trash":
+      screenContent = (
+        <Trash
+          state={state}
+          dispatch={dispatch}
+          onBack={back}
+          notify={notify}
+        />
+      )
+      break
+
+    case "notifications":
+      screenContent = (
+        <Notifications
+          state={state}
+          dispatch={dispatch}
+          onOpenDetail={(id) => go({ name: "detail", id })}
+          onBack={back}
+          notify={notify}
+        />
+      )
+      break
+
+    case "settings":
+      screenContent = (
+        <Settings
+          state={state}
+          dispatch={dispatch}
+          onNavigateTrash={() => go({ name: "trash" })}
+          onLogin={() => setPendingAuth({ name: "settings" })}
+          notify={notify}
+        />
+      )
+      break
+  }
+
+  const isFullBleed = route.name === "scan"
 
   return (
-    <Shell
-      view={view}
-      setView={navigate}
-      onAdd={requestAdd}
-      displayName={displayName}
-      urgentCount={urgentCount}
-      onAuth={
-        !isDemo
-          ? !real.session
-            ? () => setAuthModalOpen(true)
-            : () => setView("settings")
-          : undefined
-      }
-    >
-      {notice && (
-        <div className="toast" role="status">
-          <Icon name="check" />
-          {notice}
-        </div>
-      )}
-
-      {/* Global backend error display */}
-      {!isDemo && real.error && !authModalOpen && (
-        <div
-          className="toast error"
-          role="alert"
-          style={{ background: "var(--danger, #dc2626)", color: "#fff" }}
+    <div className="flex min-h-dvh bg-brand-tertiary text-text-primary antialiased">
+      {/* Desktop Sidebar Navigation */}
+      <div className="sticky top-0 hidden h-dvh md:block shrink-0">
+        <SidebarNavigation
+          footer={
+            state.mode !== "account" ? (
+              <SidebarButton
+                icon={<LogIn size={20} />}
+                aria-label="Đăng nhập"
+                title="Đăng nhập"
+                onClick={() => setPendingAuth({ name: "inventory" })}
+              />
+            ) : (
+              <SidebarButton
+                icon={<LogOut size={20} />}
+                aria-label="Đăng xuất"
+                title="Đăng xuất"
+                onClick={() => dispatch({ type: "logout" })}
+              />
+            )
+          }
         >
-          <Icon name="alert" />
-          {real.error.message}
-          {real.canRetry && (
-            <button
-              type="button"
-              style={{
-                marginLeft: 8,
+          {navItems.map((n) => (
+            <SidebarButton
+              key={n.r}
+              icon={n.icon}
+              aria-label={n.label}
+              title={n.label}
+              active={rootName === n.r}
+              badge={n.badge}
+              onClick={() => tab({ name: n.r } as Route)}
+            />
+          ))}
+          <SidebarButton
+            icon={<Bell size={22} />}
+            aria-label={
+              unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"
+            }
+            title="Thông báo"
+            active={rootName === "notifications"}
+            badge={unreadCount}
+            onClick={() => tab({ name: "notifications" })}
+          />
+        </SidebarNavigation>
+      </div>
 
-                textDecoration: "underline",
+      {/* Main Content Area */}
+      <main
+        className={`mx-auto w-full min-w-0 flex-1 ${
+          isFullBleed
+            ? "md:max-w-3xl md:p-6"
+            : route.name === "form"
+              ? "max-w-5xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-8 md:px-8 md:pt-6 md:pb-12"
+              : "max-w-5xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
+        }`}
+      >
+        {problem === "write" && !isFullBleed && (
+          <div
+            role="alert"
+            className="mb-4 flex items-center gap-2 rounded-corner-md bg-status-expired-bg border border-status-expired/30 px-4 py-2.5 text-xs md:text-sm text-status-expired"
+          >
+            <CircleAlert size={16} aria-hidden="true" className="shrink-0" />
+            <span>
+              Không lưu được vào thiết bị. Thay đổi gần nhất có thể bị mất khi
+              đóng ứng dụng.
+            </span>
+          </div>
+        )}
 
-                color: "#fff",
-
-                background: "none",
-
-                border: "none",
-
-                cursor: "pointer",
-              }}
-              onClick={() => void retryPendingCommand()}
+        {state.mode === "demo" && !isFullBleed && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-border-primary/60 bg-surface-bg px-3.5 py-1.5 text-xs shadow-xs">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-brand-accent text-brand-primary">
+                <Leaf size={14} aria-hidden="true" />
+              </span>
+              <span className="truncate font-medium text-text-secondary">
+                Dữ liệu mẫu (chế độ xem thử)
+              </span>
+            </div>
+            <Button
+              size="small"
+              variant="subtle"
+              className="shrink-0 font-semibold text-brand-primary"
+              onClick={() => setPendingAuth({ name: "inventory" })}
             >
-              Thử lại
-            </button>
-          )}
+              Đăng nhập
+            </Button>
+          </div>
+        )}
+
+        {screenContent}
+      </main>
+
+      {/* Mobile Bottom Navigation Bar */}
+      {!isFullBleed && route.name !== "form" && (
+        <nav
+          aria-label="Điều hướng chính"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-border-primary/60 bg-surface-bg/95 backdrop-blur-md px-2 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden shadow-lg"
+        >
+          <div className="grid grid-cols-5 w-full">
+            {navItems.map((n) => {
+              const activeTab = rootName === n.r
+              return (
+                <button
+                  key={n.r}
+                  type="button"
+                  aria-label={n.badge ? `${n.label}, ${n.badge} mục` : n.label}
+                  aria-current={activeTab ? "page" : undefined}
+                  onClick={() => tab({ name: n.r } as Route)}
+                  className="relative flex min-h-14 w-full flex-col items-center justify-center px-0.5 py-1 text-center transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary cursor-pointer"
+                >
+                  <span
+                    className={`relative flex h-7 w-12 items-center justify-center rounded-corner-full transition-all ${
+                      activeTab
+                        ? "bg-brand-primary text-white shadow-xs"
+                        : "text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {n.icon}
+                    {!!n.badge && n.badge > 0 && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white shadow-xs"
+                      >
+                        {n.badge}
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className={`mt-1 block w-full truncate text-[10px] sm:text-[11px] leading-tight text-center ${
+                      activeTab
+                        ? "font-bold text-brand-primary"
+                        : "text-text-secondary font-medium"
+                    }`}
+                  >
+                    {n.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </nav>
+      )}
+
+      {/* Toast notifications */}
+      {toast && (
+        <div
+          className="fixed inset-x-4 bottom-20 z-50 mx-auto max-w-sm md:bottom-6"
+          role="status"
+        >
+          <Toast
+            message={toast.message}
+            variant={toast.variant}
+            onDismiss={() => setToast(null)}
+          />
         </div>
       )}
 
-      {selected && !selected.deleted_at ? (
-        <Detail
-          food={selected}
-          attention={attention(selected)}
-          movements={isDemo ? demo.getMovements(selected.id) : real.history}
-          onBack={() => {
-            setSelectedId(null)
-
-            if (!isDemo) real.setSelectedId(null)
-          }}
-          parentLabel={
-            view === "attention"
-              ? "Cần chú ý"
-              : view === "trash"
-                ? "Thùng rác"
-                : view === "settings"
-                  ? "Cài đặt"
-                  : "Kho thực phẩm"
-          }
-          onAction={(action) => {
-            setActionEntryId(selected.id)
-
-            setActionEntrySnapshot(selected)
-
-            setModal(action)
-          }}
-        />
-      ) : view === "settings" ? (
-        <Settings
-          key={settingsKey}
-          prefs={prefs}
-          displayName={displayName}
-          userEmail={!isDemo ? real.session?.user.email : undefined}
-          onSave={async (patch) => {
-            const res = await api.updatePreferences(prefs.version, patch)
-
-            if (res.ok) flash("Đã lưu cài đặt")
-            else if (res.error) handleMutError(res.error)
-          }}
-          onLogout={
-            !isDemo && real.session
-              ? async () => {
-                  if (await real.logout()) {
-                    setSelectedId(null)
-
-                    setActionEntryId(null)
-
-                    setActionEntrySnapshot(null)
-
-                    setPendingCreate(null)
-
-                    setModal(null)
-
-                    setAddOwnerId(null)
-
-                    setPendingAdd(false)
-
-                    flash("Đã đăng xuất")
-
-                    setAuthModalOpen(true)
-                  }
-                }
-              : undefined
-          }
-        />
-      ) : view === "trash" ? (
-        <Trash
-          timezone={prefs.timezone}
-          foods={trash}
-          onRestore={(f) => {
-            setActionEntryId(f.id)
-
-            setActionEntrySnapshot(f)
-
-            setModal("restore")
-          }}
-        />
-      ) : (
-        <Inventory
-          mode={view === "attention" ? "attention" : "inventory"}
-          asOfDate={activeAsOfDate}
-          foods={visible}
-          allFoods={entries}
-          counts={counts}
-          leadDays={prefs.attention_lead_days}
-          attention={attention}
-          filters={filters}
-          setFilters={setFilters}
-          onOpen={(f) => {
-            setSelectedId(f.id)
-
-            if (!isDemo) real.setSelectedId(f.id)
-          }}
-          onAdd={requestAdd}
-          onShowAttention={() => navigate("attention")}
-          onShowInventory={() => navigate("inventory")}
-          onAction={(food, action) => {
-            setActionEntryId(food.id)
-
-            setActionEntrySnapshot(food)
-
-            if (!isDemo) real.setSelectedId(food.id)
-
-            setModal(action)
-          }}
-        />
-      )}
-
-      {/* Entry creation modal */}
-      {modal === "add" &&
-        (isDemo ||
-          (addOwnerId !== null &&
-            (!real.session || real.session.user.id === addOwnerId))) && (
-          <EntryForm
-            initial={pendingCreate}
-            active={!authModalOpen}
-            canRetry={!isDemo && (real.canRetry || retryingCommand)}
-            retryPending={real.busy || retryingCommand}
-            retryError={real.error?.message || ""}
-            onRetry={() => void retryPendingCommand()}
-            onClose={() => {
-              closeModal()
-
-              setPendingCreate(null)
-            }}
-            onCreate={create}
-            onScan={
-              isDemo ? undefined : (file, barcode) => real.scan(file, barcode)
-            }
-          />
-        )}
-
-      {/* Auth Modal for real API session */}
-      {authModalOpen && (
-        <AuthForm
-          initialMode={authModalMode}
-          initialEmail={real.session?.user.email || lastKnownEmail}
-          pending={real.busy}
-          error={real.error?.message || ""}
-          onClose={() => {
-            setAuthModalOpen(false)
-
-            if (pendingAdd) {
-              setPendingAdd(false)
-
-              setAddOwnerId(null)
-
-              setModal(null)
-            }
-          }}
-          onSubmit={async (mode, input) => {
-            const res = await real.authenticate(
-              mode === "reauth" ? "login" : mode,
-
-              {
-                email: input.email,
-
-                password: input.password || "",
-
-                ...(mode === "register"
-                  ? { display_name: input.display_name }
-                  : {}),
-              },
-            )
-
-            if (res.ok) {
-              if (res.changed) {
-                setPendingCreate(null)
-
-                setModal(null)
-
-                setSelectedId(null)
-
-                setActionEntryId(null)
-
-                setActionEntrySnapshot(null)
-
-                setAddOwnerId(null)
-
-                setPendingAdd(false)
-              } else if (pendingAdd && res.owner) {
-                setPendingAdd(false)
-
-                setAddOwnerId(res.owner)
-
-                setModal("add")
-              }
-
-              setNotice(
-                mode === "register"
-                  ? "Tạo tài khoản thành công"
-                  : "Đăng nhập thành công",
-              )
-
-              window.setTimeout(() => setNotice(""), 3000)
-
-              setAuthModalOpen(false)
-
-              if (!res.changed && pendingCreate) await create(pendingCreate)
-
-              return true
-            }
-
-            return false
-          }}
-        />
-      )}
-
-      {/* Movement form (consume / discard / recount) */}
-      {modalEntry &&
-        (modal === "consume" || modal === "discard" || modal === "recount") && (
-          <MovementForm
-            food={modalEntry}
-            mode={modal as MovementMode}
-            active={!authModalOpen}
-            canRetry={!isDemo && (real.canRetry || retryingCommand)}
-            retryPending={real.busy || retryingCommand}
-            retryError={real.error?.message || ""}
-            onRetry={() => void retryPendingCommand()}
-            onClose={closeModal}
-            onSave={async (amount, why) => {
-              const confirmedUnchanged =
-                modal === "recount" && amount === modalEntry.remaining_quantity
-
-              const res =
-                modal === "recount"
-                  ? await api.recountFood(
-                      modalEntry.id,
-
-                      modalEntry.version,
-
-                      amount,
-
-                      why,
-                    )
-                  : await api.recordMovement(
-                      modalEntry.id,
-
-                      modalEntry.version,
-
-                      modal as "consume" | "discard",
-
-                      amount,
-
-                      why || null,
-                    )
-
-              if (res.ok) {
-                closeModal()
-
-                flash(
-                  modal === "recount"
-                    ? confirmedUnchanged
-                      ? "Đã xác nhận kiểm kê, số lượng không đổi"
-                      : "Đã cập nhật lượng sau kiểm lại"
-                    : `Đã ghi nhận ${
-                        modal === "consume" ? "đã dùng" : "đã bỏ"
-                      }`,
-                )
-              } else if (res.error) {
-                handleMutError(res.error)
-              }
-            }}
-          />
-        )}
-
-      {/* History log */}
-      {selected && modal === "history" && (
-        <History
-          food={selected}
-          movements={isDemo ? demo.getMovements(selected.id) : real.history}
-          active={!authModalOpen}
-          onClose={closeModal}
-        />
-      )}
-
-      {/* Edit / Add Date modal */}
-      {modalEntry && (modal === "edit" || modal === "date") && (
-        <EntryForm
-          entry={modalEntry}
-          initialStep={modal === "date" ? 1 : 0}
-          active={!authModalOpen}
-          canRetry={!isDemo && (real.canRetry || retryingCommand)}
-          retryPending={real.busy || retryingCommand}
-          retryError={real.error?.message || ""}
-          onRetry={() => void retryPendingCommand()}
-          onClose={closeModal}
-          onUpdate={async (patch) => {
-            const res = await api.updateFood(
-              modalEntry.id,
-
-              modalEntry.version,
-
-              patch,
-            )
-
-            if (res.ok) {
-              closeModal()
-
-              flash("Đã cập nhật thông tin")
-            } else if (res.error) {
-              handleMutError(res.error)
-            }
-          }}
-        />
-      )}
-
-      {/* Soft Delete confirmation */}
-      {modalEntry && modal === "delete" && (
-        <Dialog
-          eyebrow="XÓA MÓN"
-          title={`Xóa "${modalEntry.name}"?`}
-          body="Món sẽ được chuyển vào thùng rác và có thể khôi phục bất cứ lúc nào."
-          active={!authModalOpen}
-          actionDisabled={
-            !isDemo && (real.canRetry || real.busy || retryingCommand)
-          }
-          extra={
-            <RetryAction
-              canRetry={!isDemo && (real.canRetry || retryingCommand)}
-              pending={real.busy || retryingCommand}
-              error={real.error?.message || ""}
-              onRetry={() => void retryPendingCommand()}
-            />
-          }
-          action="Xóa vào thùng rác"
-          actionVariant="danger"
-          onClose={closeModal}
-          onAction={async () => {
-            const res = await api.deleteFood(modalEntry.id, modalEntry.version)
-
-            if (res.ok) {
-              setModal(null)
-
-              setSelectedId(null)
-
-              setActionEntryId(null)
-
-              setActionEntrySnapshot(null)
-
-              if (!isDemo) real.setSelectedId(null)
-
-              flash("Đã chuyển vào thùng rác")
-            } else if (res.error) {
-              handleMutError(res.error)
-            }
-          }}
-        />
-      )}
-
-      {/* Restore confirmation */}
-      {modalEntry && modal === "restore" && (
-        <Dialog
-          eyebrow="KHÔI PHỤC"
-          title={`Khôi phục "${modalEntry.name}"?`}
-          body="Món sẽ trở lại kho thực phẩm với đầy đủ thông tin ban đầu."
-          active={!authModalOpen}
-          actionDisabled={
-            !isDemo && (real.canRetry || real.busy || retryingCommand)
-          }
-          extra={
-            <RetryAction
-              canRetry={!isDemo && (real.canRetry || retryingCommand)}
-              pending={real.busy || retryingCommand}
-              error={real.error?.message || ""}
-              onRetry={() => void retryPendingCommand()}
-            />
-          }
-          action="Khôi phục"
-          onClose={() => {
-            setModal(null)
-
-            setSelectedId(null)
-
-            setActionEntryId(null)
-
-            setActionEntrySnapshot(null)
-
-            if (!isDemo) real.setSelectedId(null)
-          }}
-          onAction={async () => {
-            const res = await api.restoreFood(modalEntry.id, modalEntry.version)
-
-            if (res.ok) {
-              setModal(null)
-
-              setSelectedId(null)
-
-              setActionEntryId(null)
-
-              setActionEntrySnapshot(null)
-
-              if (!isDemo) real.setSelectedId(null)
-
-              navigate("inventory")
-
-              flash("Đã khôi phục thực phẩm")
-            } else if (res.error) {
-              handleMutError(res.error)
-            }
-          }}
-        />
-      )}
-
-      {statusModes.includes(modal as StatusMode) && (
-        <StatusDialog
-          mode={modal as StatusMode}
-          active={!authModalOpen}
-          onClose={closeModal}
-          onAction={() => {
-            if (modal === "session") {
-              closeModal()
-
-              setAuthModalMode("reauth")
-
-              setAuthModalOpen(true)
-            } else if (modal === "conflict" || modal === "insufficient") {
-              closeModal()
-
-              if (!isDemo) real.refresh()
-            } else {
-              closeModal()
-            }
-          }}
-        />
-      )}
-    </Shell>
+      {/* Discard confirmation modal */}
+      <Modal
+        isOpen={!!discard}
+        onClose={() => setDiscard(null)}
+        title="Bỏ thông tin đang nhập?"
+        size="small"
+        footer={
+          <>
+            <Button variant="neutral" onClick={() => setDiscard(null)}>
+              Tiếp tục nhập
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                discard?.()
+                setDiscard(null)
+              }}
+            >
+              Bỏ thay đổi
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-text-secondary leading-relaxed">
+          Những gì bạn vừa nhập vào mẫu sẽ không được lưu lại.
+        </p>
+      </Modal>
+    </div>
   )
 }
-
-export default App

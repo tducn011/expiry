@@ -1,202 +1,148 @@
-import { useEffect, useRef, useState } from "react"
-
-import type { ReactNode } from "react"
-
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import Button from "./Button"
-
-import Icon from "./Icon"
+import { X } from "./Icon"
 
 let foregroundModalCount = 0
-
 let previousBodyOverflow = ""
 
 function acquireModalScrollLock() {
   if (foregroundModalCount === 0) {
     previousBodyOverflow = document.body.style.overflow
-
     document.body.style.overflow = "hidden"
   }
-
   foregroundModalCount += 1
-
   return () => {
     foregroundModalCount = Math.max(0, foregroundModalCount - 1)
-
-    if (foregroundModalCount === 0)
+    if (foregroundModalCount === 0) {
       document.body.style.overflow = previousBodyOverflow
+    }
   }
 }
 
-/** Shared dialog with fixed chrome, contained scrolling, and focus restoration. */
-
-export default function Modal({
-  eyebrow,
-
-  title,
-
-  description,
-
-  onClose,
-
-  footer,
-
-  children,
-
-  size = "regular",
-
-  layout = "flow",
-
-  dismissible = true,
-
-  active = true,
-}: {
-  eyebrow?: string
-
-  title: string
-
-  description?: string
-
-  onClose: () => void
-
-  footer?: ReactNode
-
-  children?: ReactNode
-
-  size?: "compact" | "regular" | "wide"
-
-  layout?: "flow" | "form" | "list"
-
-  dismissible?: boolean
-
+export interface ModalProps {
+  isOpen?: boolean
   active?: boolean
-}) {
+  eyebrow?: string
+  title: string
+  description?: string
+  onClose: () => void
+  footer?: ReactNode
+  children?: ReactNode
+  size?: "small" | "compact" | "regular" | "wide"
+  layout?: "flow" | "form" | "list"
+  dismissible?: boolean
+}
+
+export function Modal({
+  isOpen = true,
+  active = true,
+  eyebrow,
+  title,
+  description,
+  onClose,
+  footer,
+  children,
+  size = "regular",
+  layout = "flow",
+  dismissible = true,
+}: ModalProps) {
+  if (!isOpen) return null
+
   const dialogRef = useRef<HTMLElement>(null)
-
-  const activeRef = useRef(active)
-
-  activeRef.current = active
-
-  // Capture before child autoFocus runs during the commit.
-
   const [opener] = useState(() =>
+    typeof document !== "undefined" &&
     document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null,
   )
 
-  const closeRef = useRef(onClose)
-
-  closeRef.current = onClose
-
   useEffect(() => {
     if (!active) return
-
     const dialog = dialogRef.current
-
     if (!dialog) return
 
     const releaseScrollLock = acquireModalScrollLock()
 
-    const focusable = () =>
-      Array.from(
-        dialog.querySelectorAll<HTMLElement>(
-          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex="0"]',
-        ),
-      ).filter((element) => element.getClientRects().length > 0)
-
-    if (!dialog.contains(document.activeElement))
-      (focusable()[0] ?? dialog).focus({ preventScroll: true })
-
-    const handleKey = (event: KeyboardEvent) => {
-      if (!activeRef.current) return
-
-      // Portaled controls consume Escape and manage their own keyboard navigation.
-
-      if (
-        event.defaultPrevented ||
-        document.querySelector('[data-ui-popover="true"]')
-      )
-        return
-
-      if (event.key === "Escape" && dismissible) {
-        event.preventDefault()
-
-        closeRef.current()
-      }
-
-      if (event.key !== "Tab") return
-
-      const controls = focusable()
-
-      const first = controls[0]
-
-      const last = controls[controls.length - 1]
-
-      if (!first || !last) {
-        event.preventDefault()
-
-        dialog.focus()
-      } else if (
-        event.shiftKey &&
-        (document.activeElement === first || document.activeElement === dialog)
-      ) {
-        event.preventDefault()
-
-        last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-
-        first.focus()
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && dismissible) {
+        e.stopPropagation()
+        onClose()
       }
     }
-
-    document.addEventListener("keydown", handleKey)
+    window.addEventListener("keydown", onKeyDown)
 
     return () => {
-      document.removeEventListener("keydown", handleKey)
-
       releaseScrollLock()
-
-      if (opener?.isConnected) opener.focus({ preventScroll: true })
+      window.removeEventListener("keydown", onKeyDown)
+      opener?.focus?.()
     }
-  }, [active, dismissible, opener])
+  }, [active, dismissible, onClose, opener])
+
+  const maxWClass =
+    size === "small" || size === "compact"
+      ? "max-w-md"
+      : size === "wide"
+        ? "max-w-3xl"
+        : "max-w-lg"
 
   return (
     <div
-      className={`modal-backdrop ${active ? "active" : "suspended"}`}
-      role="presentation"
-      aria-hidden={active ? undefined : true}
-      inert={active ? undefined : true}
-      onMouseDown={active && dismissible ? () => closeRef.current() : undefined}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && dismissible) onClose()
+      }}
     >
       <section
         ref={dialogRef}
-        tabIndex={-1}
-        className={`modal ${size} layout-${layout}`}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
-        onMouseDown={(event) => event.stopPropagation()}
+        aria-labelledby="modal-title"
+        className={`modal relative flex flex-col w-full ${maxWClass} max-h-[calc(100dvh-2rem)] rounded-corner-lg bg-surface-bg shadow-xl border border-border-primary/50 overflow-hidden text-text-primary`}
       >
-        <header className="modal-header">
-          <div>
-            {eyebrow && <span className="eyebrow">{eyebrow}</span>}
-            <h2>{title}</h2>
-            {description && <p>{description}</p>}
+        <header className="flex items-start justify-between gap-3 px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border-primary/40">
+          <div className="min-w-0 flex-1">
+            {eyebrow && (
+              <span className="block text-xs font-semibold uppercase tracking-wider text-text-tertiary">
+                {eyebrow}
+              </span>
+            )}
+            <h2
+              id="modal-title"
+              className="text-base sm:text-lg font-semibold text-text-primary break-words text-balance"
+            >
+              {title}
+            </h2>
+            {description && (
+              <p className="mt-1 text-xs sm:text-sm text-text-secondary leading-relaxed break-words">
+                {description}
+              </p>
+            )}
           </div>
           {dismissible && (
             <button
               type="button"
-              className="icon-button"
-              aria-label="Đóng"
               onClick={onClose}
+              aria-label="Đóng"
+              className="p-1.5 rounded-corner-md text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
             >
-              <Icon name="close" />
+              <X size={20} aria-hidden />
             </button>
           )}
         </header>
-        {children}
-        {footer && <footer className="modal-footer">{footer}</footer>}
+
+        <div
+          className={`p-4 sm:p-6 overflow-y-auto max-h-[calc(100dvh-10rem)] ${
+            layout === "form" ? "flex flex-col gap-4" : ""
+          }`}
+        >
+          {children}
+        </div>
+
+        {footer && (
+          <footer className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-bg-subtle/50 border-t border-border-primary/40">
+            {footer}
+          </footer>
+        )}
       </section>
     </div>
   )
@@ -204,31 +150,28 @@ export default function Modal({
 
 export function RetryAction({
   canRetry,
-
   pending,
-
   error,
-
   onRetry,
 }: {
   canRetry: boolean
-
   pending: boolean
-
   error: string
-
   onRetry: () => void
 }) {
   if (!canRetry) return null
-
   return (
-    <div className="stack" role="status">
-      <p className="note-box" role="alert">
+    <div
+      className="flex flex-col gap-2 p-3 rounded-corner-md bg-status-expired-bg border border-status-expired/20"
+      role="status"
+    >
+      <p className="text-xs text-status-expired" role="alert">
         {error || "Thao tác trước chưa được xác nhận. Hãy thử lại để tiếp tục."}
       </p>
       <Button
         type="button"
-        variant="secondary"
+        variant="neutral"
+        size="small"
         loading={pending}
         onClick={onRetry}
       >
@@ -240,18 +183,17 @@ export function RetryAction({
 
 export function ModalActions({
   start,
-
   end,
 }: {
   start?: ReactNode
-
   end: ReactNode
 }) {
   return (
-    <>
-      {start}
-      <span className="footer-spacer" />
-      {end}
-    </>
+    <div className="flex items-center justify-between w-full">
+      <div>{start}</div>
+      <div className="flex items-center gap-2">{end}</div>
+    </div>
   )
 }
+
+export default Modal
