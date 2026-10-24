@@ -1,150 +1,122 @@
-import { useMemo, useState } from "react"
-
-import type { FoodEntry } from "../domain/types"
-
-import { fmtQty, fmtTime, locations, unitLabel } from "../lib/format"
-
-import Grid from "../components/layout/Grid"
-
-import PageHeader from "../components/layout/PageHeader"
-
+import { useState } from "react"
+import type { Dispatch, Food, State } from "../store/appStore"
+import { trashDaysLeft, trashed } from "../store/appStore"
 import Button from "../components/ui/Button"
-
 import Card from "../components/ui/Card"
-
 import EmptyState from "../components/ui/EmptyState"
+import { Trash2, Undo2 } from "../components/ui/Icon"
+import Modal from "../components/ui/Modal"
+import PageHeader from "../components/ui/PageHeader"
 
-import Icon from "../components/ui/Icon"
-
-import Select from "../components/ui/Select"
-
-export default function Trash({
-  timezone = "Asia/Ho_Chi_Minh",
-
-  foods,
-
-  onRestore,
+export function Trash({
+  state,
+  dispatch,
+  onBack,
+  notify,
 }: {
-  timezone?: string
-
-  foods: FoodEntry[]
-
-  onRestore: (f: FoodEntry) => void
+  state: State
+  dispatch: Dispatch
+  onBack?: () => void
+  notify: (m: string) => void
 }) {
-  const [query, setQuery] = useState("")
-
-  const [location, setLocation] = useState("Tất cả vị trí")
-
-  const filteredFoods = useMemo(() => {
-    const q = query.trim().toLowerCase()
-
-    return foods.filter((f) => {
-      const matchQuery =
-        !q ||
-        f.name.toLowerCase().includes(q) ||
-        (f.note && f.note.toLowerCase().includes(q))
-
-      const matchLocation =
-        location === "Tất cả vị trí" || f.storage_location === location
-
-      return matchQuery && matchLocation
-    })
-  }, [foods, query, location])
-
-  const isFiltered = query.trim() !== "" || location !== "Tất cả vị trí"
+  const list = trashed(state)
+  const [confirm, setConfirm] = useState<{
+    f: Food
+    kind: "restore" | "purge"
+  } | null>(null)
 
   return (
-    <Grid className="page">
+    <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto">
       <PageHeader
-        eyebrow="ĐÃ XÓA"
         title="Thùng rác"
-        description="Có thể khôi phục lại món đã xóa về kho."
+        onBack={onBack}
+        subtitle="Bản ghi tự động xóa vĩnh viễn 30 ngày sau khi chuyển vào đây (kiểm tra mỗi lần mở ứng dụng)."
       />
 
-      {foods.length > 0 && (
-        <section
-          className="filters col-span-full lg:col-span-8"
-          style={{ marginBottom: "1rem" }}
-        >
-          <label className="search">
-            <Icon name="search" />
-            <input
-              aria-label="Tìm trong thùng rác"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Tìm tên món đã xóa"
-            />
-            {query && (
-              <button
-                type="button"
-                className="clear-search"
-                onClick={() => setQuery("")}
-                aria-label="Xóa từ khóa tìm kiếm"
-              >
-                <Icon name="close" />
-              </button>
-            )}
-          </label>
-          <Select
-            aria-label="Lọc theo vị trí"
-            value={location}
-            onChange={setLocation}
-            options={[
-              { value: "Tất cả vị trí", label: "Tất cả vị trí" },
-
-              ...locations.map((loc) => ({ value: loc, label: loc })),
-            ]}
-          />
-        </section>
+      {list.length === 0 ? (
+        <EmptyState
+          icon={<Trash2 size={32} />}
+          title="Thùng rác trống"
+          text="Những thực phẩm bạn xóa sẽ nằm ở đây trong 30 ngày trước khi bị xóa vĩnh viễn khỏi thiết bị."
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {list.map((f) => (
+            <Card key={f.id} className="flex flex-col justify-between gap-4">
+              <div>
+                <p className="text-base font-semibold text-text-primary">
+                  {f.name}
+                </p>
+                <p className="mt-1 text-xs text-text-secondary">
+                  {f.quantity} {f.unit} · còn{" "}
+                  <strong className="text-brand-primary">
+                    {trashDaysLeft(f)} ngày
+                  </strong>{" "}
+                  trước khi xóa vĩnh viễn
+                </p>
+              </div>
+              <div className="flex items-center gap-2 pt-2 border-t border-border-primary/40">
+                <Button
+                  size="small"
+                  variant="neutral"
+                  iconStart={<Undo2 size={16} />}
+                  onClick={() => setConfirm({ f, kind: "restore" })}
+                >
+                  Khôi phục
+                </Button>
+                <Button
+                  size="small"
+                  variant="subtle"
+                  className="text-status-expired hover:bg-red-50"
+                  onClick={() => setConfirm({ f, kind: "purge" })}
+                >
+                  Xóa vĩnh viễn
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
 
-      <div className="col-span-full lg:col-span-8">
-        {filteredFoods.length ? (
-          <Card
-            title={
-              isFiltered
-                ? `Kết quả lọc (${filteredFoods.length}/${foods.length})`
-                : `Danh sách đã xóa (${foods.length})`
-            }
-          >
-            <div className="row-list">
-              {filteredFoods.map((f) => (
-                <div className="trash-row" key={f.id}>
-                  <div>
-                    <strong>{f.name}</strong>
-                    <span>
-                      {fmtQty(f.remaining_quantity)} {unitLabel[f.unit]}
-                      {f.storage_location && ` · ${f.storage_location}`}
-                      {f.deleted_at &&
-                        ` · Xóa lúc ${fmtTime(f.deleted_at, timezone)}`}
-                    </span>
-                  </div>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    icon="check"
-                    onClick={() => onRestore(f)}
-                  >
-                    Khôi phục
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </Card>
-        ) : foods.length ? (
-          <EmptyState
-            eyebrow="KHÔNG TÌM THẤY"
-            title="Không có kết quả phù hợp"
-            body="Không tìm thấy món đã xóa nào khớp với từ khóa tìm kiếm hoặc vị trí đã chọn."
-          />
-        ) : (
-          <EmptyState
-            eyebrow="TRỐNG"
-            title="Thùng rác trống"
-            body="Chưa có món nào bị xóa."
-          />
-        )}
-      </div>
-    </Grid>
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={!!confirm}
+        onClose={() => setConfirm(null)}
+        size="small"
+        title={
+          confirm?.kind === "restore" ? "Khôi phục bản ghi?" : "Xóa vĩnh viễn?"
+        }
+        footer={
+          <>
+            <Button variant="neutral" onClick={() => setConfirm(null)}>
+              Hủy
+            </Button>
+            <Button
+              variant={confirm?.kind === "restore" ? "primary" : "danger"}
+              onClick={() => {
+                if (!confirm) return
+                dispatch({ type: confirm.kind, id: confirm.f.id })
+                notify(
+                  confirm.kind === "restore"
+                    ? `Đã khôi phục ${confirm.f.name} vào kho`
+                    : `Đã xóa vĩnh viễn ${confirm.f.name}`,
+                )
+                setConfirm(null)
+              }}
+            >
+              {confirm?.kind === "restore" ? "Khôi phục" : "Xóa vĩnh viễn"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-text-secondary leading-relaxed">
+          {confirm?.kind === "restore"
+            ? `"${confirm.f.name}" sẽ trở lại kho thực phẩm với các thông tin đã lưu trước đó.`
+            : `"${confirm?.f.name}" sẽ bị xóa hoàn toàn khỏi thiết bị và không thể khôi phục lại.`}
+        </p>
+      </Modal>
+    </div>
   )
 }
+
+export default Trash
