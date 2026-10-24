@@ -62,7 +62,7 @@ export function History({
     .filter((e) => quantityKinds.includes(e.kind))
     .slice(0, 100)
 
-  const groups: { day: string; items: HistoryEvent[] }[] = []
+  const groups: { day: string items: HistoryEvent[] }[] = []
   for (const e of events) {
     const day = dayLabel(e.at)
     const g = groups.find((x) => x.day === day)

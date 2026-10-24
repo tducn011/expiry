@@ -15,7 +15,7 @@ import {
   Wheat,
 } from "../components/ui/Icon"
 
-export const foodKinds: { re: RegExp; icon: typeof Milk }[] = [
+export const foodKinds: { re: RegExp icon: typeof Milk }[] = [
   { re: /sữa chua/i, icon: CupSoda },
   { re: /sữa|phô mai|pho mai|bơ|kem/i, icon: Milk },
   { re: /trứng/i, icon: Egg },
