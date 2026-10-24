@@ -1,142 +1,115 @@
-import type { Attention, FoodEntry } from "../domain/types"
+import type { Food } from "../store/appStore"
+import { daysLeft, formatDate, statusOf } from "../store/appStore"
+import {
+  Apple,
+  Beef,
+  Carrot,
+  ChevronRight,
+  Croissant,
+  CupSoda,
+  Drumstick,
+  Egg,
+  LeafyGreen,
+  Milk,
+  Package,
+  Wheat,
+} from "../components/ui/Icon"
 
-import { attentionLabel, fmtDate, fmtQty, unitLabel } from "../lib/format"
+export const foodKinds: { re: RegExp; icon: typeof Milk }[] = [
+  { re: /sữa chua/i, icon: CupSoda },
+  { re: /sữa|phô mai|pho mai|bơ|kem/i, icon: Milk },
+  { re: /trứng/i, icon: Egg },
+  { re: /thịt gà|gà|vịt/i, icon: Drumstick },
+  { re: /thịt|bò|heo|lợn|cá|tôm/i, icon: Beef },
+  { re: /cà rốt/i, icon: Carrot },
+  { re: /rau|cải|xà lách|hành/i, icon: LeafyGreen },
+  { re: /táo|cà chua|cam|chuối|nho|xoài|lê|bưởi/i, icon: Apple },
+  { re: /bánh/i, icon: Croissant },
+  { re: /gạo|bột|mì|ngũ cốc/i, icon: Wheat },
+]
 
-import Badge from "../components/ui/Badge"
+export const getFoodIcon = (name: string) =>
+  foodKinds.find((k) => k.re.test(name))?.icon ?? Package
 
-import Icon from "../components/ui/Icon"
+const rowTone: Record<string, string> = {
+  expired: "text-status-expired font-medium",
+  soon: "text-status-soon font-medium",
+  ok: "text-text-secondary",
+  unknown: "text-text-secondary",
+}
 
-import type { DetailAction } from "./Detail"
-
-export default function FoodCard({
-  food,
-
-  attention,
-
-  asOfDate,
-
-  onOpen,
-
-  onAction,
-}: {
-  food: FoodEntry
-
-  attention: Attention
-
-  asOfDate?: string
-
+export interface FoodCardProps {
+  food: Food
+  remindDays?: number
   onOpen: () => void
+  className?: string
+}
 
-  onAction: (action: DetailAction) => void
-}) {
-  const currentAsOf = food.as_of_date || asOfDate
+export function FoodCard({
+  food,
+  remindDays = 3,
+  onOpen,
+  className = "",
+}: FoodCardProps) {
+  const st = statusOf(food, remindDays)
+  const IconComponent = getFoodIcon(food.name)
+  const d = daysLeft(food)
 
-  const daysRemaining =
-    food.expiry_date && currentAsOf
-      ? Math.round(
-          (Date.parse(`${food.expiry_date}T00:00:00Z`) -
-            Date.parse(`${currentAsOf}T00:00:00Z`)) /
-            86400000,
-        )
-      : null
-
-  const remainingText =
-    daysRemaining === null
-      ? null
-      : daysRemaining < 0
-        ? `Quá hạn ${Math.abs(daysRemaining)} ngày`
-        : daysRemaining === 0
-          ? "Hôm nay"
-          : `Còn ${daysRemaining} ngày`
-
-  const dateFormatted = food.expiry_date
-    ? `${
-        food.expiry_date_certainty === "estimated" ? "Ước tính: " : ""
-      }${fmtDate(food.expiry_date)}`
-    : null
+  let statusLabel: string
+  if (st === "expired") {
+    statusLabel = `Quá hạn ${d !== null ? Math.abs(d) : 1} ngày`
+  } else if (st === "soon") {
+    statusLabel = d === 0 ? "Hết hạn hôm nay" : `Còn ${d} ngày`
+  } else if (st === "ok") {
+    statusLabel = "Còn hạn"
+  } else {
+    statusLabel = "Chưa rõ HSD"
+  }
 
   return (
-    <article className="food-row">
-      <button
-        className={`food-card tone-${attention}${
-          fmtQty(food.remaining_quantity).length > 8 ? " large-quantity" : ""
-        }`}
-        onClick={onOpen}
-        type="button"
-        aria-label={`Xem ${food.name}, đang ghi nhận ${fmtQty(food.remaining_quantity)} ${unitLabel[food.unit]}, ${attentionLabel[attention]}${
-          food.storage_location ? `, ${food.storage_location}` : ""
-        }${dateFormatted ? `, ${dateFormatted}` : ""}${
-          remainingText ? `, ${remainingText}` : ""
-        }`}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) =>
+        (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())
+      }
+      className={`group flex min-h-14 cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-hover active:bg-bg-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary ${className}`}
+    >
+      <div
+        aria-hidden="true"
+        className="flex size-11 shrink-0 items-center justify-center rounded-corner-md bg-brand-tertiary text-brand-primary transition-transform group-hover:scale-105 shadow-xs"
       >
-        <span className="food-kind-icon">
-          <Icon
-            name={
-              food.unit === "ml" ? "bottle" : food.unit === "g" ? "leaf" : "box"
-            }
-          />
-        </span>
-        <span className="food-main">
-          <span className="food-name">{food.name}</span>
-          <span className="food-meta">
-            <span className="loc">
-              {food.storage_location || "Chưa chọn vị trí"}
-            </span>
-            <span className="date">
-              {dateFormatted
-                ? `${dateFormatted}${
-                    remainingText ? ` • ${remainingText}` : ""
-                  }`
-                : "Chưa ghi ngày"}
-            </span>
-          </span>
-          <Badge type={attention} />
-        </span>
-        {/* Quantity: fixed-width right column, prominent number */}
-        <span className="qty-col">
-          <span className="qty-num">{fmtQty(food.remaining_quantity)}</span>
-          <span className="qty-unit">{unitLabel[food.unit]}</span>
-        </span>
-        <Icon name="arrow" />
-      </button>
-      <div className="food-row-actions" aria-label={`Cập nhật ${food.name}`}>
-        {attention === "unknown" && food.remaining_quantity > 0 ? (
-          <button
-            type="button"
-            className="row-action primary"
-            onClick={() => onAction("date")}
-            aria-label={`Thêm ngày cho ${food.name}`}
-          >
-            <Icon name="edit" />
-            Thêm ngày
-          </button>
-        ) : food.remaining_quantity > 0 ? (
-          <button
-            type="button"
-            className={`row-action ${
-              attention === "past" ? "danger" : "primary"
-            }`}
-            onClick={() =>
-              onAction(attention === "past" ? "discard" : "consume")
-            }
-            aria-label={`Ghi ${
-              attention === "past" ? "đã bỏ" : "đã dùng"
-            } ${food.name}`}
-          >
-            <Icon name={attention === "past" ? "trash" : "check"} />
-            {attention === "past" ? "Ghi đã bỏ" : "Đã dùng"}
-          </button>
-        ) : null}
-        <button
-          type="button"
-          className="row-action"
-          onClick={() => onAction("recount")}
-          aria-label={`Kiểm kho ${food.name}`}
-        >
-          <Icon name="review" />
-          Kiểm kho
-        </button>
+        <IconComponent size={22} />
       </div>
-    </article>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <p className="truncate text-sm md:text-base font-semibold text-text-primary">
+          {food.name}
+        </p>
+        <p className="truncate text-xs text-text-secondary">
+          {food.quantity} {food.unit}
+          {food.location ? ` · ${food.location}` : ""}
+        </p>
+        <div className="flex flex-wrap items-center gap-x-2 text-xs">
+          <span className={`whitespace-nowrap ${rowTone[st]}`}>
+            {statusLabel}
+          </span>
+          {food.expDate && (
+            <span className="whitespace-nowrap text-text-secondary">
+              · HSD {formatDate(food.expDate)}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center text-text-tertiary">
+        <ChevronRight
+          size={18}
+          aria-hidden="true"
+          className="transition-transform group-hover:translate-x-0.5"
+        />
+      </div>
+    </div>
   )
 }
+
+export default FoodCard

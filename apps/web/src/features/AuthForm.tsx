@@ -1,231 +1,154 @@
 import { useState } from "react"
-
-import type { FormEvent } from "react"
-
+import type { Dispatch } from "../store/appStore"
 import Button from "../components/ui/Button"
+import Card from "../components/ui/Card"
+import FieldError from "../components/ui/FieldError"
+import { Leaf } from "../components/ui/Icon"
+import InputField from "../components/ui/InputField"
 
-import Field from "../components/ui/Field"
+export type AuthMode = "welcome" | "login" | "register"
 
-import Icon from "../components/ui/Icon"
-
-import Modal, { ModalActions } from "../components/ui/Modal"
-
-export type AuthMode = "login" | "register" | "reauth"
-
-export type AuthSubmitPayload = {
-  email: string
-
-  password: string
-
-  display_name?: string
-}
-
-export default function AuthForm({
-  initialMode = "login",
-
-  initialEmail = "",
-
-  pending,
-
-  error,
-
-  onSubmit,
-
-  onClose,
+export function AuthForm({
+  dispatch,
+  onCancel,
+  initialMode = "welcome",
 }: {
+  dispatch: Dispatch
+  onCancel: () => void
   initialMode?: AuthMode
-
-  initialEmail?: string
-
-  pending: boolean
-
-  error: string
-
-  onSubmit: (
-    mode: AuthMode,
-
-    input: AuthSubmitPayload,
-  ) => Promise<boolean | void>
-
-  onClose: () => void
 }) {
-  const [mode, setMode] = useState<AuthMode>(initialMode)
-
-  const [email, setEmail] = useState(initialEmail)
-
-  const [password, setPassword] = useState("")
-
+  const [view, setView] = useState<AuthMode>(initialMode)
+  const [email, setEmail] = useState("")
+  const [pw, setPw] = useState("")
   const [name, setName] = useState("")
+  const [err, setErr] = useState<Record<string, string>>({})
 
-  const [tried, setTried] = useState(false)
+  function submit() {
+    const e: Record<string, string> = {}
+    if (view === "register" && !name.trim())
+      e.name = "Vui lòng nhập tên của bạn."
+    if (!/^\S+@\S+\.\S+$/.test(email)) e.email = "Email không hợp lệ."
+    if (pw.length < 8) e.pw = "Mật khẩu cần ít nhất 8 ký tự."
+    setErr(e)
+    if (Object.keys(e).length) return
 
-  const [showPassword, setShowPassword] = useState(false)
-
-  const cleanEmail = email.trim()
-
-  const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
-    ? ""
-    : "Vui lòng nhập địa chỉ email hợp lệ."
-
-  const passwordError =
-    [...password].length >= 15 && [...password].length <= 128
-      ? ""
-      : "Mật khẩu cần từ 15 đến 128 ký tự."
-
-  const nameError =
-    mode === "register" && !name.trim() ? "Vui lòng nhập tên hiển thị." : ""
-
-  const switchMode = (next: AuthMode) => {
-    setMode(next)
-
-    setTried(false)
-
-    setPassword("")
-  }
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault()
-
-    setTried(true)
-
-    if (pending || emailError || passwordError || nameError) return
-
-    await onSubmit(mode, {
-      email: cleanEmail,
-
-      password,
-
-      ...(mode === "register" ? { display_name: name.trim() } : {}),
+    dispatch({
+      type: "login",
+      mode: "account",
+      name: name || email.split("@")[0],
     })
   }
 
-  const reauth = mode === "reauth"
-
   return (
-    <Modal
-      title={
-        reauth
-          ? "Xác thực lại tài khoản"
-          : mode === "login"
-            ? "Đăng nhập để tiếp tục"
-            : "Tạo tài khoản cá nhân"
-      }
-      eyebrow={reauth ? "PHIÊN ĐÃ HẾT HẠN" : "TÀI KHOẢN CÁ NHÂN"}
-      layout="form"
-      onClose={() => {
-        if (!pending) onClose()
-      }}
-    >
-      <form className="stepped-form" noValidate onSubmit={submit}>
-        <div className="form-body">
-          <div className="form-grid">
-            <p className="inline-hint span-2">
-              {reauth
-                ? "Đăng nhập lại bằng cùng tài khoản để tiếp tục. Thao tác đang chờ sẽ giữ nguyên mã yêu cầu."
-                : "Đăng nhập để thêm món và lưu thay đổi vào tài khoản cá nhân."}
-            </p>
-            {mode === "register" && (
-              <div className="span-2">
-                <Field label="Tên hiển thị *" error={tried ? nameError : ""}>
-                  <input
-                    autoComplete="name"
-                    maxLength={100}
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    disabled={pending}
-                  />
-                </Field>
-              </div>
-            )}
-            <div className="span-2">
-              <Field label="Email *" error={tried ? emailError : ""}>
-                <input
-                  autoFocus={!reauth}
-                  type="email"
-                  autoComplete="username"
-                  maxLength={254}
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  disabled={pending || reauth}
-                  placeholder="tenban@example.com"
-                />
-              </Field>
-            </div>
-            <div className="span-2">
-              <Field
-                label="Mật khẩu *"
-                error={tried ? passwordError : ""}
-                hint="Từ 15 đến 128 ký tự."
-              >
-                <div className="auth-password-control">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    autoComplete={
-                      mode === "register" ? "new-password" : "current-password"
-                    }
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    disabled={pending}
-                  />
-                  <button
-                    type="button"
-                    className="auth-password-toggle"
-                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                    aria-pressed={showPassword}
-                    onClick={() => setShowPassword((value) => !value)}
-                  >
-                    <Icon name={showPassword ? "eye-off" : "eye"} />
-                  </button>
-                </div>
-              </Field>
-            </div>
-            {error && (
-              <p className="note-box span-2" role="alert">
-                {error}
-              </p>
-            )}
+    <div className="flex min-h-[80vh] items-center justify-center p-4">
+      <Card className="flex w-full max-w-md flex-col gap-6 shadow-md border-border-primary/60">
+        <div className="flex items-center gap-3 text-brand-primary">
+          <div className="flex size-10 items-center justify-center rounded-corner-md bg-brand-primary text-white shadow-xs">
+            <Leaf size={24} aria-hidden="true" />
           </div>
+          <span className="text-xl font-bold tracking-tight">Expiry</span>
         </div>
-        <footer className="modal-footer">
-          <ModalActions
-            start={
-              reauth ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={pending}
-                  onClick={() => switchMode("login")}
-                >
-                  Dùng tài khoản khác
-                </Button>
-              ) : mode === "register" ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={pending}
-                  onClick={() => switchMode("login")}
-                >
-                  Đã có tài khoản? Đăng nhập
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={pending || reauth}
-                  onClick={() => switchMode("register")}
-                >
-                  Tạo tài khoản mới
-                </Button>
-              )
-            }
-            end={
-              <Button type="submit" variant="primary" loading={pending}>
-                {mode === "register" ? "Tạo tài khoản" : "Đăng nhập"}
+
+        {view === "welcome" ? (
+          <>
+            <div>
+              <h1 className="text-xl font-bold text-text-primary">
+                Biết mình đang có gì, món nào cần chú ý.
+              </h1>
+              <p className="mt-2 text-sm text-text-secondary leading-relaxed">
+                Đăng nhập để quản lý kho thực phẩm của riêng bạn, hoặc xem thử
+                dữ liệu mẫu có sẵn để khám phá các tính năng.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2.5 pt-2">
+              <Button variant="primary" onClick={() => setView("register")}>
+                Tạo tài khoản mới
               </Button>
-            }
-          />
-        </footer>
-      </form>
-    </Modal>
+              <Button variant="neutral" onClick={() => setView("login")}>
+                Đăng nhập
+              </Button>
+              <Button variant="subtle" onClick={onCancel}>
+                Xem dữ liệu mẫu (Chế độ xem thử)
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <h1 className="text-xl font-bold text-text-primary">
+                {view === "login" ? "Đăng nhập tài khoản" : "Tạo tài khoản mới"}
+              </h1>
+              <p className="mt-1 text-xs text-text-secondary">
+                {view === "login"
+                  ? "Nhập email và mật khẩu của bạn để đăng nhập."
+                  : "Đăng ký để đồng bộ và lưu trữ thực phẩm an toàn."}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {view === "register" && (
+                <div>
+                  <InputField
+                    label="Tên của bạn"
+                    placeholder="Ví dụ: Minh, Lan..."
+                    value={name}
+                    onChange={setName}
+                    autoFocus
+                  />
+                  <FieldError id="err-name" msg={err.name} />
+                </div>
+              )}
+              <div>
+                <InputField
+                  label="Email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={setEmail}
+                  autoComplete="email"
+                  autoFocus={view === "login"}
+                />
+                <FieldError id="err-email" msg={err.email} />
+              </div>
+              <div>
+                <InputField
+                  label="Mật khẩu"
+                  type="password"
+                  placeholder="Ít nhất 8 ký tự"
+                  value={pw}
+                  onChange={setPw}
+                  autoComplete={
+                    view === "login" ? "current-password" : "new-password"
+                  }
+                />
+                <FieldError id="err-pw" msg={err.pw} />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2.5 pt-2">
+              <Button variant="primary" onClick={submit}>
+                {view === "login" ? "Đăng nhập" : "Tạo tài khoản"}
+              </Button>
+              <Button
+                variant="subtle"
+                onClick={() => {
+                  setErr({})
+                  setView(view === "login" ? "register" : "login")
+                }}
+              >
+                {view === "login"
+                  ? "Chưa có tài khoản? Tạo mới ngay"
+                  : "Đã có tài khoản? Đăng nhập"}
+              </Button>
+              <Button variant="subtle" onClick={() => setView("welcome")}>
+                Quay lại
+              </Button>
+            </div>
+          </>
+        )}
+      </Card>
+    </div>
   )
 }
+
+export default AuthForm
