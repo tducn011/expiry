@@ -468,7 +468,7 @@ function readAccount(): State | null {
   }
 }
 
-function readStored(): { state: State; problem: StorageProblem } {
+function readStored(): { state: State problem: StorageProblem } {
   try {
     const s = parseState(localStorage.getItem(KEY))
     if (!s || s.mode !== "account") return { state: loadDemo(), problem: null }

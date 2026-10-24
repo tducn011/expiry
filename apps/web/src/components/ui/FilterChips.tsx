@@ -1,6 +1,6 @@
 export type StatusFilter = "all" | "soon" | "expired" | "unknown"
 
-export const defaultFilterChips: { v: StatusFilter; label: string }[] = [
+export const defaultFilterChips: { v: StatusFilter label: string }[] = [
   { v: "all", label: "Tất cả" },
   { v: "soon", label: "Sắp HSD" },
   { v: "expired", label: "Quá HSD" },
@@ -14,7 +14,7 @@ export function FilterChips({
 }: {
   value: StatusFilter
   onChange: (v: StatusFilter) => void
-  chips?: { v: StatusFilter; label: string }[]
+  chips?: { v: StatusFilter label: string }[]
 }) {
   return (
     <div className="relative -mx-4 px-4 md:mx-0 md:px-0">

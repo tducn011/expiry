@@ -106,8 +106,12 @@ describe("Domain Error Message Translations", () => {
 
 describe("Domain Mutation DTO and ApiClient Methods", () => {
   it("generates immutable commands with unique UUID idempotency key", () => {
-    const cmd1 = newCommand("owner-123", "POST", "/food-entries", { name: "Milk" })
-    const cmd2 = newCommand("owner-123", "POST", "/food-entries", { name: "Milk" })
+    const cmd1 = newCommand("owner-123", "POST", "/food-entries", {
+      name: "Milk",
+    })
+    const cmd2 = newCommand("owner-123", "POST", "/food-entries", {
+      name: "Milk",
+    })
 
     expect(cmd1.owner).toBe("owner-123")
     expect(cmd1.method).toBe("POST")

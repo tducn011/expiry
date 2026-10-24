@@ -65,11 +65,21 @@ describe("UI Domain Formatting & Helpers", () => {
     const asOf = "2026-10-12"
     const leadDays = 2
 
-    expect(attentionFor({ expiry_date: "2026-10-10" }, leadDays, asOf)).toBe("past")
-    expect(attentionFor({ expiry_date: "2026-10-12" }, leadDays, asOf)).toBe("today")
-    expect(attentionFor({ expiry_date: "2026-10-13" }, leadDays, asOf)).toBe("soon")
-    expect(attentionFor({ expiry_date: "2026-10-14" }, leadDays, asOf)).toBe("soon")
-    expect(attentionFor({ expiry_date: "2026-10-15" }, leadDays, asOf)).toBe("later")
+    expect(attentionFor({ expiry_date: "2026-10-10" }, leadDays, asOf)).toBe(
+      "past",
+    )
+    expect(attentionFor({ expiry_date: "2026-10-12" }, leadDays, asOf)).toBe(
+      "today",
+    )
+    expect(attentionFor({ expiry_date: "2026-10-13" }, leadDays, asOf)).toBe(
+      "soon",
+    )
+    expect(attentionFor({ expiry_date: "2026-10-14" }, leadDays, asOf)).toBe(
+      "soon",
+    )
+    expect(attentionFor({ expiry_date: "2026-10-15" }, leadDays, asOf)).toBe(
+      "later",
+    )
     expect(attentionFor({ expiry_date: null }, leadDays, asOf)).toBe("unknown")
   })
 
@@ -490,7 +500,12 @@ describe("Barcode GS1 & Lookup Service", () => {
 
   it("gracefully returns null when decoding invalid or empty image", async () => {
     const { decodeBarcodeFromImage } = await import("../src/lib/barcode")
-    const emptyImg = { naturalWidth: 0, naturalHeight: 0, width: 0, height: 0 } as HTMLImageElement
+    const emptyImg = {
+      naturalWidth: 0,
+      naturalHeight: 0,
+      width: 0,
+      height: 0,
+    } as HTMLImageElement
     const res = await decodeBarcodeFromImage(emptyImg)
     expect(res).toBeNull()
   })
@@ -554,4 +569,3 @@ describe("Manual Capture Form & Outcome Boundary (CAP-01)", () => {
     expect(dto.date_label_type).toBe("unspecified")
   })
 })
-

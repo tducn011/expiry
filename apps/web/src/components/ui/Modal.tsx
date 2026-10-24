@@ -113,7 +113,9 @@ export function Modal({
               {title}
             </h2>
             {description && (
-              <p className="mt-1 text-xs sm:text-sm text-text-secondary leading-relaxed break-words">{description}</p>
+              <p className="mt-1 text-xs sm:text-sm text-text-secondary leading-relaxed break-words">
+                {description}
+              </p>
             )}
           </div>
           {dismissible && (
