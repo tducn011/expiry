@@ -57,7 +57,10 @@ describe("Barcode Scanner & ZXing Formats", () => {
 
   it("maps camera permission errors to actionable Vietnamese guidance", () => {
     function mapCameraError(errName: string): string {
-      if (errName === "NotAllowedError" || errName === "PermissionDeniedError") {
+      if (
+        errName === "NotAllowedError" ||
+        errName === "PermissionDeniedError"
+      ) {
         return "Quyền camera bị từ chối. Hãy cho phép camera trên thanh địa chỉ hoặc nhập mã bằng tay."
       }
       if (errName === "NotFoundError" || errName === "DevicesNotFoundError") {
@@ -68,6 +71,8 @@ describe("Barcode Scanner & ZXing Formats", () => {
 
     expect(mapCameraError("NotAllowedError")).toContain("bị từ chối")
     expect(mapCameraError("NotFoundError")).toContain("Không tìm thấy camera")
-    expect(mapCameraError("UnknownError")).toContain("Không thể kích hoạt camera")
+    expect(mapCameraError("UnknownError")).toContain(
+      "Không thể kích hoạt camera",
+    )
   })
 })
