@@ -17,6 +17,12 @@ import Modal from "../components/ui/Modal"
 import PageHeader from "../components/ui/PageHeader"
 import FoodCard from "./FoodCard"
 
+export interface LocationStatItem {
+  total: number
+  attention: number
+  expired: number
+}
+
 interface StorageCategoryFilter {
   v: Category | "all"
   label: string
@@ -54,11 +60,7 @@ export default function StorageView({
 
   // Metrics per location
   const locationStats = useMemo(() => {
-    const stats: Record<string, {
-      total: number
-      attention: number
-      expired: number
-    }> = {}
+    const stats: Record<string, LocationStatItem> = {}
     for (const loc of state.locations) {
       stats[loc] = { total: 0, attention: 0, expired: 0 }
     }

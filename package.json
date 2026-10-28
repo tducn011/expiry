@@ -10,7 +10,7 @@
     "build:web": "npm --workspace=apps/web run build",
     "test:api": "npm --workspace=apps/api test",
     "test:python": "docker run --rm -v ./services/python-scan:/app expiry-python-scan python -m unittest discover tests",
-    "test:ui": "pnpm --filter expiry-ui test",
+    "test:ui": "npm --workspace=apps/web test",
     "test:dbops": "node scripts/test-dbops.mjs",
     "test:format": "cd apps/web && ./node_modules/.bin/oxfmt --check src/",
     "format": "cd apps/web && ./node_modules/.bin/oxfmt src/",
