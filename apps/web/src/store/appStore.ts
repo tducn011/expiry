@@ -1,5 +1,7 @@
 import { useEffect, useReducer, useState } from "react"
 
+import { api } from "../api/client"
+
 export type Unit = "cái" | "hộp" | "gói" | "chai" | "kg" | "g" | "lít" | "ml" | "quả"
 export const UNITS: Unit[] = [
   "cái",
@@ -647,6 +649,7 @@ function readStored(): StoredResult {
 
 function signOutStorage() {
   try {
+    api.logout().catch(() => {})
     const s = parseState(localStorage.getItem(KEY))
     if (s) localStorage.setItem(KEY, JSON.stringify({ ...s, mode: "none" }))
   } catch {

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { api } from "./api/client"
 import {
   attention,
   notifications,
@@ -69,6 +70,24 @@ export type Route = { name: "inventory" } | { name: "storage" } | {
 
 export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const { state, dispatch, problem, retry, reset } = useAppStore()
+
+  useEffect(() => {
+    if (demoMode) return
+    api
+      .session()
+      .then((s) => {
+        if (s.user) {
+          dispatch({
+            type: "login",
+            mode: "account",
+            name: s.user.display_name || s.user.email.split("@")[0],
+          })
+        }
+      })
+      .catch(() => {
+        // No active server session; retain client mode
+      })
+  }, [demoMode, dispatch])
   const [confirmReset, setConfirmReset] = useState(false)
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(() => {
     try {
