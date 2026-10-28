@@ -203,6 +203,32 @@ export const SearchX = createIcon(
 export const ChevronRight = createIcon(<path d="m9 18 6-6-6-6" />)
 export const ChevronLeft = createIcon(<path d="m15 18-6-6 6-6" />)
 export const ChevronDown = createIcon(<path d="m6 9 6 6 6-6" />)
+export const PanelLeftClose = createIcon(
+  <>
+    <rect width="18" height="18" x="3" y="3" rx="2" />
+    <path d="M9 3v18" />
+    <path d="m16 15-3-3 3-3" />
+  </>,
+)
+export const PanelLeftOpen = createIcon(
+  <>
+    <rect width="18" height="18" x="3" y="3" rx="2" />
+    <path d="M9 3v18" />
+    <path d="m14 9 3 3-3 3" />
+  </>,
+)
+export const ChevronsLeft = createIcon(
+  <>
+    <path d="m11 17-5-5 5-5" />
+    <path d="m18 17-5-5 5-5" />
+  </>,
+)
+export const ChevronsRight = createIcon(
+  <>
+    <path d="m6 17 5-5-5-5" />
+    <path d="m13 17 5-5-5-5" />
+  </>,
+)
 export const ArrowLeft = createIcon(
   <>
     <path d="m12 19-7-7 7-7" />
@@ -278,6 +304,87 @@ export const MapPin = createIcon(
   <>
     <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
     <circle cx="12" cy="10" r="3" />
+  </>,
+)
+
+export const BarChart3 = createIcon(
+  <>
+    <path d="M3 3v18h18" />
+    <path d="M18 17V9" />
+    <path d="M13 17V5" />
+    <path d="M8 17v-3" />
+  </>,
+)
+
+export const Layers = createIcon(
+  <>
+    <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+    <path d="m22 12.5-8.58 3.91a2 2 0 0 1-1.66 0L2.6 12.5" />
+    <path d="m22 17.5-8.58 3.91a2 2 0 0 1-1.66 0L2.6 17.5" />
+  </>,
+)
+
+export const Refrigerator = createIcon(
+  <>
+    <path d="M5 6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z" />
+    <path d="M5 10h14" />
+    <path d="M15 7v-1" />
+    <path d="M15 13v3" />
+  </>,
+)
+
+export const Snowflake = createIcon(
+  <>
+    <line x1="2" x2="22" y1="12" y2="12" />
+    <line x1="12" x2="12" y1="2" y2="22" />
+    <path d="m20 16-4-4 4-4" />
+    <path d="m4 8 4 4-4 4" />
+    <path d="m16 4-4 4-4-4" />
+    <path d="m8 20 4-4 4 4" />
+  </>,
+)
+
+export const Utensils = createIcon(
+  <>
+    <path d="M18 2v20" />
+    <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+    <path d="M6 2v20" />
+    <path d="M3 2v6a3 3 0 0 0 6 0V2" />
+  </>,
+)
+
+export const Archive = createIcon(
+  <>
+    <rect width="20" height="5" x="2" y="3" rx="1" />
+    <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+    <path d="M10 12h4" />
+  </>,
+)
+
+export const Boxes = createIcon(
+  <>
+    <path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z" />
+    <path d="m7 16.5-4.74-2.85" />
+    <path d="m7 16.5 5-3" />
+    <path d="M7 16.5v5.17" />
+    <path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z" />
+    <path d="m17 16.5-5-3" />
+    <path d="m17 16.5 4.74-2.85" />
+    <path d="M17 16.5v5.17" />
+    <path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z" />
+    <path d="M12 8 7.26 5.15" />
+    <path d="m12 8 4.74-2.85" />
+    <path d="M12 13.5V8" />
+  </>,
+)
+
+export const Sparkles = createIcon(
+  <>
+    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+    <path d="M5 3v4" />
+    <path d="M19 17v4" />
+    <path d="M3 5h4" />
+    <path d="M17 19h4" />
   </>,
 )
 
@@ -374,32 +481,6 @@ export const HelpCircle = createIcon(
     <circle cx="12" cy="12" r="10" />
     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
     <line x1="12" x2="12.01" y1="17" y2="17" />
-  </>,
-)
-
-export const Boxes = createIcon(
-  <>
-    <path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z" />
-    <path d="m7 16.5-4.74-2.85" />
-    <path d="m7 16.5 5-3" />
-    <path d="M7 16.5v5.17" />
-    <path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z" />
-    <path d="m17 16.5-5-3" />
-    <path d="m17 16.5 4.74-2.85" />
-    <path d="M17 16.5v5.17" />
-    <path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z" />
-    <path d="M12 8 7.26 5.15" />
-    <path d="m12 8 4.74-2.85" />
-    <path d="M12 13.5V8" />
-  </>,
-)
-
-export const BarChart3 = createIcon(
-  <>
-    <path d="M3 3v18h18" />
-    <path d="M18 17V9" />
-    <path d="M13 17V5" />
-    <path d="M8 17v-3" />
   </>,
 )
 

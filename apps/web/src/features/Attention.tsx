@@ -1,3 +1,4 @@
+import { useState } from "react"
 import type { Food, State } from "../store/appStore"
 import {
   attention,
@@ -8,7 +9,12 @@ import {
 } from "../store/appStore"
 import Button from "../components/ui/Button"
 import EmptyState from "../components/ui/EmptyState"
-import { ChevronRight, CircleCheck, Plus } from "../components/ui/Icon"
+import {
+  ChevronDown,
+  ChevronRight,
+  CircleCheck,
+  Plus,
+} from "../components/ui/Icon"
 import PageHeader from "../components/ui/PageHeader"
 import { getFoodIcon } from "./FoodCard"
 
@@ -147,9 +153,39 @@ export function Attention({
     },
   ] as const).filter((s) => s.items.length > 0)
 
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+
+  const toggleCollapse = (id: string) => {
+    setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const allCollapsed =
+    sections.length > 0 && sections.every((s) => collapsed[s.id])
+
+  const toggleAll = () => {
+    const nextState = !allCollapsed
+    const next: Record<string, boolean> = {}
+    for (const s of sections) {
+      next[s.id] = nextState
+    }
+    setCollapsed(next)
+  }
+
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <PageHeader title="Cần chú ý" subtitle={subtitle} />
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <PageHeader title="Cần chú ý" subtitle={subtitle} />
+        {sections.length > 1 && (
+          <Button
+            size="small"
+            variant="neutral"
+            onClick={toggleAll}
+            className="self-start sm:self-auto"
+          >
+            {allCollapsed ? "Mở rộng tất cả" : "Thu gọn tất cả"}
+          </Button>
+        )}
+      </div>
 
       {totalCount === 0 ? (
         <EmptyState
@@ -172,32 +208,53 @@ export function Attention({
           }
         />
       ) : (
-        sections.map((sec) => (
-          <section
-            key={sec.id}
-            aria-labelledby={`sec-${sec.id}`}
-            className="flex flex-col gap-2"
-          >
-            <div
-              role="heading"
-              aria-level={2}
-              id={`sec-${sec.id}`}
-              className="px-2 text-sm md:text-base font-semibold text-text-primary uppercase tracking-wide"
+        sections.map((sec) => {
+          const isCollapsed = collapsed[sec.id]
+          return (
+            <section
+              key={sec.id}
+              aria-labelledby={`sec-${sec.id}`}
+              className="flex flex-col gap-2 transition-all"
             >
-              {sec.title} ({sec.items.length})
-            </div>
-            <div className="flex flex-col divide-y divide-border-primary/40 overflow-hidden rounded-corner-lg border border-border-primary/50 bg-surface-bg shadow-xs">
-              {sec.items.map((f) => (
-                <AttentionFoodRow
-                  key={f.id}
-                  food={f}
-                  reason={sec.reason}
-                  onOpen={() => onOpenDetail(f.id)}
-                />
-              ))}
-            </div>
-          </section>
-        ))
+              <button
+                type="button"
+                id={`sec-${sec.id}`}
+                onClick={() => toggleCollapse(sec.id)}
+                aria-expanded={!isCollapsed}
+                className="flex items-center justify-between px-2 py-1.5 text-sm md:text-base font-semibold text-text-primary uppercase tracking-wide cursor-pointer hover:text-brand-primary transition-colors group select-none"
+              >
+                <span className="flex items-center gap-2">
+                  <span>{sec.title}</span>
+                  <span className="rounded-corner-full bg-surface-hover px-2.5 py-0.5 text-xs font-semibold text-text-secondary border border-border-primary/40">
+                    {sec.items.length} món
+                  </span>
+                </span>
+                <span className="flex items-center gap-1 text-xs font-medium text-text-tertiary group-hover:text-text-primary">
+                  <span>{isCollapsed ? "Phóng ra" : "Thu lại"}</span>
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform duration-200 ${
+                      isCollapsed ? "-rotate-90" : "rotate-0"
+                    }`}
+                  />
+                </span>
+              </button>
+
+              {!isCollapsed && (
+                <div className="flex flex-col divide-y divide-border-primary/40 overflow-hidden rounded-corner-lg border border-border-primary/50 bg-surface-bg shadow-xs transition-all">
+                  {sec.items.map((f) => (
+                    <AttentionFoodRow
+                      key={f.id}
+                      food={f}
+                      reason={sec.reason}
+                      onOpen={() => onOpenDetail(f.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          )
+        })
       )}
     </div>
   )

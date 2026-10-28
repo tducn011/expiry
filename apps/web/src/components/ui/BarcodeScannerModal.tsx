@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser"
 
 import Button from "./Button"
+import { Camera, ImageUp, Sparkles } from "./Icon"
 
 import Modal from "./Modal"
 
@@ -398,10 +399,20 @@ export default function BarcodeScannerModal({
               marginBottom: "10px",
             }}
           >
-            💡 Trình duyệt yêu cầu kết nối HTTPS hoặc localhost để mở stream
-            video trực tiếp. Bạn có thể dùng nút{" "}
-            <strong>Chụp ảnh từ Camera</strong> bên dưới để quét mã vạch nhanh
-            bằng máy ảnh.
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontWeight: 600,
+                color: "var(--brand-primary, #15803d)",
+              }}
+            >
+              <Sparkles size={16} /> Mẹo:
+            </span>{" "}
+            Trình duyệt yêu cầu kết nối HTTPS hoặc localhost để mở stream video
+            trực tiếp. Bạn có thể dùng nút <strong>Chụp ảnh từ Camera</strong>{" "}
+            bên dưới để quét mã vạch nhanh bằng máy ảnh.
           </div>
         )}
 
@@ -557,7 +568,7 @@ export default function BarcodeScannerModal({
                   color: "#ffffff",
                 }}
               >
-                📸 Chụp ảnh từ Camera
+                <Camera size={16} /> Chụp ảnh từ Camera
                 <input
                   type="file"
                   accept="image/*"
@@ -592,7 +603,7 @@ export default function BarcodeScannerModal({
                   backgroundColor: "var(--surface-muted, #f9fafb)",
                 }}
               >
-                📁 Chọn ảnh từ máy
+                <ImageUp size={16} /> Chọn ảnh từ máy
                 <input
                   type="file"
                   accept="image/*"

@@ -15,27 +15,29 @@ export const UNITS: Unit[] = [
 
 export type Category = "fresh_produce" | "meat_seafood" | "dairy_eggs" | "prepared_food" | "dry_pantry" | "beverage" | "other"
 
-export interface CategoryOption {
+export interface CategoryItem {
+  id: Category
   value: Category
   label: string
 }
+export type CategoryOption = CategoryItem
 
-export const CATEGORIES: CategoryOption[] = [
-  { value: "fresh_produce", label: "Rau củ quả" },
-  { value: "meat_seafood", label: "Thịt, cá, hải sản" },
-  { value: "dairy_eggs", label: "Sữa & trứng" },
-  { value: "prepared_food", label: "Thức ăn nấu sẵn" },
-  { value: "dry_pantry", label: "Đồ khô & gia vị" },
-  { value: "beverage", label: "Đồ uống" },
-  { value: "other", label: "Khác" },
+export const CATEGORIES: CategoryItem[] = [
+  { id: "fresh_produce", value: "fresh_produce", label: "Rau củ quả" },
+  { id: "meat_seafood", value: "meat_seafood", label: "Thịt, cá, hải sản" },
+  { id: "dairy_eggs", value: "dairy_eggs", label: "Trứng & Sữa" },
+  { id: "prepared_food", value: "prepared_food", label: "Món nấu sẵn" },
+  { id: "dry_pantry", value: "dry_pantry", label: "Gia vị & Đồ khô" },
+  { id: "beverage", value: "beverage", label: "Đồ uống" },
+  { id: "other", value: "other", label: "Khác" },
 ]
 
 export const CATEGORY_LABELS: Record<Category, string> = {
   fresh_produce: "Rau củ quả",
-  meat_seafood: "Thịt cá",
-  dairy_eggs: "Sữa trứng",
-  prepared_food: "Nấu sẵn",
-  dry_pantry: "Đồ khô",
+  meat_seafood: "Thịt, cá, hải sản",
+  dairy_eggs: "Trứng & Sữa",
+  prepared_food: "Món nấu sẵn",
+  dry_pantry: "Gia vị & Đồ khô",
   beverage: "Đồ uống",
   other: "Khác",
 }
@@ -67,6 +69,7 @@ export interface HistoryEvent {
   from?: number
   to?: number
   unit?: Unit
+  category?: Category
 }
 
 export interface Settings {
@@ -177,6 +180,7 @@ function ev(
     kind,
     at: now(),
     unit: f.unit,
+    category: f.category,
     ...extra,
   }
 }
@@ -315,8 +319,8 @@ const SEED: {
   name: string
   quantity: number
   unit: Unit
-  location: string
   category: Category
+  location: string
   days: number | null
 }[] = [
   {
@@ -324,8 +328,8 @@ const SEED: {
     name: "Sữa tươi",
     quantity: 1,
     unit: "hộp",
-    location: "Ngăn mát",
     category: "dairy_eggs",
+    location: "Ngăn mát",
     days: 1,
   },
   {
@@ -333,8 +337,8 @@ const SEED: {
     name: "Rau cải",
     quantity: 500,
     unit: "g",
-    location: "Ngăn mát",
     category: "fresh_produce",
+    location: "Ngăn mát",
     days: -1,
   },
   {
@@ -342,8 +346,8 @@ const SEED: {
     name: "Sữa chua",
     quantity: 4,
     unit: "hộp",
-    location: "Ngăn mát",
     category: "dairy_eggs",
+    location: "Ngăn mát",
     days: -2,
   },
   {
@@ -351,8 +355,8 @@ const SEED: {
     name: "Bánh mì",
     quantity: 1,
     unit: "gói",
-    location: "Tủ bếp",
     category: "prepared_food",
+    location: "Tủ bếp",
     days: 2,
   },
   {
@@ -360,8 +364,8 @@ const SEED: {
     name: "Phô mai",
     quantity: 200,
     unit: "g",
-    location: "Ngăn mát",
     category: "dairy_eggs",
+    location: "Ngăn mát",
     days: 3,
   },
   {
@@ -369,8 +373,8 @@ const SEED: {
     name: "Trứng gà",
     quantity: 10,
     unit: "quả",
-    location: "Ngăn mát",
     category: "dairy_eggs",
+    location: "Ngăn mát",
     days: 9,
   },
   {
@@ -378,8 +382,8 @@ const SEED: {
     name: "Thịt gà",
     quantity: 700,
     unit: "g",
-    location: "Ngăn đông",
     category: "meat_seafood",
+    location: "Ngăn đông",
     days: 15,
   },
   {
@@ -387,8 +391,8 @@ const SEED: {
     name: "Cà chua",
     quantity: 300,
     unit: "g",
-    location: "Ngăn mát",
     category: "fresh_produce",
+    location: "Ngăn mát",
     days: 6,
   },
   {
@@ -396,8 +400,8 @@ const SEED: {
     name: "Táo",
     quantity: 4,
     unit: "quả",
-    location: "Ngăn mát",
     category: "fresh_produce",
+    location: "Ngăn mát",
     days: null,
   },
   {
@@ -405,8 +409,8 @@ const SEED: {
     name: "Gạo",
     quantity: 2,
     unit: "kg",
-    location: "Tủ bếp",
     category: "dry_pantry",
+    location: "Tủ bếp",
     days: 120,
   },
 ]
@@ -444,25 +448,123 @@ export function seedHistory(): HistoryEvent[] {
       amount: 2,
       from: 12,
       to: 10,
+      category: "dairy_eggs",
     }),
     e("thit-ga", "Thịt gà", "consume", 20, "g", {
       amount: 300,
       from: 1000,
       to: 700,
+      category: "meat_seafood",
     }),
     e("ca-chua", "Cà chua", "discard", 30, "g", {
       amount: 200,
       from: 500,
       to: 300,
+      category: "fresh_produce",
     }),
-    e("tao", "Táo", "adjust", 52, "quả", { from: 6, to: 4 }),
+    e("tao", "Táo", "adjust", 52, "quả", {
+      from: 6,
+      to: 4,
+      category: "fresh_produce",
+    }),
     e("sua-chua", "Sữa chua", "consume", 76, "hộp", {
       amount: 2,
       from: 6,
       to: 4,
+      category: "dairy_eggs",
     }),
-    e("gao", "Gạo", "adjust", 120, "kg", { from: 3, to: 2 }),
+    e("gao", "Gạo", "adjust", 120, "kg", {
+      from: 3,
+      to: 2,
+      category: "dry_pantry",
+    }),
   ]
+}
+
+export function inferCategory(name: string): Category {
+  const n = name.toLowerCase().trim()
+  if (
+    n.includes("sữa") ||
+    n.includes("trứng") ||
+    n.includes("phô mai") ||
+    n.includes("bơ") ||
+    n.includes("yaourt") ||
+    n.includes("sữa chua")
+  ) {
+    return "dairy_eggs"
+  }
+  if (
+    n.includes("rau") ||
+    n.includes("cải") ||
+    n.includes("cà chua") ||
+    n.includes("táo") ||
+    n.includes("chuối") ||
+    n.includes("cam") ||
+    n.includes("quả") ||
+    n.includes("nấm") ||
+    n.includes("dưa") ||
+    n.includes("hành") ||
+    n.includes("tỏi") ||
+    n.includes("ớt") ||
+    n.includes("củ")
+  ) {
+    return "fresh_produce"
+  }
+  if (
+    n.includes("thịt") ||
+    n.includes("gà") ||
+    n.includes("bò") ||
+    n.includes("heo") ||
+    n.includes("lợn") ||
+    n.includes("cá") ||
+    n.includes("tôm") ||
+    n.includes("mực") ||
+    n.includes("hải sản") ||
+    n.includes("xúc xích") ||
+    n.includes("chả")
+  ) {
+    return "meat_seafood"
+  }
+  if (
+    n.includes("bánh mì") ||
+    n.includes("bánh") ||
+    n.includes("cơm") ||
+    n.includes("canh") ||
+    n.includes("kho") ||
+    n.includes("xào") ||
+    n.includes("thức ăn") ||
+    n.includes("nấu sẵn") ||
+    n.includes("đồ ăn")
+  ) {
+    return "prepared_food"
+  }
+  if (
+    n.includes("gạo") ||
+    n.includes("mì") ||
+    n.includes("bún") ||
+    n.includes("miến") ||
+    n.includes("đường") ||
+    n.includes("muối") ||
+    n.includes("hạt nêm") ||
+    n.includes("nước mắm") ||
+    n.includes("dầu ăn") ||
+    n.includes("gia vị") ||
+    n.includes("đồ hộp") ||
+    n.includes("ngũ cốc")
+  ) {
+    return "dry_pantry"
+  }
+  if (
+    n.includes("nước") ||
+    n.includes("bia") ||
+    n.includes("trà") ||
+    n.includes("cà phê") ||
+    n.includes("nước ngọt") ||
+    n.includes("nước ép")
+  ) {
+    return "beverage"
+  }
+  return "other"
 }
 
 function parseState(raw: string | null): State | null {
@@ -470,6 +572,18 @@ function parseState(raw: string | null): State | null {
   const s = { ...initial, ...JSON.parse(raw) } as State
   if (!Array.isArray(s.foods) || !Array.isArray(s.history))
     throw new Error("invalid")
+  s.foods = s.foods.map((f) => ({
+    ...f,
+    category:
+      f.category && f.category !== "other" ? f.category : inferCategory(f.name),
+  }))
+  s.history = s.history.map((h) => ({
+    ...h,
+    category:
+      h.category && h.category !== "other"
+        ? h.category
+        : inferCategory(h.foodName),
+  }))
   return s
 }
 
