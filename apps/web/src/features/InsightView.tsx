@@ -1,10 +1,6 @@
 import { useMemo, useState } from "react"
 import type { HistoryEvent, State, Category } from "../store/appStore"
-import {
-  CATEGORIES,
-  CATEGORY_LABELS,
-  formatDate,
-} from "../store/appStore"
+import { CATEGORIES, CATEGORY_LABELS, formatDate } from "../store/appStore"
 import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
 import EmptyState from "../components/ui/EmptyState"
@@ -25,6 +21,11 @@ export interface InsightViewProps {
 }
 
 type TimeRange = "7d" | "30d" | "all"
+
+interface CategoryStat {
+  consume: number
+  discard: number
+}
 
 export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
   const [range, setRange] = useState<TimeRange>("30d")
@@ -55,7 +56,7 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
     let adjustCount = 0
 
     // Breakdown by category
-    const catStats: Record<string, { consume: number; discard: number }> = {}
+    const catStats: Record<string, CategoryStat> = {}
     for (const c of CATEGORIES) {
       catStats[c.value] = { consume: 0, discard: 0 }
     }
@@ -87,7 +88,7 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
     for (const [c, s] of Object.entries(catStats)) {
       if (s.discard > worstWasteCount) {
         worstWasteCount = s.discard
-        worstCat = c as Category
+        worstCat = (c as Category)
       }
     }
 
@@ -104,7 +105,9 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
     }
   }, [filteredEvents, foodCategoryMap])
 
-  const activeFoodCount = state.foods.filter((f) => !f.deletedAt && !f.finishedAt).length
+  const activeFoodCount = state.foods.filter(
+    (f) => !f.deletedAt && !f.finishedAt,
+  ).length
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto pb-12">
@@ -113,13 +116,11 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
         subtitle="Đo lường giá trị chống lãng phí và phân tích thói quen mua sắm"
         actions={
           <div className="flex rounded-corner-md border border-border-primary bg-surface-bg p-0.5 text-xs font-semibold">
-            {(
-              [
-                ["7d", "7 ngày"],
-                ["30d", "30 ngày"],
-                ["all", "Toàn bộ"],
-              ] as const
-            ).map(([v, label]) => (
+            {([
+              ["7d", "7 ngày"],
+              ["30d", "30 ngày"],
+              ["all", "Toàn bộ"],
+            ] as const).map(([v, label]) => (
               <button
                 key={v}
                 type="button"
@@ -204,7 +205,8 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
       <Card className="p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold text-text-primary">
-            Cân bằng: Đã dùng ({stats.consumptionRate}%) vs Đã bỏ ({stats.wasteRate}%)
+            Cân bằng: Đã dùng ({stats.consumptionRate}%) vs Đã bỏ (
+            {stats.wasteRate}%)
           </span>
           <span className="text-xs text-text-secondary">
             Tổng cộng: {stats.totalDecided} món đã xử lý
@@ -250,21 +252,27 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
             <BarChart3 size={18} className="text-brand-primary" />
             <span>Phân tích theo danh mục</span>
           </h3>
-          <span className="text-xs text-text-secondary">Hiệu suất từng nhóm</span>
+          <span className="text-xs text-text-secondary">
+            Hiệu suất từng nhóm
+          </span>
         </div>
 
         <div className="flex flex-col gap-3">
           {CATEGORIES.map((c) => {
             const data = stats.catStats[c.value] || { consume: 0, discard: 0 }
             const total = data.consume + data.discard
-            const catRate = total > 0 ? Math.round((data.consume / total) * 100) : 100
+            const catRate =
+              total > 0 ? Math.round((data.consume / total) * 100) : 100
 
             return (
               <div key={c.value} className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-text-primary">{c.label}</span>
+                  <span className="font-semibold text-text-primary">
+                    {c.label}
+                  </span>
                   <span className="text-text-secondary">
-                    {data.consume} dùng · {data.discard} bỏ ({total > 0 ? `${catRate}% dùng` : "Chưa có dữ liệu"})
+                    {data.consume} dùng · {data.discard} bỏ (
+                    {total > 0 ? `${catRate}% dùng` : "Chưa có dữ liệu"})
                   </span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-border-primary/50 overflow-hidden flex">
@@ -293,14 +301,24 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
       <div className="rounded-corner-md border border-brand-primary/30 bg-brand-primary/5 p-4 text-xs md:text-sm text-text-primary shadow-xs flex items-start gap-3">
         <span className="text-xl">💡</span>
         <div className="flex-1 leading-relaxed">
-          <p className="font-bold text-brand-primary mb-1">Gợi ý tối ưu thực đơn & bảo quản:</p>
+          <p className="font-bold text-brand-primary mb-1">
+            Gợi ý tối ưu thực đơn & bảo quản:
+          </p>
           {stats.worstCat && stats.worstWasteCount > 0 ? (
             <p>
-              Nhóm <strong className="underline">{CATEGORY_LABELS[stats.worstCat] || stats.worstCat}</strong> đang có tỷ lệ bị vứt bỏ cao nhất ({stats.worstWasteCount} lần). Hãy ưu tiên chế biến nhóm này trước vào các bữa ăn giữa tuần hoặc chia nhỏ đông lạnh ngay khi mua về!
+              Nhóm{" "}
+              <strong className="underline">
+                {CATEGORY_LABELS[stats.worstCat] || stats.worstCat}
+              </strong>{" "}
+              đang có tỷ lệ bị vứt bỏ cao nhất ({stats.worstWasteCount} lần).
+              Hãy ưu tiên chế biến nhóm này trước vào các bữa ăn giữa tuần hoặc
+              chia nhỏ đông lạnh ngay khi mua về!
             </p>
           ) : (
             <p>
-              Tuyệt vời! Bạn đang duy trì tỷ lệ sử dụng thực phẩm rất tốt. Tiếp tục kiểm tra tab <strong>Lưu trữ</strong> thường xuyên để giữ thói quen sử dụng thông minh nhé!
+              Tuyệt vời! Bạn đang duy trì tỷ lệ sử dụng thực phẩm rất tốt. Tiếp
+              tục kiểm tra tab <strong>Lưu trữ</strong> thường xuyên để giữ thói
+              quen sử dụng thông minh nhé!
             </p>
           )}
         </div>
@@ -315,7 +333,9 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
             className="flex items-center gap-2 text-sm font-bold text-text-primary hover:text-brand-primary cursor-pointer text-left"
           >
             <History size={18} className="text-text-secondary" />
-            <span>Nhật ký thao tác chi tiết ({filteredEvents.length} bản ghi)</span>
+            <span>
+              Nhật ký thao tác chi tiết ({filteredEvents.length} bản ghi)
+            </span>
             <span className="text-xs text-brand-primary font-normal">
               {showRawHistory ? "▲ Thu gọn" : "▼ Xem chi tiết"}
             </span>
@@ -343,8 +363,8 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
                           isConsume
                             ? "bg-status-ok"
                             : isDiscard
-                            ? "bg-danger"
-                            : "bg-warning"
+                              ? "bg-danger"
+                              : "bg-warning"
                         }`}
                       />
                       <span
@@ -357,8 +377,8 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
                         {isConsume
                           ? `Đã dùng ${ev.amount || ""} ${ev.unit || ""}`
                           : isDiscard
-                          ? `Đã bỏ ${ev.amount || ""} ${ev.unit || ""}`
-                          : `Điều chỉnh số lượng`}
+                            ? `Đã bỏ ${ev.amount || ""} ${ev.unit || ""}`
+                            : `Điều chỉnh số lượng`}
                       </span>
                     </div>
                     <span className="text-[10px] text-text-secondary shrink-0 ml-2">

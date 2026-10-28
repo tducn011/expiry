@@ -50,31 +50,21 @@ import Settings from "./features/Settings"
 import AuthForm from "./features/AuthForm"
 import Onboarding from "./features/Onboarding"
 
-export type Route =
-  | { name: "inventory" }
-  | { name: "storage" }
-  | { name: "attention" }
-  | {
-      name: "add"
-    }
-  | { name: "scan" }
-  | {
-      name: "form"
-      mode: FormMode
-      draft: Draft
-      image?: string
-    }
-  | {
-      name: "detail"
-      id: string
-    }
-  | { name: "insight" }
-  | { name: "history" }
-  | { name: "trash" }
-  | {
-      name: "notifications"
-    }
-  | { name: "settings" }
+export type Route = { name: "inventory" } | { name: "storage" } | {
+  name: "attention"
+} | {
+  name: "add"
+} | { name: "scan" } | {
+  name: "form"
+  mode: FormMode
+  draft: Draft
+  image?: string
+} | {
+  name: "detail"
+  id: string
+} | { name: "insight" } | { name: "history" } | { name: "trash" } | {
+  name: "notifications"
+} | { name: "settings" }
 
 export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const { state, dispatch, problem, retry, reset } = useAppStore()

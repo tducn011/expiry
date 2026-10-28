@@ -13,16 +13,14 @@ export const UNITS: Unit[] = [
   "ml",
 ]
 
-export type Category =
-  | "fresh_produce"
-  | "meat_seafood"
-  | "dairy_eggs"
-  | "prepared_food"
-  | "dry_pantry"
-  | "beverage"
-  | "other"
+export type Category = "fresh_produce" | "meat_seafood" | "dairy_eggs" | "prepared_food" | "dry_pantry" | "beverage" | "other"
 
-export const CATEGORIES: { value: Category; label: string }[] = [
+export interface CategoryOption {
+  value: Category
+  label: string
+}
+
+export const CATEGORIES: CategoryOption[] = [
   { value: "fresh_produce", label: "Rau củ quả" },
   { value: "meat_seafood", label: "Thịt, cá, hải sản" },
   { value: "dairy_eggs", label: "Sữa & trứng" },
