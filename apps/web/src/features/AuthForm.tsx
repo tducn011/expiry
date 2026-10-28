@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { Dispatch } from "../store/appStore"
+import { api, ApiError, errorMessage } from "../api/client"
 import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
 import FieldError from "../components/ui/FieldError"
@@ -22,21 +23,57 @@ export function AuthForm({
   const [pw, setPw] = useState("")
   const [name, setName] = useState("")
   const [err, setErr] = useState<Record<string, string>>({})
+  const [generalError, setGeneralError] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  function submit() {
+  async function submit() {
     const e: Record<string, string> = {}
     if (view === "register" && !name.trim())
       e.name = "Vui lòng nhập tên của bạn."
     if (!/^\S+@\S+\.\S+$/.test(email)) e.email = "Email không hợp lệ."
-    if (pw.length < 8) e.pw = "Mật khẩu cần ít nhất 8 ký tự."
+    if (pw.length < 15)
+      e.pw = "Mật khẩu cần ít nhất 15 ký tự theo chuẩn bảo mật."
     setErr(e)
+    setGeneralError("")
     if (Object.keys(e).length) return
 
-    dispatch({
-      type: "login",
-      mode: "account",
-      name: name || email.split("@")[0],
-    })
+    setLoading(true)
+    try {
+      const mode = view === "register" ? "register" : "login"
+      const session = await api.authenticate(mode, {
+        email: email.trim(),
+        password: pw,
+        display_name: view === "register" ? name.trim() : undefined,
+      })
+
+      dispatch({
+        type: "login",
+        mode: "account",
+        name: session.user?.display_name || name || email.split("@")[0],
+      })
+      onCancel()
+    } catch (failure: unknown) {
+      if (failure instanceof ApiError) {
+        if (failure.code === "INVALID_CREDENTIALS") {
+          setErr({ email: "Email hoặc mật khẩu chưa đúng.", pw: " " })
+        } else if (failure.code === "EMAIL_ALREADY_REGISTERED") {
+          setErr({ email: "Email đã được đăng ký. Hãy đăng nhập." })
+        } else if (failure.code === "AUTH_RATE_LIMITED") {
+          setGeneralError(
+            "Đã thử đăng nhập nhiều lần. Vui lòng chờ ít phút rồi thử lại.",
+          )
+        } else {
+          setGeneralError(
+            errorMessage(failure.status, failure.code) ||
+              "Không thể xác thực tài khoản.",
+          )
+        }
+      } else {
+        setGeneralError("Không thể kết nối đến máy chủ. Vui lòng thử lại sau.")
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -114,7 +151,7 @@ export function AuthForm({
                 <InputField
                   label="Mật khẩu"
                   type="password"
-                  placeholder="Ít nhất 8 ký tự"
+                  placeholder="Ít nhất 15 ký tự"
                   value={pw}
                   onChange={setPw}
                   autoComplete={
@@ -125,9 +162,22 @@ export function AuthForm({
               </div>
             </div>
 
+            {generalError && (
+              <div
+                role="alert"
+                className="rounded-corner-md border border-status-expired/30 bg-status-expired-bg px-3.5 py-2.5 text-xs text-status-expired"
+              >
+                {generalError}
+              </div>
+            )}
+
             <div className="flex flex-col gap-2.5 pt-2">
-              <Button variant="primary" onClick={submit}>
-                {view === "login" ? "Đăng nhập" : "Tạo tài khoản"}
+              <Button variant="primary" onClick={submit} disabled={loading}>
+                {loading
+                  ? "Đang xử lý..."
+                  : view === "login"
+                    ? "Đăng nhập"
+                    : "Tạo tài khoản"}
               </Button>
               <Button
                 variant="subtle"

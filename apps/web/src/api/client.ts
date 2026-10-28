@@ -673,23 +673,35 @@ export class ApiClient {
 
   async authenticate(
     mode: "login" | "register",
-
     input: {
       email: string
-
       password: string
-
       display_name?: string
+      timezone?: string
     },
   ) {
+    const payload =
+      mode === "register"
+        ? {
+            email: input.email,
+            password: input.password,
+            display_name: input.display_name,
+            timezone:
+              input.timezone ||
+              Intl.DateTimeFormat().resolvedOptions().timeZone ||
+              "UTC",
+          }
+        : {
+            email: input.email,
+            password: input.password,
+          }
+
     await this.request(`/auth/${mode}`, {
       method: "POST",
-
-      body: JSON.stringify(input),
+      body: JSON.stringify(payload),
     })
 
     // Only the authenticated session read establishes the UI principal.
-
     return this.session()
   }
 
@@ -950,3 +962,5 @@ export class ApiClient {
     return result
   }
 }
+
+export const api = new ApiClient()
