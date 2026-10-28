@@ -6,6 +6,7 @@ import {
   formatDate,
   statusOf,
   today,
+  CATEGORY_LABELS,
 } from "../store/appStore"
 import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
@@ -221,6 +222,7 @@ export function Detail({
               {[
                 ["Số lượng", `${f.quantity} ${f.unit}`],
                 ["Nơi bảo quản", f.location || "Chưa chọn"],
+                ["Danh mục", f.category ? (CATEGORY_LABELS[f.category] || f.category) : "Chưa phân loại"],
                 [
                   "Ngày sản xuất",
                   f.mfgDate ? formatDate(f.mfgDate) : "Chưa rõ",

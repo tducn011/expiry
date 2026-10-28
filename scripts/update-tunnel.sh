@@ -8,7 +8,7 @@ if [ ! -f "$LOG_FILE" ]; then
   exit 1
 fi
 
-TUNNEL_URL=$(grep -o 'https://[-a-z0-9.]*\.trycloudflare\.com' "$LOG_FILE" | tail -n 1 || true)
+TUNNEL_URL=$(grep -a -o 'https://[-a-z0-9.]*\.trycloudflare\.com' "$LOG_FILE" | tail -n 1 || true)
 
 if [ -z "$TUNNEL_URL" ]; then
   echo "Error: Could not extract trycloudflare URL from $LOG_FILE"
