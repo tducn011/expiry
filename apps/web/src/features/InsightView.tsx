@@ -1,16 +1,15 @@
 import { useMemo, useState } from "react"
 import type { HistoryEvent, State, Category } from "../store/appStore"
 import { CATEGORIES, CATEGORY_LABELS, formatDate } from "../store/appStore"
-import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
-import EmptyState from "../components/ui/EmptyState"
 import {
   BarChart3,
+  ChevronDown,
   CircleAlert,
   CircleCheck,
-  Clock,
   History,
   Package,
+  Sparkles,
   TrendingUp,
 } from "../components/ui/Icon"
 import PageHeader from "../components/ui/PageHeader"
@@ -40,7 +39,7 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
     return state.history.filter((e) => new Date(e.at).getTime() >= cutoff)
   }, [state.history, range])
 
-  // Map foodId to Food entity for category lookup
+  // Map foodId to Food entity for category lookup fallback
   const foodCategoryMap = useMemo(() => {
     const map = new Map<string, Category>()
     for (const f of state.foods) {
@@ -63,7 +62,7 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
     catStats["other"] = { consume: 0, discard: 0 }
 
     for (const e of filteredEvents) {
-      const cat = foodCategoryMap.get(e.foodId) || "other"
+      const cat = e.category || foodCategoryMap.get(e.foodId) || "other"
       if (!catStats[cat]) catStats[cat] = { consume: 0, discard: 0 }
 
       if (e.kind === "consume") {
@@ -78,9 +77,11 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
     }
 
     const totalDecided = consumeCount + discardCount
-    const consumptionRate =
-      totalDecided > 0 ? Math.round((consumeCount / totalDecided) * 100) : 100
-    const wasteRate = totalDecided > 0 ? 100 - consumptionRate : 0
+    const hasData = totalDecided > 0
+    const consumptionRate = hasData
+      ? Math.round((consumeCount / totalDecided) * 100)
+      : 0
+    const wasteRate = hasData ? 100 - consumptionRate : 0
 
     // Find most wasted category
     let worstCat: Category | null = null
@@ -97,6 +98,7 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
       discardCount,
       adjustCount,
       totalDecided,
+      hasData,
       consumptionRate,
       wasteRate,
       catStats,
@@ -104,6 +106,23 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
       worstWasteCount,
     }
   }, [filteredEvents, foodCategoryMap])
+
+  // Categories sorted with active groups first, ordered by waste count then total
+  const sortedCategories = useMemo(() => {
+    return [...CATEGORIES].sort((a, b) => {
+      const dataA = stats.catStats[a.value] || { consume: 0, discard: 0 }
+      const dataB = stats.catStats[b.value] || { consume: 0, discard: 0 }
+      const totalA = dataA.consume + dataA.discard
+      const totalB = dataB.consume + dataB.discard
+
+      if (totalA > 0 && totalB === 0) return -1
+      if (totalA === 0 && totalB > 0) return 1
+      if (dataA.discard !== dataB.discard) {
+        return dataB.discard - dataA.discard
+      }
+      return totalB - totalA
+    })
+  }, [stats.catStats])
 
   const activeFoodCount = state.foods.filter(
     (f) => !f.deletedAt && !f.finishedAt,
@@ -147,10 +166,10 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
           </div>
           <div>
             <p className="text-2xl sm:text-3xl font-extrabold text-brand-primary">
-              {stats.consumptionRate}%
+              {stats.hasData ? `${stats.consumptionRate}%` : "—"}
             </p>
             <p className="text-[11px] text-text-secondary mt-1">
-              Mục tiêu: &gt;85%
+              {stats.hasData ? "Mục tiêu: >85%" : "Chưa có phát sinh"}
             </p>
           </div>
         </Card>
@@ -187,7 +206,7 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
 
         <Card className="flex flex-col justify-between p-4 bg-surface-bg border-border-primary">
           <div className="flex items-center justify-between text-text-secondary mb-2">
-            <span className="text-xs font-semibold">Đang bảo quản</span>
+            <span className="text-xs font-semibold">Tồn kho hiện tại</span>
             <Package size={18} />
           </div>
           <div>
@@ -209,40 +228,51 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
             {stats.wasteRate}%)
           </span>
           <span className="text-xs text-text-secondary">
-            Tổng cộng: {stats.totalDecided} món đã xử lý
+            {stats.hasData
+              ? `Tổng cộng: ${stats.totalDecided} món đã xử lý`
+              : "Chưa có món xử lý trong kỳ"}
           </span>
         </div>
 
-        <div className="h-4 w-full rounded-full bg-danger/20 overflow-hidden flex shadow-inner">
-          <div
-            style={{ width: `${stats.consumptionRate}%` }}
-            className="h-full bg-brand-primary transition-all duration-500 flex items-center justify-end pr-2"
-          >
-            {stats.consumptionRate > 15 && (
-              <span className="text-[10px] font-bold text-white leading-none">
-                {stats.consumptionRate}%
+        {stats.hasData ? (
+          <>
+            <div className="h-4 w-full rounded-full bg-danger/20 overflow-hidden flex shadow-inner">
+              <div
+                style={{ width: `${stats.consumptionRate}%` }}
+                className="h-full bg-brand-primary transition-all duration-500 flex items-center justify-end pr-2"
+              >
+                {stats.consumptionRate > 15 && (
+                  <span className="text-[10px] font-bold text-white leading-none">
+                    {stats.consumptionRate}%
+                  </span>
+                )}
+              </div>
+              {stats.wasteRate > 15 && (
+                <div className="h-full flex items-center pl-2">
+                  <span className="text-[10px] font-bold text-danger leading-none">
+                    {stats.wasteRate}%
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-text-secondary pt-1">
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-full bg-brand-primary inline-block" />
+                Đã tiêu thụ thành công
               </span>
-            )}
-          </div>
-          {stats.wasteRate > 15 && (
-            <div className="h-full flex items-center pl-2">
-              <span className="text-[10px] font-bold text-danger leading-none">
-                {stats.wasteRate}%
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-full bg-danger inline-block" />
+                Đã vứt bỏ do hỏng / quá hạn
               </span>
             </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between text-xs text-text-secondary pt-1">
-          <span className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-brand-primary inline-block" />
-            Đã tiêu thụ thành công
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-danger inline-block" />
-            Đã vứt bỏ do hỏng / quá hạn
-          </span>
-        </div>
+          </>
+        ) : (
+          <div className="py-3 px-4 rounded-corner-sm bg-surface-subtle border border-border-primary/60 text-xs text-text-secondary text-center">
+            Chưa phát sinh lượt tiêu thụ hoặc vứt bỏ nào trong khoảng thời gian
+            này.
+          </div>
+        )}
       </Card>
 
       {/* Category Breakdown */}
@@ -258,7 +288,7 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
         </div>
 
         <div className="flex flex-col gap-3">
-          {CATEGORIES.map((c) => {
+          {sortedCategories.map((c) => {
             const data = stats.catStats[c.value] || { consume: 0, discard: 0 }
             const total = data.consume + data.discard
             const catRate =
@@ -299,7 +329,9 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
 
       {/* Smart Advice Box */}
       <div className="rounded-corner-md border border-brand-primary/30 bg-brand-primary/5 p-4 text-xs md:text-sm text-text-primary shadow-xs flex items-start gap-3">
-        <span className="text-xl">💡</span>
+        <div className="w-8 h-8 rounded-corner-md bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
+          <Sparkles size={18} />
+        </div>
         <div className="flex-1 leading-relaxed">
           <p className="font-bold text-brand-primary mb-1">
             Gợi ý tối ưu thực đơn & bảo quản:
@@ -314,31 +346,46 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
               Hãy ưu tiên chế biến nhóm này trước vào các bữa ăn giữa tuần hoặc
               chia nhỏ đông lạnh ngay khi mua về!
             </p>
+          ) : stats.hasData ? (
+            <p>
+              Tuyệt vời! Bạn đang duy trì tỷ lệ sử dụng thực phẩm rất tốt (
+              {stats.consumptionRate}%). Tiếp tục kiểm tra tab{" "}
+              <strong>Lưu trữ</strong> thường xuyên để giữ thói quen sử dụng
+              thông minh nhé!
+            </p>
           ) : (
             <p>
-              Tuyệt vời! Bạn đang duy trì tỷ lệ sử dụng thực phẩm rất tốt. Tiếp
-              tục kiểm tra tab <strong>Lưu trữ</strong> thường xuyên để giữ thói
-              quen sử dụng thông minh nhé!
+              Chưa có đủ lịch sử tiêu dùng trong khoảng thời gian này. Khi bạn
+              cập nhật số lượng hoặc đánh dấu dùng món đồ trong kho, Expiry sẽ
+              tự động phân tích và đưa ra gợi ý tiết kiệm tối ưu!
             </p>
           )}
         </div>
       </div>
 
-      {/* Detailed History Log (Collapsible) */}
+      {/* Detailed History Log (Collapsible Accordion) */}
       <Card className="p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={() => setShowRawHistory((v) => !v)}
-            className="flex items-center gap-2 text-sm font-bold text-text-primary hover:text-brand-primary cursor-pointer text-left"
+            className="flex items-center justify-between w-full text-sm font-bold text-text-primary hover:text-brand-primary cursor-pointer"
           >
-            <History size={18} className="text-text-secondary" />
-            <span>
-              Nhật ký thao tác chi tiết ({filteredEvents.length} bản ghi)
-            </span>
-            <span className="text-xs text-brand-primary font-normal">
-              {showRawHistory ? "▲ Thu gọn" : "▼ Xem chi tiết"}
-            </span>
+            <div className="flex items-center gap-2">
+              <History size={18} className="text-text-secondary" />
+              <span>
+                Nhật ký thao tác chi tiết ({filteredEvents.length} bản ghi)
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+              <span>{showRawHistory ? "Thu gọn" : "Xem chi tiết"}</span>
+              <ChevronDown
+                size={16}
+                className={`transition-transform duration-200 ${
+                  showRawHistory ? "rotate-180" : ""
+                }`}
+              />
+            </div>
           </button>
         </div>
 
