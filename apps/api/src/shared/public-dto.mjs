@@ -24,6 +24,7 @@ export function entryDTO(entry, projection) {
     id: entry.id,
     name: entry.name,
     storage_location: entry.storage_location,
+    category: entry.category ?? 'other',
     remaining_quantity: entry.remaining_quantity,
     unit: entry.unit,
     expiry_date: entry.expiry_date,
