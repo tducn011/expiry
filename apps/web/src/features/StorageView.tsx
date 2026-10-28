@@ -5,11 +5,15 @@ import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
 import EmptyState from "../components/ui/EmptyState"
 import {
+  Archive,
   Boxes,
   CircleAlert,
+  Package,
   Plus,
+  Refrigerator,
   Search,
   SearchX,
+  Snowflake,
   X,
 } from "../components/ui/Icon"
 import InputField from "../components/ui/InputField"
@@ -26,6 +30,21 @@ export interface LocationStatItem {
 interface StorageCategoryFilter {
   v: Category | "all"
   label: string
+}
+
+export function getLocationIcon(loc: string) {
+  const l = loc.toLowerCase()
+  if (l.includes("mát") || l.includes("tủ lạnh")) return Refrigerator
+  if (l.includes("đông") || l.includes("băng") || l.includes("đá"))
+    return Snowflake
+  if (
+    l.includes("bếp") ||
+    l.includes("kệ") ||
+    l.includes("tủ") ||
+    l.includes("kho")
+  )
+    return Archive
+  return Package
 }
 
 export interface StorageViewProps {
@@ -235,7 +254,9 @@ export default function StorageView({
             }`}
           >
             <div className="flex items-center justify-between w-full mb-2">
-              <span className="text-xl">🏠</span>
+              <div className="w-8 h-8 rounded-corner-md flex items-center justify-center bg-brand-primary/10 text-brand-primary">
+                <Boxes size={18} />
+              </div>
               {totalAttentionCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-danger text-white">
                   {totalAttentionCount} cần ăn
@@ -260,16 +281,17 @@ export default function StorageView({
               expired: 0,
             }
             const isSelected = selectedLocation === loc
-            const iconEmoji =
+            const LocIcon = getLocationIcon(loc)
+            const iconTone =
               loc.toLowerCase().includes("mát") ||
               loc.toLowerCase().includes("tủ lạnh")
-                ? "❄️"
+                ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
                 : loc.toLowerCase().includes("đông")
-                  ? "🧊"
+                  ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
                   : loc.toLowerCase().includes("bếp") ||
                       loc.toLowerCase().includes("kệ")
-                    ? "🥫"
-                    : "📦"
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                    : "bg-surface-subtle text-text-secondary"
 
             return (
               <button
@@ -283,7 +305,11 @@ export default function StorageView({
                 }`}
               >
                 <div className="flex items-center justify-between w-full mb-2">
-                  <span className="text-xl">{iconEmoji}</span>
+                  <div
+                    className={`w-8 h-8 rounded-corner-md flex items-center justify-center ${iconTone}`}
+                  >
+                    <LocIcon size={18} />
+                  </div>
                   {stats.attention > 0 && (
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
