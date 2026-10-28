@@ -13,11 +13,41 @@ export const UNITS: Unit[] = [
   "ml",
 ]
 
+export type Category =
+  | "fresh_produce"
+  | "meat_seafood"
+  | "dairy_eggs"
+  | "prepared_food"
+  | "dry_pantry"
+  | "beverage"
+  | "other"
+
+export const CATEGORIES: { value: Category; label: string }[] = [
+  { value: "fresh_produce", label: "Rau củ quả" },
+  { value: "meat_seafood", label: "Thịt, cá, hải sản" },
+  { value: "dairy_eggs", label: "Sữa & trứng" },
+  { value: "prepared_food", label: "Thức ăn nấu sẵn" },
+  { value: "dry_pantry", label: "Đồ khô & gia vị" },
+  { value: "beverage", label: "Đồ uống" },
+  { value: "other", label: "Khác" },
+]
+
+export const CATEGORY_LABELS: Record<Category, string> = {
+  fresh_produce: "Rau củ quả",
+  meat_seafood: "Thịt cá",
+  dairy_eggs: "Sữa trứng",
+  prepared_food: "Nấu sẵn",
+  dry_pantry: "Đồ khô",
+  beverage: "Đồ uống",
+  other: "Khác",
+}
+
 export interface Food {
   id: string
   name: string
   quantity: number
   unit: Unit
+  category?: Category
   mfgDate?: string // NSX, ISO yyyy-mm-dd
   expDate?: string // HSD; unknown stays undefined
   location?: string
@@ -288,6 +318,7 @@ const SEED: {
   quantity: number
   unit: Unit
   location: string
+  category: Category
   days: number | null
 }[] = [
   {
@@ -296,6 +327,7 @@ const SEED: {
     quantity: 1,
     unit: "hộp",
     location: "Ngăn mát",
+    category: "dairy_eggs",
     days: 1,
   },
   {
@@ -304,6 +336,7 @@ const SEED: {
     quantity: 500,
     unit: "g",
     location: "Ngăn mát",
+    category: "fresh_produce",
     days: -1,
   },
   {
@@ -312,6 +345,7 @@ const SEED: {
     quantity: 4,
     unit: "hộp",
     location: "Ngăn mát",
+    category: "dairy_eggs",
     days: -2,
   },
   {
@@ -320,6 +354,7 @@ const SEED: {
     quantity: 1,
     unit: "gói",
     location: "Tủ bếp",
+    category: "prepared_food",
     days: 2,
   },
   {
@@ -328,6 +363,7 @@ const SEED: {
     quantity: 200,
     unit: "g",
     location: "Ngăn mát",
+    category: "dairy_eggs",
     days: 3,
   },
   {
@@ -336,6 +372,7 @@ const SEED: {
     quantity: 10,
     unit: "quả",
     location: "Ngăn mát",
+    category: "dairy_eggs",
     days: 9,
   },
   {
@@ -344,6 +381,7 @@ const SEED: {
     quantity: 700,
     unit: "g",
     location: "Ngăn đông",
+    category: "meat_seafood",
     days: 15,
   },
   {
@@ -352,6 +390,7 @@ const SEED: {
     quantity: 300,
     unit: "g",
     location: "Ngăn mát",
+    category: "fresh_produce",
     days: 6,
   },
   {
@@ -360,6 +399,7 @@ const SEED: {
     quantity: 4,
     unit: "quả",
     location: "Ngăn mát",
+    category: "fresh_produce",
     days: null,
   },
   {
@@ -368,6 +408,7 @@ const SEED: {
     quantity: 2,
     unit: "kg",
     location: "Tủ bếp",
+    category: "dry_pantry",
     days: 120,
   },
 ]

@@ -53,6 +53,19 @@ async function main() {
         });
         break;
       } catch (connErr) {
+        if (connErr.code === 'ER_ACCESS_DENIED_ERROR' && DB_PASSWORD !== 'app_dev_password') {
+          try {
+            conn = await mysql.createConnection({
+              host: DB_HOST,
+              port: DB_PORT,
+              user: DB_USER,
+              password: 'app_dev_password',
+              database: DB_NAME,
+              timezone: 'Z',
+            });
+            break;
+          } catch {}
+        }
         if (attempt === 15) throw connErr;
         console.log(`  ⏳ Đang đợi MySQL sẵn sàng (lần thử ${attempt}/15: ${connErr.message})...`);
         await new Promise(r => setTimeout(r, 1500));
