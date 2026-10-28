@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
-import type { Food, Unit, Category } from "../store/appStore"
-import { today, UNITS, CATEGORIES } from "../store/appStore"
+import type { Category, Food, Unit } from "../store/appStore"
+import { CATEGORIES, today, UNITS } from "../store/appStore"
 import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
 import FieldError from "../components/ui/FieldError"
@@ -25,7 +25,7 @@ export const emptyDraft = (): Draft => ({
   name: "",
   quantity: "1",
   unit: "cái",
-  category: "",
+  category: "other",
   mfgDate: "",
   expDate: "",
   location: "",
@@ -36,7 +36,7 @@ export const draftFrom = (f: Food, keepQty = true): Draft => ({
   name: f.name,
   quantity: keepQty ? String(f.quantity) : "",
   unit: f.unit,
-  category: f.category ?? "",
+  category: f.category ?? "other",
   mfgDate: f.mfgDate ?? "",
   expDate: f.expDate ?? "",
   location: f.location ?? "",
@@ -216,41 +216,39 @@ export function FoodForm({
           </div>
         </div>
 
-        <div>
-          <div className="flex items-center justify-between gap-2 mb-1.5">
-            <label className="text-sm font-semibold text-text-primary">
-              Nơi bảo quản
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-semibold text-text-primary block mb-1.5">
+              Danh mục
             </label>
-            <button
-              type="button"
-              onClick={() => setNewLocModal(true)}
-              className="text-xs font-semibold text-brand-primary hover:underline cursor-pointer"
-            >
-              + Thêm vị trí mới
-            </button>
+            <SelectField
+              options={CATEGORIES.map((c) => ({ value: c.id, label: c.label }))}
+              value={d.category}
+              onChange={set("category")}
+            />
           </div>
-          <SelectField
-            options={[
-              { value: "", label: "Chọn nơi bảo quản..." },
-              ...locations.map((loc) => ({ value: loc, label: loc })),
-            ]}
-            value={d.location}
-            onChange={set("location")}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-text-primary mb-1.5">
-            Danh mục thực phẩm
-          </label>
-          <SelectField
-            options={[
-              { value: "", label: "Chọn danh mục (tuỳ chọn)..." },
-              ...CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
-            ]}
-            value={d.category}
-            onChange={set("category")}
-          />
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <label className="text-sm font-semibold text-text-primary">
+                Nơi bảo quản
+              </label>
+              <button
+                type="button"
+                onClick={() => setNewLocModal(true)}
+                className="text-xs font-semibold text-brand-primary hover:underline cursor-pointer"
+              >
+                + Thêm vị trí mới
+              </button>
+            </div>
+            <SelectField
+              options={[
+                { value: "", label: "Chọn nơi bảo quản..." },
+                ...locations.map((loc) => ({ value: loc, label: loc })),
+              ]}
+              value={d.location}
+              onChange={set("location")}
+            />
+          </div>
         </div>
       </Card>
 

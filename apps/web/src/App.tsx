@@ -13,8 +13,9 @@ import {
   type FormMode,
 } from "./features/FoodForm"
 import {
-  Bell,
+  Archive,
   BarChart3,
+  Bell,
   Boxes,
   CircleAlert,
   History as HistoryIcon,
@@ -69,6 +70,23 @@ export type Route = { name: "inventory" } | { name: "storage" } | {
 export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const { state, dispatch, problem, retry, reset } = useAppStore()
   const [confirmReset, setConfirmReset] = useState(false)
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("expiry_sidebar_expanded") === "true"
+    } catch {
+      return false
+    }
+  })
+
+  const toggleSidebar = () => {
+    setIsSidebarExpanded((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem("expiry_sidebar_expanded", String(next))
+      } catch {}
+      return next
+    })
+  }
   const [stack, setStack] = useState<Route[]>(() => {
     if (typeof window !== "undefined") {
       const q = new URLSearchParams(window.location.search)
@@ -76,9 +94,9 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       const id = q.get("id")
       if (id) return [{ name: "inventory" }, { name: "detail", id }]
       if (v === "storage" || v === "attention") return [{ name: "storage" }]
+      if (v === "insight" || v === "history") return [{ name: "insight" }]
       if (v === "trash") return [{ name: "trash" }]
       if (v === "settings") return [{ name: "settings" }]
-      if (v === "insight" || v === "history") return [{ name: "insight" }]
     }
     return [{ name: "inventory" }]
   })
@@ -198,7 +216,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     {
       r: "storage",
       label: "Lưu trữ",
-      icon: <Boxes size={22} />,
+      icon: <Archive size={22} />,
       badge: attnCount,
     },
     { r: "add", label: "Thêm", icon: <Plus size={22} /> },
@@ -221,7 +239,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         name: d.name.trim(),
         quantity: Number(d.quantity),
         unit: d.unit || "cái",
-        category: d.category || undefined,
+        category: d.category || "other",
         mfgDate: d.mfgDate || undefined,
         expDate: d.expDate || undefined,
         location: d.location || undefined,
@@ -380,12 +398,16 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       {/* Desktop Sidebar Navigation */}
       <div className="sticky top-0 hidden h-dvh md:block shrink-0">
         <SidebarNavigation
+          isExpanded={isSidebarExpanded}
+          onToggleExpanded={toggleSidebar}
           footer={
             state.mode !== "account" ? (
               <SidebarButton
                 icon={<LogIn size={20} />}
                 aria-label="Đăng nhập"
                 title="Đăng nhập"
+                label="Đăng nhập"
+                isExpanded={isSidebarExpanded}
                 onClick={() => setPendingAuth({ name: "inventory" })}
               />
             ) : (
@@ -393,6 +415,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 icon={<LogOut size={20} />}
                 aria-label="Đăng xuất"
                 title="Đăng xuất"
+                label="Đăng xuất"
+                isExpanded={isSidebarExpanded}
                 onClick={() => dispatch({ type: "logout" })}
               />
             )
@@ -404,6 +428,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               icon={n.icon}
               aria-label={n.label}
               title={n.label}
+              label={n.label}
+              isExpanded={isSidebarExpanded}
               active={rootName === n.r}
               badge={n.badge}
               onClick={() => tab({ name: n.r } as Route)}
@@ -415,6 +441,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"
             }
             title="Thông báo"
+            label="Thông báo"
+            isExpanded={isSidebarExpanded}
             active={rootName === "notifications"}
             badge={unreadCount}
             onClick={() => tab({ name: "notifications" })}
@@ -424,12 +452,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
       {/* Main Content Area */}
       <main
-        className={`mx-auto w-full min-w-0 flex-1 ${
+        className={`mx-auto w-full min-w-0 flex-1 transition-all ${
           isFullBleed
-            ? "md:max-w-3xl md:p-6"
+            ? "md:max-w-4xl md:p-6"
             : route.name === "form"
               ? "max-w-5xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-8 md:px-8 md:pt-6 md:pb-12"
-              : "max-w-5xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
+              : "max-w-7xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
         }`}
       >
         {problem === "write" && !isFullBleed && (

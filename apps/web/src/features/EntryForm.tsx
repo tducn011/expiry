@@ -27,7 +27,7 @@ import DatePicker from "../components/ui/DatePicker"
 
 import Field from "../components/ui/Field"
 
-import Icon from "../components/ui/Icon"
+import Icon, { X } from "../components/ui/Icon"
 
 import Modal, { ModalActions, RetryAction } from "../components/ui/Modal"
 
@@ -507,7 +507,7 @@ export default function EntryForm({
                       }}
                       title="Xóa mã vạch"
                     >
-                      ✕
+                      <X size={14} />
                     </button>
                   </div>
                 )}

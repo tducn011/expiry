@@ -2442,6 +2442,18 @@
             "minLength": 1,
             "maxLength": 100
           },
+          "category": {
+            "type": "string",
+            "enum": [
+              "fresh_produce",
+              "meat_seafood",
+              "dairy_eggs",
+              "prepared_food",
+              "dry_pantry",
+              "beverage",
+              "other"
+            ]
+          },
           "expiry_date": {
             "type": [
               "string",
@@ -2535,6 +2547,18 @@
             "minLength": 1,
             "maxLength": 100
           },
+          "category": {
+            "type": "string",
+            "enum": [
+              "fresh_produce",
+              "meat_seafood",
+              "dairy_eggs",
+              "prepared_food",
+              "dry_pantry",
+              "beverage",
+              "other"
+            ]
+          },
           "expiry_date": {
             "type": [
               "string",
@@ -2616,6 +2640,11 @@
           },
           {
             "required": [
+              "category"
+            ]
+          },
+          {
+            "required": [
               "expiry_date"
             ]
           },
@@ -2692,6 +2721,18 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "fresh_produce",
+              "meat_seafood",
+              "dairy_eggs",
+              "prepared_food",
+              "dry_pantry",
+              "beverage",
+              "other"
+            ]
           },
           "expiry_date": {
             "type": [
@@ -2801,6 +2842,7 @@
         "required": [
           "name",
           "storage_location",
+          "category",
           "expiry_date",
           "date_certainty",
           "date_source",

@@ -1,6 +1,6 @@
 import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
-import { Camera, Keyboard, ScanText } from "../components/ui/Icon"
+import { Camera, Keyboard, ScanText, Sparkles } from "../components/ui/Icon"
 import PageHeader from "../components/ui/PageHeader"
 
 export function AddEntry({
@@ -77,7 +77,14 @@ export function AddEntry({
       </div>
 
       <div className="rounded-corner-lg bg-brand-tertiary/60 border border-brand-primary/10 p-4 text-xs text-text-secondary leading-relaxed">
-        <p className="font-semibold text-brand-primary mb-1">💡 Mẹo nhỏ:</p>
+        <p className="font-semibold text-brand-primary mb-1 flex items-center gap-1.5">
+          <Sparkles
+            size={14}
+            className="text-brand-primary"
+            aria-hidden="true"
+          />
+          Mẹo nhỏ:
+        </p>
         Nếu chưa rõ hạn sử dụng của thực phẩm, bạn hoàn toàn có thể bỏ trống ô
         HSD — ứng dụng sẽ hiển thị &quot;Chưa rõ HSD&quot; và bạn có thể hẹn
         lịch kiểm tra lại sau.
