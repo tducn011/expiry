@@ -5,11 +5,11 @@
   "rewrites": [
     {
       "source": "/health",
-      "destination": "https://bathrooms-boost-breaking-atlas.trycloudflare.com/health"
+      "destination": "https://asthma-casa-saturn-collaboration.trycloudflare.com/health"
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://bathrooms-boost-breaking-atlas.trycloudflare.com/api/$1"
+      "destination": "https://asthma-casa-saturn-collaboration.trycloudflare.com/api/$1"
     },
     {
       "source": "/(.*)",

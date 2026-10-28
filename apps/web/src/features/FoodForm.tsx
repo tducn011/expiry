@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
-import type { Food, Unit } from "../store/appStore"
-import { today, UNITS } from "../store/appStore"
+import type { Food, Unit, Category } from "../store/appStore"
+import { today, UNITS, CATEGORIES } from "../store/appStore"
 import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
 import FieldError from "../components/ui/FieldError"
@@ -15,6 +15,7 @@ export interface Draft {
   name: string
   quantity: string
   unit: Unit | ""
+  category: Category | ""
   mfgDate: string
   expDate: string
   location: string
@@ -24,6 +25,7 @@ export const emptyDraft = (): Draft => ({
   name: "",
   quantity: "1",
   unit: "cái",
+  category: "",
   mfgDate: "",
   expDate: "",
   location: "",
@@ -34,6 +36,7 @@ export const draftFrom = (f: Food, keepQty = true): Draft => ({
   name: f.name,
   quantity: keepQty ? String(f.quantity) : "",
   unit: f.unit,
+  category: f.category ?? "",
   mfgDate: f.mfgDate ?? "",
   expDate: f.expDate ?? "",
   location: f.location ?? "",
@@ -233,6 +236,20 @@ export function FoodForm({
             ]}
             value={d.location}
             onChange={set("location")}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-text-primary mb-1.5">
+            Danh mục thực phẩm
+          </label>
+          <SelectField
+            options={[
+              { value: "", label: "Chọn danh mục (tuỳ chọn)..." },
+              ...CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
+            ]}
+            value={d.category}
+            onChange={set("category")}
           />
         </div>
       </Card>

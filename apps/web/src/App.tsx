@@ -14,6 +14,8 @@ import {
 } from "./features/FoodForm"
 import {
   Bell,
+  BarChart3,
+  Boxes,
   CircleAlert,
   History as HistoryIcon,
   Home,
@@ -35,18 +37,22 @@ import {
 // Feature screens
 import Inventory from "./features/Inventory"
 import Attention from "./features/Attention"
+import StorageView from "./features/StorageView"
 import AddEntry from "./features/AddEntry"
 import Scanner from "./features/Scanner"
 import FoodForm from "./features/FoodForm"
 import Detail from "./features/Detail"
 import History from "./features/History"
+import InsightView from "./features/InsightView"
 import Trash from "./features/Trash"
 import Notifications from "./features/Notifications"
 import Settings from "./features/Settings"
 import AuthForm from "./features/AuthForm"
 import Onboarding from "./features/Onboarding"
 
-export type Route = { name: "inventory" } | { name: "attention" } | {
+export type Route = { name: "inventory" } | { name: "storage" } | {
+  name: "attention"
+} | {
   name: "add"
 } | { name: "scan" } | {
   name: "form"
@@ -56,7 +62,7 @@ export type Route = { name: "inventory" } | { name: "attention" } | {
 } | {
   name: "detail"
   id: string
-} | { name: "history" } | { name: "trash" } | {
+} | { name: "insight" } | { name: "history" } | { name: "trash" } | {
   name: "notifications"
 } | { name: "settings" }
 
@@ -69,10 +75,10 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       const v = q.get("view")
       const id = q.get("id")
       if (id) return [{ name: "inventory" }, { name: "detail", id }]
-      if (v === "attention") return [{ name: "attention" }]
+      if (v === "storage" || v === "attention") return [{ name: "storage" }]
       if (v === "trash") return [{ name: "trash" }]
       if (v === "settings") return [{ name: "settings" }]
-      if (v === "history") return [{ name: "history" }]
+      if (v === "insight" || v === "history") return [{ name: "insight" }]
     }
     return [{ name: "inventory" }]
   })
@@ -190,13 +196,13 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   }[] = [
     { r: "inventory", label: "Thực phẩm", icon: <Home size={22} /> },
     {
-      r: "attention",
-      label: "Cần chú ý",
-      icon: <CircleAlert size={22} />,
+      r: "storage",
+      label: "Lưu trữ",
+      icon: <Boxes size={22} />,
       badge: attnCount,
     },
     { r: "add", label: "Thêm", icon: <Plus size={22} /> },
-    { r: "history", label: "Lịch sử", icon: <HistoryIcon size={22} /> },
+    { r: "insight", label: "Insight", icon: <BarChart3 size={22} /> },
     { r: "settings", label: "Cài đặt", icon: <SettingsIcon size={22} /> },
   ]
 
@@ -215,6 +221,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         name: d.name.trim(),
         quantity: Number(d.quantity),
         unit: d.unit || "cái",
+        category: d.category || undefined,
         mfgDate: d.mfgDate || undefined,
         expDate: d.expDate || undefined,
         location: d.location || undefined,
@@ -239,19 +246,20 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           state={state}
           onOpenDetail={(id) => go({ name: "detail", id })}
           onAdd={() => go({ name: "add" })}
-          onNavigateAttention={() => tab({ name: "attention" })}
+          onNavigateAttention={() => tab({ name: "storage" })}
           onOpenNotifications={() => go({ name: "notifications" })}
           unreadNotificationsCount={unreadCount}
         />
       )
       break
 
+    case "storage":
     case "attention":
       screenContent = (
-        <Attention
+        <StorageView
           state={state}
+          dispatch={dispatch}
           onOpenDetail={(id) => go({ name: "detail", id })}
-          onNavigateInventory={() => tab({ name: "inventory" })}
           onAdd={() => go({ name: "add" })}
         />
       )
@@ -319,23 +327,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       )
       break
 
+    case "insight":
     case "history":
       screenContent = (
-        <History
+        <InsightView
           state={state}
           onOpenDetail={(id) => go({ name: "detail", id })}
-          onReadd={(f) =>
-            go({
-              name: "form",
-              mode: "readd",
-              draft: {
-                ...draftFrom(f, false),
-                id: undefined,
-                mfgDate: "",
-                expDate: "",
-              },
-            })
-          }
         />
       )
       break
