@@ -2,11 +2,11 @@ import { useState } from "react"
 import type { Dispatch, Food, State } from "../store/appStore"
 import {
   addDays,
+  CATEGORY_LABELS,
   daysLeft,
   formatDate,
   statusOf,
   today,
-  CATEGORY_LABELS,
 } from "../store/appStore"
 import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
