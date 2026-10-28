@@ -1,9 +1,6 @@
 import { useMemo, useState } from "react"
 import type { Dispatch, State, Category } from "../store/appStore"
-import {
-  statusOf,
-  CATEGORIES,
-} from "../store/appStore"
+import { statusOf, CATEGORIES } from "../store/appStore"
 import Button from "../components/ui/Button"
 import Card from "../components/ui/Card"
 import EmptyState from "../components/ui/EmptyState"
@@ -20,6 +17,11 @@ import Modal from "../components/ui/Modal"
 import PageHeader from "../components/ui/PageHeader"
 import FoodCard from "./FoodCard"
 
+interface StorageCategoryFilter {
+  v: Category | "all"
+  label: string
+}
+
 export interface StorageViewProps {
   state: State
   dispatch: Dispatch
@@ -34,7 +36,9 @@ export default function StorageView({
   onAdd,
 }: StorageViewProps) {
   const [selectedLocation, setSelectedLocation] = useState<string>("all")
-  const [selectedCategory, setSelectedCategory] = useState<Category | "all">("all")
+  const [selectedCategory, setSelectedCategory] = useState<Category | "all">(
+    "all",
+  )
   const [query, setQuery] = useState("")
   const [onlyAttention, setOnlyAttention] = useState(false)
   const [newLocModal, setNewLocModal] = useState(false)
@@ -50,14 +54,19 @@ export default function StorageView({
 
   // Metrics per location
   const locationStats = useMemo(() => {
-    const stats: Record<string, { total: number; attention: number; expired: number }> = {}
+    const stats: Record<string, {
+      total: number
+      attention: number
+      expired: number
+    }> = {}
     for (const loc of state.locations) {
       stats[loc] = { total: 0, attention: 0, expired: 0 }
     }
     stats["Khác"] = { total: 0, attention: 0, expired: 0 }
 
     for (const f of activeFoods) {
-      const locKey = f.location && state.locations.includes(f.location) ? f.location : "Khác"
+      const locKey =
+        f.location && state.locations.includes(f.location) ? f.location : "Khác"
       if (!stats[locKey]) stats[locKey] = { total: 0, attention: 0, expired: 0 }
       stats[locKey].total++
       const st = statusOf(f, remindDays)
@@ -108,7 +117,15 @@ export default function StorageView({
       }
       return true
     })
-  }, [activeFoods, selectedLocation, selectedCategory, onlyAttention, query, remindDays, state.locations])
+  }, [
+    activeFoods,
+    selectedLocation,
+    selectedCategory,
+    onlyAttention,
+    query,
+    remindDays,
+    state.locations,
+  ])
 
   const handleAddLocation = () => {
     const name = newLocName.trim()
@@ -121,7 +138,7 @@ export default function StorageView({
     setNewLocModal(false)
   }
 
-  const categoryOptions: { v: Category | "all"; label: string }[] = [
+  const categoryOptions: StorageCategoryFilter[] = [
     { v: "all", label: "Tất cả nhóm" },
     ...CATEGORIES.map((c) => ({ v: c.value, label: c.label })),
   ]
@@ -173,12 +190,17 @@ export default function StorageView({
               : "bg-surface-bg border-border-primary text-text-secondary hover:bg-surface-hover hover:text-text-primary"
           }`}
         >
-          <CircleAlert size={16} className={onlyAttention ? "text-danger" : "text-text-secondary"} />
+          <CircleAlert
+            size={16}
+            className={onlyAttention ? "text-danger" : "text-text-secondary"}
+          />
           <span>Chỉ hiện cần chú ý</span>
           {totalAttentionCount > 0 && (
             <span
               className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                onlyAttention ? "bg-danger text-white" : "bg-danger/20 text-danger"
+                onlyAttention
+                  ? "bg-danger text-white"
+                  : "bg-danger/20 text-danger"
               }`}
             >
               {totalAttentionCount}
@@ -219,23 +241,33 @@ export default function StorageView({
               )}
             </div>
             <div>
-              <p className="text-xs font-bold text-text-primary truncate">Tất cả kho</p>
-              <p className="text-[11px] text-text-secondary mt-0.5">{activeFoods.length} món đồ</p>
+              <p className="text-xs font-bold text-text-primary truncate">
+                Tất cả kho
+              </p>
+              <p className="text-[11px] text-text-secondary mt-0.5">
+                {activeFoods.length} món đồ
+              </p>
             </div>
           </button>
 
           {/* Cards for each location */}
           {state.locations.map((loc) => {
-            const stats = locationStats[loc] || { total: 0, attention: 0, expired: 0 }
+            const stats = locationStats[loc] || {
+              total: 0,
+              attention: 0,
+              expired: 0,
+            }
             const isSelected = selectedLocation === loc
             const iconEmoji =
-              loc.toLowerCase().includes("mát") || loc.toLowerCase().includes("tủ lạnh")
+              loc.toLowerCase().includes("mát") ||
+              loc.toLowerCase().includes("tủ lạnh")
                 ? "❄️"
                 : loc.toLowerCase().includes("đông")
-                ? "🧊"
-                : loc.toLowerCase().includes("bếp") || loc.toLowerCase().includes("kệ")
-                ? "🥫"
-                : "📦"
+                  ? "🧊"
+                  : loc.toLowerCase().includes("bếp") ||
+                      loc.toLowerCase().includes("kệ")
+                    ? "🥫"
+                    : "📦"
 
             return (
               <button
@@ -253,7 +285,9 @@ export default function StorageView({
                   {stats.attention > 0 && (
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        stats.expired > 0 ? "bg-danger text-white" : "bg-warning text-black"
+                        stats.expired > 0
+                          ? "bg-danger text-white"
+                          : "bg-warning text-black"
                       }`}
                     >
                       {stats.attention} chú ý
@@ -261,8 +295,12 @@ export default function StorageView({
                   )}
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-text-primary truncate">{loc}</p>
-                  <p className="text-[11px] text-text-secondary mt-0.5">{stats.total} món</p>
+                  <p className="text-xs font-bold text-text-primary truncate">
+                    {loc}
+                  </p>
+                  <p className="text-[11px] text-text-secondary mt-0.5">
+                    {stats.total} món
+                  </p>
                 </div>
               </button>
             )
@@ -272,7 +310,9 @@ export default function StorageView({
 
       {/* Horizontal Category Filter Chips */}
       <div>
-        <p className="text-xs font-semibold text-text-secondary mb-2">Phân loại theo nhóm:</p>
+        <p className="text-xs font-semibold text-text-secondary mb-2">
+          Phân loại theo nhóm:
+        </p>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {categoryOptions.map((cat) => {
             const isActive = selectedCategory === cat.v
@@ -300,7 +340,8 @@ export default function StorageView({
           <h3 className="text-sm font-bold text-text-primary">
             Danh sách món (
             {selectedLocation === "all" ? "Tất cả vị trí" : selectedLocation})
-            {selectedCategory !== "all" && ` · ${categoryOptions.find((c) => c.v === selectedCategory)?.label}`}
+            {selectedCategory !== "all" &&
+              ` · ${categoryOptions.find((c) => c.v === selectedCategory)?.label}`}
           </h3>
           <span className="text-xs text-text-secondary">
             {filteredFoods.length} kết quả
