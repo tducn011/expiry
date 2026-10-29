@@ -64,6 +64,16 @@ export function getLocationIcon(loc: string) {
   return Package
 }
 
+export interface StoragePreferences {
+  preferred_location?: string
+
+  category?: Category | "all"
+
+  locations?: string[]
+
+  new_location?: string
+}
+
 export interface StorageViewProps {
   state: State
 
@@ -78,6 +88,20 @@ export interface StorageViewProps {
   initialCategory?: Category | "all"
 
   onFilterChange?: (location: string, category: Category | "all") => void
+
+  isLive?: boolean
+
+  onAddLocation?: (name: string) => Promise<void> | void
+
+  onSavePreferences?: (preferences: StoragePreferences) => Promise<void> | void
+}
+
+function getStorage(): Storage | null {
+  try {
+    if (typeof localStorage !== "undefined") return localStorage
+  } catch {}
+
+  return null
 }
 
 export default function StorageView({
@@ -94,7 +118,15 @@ export default function StorageView({
   initialCategory,
 
   onFilterChange,
+
+  isLive: isLiveProp,
+
+  onAddLocation,
+
+  onSavePreferences,
 }: StorageViewProps) {
+  const isLive = isLiveProp ?? state.mode === "account"
+
   const [selectedLocation, setSelectedLocation] = useState<string>(
     initialLocation || "all",
   )
@@ -111,16 +143,62 @@ export default function StorageView({
     if (initialCategory !== undefined) setSelectedCategory(initialCategory)
   }, [initialCategory])
 
+  useEffect(() => {
+    if (initialLocation === undefined || initialCategory === undefined) {
+      try {
+        const saved = getStorage()?.getItem("expiry_storage_preferences")
+
+        if (saved) {
+          const parsed = JSON.parse(saved)
+
+          if (
+            initialLocation === undefined &&
+            parsed.location &&
+            (parsed.location === "all" ||
+              state.locations.includes(parsed.location) ||
+              parsed.location === "Khác")
+          ) {
+            setSelectedLocation(parsed.location)
+          }
+
+          if (initialCategory === undefined && parsed.category) {
+            setSelectedCategory(parsed.category)
+          }
+        }
+      } catch {}
+    }
+  }, [])
+
   const handleLocationChange = (loc: string) => {
-    handleLocationChange(loc)
+    setSelectedLocation(loc)
 
     onFilterChange?.(loc, selectedCategory)
+
+    try {
+      getStorage()?.setItem(
+        "expiry_storage_preferences",
+
+        JSON.stringify({ location: loc, category: selectedCategory }),
+      )
+    } catch {}
+
+    onSavePreferences?.({ preferred_location: loc, category: selectedCategory })
   }
 
   const handleCategoryChange = (cat: Category | "all") => {
     setSelectedCategory(cat)
 
     onFilterChange?.(selectedLocation, cat)
+
+    try {
+      getStorage()?.setItem(
+        "expiry_storage_preferences",
+
+        JSON.stringify({ location: selectedLocation, category: cat }),
+      )
+    } catch {}
+
+    onSavePreferences?.({ preferred_location: selectedLocation, category: cat })
   }
 
   const [query, setQuery] = useState("")
@@ -242,7 +320,7 @@ export default function StorageView({
     state.locations,
   ])
 
-  const handleAddLocation = () => {
+  const handleAddLocation = async () => {
     const name = newLocName.trim()
 
     if (!name) return
@@ -250,6 +328,28 @@ export default function StorageView({
     if (!state.locations.includes(name)) {
       dispatch({ type: "addLocation", name })
     }
+
+    if (onAddLocation) {
+      await onAddLocation(name)
+    }
+
+    try {
+      const userPrefs = JSON.parse(
+        getStorage()?.getItem("expiry_user_preferences") || "{}",
+      )
+
+      const locs = Array.from(
+        new Set([...(userPrefs.locations || state.locations), name]),
+      )
+
+      getStorage()?.setItem(
+        "expiry_user_preferences",
+
+        JSON.stringify({ ...userPrefs, locations: locs }),
+      )
+    } catch {}
+
+    onSavePreferences?.({ new_location: name })
 
     setSelectedLocation(name)
 
@@ -270,14 +370,25 @@ export default function StorageView({
         title="Nơi lưu trữ"
         subtitle="Tìm duyệt nhanh theo không gian bảo quản & nhóm thực phẩm"
         actions={
-          <Button
-            variant="primary"
-            size="small"
-            iconStart={<Plus size={16} />}
-            onClick={() => setNewLocModal(true)}
-          >
-            Thêm vị trí
-          </Button>
+          <div className="flex items-center gap-2">
+            {isLive && (
+              <span
+                data-testid="live-storage-badge"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+              >
+                <span className="size-2 rounded-full bg-brand-primary animate-pulse" />
+                Trực tuyến
+              </span>
+            )}
+            <Button
+              variant="primary"
+              size="small"
+              iconStart={<Plus size={16} />}
+              onClick={() => setNewLocModal(true)}
+            >
+              Thêm vị trí
+            </Button>
+          </div>
         }
       />
 
@@ -454,7 +565,7 @@ export default function StorageView({
               <button
                 key={cat.v}
                 type="button"
-                onClick={() => setSelectedCategory(cat.v)}
+                onClick={() => handleCategoryChange(cat.v)}
                 className={`min-h-8 shrink-0 rounded-corner-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
                   isActive
                     ? "bg-brand-primary text-white shadow-xs"

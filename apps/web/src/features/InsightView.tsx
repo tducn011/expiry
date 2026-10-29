@@ -1,8 +1,19 @@
 import { useEffect, useMemo, useState } from "react"
 
-import type { HistoryEvent, State, Category } from "../store/appStore"
+import { api, ApiClient } from "../api/client"
+
+import type {
+  Dispatch,
+  EventKind,
+  Food,
+  HistoryEvent,
+  State,
+  Category,
+} from "../store/appStore"
 
 import { CATEGORIES, CATEGORY_LABELS, formatDate } from "../store/appStore"
+
+import type { QuantityMovement } from "../domain/types"
 
 import Card from "../components/ui/Card"
 
@@ -22,11 +33,124 @@ import PageHeader from "../components/ui/PageHeader"
 export interface InsightViewProps {
   state: State
 
+  dispatch?: Dispatch
+
   onOpenDetail?: (id: string) => void
 
   initialTab?: string
 
   onTabChange?: (tab: string) => void
+
+  isLive?: boolean
+
+  apiClient?: ApiClient
+}
+
+export function fromQuantityMovement(
+  m: QuantityMovement,
+
+  food?: Food,
+): HistoryEvent {
+  const kind: EventKind =
+    m.kind === "consume"
+      ? "consume"
+      : m.kind === "discard"
+        ? "discard"
+        : m.kind === "recount"
+          ? "adjust"
+          : "add"
+
+  const diff = Math.abs(m.quantity_before - m.quantity_after)
+
+  return {
+    id: m.id,
+
+    foodId: m.entry_id,
+
+    foodName: food?.name || "Thực phẩm",
+
+    kind,
+
+    at: m.recorded_at,
+
+    amount: diff,
+
+    from: m.quantity_before,
+
+    to: m.quantity_after,
+
+    unit: food?.unit || "cái",
+
+    category: food?.category || "other",
+  }
+}
+
+export async function fetchLiveMovements(
+  client: ApiClient = api,
+
+  foods: Food[] = [],
+): Promise<HistoryEvent[]> {
+  let targetFoods = foods
+
+  if (targetFoods.length === 0) {
+    try {
+      const page = await client.entries({ limit: 50 })
+
+      targetFoods = page.items.map((item) => ({
+        id: item.id,
+
+        name: item.name,
+
+        quantity: item.remaining_quantity,
+
+        unit: (item.unit === "piece" ? "cái" : item.unit) as any,
+
+        category: item.category as Category || "other",
+
+        location: item.storage_location || undefined,
+
+        expDate: item.expiry_date || undefined,
+
+        createdAt: item.created_at,
+
+        version: item.version,
+      }))
+    } catch {
+      return []
+    }
+  }
+
+  const results = await Promise.allSettled(
+    targetFoods.map((f) => client.history(f.id)),
+  )
+
+  const events: HistoryEvent[] = []
+
+  results.forEach((res, idx) => {
+    if (res.status === "fulfilled" && Array.isArray(res.value)) {
+      const food = targetFoods[idx]
+
+      for (const movement of res.value) {
+        events.push(fromQuantityMovement(movement, food))
+      }
+    }
+  })
+
+  const seen = new Set<string>()
+
+  const deduped: HistoryEvent[] = []
+
+  for (const ev of events) {
+    if (!seen.has(ev.id)) {
+      seen.add(ev.id)
+
+      deduped.push(ev)
+    }
+  }
+
+  return deduped.sort(
+    (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime(),
+  )
 }
 
 type TimeRange = "7d" | "30d" | "all"
@@ -40,17 +164,67 @@ interface CategoryStat {
 export default function InsightView({
   state,
 
+  dispatch,
+
   onOpenDetail,
 
   initialTab = "overview",
 
   onTabChange,
+
+  isLive: isLiveProp,
+
+  apiClient = api,
 }: InsightViewProps) {
+  const isLive = isLiveProp ?? state.mode === "account"
+
   const [range, setRange] = useState<TimeRange>("30d")
 
   const [activeTab, setActiveTab] = useState<string>(initialTab)
 
   const [showRawHistory, setShowRawHistory] = useState(initialTab === "history")
+
+  const [liveEvents, setLiveEvents] = useState<HistoryEvent[]>([])
+
+  const [loadingLive, setLoadingLive] = useState(false)
+
+  const loadMovements = async () => {
+    if (!isLive) return
+
+    setLoadingLive(true)
+
+    try {
+      const movements = await fetchLiveMovements(apiClient, state.foods)
+
+      if (movements.length > 0) {
+        setLiveEvents(movements)
+
+        if (dispatch) {
+          const eventMap = new Map<string, HistoryEvent>()
+
+          for (const ev of state.history) eventMap.set(ev.id, ev)
+
+          for (const ev of movements) eventMap.set(ev.id, ev)
+
+          const merged = Array.from(eventMap.values()).sort(
+            (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime(),
+          )
+
+          dispatch({ type: "replace", state: { ...state, history: merged } })
+        }
+      }
+    } catch {
+      // Retain local state history on network failure
+    } finally {
+      setLoadingLive(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isLive) {
+      loadMovements()
+    }
+  }, [isLive, state.foods.length])
 
   useEffect(() => {
     if (initialTab) {
@@ -68,10 +242,24 @@ export default function InsightView({
     onTabChange?.(tab)
   }
 
+  const combinedHistory = useMemo(() => {
+    if (!isLive || liveEvents.length === 0) return state.history
+
+    const eventMap = new Map<string, HistoryEvent>()
+
+    for (const ev of state.history) eventMap.set(ev.id, ev)
+
+    for (const ev of liveEvents) eventMap.set(ev.id, ev)
+
+    return Array.from(eventMap.values()).sort(
+      (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime(),
+    )
+  }, [state.history, liveEvents, isLive])
+
   // Filter history events by time range
 
   const filteredEvents = useMemo(() => {
-    if (range === "all") return state.history
+    if (range === "all") return combinedHistory
 
     const now = Date.now()
 
@@ -79,8 +267,8 @@ export default function InsightView({
 
     const cutoff = now - daysLimit * 24 * 3600_000
 
-    return state.history.filter((e) => new Date(e.at).getTime() >= cutoff)
-  }, [state.history, range])
+    return combinedHistory.filter((e) => new Date(e.at).getTime() >= cutoff)
+  }, [combinedHistory, range])
 
   // Map foodId to Food entity for category lookup fallback
 
@@ -212,27 +400,38 @@ export default function InsightView({
         title="Insight & Hiệu quả tiêu dùng"
         subtitle="Đo lường giá trị chống lãng phí và phân tích thói quen mua sắm"
         actions={
-          <div className="flex rounded-corner-md border border-border-primary bg-surface-bg p-0.5 text-xs font-semibold">
-            {([
-              ["7d", "7 ngày"],
-
-              ["30d", "30 ngày"],
-
-              ["all", "Toàn bộ"],
-            ] as const).map(([v, label]) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setRange(v)}
-                className={`px-3 py-1.5 rounded-corner-sm transition-all cursor-pointer ${
-                  range === v
-                    ? "bg-brand-primary text-white shadow-xs"
-                    : "text-text-secondary hover:text-text-primary"
-                }`}
+          <div className="flex items-center gap-2">
+            {isLive && (
+              <span
+                data-testid="live-insight-badge"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
               >
-                {label}
-              </button>
-            ))}
+                <span className="size-2 rounded-full bg-brand-primary animate-pulse" />
+                {loadingLive ? "Đang đồng bộ..." : "Dữ liệu thực tế"}
+              </span>
+            )}
+            <div className="flex rounded-corner-md border border-border-primary bg-surface-bg p-0.5 text-xs font-semibold">
+              {([
+                ["7d", "7 ngày"],
+
+                ["30d", "30 ngày"],
+
+                ["all", "Toàn bộ"],
+              ] as const).map(([v, label]) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setRange(v)}
+                  className={`px-3 py-1.5 rounded-corner-sm transition-all cursor-pointer ${
+                    range === v
+                      ? "bg-brand-primary text-white shadow-xs"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         }
       />
