@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import type { HistoryEvent, State, Category } from "../store/appStore"
 
@@ -23,6 +23,10 @@ export interface InsightViewProps {
   state: State
 
   onOpenDetail?: (id: string) => void
+
+  initialTab?: string
+
+  onTabChange?: (tab: string) => void
 }
 
 type TimeRange = "7d" | "30d" | "all"
@@ -33,10 +37,36 @@ interface CategoryStat {
   discard: number
 }
 
-export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
+export default function InsightView({
+  state,
+
+  onOpenDetail,
+
+  initialTab = "overview",
+
+  onTabChange,
+}: InsightViewProps) {
   const [range, setRange] = useState<TimeRange>("30d")
 
-  const [showRawHistory, setShowRawHistory] = useState(false)
+  const [activeTab, setActiveTab] = useState<string>(initialTab)
+
+  const [showRawHistory, setShowRawHistory] = useState(initialTab === "history")
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab)
+
+      if (initialTab === "history") setShowRawHistory(true)
+    }
+  }, [initialTab])
+
+  const handleTabSelect = (tab: string) => {
+    setActiveTab(tab)
+
+    if (tab === "history") setShowRawHistory(true)
+
+    onTabChange?.(tab)
+  }
 
   // Filter history events by time range
 
@@ -206,6 +236,43 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
           </div>
         }
       />
+
+      {/* Insight Navigation Tabs */}
+      <div className="flex border-b border-border-primary gap-2 text-sm font-semibold">
+        <button
+          type="button"
+          onClick={() => handleTabSelect("overview")}
+          className={`pb-2.5 px-3 border-b-2 transition-all cursor-pointer ${
+            activeTab === "overview"
+              ? "border-brand-primary text-brand-primary"
+              : "border-transparent text-text-secondary hover:text-text-primary"
+          }`}
+        >
+          Tổng quan
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabSelect("categories")}
+          className={`pb-2.5 px-3 border-b-2 transition-all cursor-pointer ${
+            activeTab === "categories"
+              ? "border-brand-primary text-brand-primary"
+              : "border-transparent text-text-secondary hover:text-text-primary"
+          }`}
+        >
+          Theo danh mục
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabSelect("history")}
+          className={`pb-2.5 px-3 border-b-2 transition-all cursor-pointer ${
+            activeTab === "history"
+              ? "border-brand-primary text-brand-primary"
+              : "border-transparent text-text-secondary hover:text-text-primary"
+          }`}
+        >
+          Lịch sử chi tiết
+        </button>
+      </div>
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import type { Dispatch, State, Category } from "../store/appStore"
 
@@ -72,6 +72,12 @@ export interface StorageViewProps {
   onOpenDetail: (id: string) => void
 
   onAdd: () => void
+
+  initialLocation?: string
+
+  initialCategory?: Category | "all"
+
+  onFilterChange?: (location: string, category: Category | "all") => void
 }
 
 export default function StorageView({
@@ -82,12 +88,40 @@ export default function StorageView({
   onOpenDetail,
 
   onAdd,
+
+  initialLocation,
+
+  initialCategory,
+
+  onFilterChange,
 }: StorageViewProps) {
-  const [selectedLocation, setSelectedLocation] = useState<string>("all")
+  const [selectedLocation, setSelectedLocation] = useState<string>(
+    initialLocation || "all",
+  )
 
   const [selectedCategory, setSelectedCategory] = useState<Category | "all">(
-    "all",
+    initialCategory || "all",
   )
+
+  useEffect(() => {
+    if (initialLocation !== undefined) setSelectedLocation(initialLocation)
+  }, [initialLocation])
+
+  useEffect(() => {
+    if (initialCategory !== undefined) setSelectedCategory(initialCategory)
+  }, [initialCategory])
+
+  const handleLocationChange = (loc: string) => {
+    handleLocationChange(loc)
+
+    onFilterChange?.(loc, selectedCategory)
+  }
+
+  const handleCategoryChange = (cat: Category | "all") => {
+    setSelectedCategory(cat)
+
+    onFilterChange?.(selectedLocation, cat)
+  }
 
   const [query, setQuery] = useState("")
 
@@ -312,7 +346,7 @@ export default function StorageView({
           {/* Card: Tất cả */}
           <button
             type="button"
-            onClick={() => setSelectedLocation("all")}
+            onClick={() => handleLocationChange("all")}
             className={`flex flex-col justify-between p-3.5 rounded-corner-md border text-left transition-all cursor-pointer ${
               selectedLocation === "all"
                 ? "border-brand-primary bg-brand-primary/5 shadow-xs ring-2 ring-brand-primary/20"
@@ -368,7 +402,7 @@ export default function StorageView({
               <button
                 key={loc}
                 type="button"
-                onClick={() => setSelectedLocation(loc)}
+                onClick={() => handleLocationChange(loc)}
                 className={`flex flex-col justify-between p-3.5 rounded-corner-md border text-left transition-all cursor-pointer ${
                   isSelected
                     ? "border-brand-primary bg-brand-primary/5 shadow-xs ring-2 ring-brand-primary/20"
