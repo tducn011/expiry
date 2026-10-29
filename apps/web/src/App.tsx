@@ -6,6 +6,7 @@ import {
   attention,
   notifications,
   useAppStore,
+  type Category,
   type Food,
   type State,
   type Unit,
@@ -76,11 +77,13 @@ import AuthForm from "./features/AuthForm"
 
 import Onboarding from "./features/Onboarding"
 
-export type Route = { name: "inventory" } | { name: "storage" } | {
-  name: "attention"
-} | {
-  name: "add"
-} | { name: "scan" } | {
+export type Route = { name: "inventory" } | {
+  name: "storage"
+
+  location?: string
+
+  category?: string
+} | { name: "attention" } | { name: "add" } | { name: "scan" } | {
   name: "form"
 
   mode: FormMode
@@ -92,9 +95,77 @@ export type Route = { name: "inventory" } | { name: "storage" } | {
   name: "detail"
 
   id: string
-} | { name: "insight" } | { name: "history" } | { name: "trash" } | {
-  name: "notifications"
-} | { name: "settings" }
+} | {
+  name: "insight"
+
+  tab?: string
+} | { name: "history" } | {
+  name: "trash"
+} | { name: "notifications" } | { name: "settings" }
+
+export function routeFromUrl(
+  search = typeof window !== "undefined" ? window.location.search : "",
+): Route[] {
+  const q = new URLSearchParams(search)
+
+  const v = q.get("view")
+
+  const id = q.get("id")
+
+  if (id) return [{ name: "inventory" }, { name: "detail", id }]
+
+  if (v === "storage" || v === "attention") {
+    const loc = q.get("loc") || undefined
+
+    const cat = q.get("cat") || undefined
+
+    return [{ name: "storage", location: loc, category: cat }]
+  }
+
+  if (v === "insight" || v === "history") {
+    const tab = q.get("tab") || undefined
+
+    return [{ name: "insight", tab }]
+  }
+
+  if (v === "trash") return [{ name: "trash" }]
+
+  if (v === "settings") return [{ name: "settings" }]
+
+  if (v === "add") return [{ name: "add" }]
+
+  if (v === "scan") return [{ name: "scan" }]
+
+  if (v === "notifications") return [{ name: "notifications" }]
+
+  return [{ name: "inventory" }]
+}
+
+export function urlFromRoute(r: Route): string {
+  const p = new URLSearchParams()
+
+  if (r.name === "inventory") {
+    return typeof window !== "undefined" ? window.location.pathname : "/"
+  }
+
+  if (r.name === "detail") {
+    p.set("id", r.id)
+
+    return `?${p.toString()}`
+  }
+
+  p.set("view", r.name)
+
+  if (r.name === "storage") {
+    if (r.location && r.location !== "all") p.set("loc", r.location)
+
+    if (r.category && r.category !== "all") p.set("cat", r.category)
+  } else if (r.name === "insight") {
+    if (r.tab && r.tab !== "overview") p.set("tab", r.tab)
+  }
+
+  return `?${p.toString()}`
+}
 
 export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const { state, dispatch, problem, retry, reset } = useAppStore()
@@ -178,27 +249,35 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     })
   }
 
-  const [stack, setStack] = useState<Route[]>(() => {
+  const [stack, setStack] = useState<Route[]>(() => routeFromUrl())
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      const q = new URLSearchParams(window.location.search)
+      const current = stack[stack.length - 1] || { name: "inventory" }
 
-      const v = q.get("view")
+      window.history.replaceState({ stack }, "", urlFromRoute(current))
+    }
+  }, [])
 
-      const id = q.get("id")
+  useEffect(() => {
+    if (typeof window === "undefined") return
 
-      if (id) return [{ name: "inventory" }, { name: "detail", id }]
-
-      if (v === "storage" || v === "attention") return [{ name: "storage" }]
-
-      if (v === "insight" || v === "history") return [{ name: "insight" }]
-
-      if (v === "trash") return [{ name: "trash" }]
-
-      if (v === "settings") return [{ name: "settings" }]
+    const handlePopState = (event: PopStateEvent) => {
+      if (
+        event.state &&
+        Array.isArray(event.state.stack) &&
+        event.state.stack.length > 0
+      ) {
+        setStack(event.state.stack)
+      } else {
+        setStack(routeFromUrl())
+      }
     }
 
-    return [{ name: "inventory" }]
-  })
+    window.addEventListener("popstate", handlePopState)
+
+    return () => window.removeEventListener("popstate", handlePopState)
+  }, [])
 
   const [toast, setToast] = useState<{
     message: string
@@ -212,11 +291,47 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const route = stack[stack.length - 1] || { name: "inventory" }
 
-  const go = (r: Route) => setStack((s) => [...s, r])
+  const go = (r: Route) => {
+    setStack((s) => {
+      const next = [...s, r]
 
-  const tab = (r: Route) => setStack([r])
+      if (typeof window !== "undefined") {
+        window.history.pushState({ stack: next }, "", urlFromRoute(r))
+      }
 
-  const back = () => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s))
+      return next
+    })
+  }
+
+  const tab = (r: Route) => {
+    setStack(() => {
+      const next = [r]
+
+      if (typeof window !== "undefined") {
+        window.history.pushState({ stack: next }, "", urlFromRoute(r))
+      }
+
+      return next
+    })
+  }
+
+  const back = () => {
+    setStack((s) => {
+      if (s.length > 1) {
+        const next = s.slice(0, -1)
+
+        const current = next[next.length - 1]
+
+        if (typeof window !== "undefined") {
+          window.history.pushState({ stack: next }, "", urlFromRoute(current))
+        }
+
+        return next
+      }
+
+      return s
+    })
+  }
 
   const notify = (
     message: string,
@@ -352,7 +467,11 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     route.name === "scan" ||
     (route.name === "form" && route.mode !== "edit")
 
-  const rootName = isAddFlow ? "add" : stack[0].name
+  const rootName = isAddFlow
+    ? "add"
+    : route.name === "detail"
+      ? stack[0]?.name || "inventory"
+      : route.name
 
   function toBackendUnitAndQty(quantity: number, unit: string): {
     quantity: number
@@ -581,6 +700,33 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         <StorageView
           state={state}
           dispatch={dispatch}
+          initialLocation={
+            route.name === "storage" ? route.location : undefined
+          }
+          initialCategory={
+            route.name === "storage"
+              ? route.category as Category | "all" | undefined
+              : undefined
+          }
+          onFilterChange={(loc, cat) => {
+            const nextRoute: Route = {
+              name: "storage",
+
+              location: loc !== "all" ? loc : undefined,
+
+              category: cat !== "all" ? cat : undefined,
+            }
+
+            if (typeof window !== "undefined") {
+              window.history.replaceState(
+                { stack: [nextRoute] },
+
+                "",
+
+                urlFromRoute(nextRoute),
+              )
+            }
+          }}
           onOpenDetail={(id) => go({ name: "detail", id })}
           onAdd={() => go({ name: "add" })}
         />
@@ -670,6 +816,20 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       screenContent = (
         <InsightView
           state={state}
+          initialTab={route.name === "insight" ? route.tab : "history"}
+          onTabChange={(t) => {
+            const nextRoute: Route = { name: "insight", tab: t }
+
+            if (typeof window !== "undefined") {
+              window.history.replaceState(
+                { stack: [nextRoute] },
+
+                "",
+
+                urlFromRoute(nextRoute),
+              )
+            }
+          }}
           onOpenDetail={(id) => go({ name: "detail", id })}
         />
       )

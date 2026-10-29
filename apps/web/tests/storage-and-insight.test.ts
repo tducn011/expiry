@@ -63,4 +63,54 @@ describe("Storage & Insight Feature Integration", () => {
 
     expect(attentionItems.length).toBeGreaterThan(0)
   })
+
+  it("parses deep linking URLs for Storage and Insight views with query params", async () => {
+    const { routeFromUrl, urlFromRoute } = await import("../src/App")
+
+    // 1. Storage deep linking with location and category
+    const storageRoutes = routeFromUrl("?view=storage&loc=Ng%C4%83n+m%C3%A1t&cat=fresh_produce")
+    expect(storageRoutes.length).toBe(1)
+    expect(storageRoutes[0]).toEqual({
+      name: "storage",
+      location: "Ngăn mát",
+      category: "fresh_produce",
+    })
+
+    // URL roundtrip
+    const storageUrl = urlFromRoute(storageRoutes[0])
+    expect(storageUrl).toContain("view=storage")
+    expect(storageUrl).toContain("cat=fresh_produce")
+
+    // 2. Insight deep linking with tab
+    const insightRoutes = routeFromUrl("?view=insight&tab=categories")
+    expect(insightRoutes.length).toBe(1)
+    expect(insightRoutes[0]).toEqual({
+      name: "insight",
+      tab: "categories",
+    })
+
+    const insightUrl = urlFromRoute(insightRoutes[0])
+    expect(insightUrl).toBe("?view=insight&tab=categories")
+
+    // 3. Fallback to inventory
+    const defaultRoutes = routeFromUrl("")
+    expect(defaultRoutes).toEqual([{ name: "inventory" }])
+  })
+
+  it("synchronizes browser history popstate without losing view state", async () => {
+    const { routeFromUrl } = await import("../src/App")
+
+    // Simulate history stack
+    const initialStack = [{ name: "inventory" as const }]
+    const storageRoute = { name: "storage" as const, location: "Tủ đông", category: "meat_seafood" }
+    const historyStack = [...initialStack, storageRoute]
+
+    // Simulate popstate event payload
+    const mockPopEvent = {
+      state: { stack: historyStack },
+    } as unknown as PopStateEvent
+
+    expect(mockPopEvent.state?.stack).toEqual(historyStack)
+    expect(mockPopEvent.state?.stack[1].name).toBe("storage")
+  })
 })

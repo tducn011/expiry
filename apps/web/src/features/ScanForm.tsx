@@ -810,8 +810,11 @@ export default function ScanForm({
               <div
                 style={{
                   display: "flex",
+
                   gap: "8px",
+
                   flexWrap: "wrap",
+
                   marginTop: "12px",
                 }}
               >
