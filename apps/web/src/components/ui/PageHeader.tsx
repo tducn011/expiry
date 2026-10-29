@@ -1,29 +1,46 @@
 import type { ReactNode } from "react"
+
 import { ArrowLeft } from "./Icon"
+
 import IconButton from "./IconButton"
 
 export interface PageHeaderProps {
   title: string
+
   subtitle?: string
+
   description?: string
+
   eyebrow?: string
+
   onBack?: () => void
+
   actions?: ReactNode
+
   action?: ReactNode
+
   className?: string
 }
 
 export function PageHeader({
   title,
+
   subtitle,
+
   description,
+
   eyebrow,
+
   onBack,
+
   actions,
+
   action,
+
   className = "",
 }: PageHeaderProps) {
   const sub = subtitle || description
+
   const act = actions || action
 
   return (

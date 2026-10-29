@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { api, ApiError, decimal, type EditEntryDTO } from "./api/client"
 import {
   attention,
   notifications,
   useAppStore,
   type Food,
   type State,
+  type Unit,
 } from "./store/appStore"
 import {
   emptyDraft,
@@ -69,6 +71,46 @@ export type Route = { name: "inventory" } | { name: "storage" } | {
 
 export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const { state, dispatch, problem, retry, reset } = useAppStore()
+
+  useEffect(() => {
+    if (demoMode) return
+    api
+      .session()
+      .then(async (s) => {
+        if (s.user) {
+          dispatch({
+            type: "login",
+            mode: "account",
+            name: s.user.display_name || s.user.email.split("@")[0],
+          })
+          try {
+            const page = await api.entries({ limit: 100 })
+            for (const item of page.items) {
+              dispatch({
+                type: "save",
+                food: {
+                  id: item.id,
+                  name: item.name,
+                  quantity: item.remaining_quantity,
+                  unit: (item.unit === "piece" ? "cái" : item.unit) as Unit,
+                  location: item.storage_location || undefined,
+                  expDate: item.expiry_date || undefined,
+                  mfgDate: item.opened_on || undefined,
+                  finishedAt:
+                    item.remaining_quantity === 0 ? item.updated_at : undefined,
+                  version: item.version,
+                },
+              })
+            }
+          } catch {
+            // Keep local cached entries if server fetch fails
+          }
+        }
+      })
+      .catch(() => {
+        // No active server session; retain client mode
+      })
+  }, [demoMode, dispatch])
   const [confirmReset, setConfirmReset] = useState(false)
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(() => {
     try {
@@ -231,7 +273,116 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const rootName = isAddFlow ? "add" : stack[0].name
 
+  function toBackendUnitAndQty(quantity: number, unit: string): {
+    quantity: number
+    unit: "piece" | "g" | "ml"
+  } {
+    if (unit === "kg") return { quantity: quantity * 1000, unit: "g" }
+    if (unit === "lít") return { quantity: quantity * 1000, unit: "ml" }
+    if (unit === "g") return { quantity, unit: "g" }
+    if (unit === "ml") return { quantity, unit: "ml" }
+    return { quantity, unit: "piece" }
+  }
+
   async function handleSaveDraft(d: Draft, mode: FormMode) {
+    if (state.mode === "account") {
+      const idempotencyKey = `idemp_${crypto.randomUUID()}`
+      if (mode === "edit" && d.id) {
+        const existing = state.foods.find((f) => f.id === d.id)
+        const expectedVersion = existing?.version ?? 1
+        try {
+          const patch: EditEntryDTO = {
+            name: d.name.trim(),
+            storage_location: d.location?.trim() || "unspecified",
+            expiry_date: d.expDate || null,
+            date_certainty: d.expDate ? "known" : "unknown",
+            date_source: d.expDate ? "printed_label" : "unknown",
+            date_label_type: "unspecified",
+            expected_version: expectedVersion,
+          }
+          const updated = await api.updateEntry(d.id, patch, idempotencyKey)
+          dispatch({
+            type: "save",
+            food: {
+              id: updated.id,
+              name: updated.name,
+              quantity: updated.remaining_quantity,
+              unit: (d.unit || "cái") as Unit,
+              category: d.category || "other",
+              mfgDate: d.mfgDate || undefined,
+              expDate: updated.expiry_date || undefined,
+              location: updated.storage_location || undefined,
+              finishedAt:
+                updated.remaining_quantity === 0
+                  ? new Date().toISOString()
+                  : undefined,
+              version: updated.version,
+            },
+          })
+          notify("Đã lưu thay đổi")
+          setStack([{ name: "inventory" }])
+          return
+        } catch (err: unknown) {
+          if (err instanceof ApiError && err.code === "VERSION_CONFLICT") {
+            notify(
+              "Xung đột phiên bản: Dữ liệu đã thay đổi ở nơi khác. Vui lòng tải lại.",
+            )
+          } else {
+            notify("Lỗi kết nối máy chủ. Không thể lưu thay đổi.")
+          }
+          return
+        }
+      } else {
+        try {
+          const rawQty = Number(d.quantity) || 1
+          const { quantity, unit } = toBackendUnitAndQty(
+            rawQty,
+            d.unit || "cái",
+          )
+          const created = await api.createEntry(
+            {
+              name: d.name.trim(),
+              storage_location: d.location?.trim() || "unspecified",
+              expiry_date: d.expDate || null,
+              date_certainty: d.expDate ? "known" : "unknown",
+              date_source: d.expDate ? "printed_label" : "unknown",
+              date_label_type: "unspecified",
+              opened_on: d.mfgDate || null,
+              note: null,
+              quantity: decimal(quantity),
+              unit,
+            },
+            idempotencyKey,
+          )
+          dispatch({
+            type: "save",
+            food: {
+              id: created.id,
+              name: created.name,
+              quantity: Number(d.quantity),
+              unit: (d.unit || "cái") as Unit,
+              category: d.category || "other",
+              mfgDate: d.mfgDate || undefined,
+              expDate: created.expiry_date || undefined,
+              location: created.storage_location || undefined,
+              finishedAt: undefined,
+              version: created.version,
+            },
+          })
+          notify(
+            d.expDate
+              ? `Đã lưu ${d.name.trim()}`
+              : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
+          )
+          setStack([{ name: "inventory" }])
+          return
+        } catch {
+          notify("Lỗi kết nối máy chủ. Không thể tạo thực phẩm.")
+          return
+        }
+      }
+    }
+
     dispatch({
       type: "save",
       food: {
@@ -305,10 +456,15 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               { name: "form", mode: "manual", draft: emptyDraft() },
             ])
           }
-          onReview={(image) =>
+          onReview={(image, draft) =>
             setStack((s) => [
               ...s.slice(0, -1),
-              { name: "form", mode: "ocr", draft: emptyDraft(), image },
+              {
+                name: "form",
+                mode: "ocr",
+                draft: draft || emptyDraft(),
+                image,
+              },
             ])
           }
         />

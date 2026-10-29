@@ -3,22 +3,32 @@ import type { ButtonHTMLAttributes, ReactNode } from "react"
 export interface IconButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon: ReactNode
+
   "aria-label": string
+
   variant?: "primary" | "neutral" | "subtle" | "danger"
+
   size?: "small" | "md" | "lg"
+
   className?: string
 }
 
 export function IconButton({
   icon,
+
   variant = "subtle",
+
   size = "md",
+
   className = "",
+
   disabled,
+
   ...props
 }: IconButtonProps) {
   const sizeClass =
     size === "small" ? "size-8" : size === "lg" ? "size-12" : "size-10"
+
   const variantClass =
     variant === "primary"
       ? "bg-brand-primary text-white hover:bg-brand-hover active:bg-brand-dark"

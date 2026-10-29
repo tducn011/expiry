@@ -260,7 +260,9 @@ export function useExpiry(
         ? api.entries(query, true)
         : Promise.resolve({
             items: [] as FoodEntry[],
+
             pagination: { page: 1, limit: 20, total: 0 },
+
             as_of_date: "",
           }),
     ])

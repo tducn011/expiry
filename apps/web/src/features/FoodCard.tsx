@@ -1,5 +1,7 @@
 import type { Food } from "../store/appStore"
+
 import { daysLeft, formatDate, statusOf } from "../store/appStore"
+
 import {
   Apple,
   Beef,
@@ -17,19 +19,29 @@ import {
 
 export interface FoodKindPattern {
   re: RegExp
+
   icon: typeof Milk
 }
 
 export const foodKinds: FoodKindPattern[] = [
   { re: /sữa chua/i, icon: CupSoda },
+
   { re: /sữa|phô mai|pho mai|bơ|kem/i, icon: Milk },
+
   { re: /trứng/i, icon: Egg },
+
   { re: /thịt gà|gà|vịt/i, icon: Drumstick },
+
   { re: /thịt|bò|heo|lợn|cá|tôm/i, icon: Beef },
+
   { re: /cà rốt/i, icon: Carrot },
+
   { re: /rau|cải|xà lách|hành/i, icon: LeafyGreen },
+
   { re: /táo|cà chua|cam|chuối|nho|xoài|lê|bưởi/i, icon: Apple },
+
   { re: /bánh/i, icon: Croissant },
+
   { re: /gạo|bột|mì|ngũ cốc/i, icon: Wheat },
 ]
 
@@ -38,29 +50,41 @@ export const getFoodIcon = (name: string) =>
 
 const rowTone: Record<string, string> = {
   expired: "text-status-expired font-medium",
+
   soon: "text-status-soon font-medium",
+
   ok: "text-text-secondary",
+
   unknown: "text-text-secondary",
 }
 
 export interface FoodCardProps {
   food: Food
+
   remindDays?: number
+
   onOpen: () => void
+
   className?: string
 }
 
 export function FoodCard({
   food,
+
   remindDays = 3,
+
   onOpen,
+
   className = "",
 }: FoodCardProps) {
   const st = statusOf(food, remindDays)
+
   const IconComponent = getFoodIcon(food.name)
+
   const d = daysLeft(food)
 
   let statusLabel: string
+
   if (st === "expired") {
     statusLabel = `Quá hạn ${d !== null ? Math.abs(d) : 1} ngày`
   } else if (st === "soon") {

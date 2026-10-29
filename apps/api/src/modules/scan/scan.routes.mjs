@@ -5,7 +5,6 @@ export function createScanRouter(controller) {
 
   router.post('/scans', controller.upload);
   router.post('/scan', controller.scan);
-  router.get('/scan/health', controller.health);
 
   return router;
 }

@@ -2,21 +2,33 @@ import type { ReactNode } from "react"
 
 export interface CardProps {
   children: ReactNode
+
   className?: string
+
   role?: string
+
   title?: string
+
   action?: ReactNode
+
   muted?: boolean
+
   onClick?: () => void
 }
 
 export function Card({
   children,
+
   className = "",
+
   role,
+
   title,
+
   action,
+
   muted = false,
+
   onClick,
 }: CardProps) {
   return (

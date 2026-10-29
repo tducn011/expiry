@@ -1,4 +1,11 @@
 import { useState } from "react"
+import {
+  api,
+  ApiError,
+  decimal,
+  errorMessage,
+  type MutationResult,
+} from "../api/client"
 import type { Dispatch, Food, State } from "../store/appStore"
 import {
   addDays,
@@ -68,6 +75,7 @@ export function Detail({
   const [later, setLater] = useState(false)
   const [laterDate, setLaterDate] = useState(addDays(today(), 1))
   const [confirmTrash, setConfirmTrash] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   if (!f || f.deletedAt) {
     return (
@@ -108,7 +116,88 @@ export function Detail({
     setStep("review")
   }
 
-  function confirm() {
+  async function confirm() {
+    if (state.mode === "account") {
+      setLoading(true)
+      setErr("")
+      try {
+        const idempotencyKey = `idemp_${crypto.randomUUID()}`
+        const expectedVersion = f!.version ?? 1
+        let res: MutationResult
+        if (qty === "adjust") {
+          res = await api.recount(
+            f!.id,
+            {
+              expected_version: expectedVersion,
+              actual_quantity: decimal(n),
+              reason: "Kiểm kê lại thực tế",
+            },
+            idempotencyKey,
+          )
+        } else {
+          res = await api.recordMovement(
+            f!.id,
+            {
+              expected_version: expectedVersion,
+              kind: qty!,
+              amount: decimal(n),
+              reason: qty === "consume" ? "Đã dùng thực phẩm" : "Bỏ thực phẩm",
+            },
+            idempotencyKey,
+          )
+        }
+
+        dispatch({ type: "qty", id: f!.id, kind: qty!, value: n })
+        if (res.entry) {
+          dispatch({
+            type: "save",
+            food: {
+              ...f!,
+              quantity: res.entry.remaining_quantity,
+              version: res.entry.version,
+              finishedAt:
+                res.entry.remaining_quantity === 0
+                  ? new Date().toISOString()
+                  : undefined,
+            },
+          })
+        }
+        notify(
+          to === 0
+            ? `${f!.name} đã hết — chuyển vào Lịch sử`
+            : `${qtyCopy[qty!].verb}: còn ${to} ${f!.unit}`,
+        )
+        setQty(null)
+        if (to === 0) onBack()
+        return
+      } catch (failure: unknown) {
+        if (failure instanceof ApiError) {
+          if (failure.code === "INSUFFICIENT_QUANTITY") {
+            setErr(
+              "Số lượng còn lại trong kho không đủ để thực hiện thao tác này.",
+            )
+          } else if (
+            failure.code === "VERSION_CONFLICT" ||
+            failure.status === 409
+          ) {
+            setErr(
+              "Dữ liệu đã bị thay đổi ở thiết bị khác. Vui lòng tải lại trang.",
+            )
+          } else {
+            setErr(
+              errorMessage(failure.status, failure.code) ||
+                "Không thể ghi nhận biến động kho.",
+            )
+          }
+        } else {
+          setErr("Lỗi kết nối máy chủ. Vui lòng thử lại sau.")
+        }
+        return
+      } finally {
+        setLoading(false)
+      }
+    }
+
     dispatch({ type: "qty", id: f!.id, kind: qty!, value: n })
     notify(
       to === 0
@@ -117,6 +206,33 @@ export function Detail({
     )
     setQty(null)
     if (to === 0) onBack()
+  }
+
+  async function handleTrash() {
+    setLoading(true)
+    try {
+      if (state.mode === "account") {
+        const idempotencyKey = `idemp_${crypto.randomUUID()}`
+        await api.deleteEntry(f!.id, f!.version ?? 1, idempotencyKey)
+      }
+      dispatch({ type: "trash", id: f!.id })
+      notify("Đã chuyển vào Thùng rác")
+      onBack()
+    } catch (failure: unknown) {
+      if (
+        failure instanceof ApiError &&
+        (failure.code === "VERSION_CONFLICT" || failure.status === 409)
+      ) {
+        notify(
+          "Xung đột phiên bản: Thực phẩm đã thay đổi trước đó. Vui lòng tải lại.",
+        )
+      } else {
+        notify("Lỗi kết nối máy chủ. Không thể chuyển vào Thùng rác.")
+      }
+    } finally {
+      setLoading(false)
+      setConfirmTrash(false)
+    }
   }
 
   const openQty = (k: QtyKind) => {
@@ -299,8 +415,8 @@ export function Detail({
               <Button variant="neutral" onClick={() => setStep("enter")}>
                 Sửa lại
               </Button>
-              <Button variant="primary" onClick={confirm}>
-                Xác nhận
+              <Button variant="primary" onClick={confirm} disabled={loading}>
+                {loading ? "Đang xử lý..." : "Xác nhận"}
               </Button>
             </>
           )
@@ -382,6 +498,11 @@ export function Detail({
                 khi mua mới.
               </p>
             )}
+            {err && (
+              <p role="alert" className="text-xs text-danger font-medium">
+                {err}
+              </p>
+            )}
           </div>
         )}
       </Modal>
@@ -451,15 +572,8 @@ export function Detail({
             <Button variant="neutral" onClick={() => setConfirmTrash(false)}>
               Hủy
             </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                dispatch({ type: "trash", id: f.id })
-                notify("Đã chuyển vào Thùng rác")
-                onBack()
-              }}
-            >
-              Chuyển vào Thùng rác
+            <Button variant="danger" disabled={loading} onClick={handleTrash}>
+              {loading ? "Đang xử lý..." : "Chuyển vào Thùng rác"}
             </Button>
           </>
         }

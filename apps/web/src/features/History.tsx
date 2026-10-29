@@ -1,76 +1,114 @@
 import { useState } from "react"
+
 import type { HistoryEvent, State } from "../store/appStore"
+
 import { formatDate, today } from "../store/appStore"
+
 import Button from "../components/ui/Button"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import {
   ChevronRight,
   History as HistoryIcon,
   RotateCcw,
 } from "../components/ui/Icon"
+
 import Modal from "../components/ui/Modal"
+
 import PageHeader from "../components/ui/PageHeader"
 
 const kindLabel: Record<string, string> = {
   add: "Đã thêm",
+
   edit: "Đã sửa",
+
   consume: "Đã dùng",
+
   discard: "Đã bỏ",
+
   adjust: "Điều chỉnh",
+
   trash: "Chuyển vào Thùng rác",
+
   restore: "Khôi phục",
+
   review: "Hẹn kiểm tra lại",
 }
 
 const kindTone: Record<string, string> = {
   consume: "bg-status-ok-bg text-status-ok border-status-ok/20",
+
   discard: "bg-status-soon-bg text-status-soon border-status-soon/20",
+
   adjust: "bg-brand-tertiary text-brand-primary border-brand-primary/20",
 }
 
 function dayLabel(iso: string) {
   const d = iso.slice(0, 10)
+
   const t = today()
+
   if (d === t) return "Hôm nay"
+
   const y = new Date(t + "T00:00:00")
+
   y.setDate(y.getDate() - 1)
+
   const yStr = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, "0")}-${String(y.getDate()).padStart(2, "0")}`
+
   if (d === yStr) return "Hôm qua"
+
   return formatDate(d)
 }
 
 function eventSummary(e: HistoryEvent) {
   if (e.amount !== undefined) return `-${e.amount} ${e.unit ?? ""}`.trim()
+
   if (e.from !== undefined && e.to !== undefined)
     return `${e.from} → ${e.to} ${e.unit ?? ""}`.trim()
+
   return ""
 }
 
 export function History({
   state,
+
   onOpenDetail,
+
   onReadd,
 }: {
   state: State
+
   onOpenDetail: (id: string) => void
+
   onReadd: (food: import("../store/appStore").Food) => void
 }) {
   const [open, setOpen] = useState<HistoryEvent | null>(null)
+
   const finished = state.foods.filter((f) => f.finishedAt && !f.deletedAt)
+
   const quantityKinds = ["consume", "discard", "adjust"]
+
   const events = state.history
+
     .filter((e) => quantityKinds.includes(e.kind))
+
     .slice(0, 100)
 
   interface HistoryGroup {
     day: string
+
     items: HistoryEvent[]
   }
 
   const groups: HistoryGroup[] = []
+
   for (const e of events) {
     const day = dayLabel(e.at)
+
     const g = groups.find((x) => x.day === day)
+
     if (g) g.items.push(e)
     else groups.push({ day, items: [e] })
   }
@@ -78,6 +116,7 @@ export function History({
   const time = (iso: string) =>
     new Date(iso).toLocaleTimeString("vi-VN", {
       hour: "2-digit",
+
       minute: "2-digit",
     })
 
@@ -212,7 +251,9 @@ export function History({
               variant="primary"
               onClick={() => {
                 const fid = source.id
+
                 setOpen(null)
+
                 onOpenDetail(fid)
               }}
             >
