@@ -767,11 +767,20 @@ export default function BarcodeScannerModal({
           style={{
             display: "flex",
 
-            justifyContent: "flex-end",
+            justifyContent: "space-between",
+
+            alignItems: "center",
 
             marginTop: "16px",
           }}
         >
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+          >
+            Chuyển sang điền tay
+          </Button>
           <Button type="button" variant="ghost" onClick={onClose}>
             Đóng
           </Button>

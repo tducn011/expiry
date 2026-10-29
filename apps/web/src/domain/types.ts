@@ -23,6 +23,8 @@ export type FoodEntry = {
 
   storage_location: string | null
 
+  category?: string | null
+
   remaining_quantity: number
 
   unit: Unit
@@ -78,6 +80,8 @@ export type EntryDraft = {
   name: string
 
   storage_location: string | null
+
+  category?: string | null
 
   expiry_date: string | null
 

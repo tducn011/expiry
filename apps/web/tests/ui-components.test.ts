@@ -170,6 +170,8 @@ describe("Scanner UI Adapter (scanToEntryDraft)", () => {
 
     expect(draft.name).toBe("Yogurt")
 
+    expect(draft.category).toBe("dairy_eggs")
+
     expect(draft.expiry_date).toBe("2026-12-31")
 
     expect(draft.expiry_date_certainty).toBe("exact")
@@ -235,6 +237,30 @@ describe("Scanner UI Adapter (scanToEntryDraft)", () => {
     expect(draft.expiry_date_certainty).toBe("unknown")
 
     expect(draft.expiry_date_source).toBeNull()
+  })
+
+  it("automatically infers category from recognized candidate food name conforming to publicScanResult", async () => {
+    const { scanToEntryDraft } = await import("../src/api/client")
+
+    const beefResult = {
+      ...baseResult,
+      candidates: {
+        ...baseResult.candidates,
+        food_name: "Thịt bò tươi",
+      },
+    }
+    const beefDraft = scanToEntryDraft(beefResult, "2026-12-31")
+    expect(beefDraft.category).toBe("meat_seafood")
+
+    const appleResult = {
+      ...baseResult,
+      candidates: {
+        ...baseResult.candidates,
+        food_name: "Táo Envy",
+      },
+    }
+    const appleDraft = scanToEntryDraft(appleResult, "2026-12-31")
+    expect(appleDraft.category).toBe("fresh_produce")
   })
 })
 
