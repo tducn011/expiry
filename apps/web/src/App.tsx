@@ -188,7 +188,23 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           })
 
           try {
-            const page = await api.entries({ limit: 100 })
+            const [page, prefs] = await Promise.all([
+              api.entries({ limit: 100 }),
+
+              api.preferences().catch(() => null),
+            ])
+
+            if (prefs && prefs.attention_lead_days) {
+              dispatch({
+                type: "settings",
+
+                settings: {
+                  ...state.settings,
+
+                  remindDays: prefs.attention_lead_days,
+                },
+              })
+            }
 
             for (const item of page.items) {
               dispatch({
@@ -203,6 +219,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
                   unit: (item.unit === "piece" ? "cái" : item.unit) as Unit,
 
+                  category: item.category as Category || undefined,
+
                   location: item.storage_location || undefined,
 
                   expDate: item.expiry_date || undefined,
@@ -215,6 +233,14 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                   version: item.version,
                 },
               })
+
+              if (
+                item.storage_location &&
+                item.storage_location !== "unspecified" &&
+                !state.locations.includes(item.storage_location)
+              ) {
+                dispatch({ type: "addLocation", name: item.storage_location })
+              }
             }
           } catch {
             // Keep local cached entries if server fetch fails
@@ -700,6 +726,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         <StorageView
           state={state}
           dispatch={dispatch}
+          isLive={state.mode === "account"}
           initialLocation={
             route.name === "storage" ? route.location : undefined
           }
@@ -726,6 +753,46 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 urlFromRoute(nextRoute),
               )
             }
+          }}
+          onAddLocation={async (name) => {
+            dispatch({ type: "addLocation", name })
+
+            if (state.mode === "account") {
+              try {
+                const curPrefs = JSON.parse(
+                  (typeof localStorage !== "undefined"
+                    ? localStorage.getItem("expiry_user_preferences")
+                    : null) || "{}",
+                )
+
+                const locs = Array.from(
+                  new Set([...(curPrefs.locations || state.locations), name]),
+                )
+
+                if (typeof localStorage !== "undefined")
+                  localStorage.setItem(
+                    "expiry_user_preferences",
+
+                    JSON.stringify({ ...curPrefs, locations: locs }),
+                  )
+              } catch {}
+            }
+          }}
+          onSavePreferences={async (prefs) => {
+            try {
+              const curPrefs = JSON.parse(
+                (typeof localStorage !== "undefined"
+                  ? localStorage.getItem("expiry_user_preferences")
+                  : null) || "{}",
+              )
+
+              if (typeof localStorage !== "undefined")
+                localStorage.setItem(
+                  "expiry_user_preferences",
+
+                  JSON.stringify({ ...curPrefs, ...prefs }),
+                )
+            } catch {}
           }}
           onOpenDetail={(id) => go({ name: "detail", id })}
           onAdd={() => go({ name: "add" })}
@@ -816,6 +883,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       screenContent = (
         <InsightView
           state={state}
+          dispatch={dispatch}
+          isLive={state.mode === "account"}
           initialTab={route.name === "insight" ? route.tab : "history"}
           onTabChange={(t) => {
             const nextRoute: Route = { name: "insight", tab: t }
