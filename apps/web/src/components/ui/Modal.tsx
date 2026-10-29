@@ -1,18 +1,25 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
+
 import Button from "./Button"
+
 import { X } from "./Icon"
 
 let foregroundModalCount = 0
+
 let previousBodyOverflow = ""
 
 function acquireModalScrollLock() {
   if (foregroundModalCount === 0) {
     previousBodyOverflow = document.body.style.overflow
+
     document.body.style.overflow = "hidden"
   }
+
   foregroundModalCount += 1
+
   return () => {
     foregroundModalCount = Math.max(0, foregroundModalCount - 1)
+
     if (foregroundModalCount === 0) {
       document.body.style.overflow = previousBodyOverflow
     }
@@ -21,34 +28,55 @@ function acquireModalScrollLock() {
 
 export interface ModalProps {
   isOpen?: boolean
+
   active?: boolean
+
   eyebrow?: string
+
   title: string
+
   description?: string
+
   onClose: () => void
+
   footer?: ReactNode
+
   children?: ReactNode
+
   size?: "small" | "compact" | "regular" | "wide"
+
   layout?: "flow" | "form" | "list"
+
   dismissible?: boolean
 }
 
 export function Modal({
   isOpen = true,
+
   active = true,
+
   eyebrow,
+
   title,
+
   description,
+
   onClose,
+
   footer,
+
   children,
+
   size = "regular",
+
   layout = "flow",
+
   dismissible = true,
 }: ModalProps) {
   if (!isOpen) return null
 
   const dialogRef = useRef<HTMLElement>(null)
+
   const [opener] = useState(() =>
     typeof document !== "undefined" &&
     document.activeElement instanceof HTMLElement
@@ -58,7 +86,9 @@ export function Modal({
 
   useEffect(() => {
     if (!active) return
+
     const dialog = dialogRef.current
+
     if (!dialog) return
 
     const releaseScrollLock = acquireModalScrollLock()
@@ -66,14 +96,18 @@ export function Modal({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && dismissible) {
         e.stopPropagation()
+
         onClose()
       }
     }
+
     window.addEventListener("keydown", onKeyDown)
 
     return () => {
       releaseScrollLock()
+
       window.removeEventListener("keydown", onKeyDown)
+
       opener?.focus?.()
     }
   }, [active, dismissible, onClose, opener])
@@ -150,16 +184,23 @@ export function Modal({
 
 export function RetryAction({
   canRetry,
+
   pending,
+
   error,
+
   onRetry,
 }: {
   canRetry: boolean
+
   pending: boolean
+
   error: string
+
   onRetry: () => void
 }) {
   if (!canRetry) return null
+
   return (
     <div
       className="flex flex-col gap-2 p-3 rounded-corner-md bg-status-expired-bg border border-status-expired/20"
@@ -183,9 +224,11 @@ export function RetryAction({
 
 export function ModalActions({
   start,
+
   end,
 }: {
   start?: ReactNode
+
   end: ReactNode
 }) {
   return (

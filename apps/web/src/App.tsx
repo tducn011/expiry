@@ -273,10 +273,10 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const rootName = isAddFlow ? "add" : stack[0].name
 
-  function toBackendUnitAndQty(
-    quantity: number,
-    unit: string,
-  ): { quantity: number; unit: "piece" | "g" | "ml" } {
+  function toBackendUnitAndQty(quantity: number, unit: string): {
+    quantity: number
+    unit: "piece" | "g" | "ml"
+  } {
     if (unit === "kg") return { quantity: quantity * 1000, unit: "g" }
     if (unit === "lít") return { quantity: quantity * 1000, unit: "ml" }
     if (unit === "g") return { quantity, unit: "g" }

@@ -110,7 +110,10 @@ export type Action = {
   name?: string
 } | { type: "logout" } | { type: "onboarded" } | {
   type: "save"
-  food: Omit<Food, "id" | "createdAt"> & { id?: string; version?: number }
+  food: Omit<Food, "id" | "createdAt"> & {
+    id?: string
+    version?: number
+  }
 } | {
   type: "qty"
   id: string

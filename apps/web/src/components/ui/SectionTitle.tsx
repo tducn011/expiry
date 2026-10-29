@@ -2,9 +2,11 @@ import type { ReactNode } from "react"
 
 export function SectionTitle({
   children,
+
   className = "",
 }: {
   children: ReactNode
+
   className?: string
 }) {
   return (

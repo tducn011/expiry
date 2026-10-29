@@ -1,6 +1,9 @@
 import { useState, type ReactNode } from "react"
+
 import type { Dispatch, State } from "../store/appStore"
+
 import Button from "../components/ui/Button"
+
 import {
   BellOff,
   CalendarClock,
@@ -12,17 +15,24 @@ import {
   RotateCcw,
   Trash2,
 } from "../components/ui/Icon"
+
 import Modal from "../components/ui/Modal"
+
 import PageHeader from "../components/ui/PageHeader"
+
 import SwitchField from "../components/ui/SwitchField"
 
 function SettingsGroup({
   title,
+
   children,
+
   footer,
 }: {
   title: string
+
   children: ReactNode
+
   footer?: ReactNode
 }) {
   return (
@@ -44,15 +54,23 @@ function SettingsGroup({
 
 function SettingsRow({
   icon,
+
   label,
+
   value,
+
   onClick,
+
   disabled,
 }: {
   icon: ReactNode
+
   label: string
+
   value?: string
+
   onClick?: () => void
+
   disabled?: boolean
 }) {
   return (
@@ -82,22 +100,32 @@ function SettingsRow({
 
 export function Settings({
   state,
+
   dispatch,
+
   onNavigateTrash,
+
   onLogin,
+
   notify,
 }: {
   state: State
+
   dispatch: Dispatch
+
   onNavigateTrash: () => void
+
   onLogin?: () => void
+
   notify: (m: string, v?: "success" | "danger" | "warning") => void
 }) {
   const [s, setS] = useState(state.settings)
+
   const [pickDays, setPickDays] = useState(false)
 
   const pushSupported =
     typeof window !== "undefined" && "Notification" in window
+
   const [perm, setPerm] = useState(
     pushSupported ? Notification.permission : "unsupported",
   )
@@ -109,13 +137,19 @@ export function Settings({
 
   async function togglePush(on: boolean) {
     if (!on) return setS({ ...s, push: false })
+
     if (!pushSupported) return setPerm("unsupported")
+
     if (perm === "denied") {
       setS({ ...s, push: false })
+
       return
     }
+
     const p = await Notification.requestPermission()
+
     setPerm(p)
+
     setS({ ...s, push: p === "granted" })
   }
 
@@ -202,6 +236,7 @@ export function Settings({
             variant="primary"
             onClick={() => {
               dispatch({ type: "settings", settings: s })
+
               notify("Đã lưu cài đặt nhắc nhở")
             }}
           >
@@ -233,6 +268,7 @@ export function Settings({
             label="Nạp lại bộ dữ liệu mẫu"
             onClick={() => {
               dispatch({ type: "demoReset", scenario: "full" })
+
               notify("Đã nạp lại dữ liệu mẫu đầy đủ")
             }}
           />
@@ -241,6 +277,7 @@ export function Settings({
             label="Chuyển sang kho trống"
             onClick={() => {
               dispatch({ type: "demoReset", scenario: "empty" })
+
               notify("Đã chuyển sang trạng thái kho trống")
             }}
           />
@@ -270,6 +307,7 @@ export function Settings({
               aria-pressed={s.remindDays === num}
               onClick={() => {
                 setS({ ...s, remindDays: num })
+
                 setPickDays(false)
               }}
               className="flex min-h-12 items-center justify-between px-3 text-sm font-medium hover:bg-surface-hover transition-colors cursor-pointer"

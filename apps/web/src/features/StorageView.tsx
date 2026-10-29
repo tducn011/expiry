@@ -1,9 +1,15 @@
 import { useMemo, useState } from "react"
+
 import type { Dispatch, State, Category } from "../store/appStore"
+
 import { statusOf, CATEGORIES } from "../store/appStore"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import {
   Archive,
   Boxes,
@@ -16,27 +22,37 @@ import {
   Snowflake,
   X,
 } from "../components/ui/Icon"
+
 import InputField from "../components/ui/InputField"
+
 import Modal from "../components/ui/Modal"
+
 import PageHeader from "../components/ui/PageHeader"
+
 import FoodCard from "./FoodCard"
 
 export interface LocationStatItem {
   total: number
+
   attention: number
+
   expired: number
 }
 
 interface StorageCategoryFilter {
   v: Category | "all"
+
   label: string
 }
 
 export function getLocationIcon(loc: string) {
   const l = loc.toLowerCase()
+
   if (l.includes("mát") || l.includes("tủ lạnh")) return Refrigerator
+
   if (l.includes("đông") || l.includes("băng") || l.includes("đá"))
     return Snowflake
+
   if (
     l.includes("bếp") ||
     l.includes("kệ") ||
@@ -44,75 +60,102 @@ export function getLocationIcon(loc: string) {
     l.includes("kho")
   )
     return Archive
+
   return Package
 }
 
 export interface StorageViewProps {
   state: State
+
   dispatch: Dispatch
+
   onOpenDetail: (id: string) => void
+
   onAdd: () => void
 }
 
 export default function StorageView({
   state,
+
   dispatch,
+
   onOpenDetail,
+
   onAdd,
 }: StorageViewProps) {
   const [selectedLocation, setSelectedLocation] = useState<string>("all")
+
   const [selectedCategory, setSelectedCategory] = useState<Category | "all">(
     "all",
   )
+
   const [query, setQuery] = useState("")
+
   const [onlyAttention, setOnlyAttention] = useState(false)
+
   const [newLocModal, setNewLocModal] = useState(false)
+
   const [newLocName, setNewLocName] = useState("")
 
   const remindDays = state.settings.remindDays
 
   // Active items
+
   const activeFoods = useMemo(
     () => state.foods.filter((f) => !f.deletedAt && !f.finishedAt),
+
     [state.foods],
   )
 
   // Metrics per location
+
   const locationStats = useMemo(() => {
     const stats: Record<string, LocationStatItem> = {}
+
     for (const loc of state.locations) {
       stats[loc] = { total: 0, attention: 0, expired: 0 }
     }
+
     stats["Khác"] = { total: 0, attention: 0, expired: 0 }
 
     for (const f of activeFoods) {
       const locKey =
         f.location && state.locations.includes(f.location) ? f.location : "Khác"
+
       if (!stats[locKey]) stats[locKey] = { total: 0, attention: 0, expired: 0 }
+
       stats[locKey].total++
+
       const st = statusOf(f, remindDays)
+
       if (st === "expired") {
         stats[locKey].expired++
+
         stats[locKey].attention++
       } else if (st === "soon") {
         stats[locKey].attention++
       }
     }
+
     return stats
   }, [activeFoods, state.locations, remindDays])
 
   // Total attention items
+
   const totalAttentionCount = useMemo(() => {
     return activeFoods.filter((f) => {
       const st = statusOf(f, remindDays)
+
       return st === "expired" || st === "soon"
     }).length
   }, [activeFoods, remindDays])
 
   // Filtered food list
+
   const filteredFoods = useMemo(() => {
     return activeFoods.filter((f) => {
       // Location filter
+
       if (selectedLocation !== "all") {
         if (selectedLocation === "Khác") {
           if (f.location && state.locations.includes(f.location)) return false
@@ -120,47 +163,70 @@ export default function StorageView({
           return false
         }
       }
+
       // Category filter
+
       if (selectedCategory !== "all") {
         if (f.category !== selectedCategory) return false
       }
+
       // Only attention toggle
+
       if (onlyAttention) {
         const st = statusOf(f, remindDays)
+
         if (st !== "expired" && st !== "soon") return false
       }
+
       // Search query
+
       if (query.trim()) {
         const q = query.trim().toLowerCase()
+
         const matchName = f.name.toLowerCase().includes(q)
+
         const matchLoc = (f.location || "").toLowerCase().includes(q)
+
         if (!matchName && !matchLoc) return false
       }
+
       return true
     })
   }, [
     activeFoods,
+
     selectedLocation,
+
     selectedCategory,
+
     onlyAttention,
+
     query,
+
     remindDays,
+
     state.locations,
   ])
 
   const handleAddLocation = () => {
     const name = newLocName.trim()
+
     if (!name) return
+
     if (!state.locations.includes(name)) {
       dispatch({ type: "addLocation", name })
     }
+
     setSelectedLocation(name)
+
     setNewLocName("")
+
     setNewLocModal(false)
   }
 
   const categoryOptions: StorageCategoryFilter[] = [
     { v: "all", label: "Tất cả nhóm" },
+
     ...CATEGORIES.map((c) => ({ v: c.value, label: c.label })),
   ]
 
@@ -277,11 +343,16 @@ export default function StorageView({
           {state.locations.map((loc) => {
             const stats = locationStats[loc] || {
               total: 0,
+
               attention: 0,
+
               expired: 0,
             }
+
             const isSelected = selectedLocation === loc
+
             const LocIcon = getLocationIcon(loc)
+
             const iconTone =
               loc.toLowerCase().includes("mát") ||
               loc.toLowerCase().includes("tủ lạnh")
@@ -344,6 +415,7 @@ export default function StorageView({
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {categoryOptions.map((cat) => {
             const isActive = selectedCategory === cat.v
+
             return (
               <button
                 key={cat.v}
@@ -412,6 +484,7 @@ export default function StorageView({
           description="Đặt tên cho khu vực lưu trữ thực phẩm trong nhà (ví dụ: Tủ gia vị, Ngăn rau...)"
           onClose={() => {
             setNewLocName("")
+
             setNewLocModal(false)
           }}
           footer={
@@ -420,6 +493,7 @@ export default function StorageView({
                 variant="subtle"
                 onClick={() => {
                   setNewLocName("")
+
                   setNewLocModal(false)
                 }}
               >

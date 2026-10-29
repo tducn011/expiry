@@ -2,30 +2,46 @@ import { useState } from "react"
 
 export interface SwitchFieldProps {
   label: string
+
   description?: string
+
   defaultSelected?: boolean
+
   selected?: boolean
+
   onChange?: (checked: boolean) => void
+
   disabled?: boolean
+
   className?: string
 }
 
 export function SwitchField({
   label,
+
   description,
+
   defaultSelected = false,
+
   selected,
+
   onChange,
+
   disabled = false,
+
   className = "",
 }: SwitchFieldProps) {
   const [internalChecked, setInternalChecked] = useState(defaultSelected)
+
   const isChecked = selected !== undefined ? selected : internalChecked
 
   const handleToggle = () => {
     if (disabled) return
+
     const next = !isChecked
+
     if (selected === undefined) setInternalChecked(next)
+
     onChange?.(next)
   }
 

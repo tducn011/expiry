@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser"
 
 import Button from "./Button"
+
 import { Camera, ImageUp, Sparkles } from "./Icon"
 
 import Modal from "./Modal"
@@ -402,9 +403,13 @@ export default function BarcodeScannerModal({
             <span
               style={{
                 display: "inline-flex",
+
                 alignItems: "center",
+
                 gap: "6px",
+
                 fontWeight: 600,
+
                 color: "var(--brand-primary, #15803d)",
               }}
             >

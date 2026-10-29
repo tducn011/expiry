@@ -1,56 +1,86 @@
 import { useState } from "react"
+
 import type { Dispatch } from "../store/appStore"
+
 import { api, ApiError, errorMessage } from "../api/client"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import FieldError from "../components/ui/FieldError"
+
 import { Leaf } from "../components/ui/Icon"
+
 import InputField from "../components/ui/InputField"
 
 export type AuthMode = "welcome" | "login" | "register"
 
 export function AuthForm({
   dispatch,
+
   onCancel,
+
   initialMode = "welcome",
 }: {
   dispatch: Dispatch
+
   onCancel: () => void
+
   initialMode?: AuthMode
 }) {
   const [view, setView] = useState<AuthMode>(initialMode)
+
   const [email, setEmail] = useState("")
+
   const [pw, setPw] = useState("")
+
   const [name, setName] = useState("")
+
   const [err, setErr] = useState<Record<string, string>>({})
+
   const [generalError, setGeneralError] = useState("")
+
   const [loading, setLoading] = useState(false)
 
   async function submit() {
     const e: Record<string, string> = {}
+
     if (view === "register" && !name.trim())
       e.name = "Vui lòng nhập tên của bạn."
+
     if (!/^\S+@\S+\.\S+$/.test(email)) e.email = "Email không hợp lệ."
+
     if (pw.length < 15)
       e.pw = "Mật khẩu cần ít nhất 15 ký tự theo chuẩn bảo mật."
+
     setErr(e)
+
     setGeneralError("")
+
     if (Object.keys(e).length) return
 
     setLoading(true)
+
     try {
       const mode = view === "register" ? "register" : "login"
+
       const session = await api.authenticate(mode, {
         email: email.trim(),
+
         password: pw,
+
         display_name: view === "register" ? name.trim() : undefined,
       })
 
       dispatch({
         type: "login",
+
         mode: "account",
+
         name: session.user?.display_name || name || email.split("@")[0],
       })
+
       onCancel()
     } catch (failure: unknown) {
       if (failure instanceof ApiError) {
@@ -183,6 +213,7 @@ export function AuthForm({
                 variant="subtle"
                 onClick={() => {
                   setErr({})
+
                   setView(view === "login" ? "register" : "login")
                 }}
               >

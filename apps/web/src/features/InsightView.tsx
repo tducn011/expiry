@@ -1,7 +1,11 @@
 import { useMemo, useState } from "react"
+
 import type { HistoryEvent, State, Category } from "../store/appStore"
+
 import { CATEGORIES, CATEGORY_LABELS, formatDate } from "../store/appStore"
+
 import Card from "../components/ui/Card"
+
 import {
   BarChart3,
   ChevronDown,
@@ -12,10 +16,12 @@ import {
   Sparkles,
   TrendingUp,
 } from "../components/ui/Icon"
+
 import PageHeader from "../components/ui/PageHeader"
 
 export interface InsightViewProps {
   state: State
+
   onOpenDetail?: (id: string) => void
 }
 
@@ -23,53 +29,72 @@ type TimeRange = "7d" | "30d" | "all"
 
 interface CategoryStat {
   consume: number
+
   discard: number
 }
 
 export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
   const [range, setRange] = useState<TimeRange>("30d")
+
   const [showRawHistory, setShowRawHistory] = useState(false)
 
   // Filter history events by time range
+
   const filteredEvents = useMemo(() => {
     if (range === "all") return state.history
+
     const now = Date.now()
+
     const daysLimit = range === "7d" ? 7 : 30
+
     const cutoff = now - daysLimit * 24 * 3600_000
+
     return state.history.filter((e) => new Date(e.at).getTime() >= cutoff)
   }, [state.history, range])
 
   // Map foodId to Food entity for category lookup fallback
+
   const foodCategoryMap = useMemo(() => {
     const map = new Map<string, Category>()
+
     for (const f of state.foods) {
       if (f.category) map.set(f.id, f.category)
     }
+
     return map
   }, [state.foods])
 
   // Calculate consumption and waste metrics
+
   const stats = useMemo(() => {
     let consumeCount = 0
+
     let discardCount = 0
+
     let adjustCount = 0
 
     // Breakdown by category
+
     const catStats: Record<string, CategoryStat> = {}
+
     for (const c of CATEGORIES) {
       catStats[c.value] = { consume: 0, discard: 0 }
     }
+
     catStats["other"] = { consume: 0, discard: 0 }
 
     for (const e of filteredEvents) {
       const cat = e.category || foodCategoryMap.get(e.foodId) || "other"
+
       if (!catStats[cat]) catStats[cat] = { consume: 0, discard: 0 }
 
       if (e.kind === "consume") {
         consumeCount++
+
         catStats[cat].consume++
       } else if (e.kind === "discard") {
         discardCount++
+
         catStats[cat].discard++
       } else if (e.kind === "adjust") {
         adjustCount++
@@ -77,49 +102,72 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
     }
 
     const totalDecided = consumeCount + discardCount
+
     const hasData = totalDecided > 0
+
     const consumptionRate = hasData
       ? Math.round((consumeCount / totalDecided) * 100)
       : 0
+
     const wasteRate = hasData ? 100 - consumptionRate : 0
 
     // Find most wasted category
+
     let worstCat: Category | null = null
+
     let worstWasteCount = 0
+
     for (const [c, s] of Object.entries(catStats)) {
       if (s.discard > worstWasteCount) {
         worstWasteCount = s.discard
+
         worstCat = (c as Category)
       }
     }
 
     return {
       consumeCount,
+
       discardCount,
+
       adjustCount,
+
       totalDecided,
+
       hasData,
+
       consumptionRate,
+
       wasteRate,
+
       catStats,
+
       worstCat,
+
       worstWasteCount,
     }
   }, [filteredEvents, foodCategoryMap])
 
   // Categories sorted with active groups first, ordered by waste count then total
+
   const sortedCategories = useMemo(() => {
     return [...CATEGORIES].sort((a, b) => {
       const dataA = stats.catStats[a.value] || { consume: 0, discard: 0 }
+
       const dataB = stats.catStats[b.value] || { consume: 0, discard: 0 }
+
       const totalA = dataA.consume + dataA.discard
+
       const totalB = dataB.consume + dataB.discard
 
       if (totalA > 0 && totalB === 0) return -1
+
       if (totalA === 0 && totalB > 0) return 1
+
       if (dataA.discard !== dataB.discard) {
         return dataB.discard - dataA.discard
       }
+
       return totalB - totalA
     })
   }, [stats.catStats])
@@ -137,7 +185,9 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
           <div className="flex rounded-corner-md border border-border-primary bg-surface-bg p-0.5 text-xs font-semibold">
             {([
               ["7d", "7 ngày"],
+
               ["30d", "30 ngày"],
+
               ["all", "Toàn bộ"],
             ] as const).map(([v, label]) => (
               <button
@@ -290,7 +340,9 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
         <div className="flex flex-col gap-3">
           {sortedCategories.map((c) => {
             const data = stats.catStats[c.value] || { consume: 0, discard: 0 }
+
             const total = data.consume + data.discard
+
             const catRate =
               total > 0 ? Math.round((data.consume / total) * 100) : 100
 
@@ -398,7 +450,9 @@ export default function InsightView({ state, onOpenDetail }: InsightViewProps) {
             ) : (
               filteredEvents.map((ev) => {
                 const isConsume = ev.kind === "consume"
+
                 const isDiscard = ev.kind === "discard"
+
                 return (
                   <div
                     key={ev.id}

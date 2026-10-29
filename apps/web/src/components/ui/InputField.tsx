@@ -8,9 +8,13 @@ import {
 export interface InputFieldProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "prefix"> {
   label?: string
+
   description?: string
+
   prefix?: ReactNode
+
   suffix?: ReactNode
+
   onChange?: ((value: string) => void) | ((
     e: ChangeEvent<HTMLInputElement>,
   ) => void)
@@ -18,23 +22,36 @@ export interface InputFieldProps
 
 export function InputField({
   label,
+
   description,
+
   prefix,
+
   suffix,
+
   value,
+
   onChange,
+
   type = "text",
+
   id: explicitId,
+
   className = "",
+
   disabled,
+
   ...props
 }: InputFieldProps) {
   const generatedId = useId()
+
   const id = explicitId || generatedId
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!onChange) return
+
     const fn = onChange as (val: string) => void
+
     fn(e.target.value)
   }
 
