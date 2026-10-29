@@ -163,9 +163,9 @@ export class InventoryRepository {
   }
   async list(owner,query={},explain=false) {
     this.principal(owner);
-    allow(query,['view','lifecycle','attention','page','limit','q','location']);
-    const {view='inventory',lifecycle='active',attention:filter,page=1,limit=20,q='',location}=query;
-    if (!['inventory','attention','trash'].includes(view) || !['active','depleted','all'].includes(lifecycle) || !Number.isSafeInteger(page) || page<1 || !Number.isSafeInteger(limit) || limit<1 || limit>100 || typeof q!=='string' || q.length>200 || location!==undefined && (typeof location!=='string' || location.length>100) || view==='attention' && lifecycle!=='active' || filter && !['past_date','due_today','soon','unknown','later'].includes(filter)) invalid();
+    allow(query,['view','lifecycle','attention','page','limit','q','location','category']);
+    const {view='inventory',lifecycle='active',attention:filter,page=1,limit=20,q='',location,category}=query;
+    if (!['inventory','attention','trash'].includes(view) || !['active','depleted','all'].includes(lifecycle) || !Number.isSafeInteger(page) || page<1 || !Number.isSafeInteger(limit) || limit<1 || limit>100 || typeof q!=='string' || q.length>200 || location!==undefined && (typeof location!=='string' || location.length>100) || category!==undefined && (typeof category!=='string' || !categories.includes(category)) || view==='attention' && lifecycle!=='active' || filter && !['past_date','due_today','soon','unknown','later'].includes(filter)) invalid();
     const c=await connect(this.database);
     try {
       const [[user]]=await c.execute('SELECT timezone,attention_lead_days FROM users WHERE id=?',[owner]);
@@ -177,6 +177,7 @@ export class InventoryRepository {
       if(view!=='trash' && lifecycle!=='all') where+=` AND remaining_quantity ${lifecycle==='active'?'>':'='} 0`;
       if(q) { where+=" AND name LIKE ? ESCAPE '!'"; args.push('%'+q.replace(/[!%_]/g,c=>'!'+c)+'%'); }
       if(location!==undefined) { where+=' AND storage_location=?'; args.push(location); }
+      if(category!==undefined) { where+=' AND category=?'; args.push(category); }
       const cte=`WITH classified AS (SELECT *,CASE WHEN expiry_date IS NULL THEN 'unknown' WHEN expiry_date<? THEN 'past_date' WHEN expiry_date=? THEN 'due_today' WHEN DATEDIFF(expiry_date,?)<=? THEN 'soon' ELSE 'later' END AS attention_status FROM food_entries WHERE ${where})`;
       args.splice(2,0,day);
       let outer = '';
@@ -199,6 +200,7 @@ export class InventoryRepository {
         const whereArgs = [owner];
         if (q) whereArgs.push('%' + q.replace(/[!%_]/g, c => '!' + c) + '%');
         if (location !== undefined) whereArgs.push(location);
+        if (category !== undefined) whereArgs.push(category);
         const [[countRow]] = await c.query(`SELECT COUNT(*) total FROM food_entries WHERE ${where}`, whereArgs);
         total = Number(countRow.total);
       } else {
