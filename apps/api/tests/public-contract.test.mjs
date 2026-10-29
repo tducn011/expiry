@@ -144,6 +144,13 @@ test('detail/list/trash project exact Entry and EntryList contracts, including o
 
   const invalidViewRes = await request('/food-entries?view=invalid_view');
   assert.equal(invalidViewRes.status, 422);
+
+  const filteredCategory = await (await request('/food-entries?category=dairy_eggs')).json();
+  validate(filteredCategory, 'EntryList');
+  assert.equal(calls.at(-1)[1].category, 'dairy_eggs');
+
+  const invalidCategoryRes = await request('/food-entries?category=invalid_category');
+  assert.equal(invalidCategoryRes.status, 422);
 });
 
 test('empty EntryList retains its repository owner-local as_of_date', async t => {

@@ -21,6 +21,7 @@
     "notify": "node scripts/notify-mobile.mjs",
     "dev:web": "npm --workspace=apps/web run dev",
     "dev:api": "npm --workspace=apps/api run dev",
+    "migrate": "node database/mysql/scripts/manage.mjs migrate-dev",
     "db:migrate": "node database/mysql/scripts/manage.mjs migrate-dev"
   }
 }
