@@ -504,6 +504,7 @@ export function inferCategory(name: string): Category {
     n.includes("phô mai") ||
     n.includes("bơ") ||
     n.includes("yaourt") ||
+    n.includes("yogurt") ||
     n.includes("sữa chua")
   ) {
     return "dairy_eggs"

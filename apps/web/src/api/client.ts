@@ -1,3 +1,4 @@
+import { inferCategory, type Category } from "../store/appStore"
 import type {
   Attention,
   CreatePayload,
@@ -147,6 +148,8 @@ export type EntryDraftDTO = {
 
   storage_location?: string
 
+  category?: string | null
+
   expiry_date: string | null
 
   date_certainty: "known" | "estimated" | "unknown"
@@ -266,7 +269,7 @@ export function scanToEntryDraft(
   result: ScanResult,
 
   selectedDate: string | null,
-): Pick<EntryDraft, "name" | "expiry_date" | "expiry_date_certainty" | "expiry_date_source" | "expiry_date_label_type"> {
+): Pick<EntryDraft, "name" | "expiry_date" | "expiry_date_certainty" | "expiry_date_source" | "expiry_date_label_type"> & { category?: Category } {
   const candidate = result.candidates.expiry_date
 
   const expiryDate =
@@ -289,8 +292,13 @@ export function scanToEntryDraft(
       ? candidate.date_label_type
       : null
 
+  const name = result.candidates.food_name?.trim() || ""
+  const category = name ? inferCategory(name) : undefined
+
   return {
-    name: result.candidates.food_name?.trim() || "",
+    name,
+
+    category,
 
     expiry_date: expiryDate,
 

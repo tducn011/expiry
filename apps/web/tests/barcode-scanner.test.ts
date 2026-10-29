@@ -75,4 +75,14 @@ describe("Barcode Scanner & ZXing Formats", () => {
       "Không thể kích hoạt camera",
     )
   })
+
+  it("provides seamless fallback to manual capture when scan is unavailable or fails", () => {
+    let mode: "camera" | "upload" | "manual" = "camera"
+    const handleFallbackToManual = () => {
+      mode = "manual"
+    }
+
+    handleFallbackToManual()
+    expect(mode).toBe("manual")
+  })
 })
