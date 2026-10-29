@@ -907,10 +907,14 @@ export class ApiClient {
     return this.request<Preferences>("/me/preferences")
   }
 
-  async scan(file: File, barcode?: string, locale?: string) {
+  async scan(file: File | Blob, barcode?: string, locale?: string) {
     const body = new FormData()
 
-    body.append("image", file)
+    if (file instanceof File) {
+      body.append("image", file)
+    } else {
+      body.append("image", file, "capture.jpg")
+    }
 
     const params = new URLSearchParams()
 

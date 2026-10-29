@@ -57,6 +57,7 @@ export interface Food {
   reviewAt?: string // later-check date; never overwrites expDate
   deletedAt?: string // set => in Trash
   finishedAt?: string // quantity reached 0 => History only
+  version?: number
 }
 
 export type EventKind = "add" | "edit" | "consume" | "discard" | "adjust" | "trash" | "restore" | "review"
@@ -109,7 +110,7 @@ export type Action = {
   name?: string
 } | { type: "logout" } | { type: "onboarded" } | {
   type: "save"
-  food: Omit<Food, "id" | "createdAt"> & { id?: string }
+  food: Omit<Food, "id" | "createdAt"> & { id?: string; version?: number }
 } | {
   type: "qty"
   id: string
@@ -220,14 +221,23 @@ function reducer(s: State, a: Action): State {
         ? s.foods.find((f) => f.id === a.food.id)
         : undefined
       if (existing) {
-        const f = { ...existing, ...a.food } as Food
+        const f = {
+          ...existing,
+          ...a.food,
+          version: a.food.version ?? existing.version ?? 1,
+        } as Food
         return {
           ...s,
           foods: s.foods.map((x) => (x.id === f.id ? f : x)),
           history: [ev(f, "edit"), ...s.history],
         }
       }
-      const f = { ...a.food, id: uid(), createdAt: now() } as Food
+      const f = {
+        ...a.food,
+        id: a.food.id || uid(),
+        createdAt: now(),
+        version: a.food.version ?? 1,
+      } as Food
       return {
         ...s,
         foods: [f, ...s.foods],
