@@ -1,4 +1,5 @@
 import { inferCategory, type Category } from "../store/appStore"
+
 import type {
   Attention,
   CreatePayload,
@@ -269,7 +270,9 @@ export function scanToEntryDraft(
   result: ScanResult,
 
   selectedDate: string | null,
-): Pick<EntryDraft, "name" | "expiry_date" | "expiry_date_certainty" | "expiry_date_source" | "expiry_date_label_type"> & { category?: Category } {
+): Pick<EntryDraft, "name" | "expiry_date" | "expiry_date_certainty" | "expiry_date_source" | "expiry_date_label_type"> & {
+  category?: Category
+} {
   const candidate = result.candidates.expiry_date
 
   const expiryDate =
@@ -293,6 +296,7 @@ export function scanToEntryDraft(
       : null
 
   const name = result.candidates.food_name?.trim() || ""
+
   const category = name ? inferCategory(name) : undefined
 
   return {
@@ -681,10 +685,14 @@ export class ApiClient {
 
   async authenticate(
     mode: "login" | "register",
+
     input: {
       email: string
+
       password: string
+
       display_name?: string
+
       timezone?: string
     },
   ) {
@@ -692,8 +700,11 @@ export class ApiClient {
       mode === "register"
         ? {
             email: input.email,
+
             password: input.password,
+
             display_name: input.display_name,
+
             timezone:
               input.timezone ||
               Intl.DateTimeFormat().resolvedOptions().timeZone ||
@@ -701,15 +712,18 @@ export class ApiClient {
           }
         : {
             email: input.email,
+
             password: input.password,
           }
 
     await this.request(`/auth/${mode}`, {
       method: "POST",
+
       body: JSON.stringify(payload),
     })
 
     // Only the authenticated session read establishes the UI principal.
+
     return this.session()
   }
 
