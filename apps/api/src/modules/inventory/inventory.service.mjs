@@ -47,13 +47,18 @@ export class InventoryService {
   }
 
   async listMovements(owner, id, { page = 1, limit = 20 } = {}) {
-    if (this.repo.listMovements) {
-      const { events, total } = await this.repo.listMovements(owner, id, { page, limit });
-      return { items: events.map(movementDTO), pagination: { page: Number(page), limit: Number(limit), total } };
+    const pageNum = Math.max(1, Number(page) || 1);
+    const limitNum = Math.max(1, Math.min(100, Number(limit) || 20));
+    if (typeof this.repo.listMovements === 'function') {
+      const { events, total } = await this.repo.listMovements(owner, id, { page: pageNum, limit: limitNum });
+      return { items: events.map(movementDTO), pagination: { page: pageNum, limit: limitNum, total } };
     }
-    const movements = await this.repo.get(owner, id, true);
-    const start = (page - 1) * limit;
-    return { items: movements.slice(start, start + limit).map(movementDTO), pagination: { page, limit, total: movements.length } };
+    const result = await this.repo.get(owner, id, true, { page: pageNum, limit: limitNum });
+    if (Array.isArray(result)) {
+      const start = (pageNum - 1) * limitNum;
+      return { items: result.slice(start, start + limitNum).map(movementDTO), pagination: { page: pageNum, limit: limitNum, total: result.length } };
+    }
+    return { items: (result.events || []).map(movementDTO), pagination: { page: pageNum, limit: limitNum, total: result.total } };
   }
 
   async recountQuantity(owner, idempotencyKey, id, input) {
