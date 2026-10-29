@@ -774,11 +774,7 @@ export default function BarcodeScannerModal({
             marginTop: "16px",
           }}
         >
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-          >
+          <Button type="button" variant="secondary" onClick={onClose}>
             Chuyển sang điền tay
           </Button>
           <Button type="button" variant="ghost" onClick={onClose}>

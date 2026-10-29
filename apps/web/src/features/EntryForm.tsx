@@ -11,6 +11,7 @@ import type {
 } from "../domain/types"
 
 import { scanToEntryDraft, type ScanResult } from "../api/client"
+
 import { inferCategory, CATEGORIES, type Category } from "../store/appStore"
 
 import {
@@ -144,7 +145,8 @@ export default function EntryForm({
 
     unit: base?.unit ?? "piece",
 
-    category: base?.category ?? (base?.name ? inferCategory(base.name) : "other"),
+    category:
+      base?.category ?? (base?.name ? inferCategory(base.name) : "other"),
 
     storage_location: base?.storage_location ?? "",
 
@@ -395,7 +397,11 @@ export default function EntryForm({
 
                               name: mapped.name || current.name,
 
-                              category: mapped.category || (mapped.name ? inferCategory(mapped.name) : current.category),
+                              category:
+                                mapped.category ||
+                                (mapped.name
+                                  ? inferCategory(mapped.name)
+                                  : current.category),
 
                               ...(mapped.expiry_date === null
                                 ? {}
@@ -785,7 +791,10 @@ export default function EntryForm({
             const lookup = await lookupBarcode(res.text)
 
             if (lookup.found && lookup.product) {
-              const inferredCat = lookup.product!.name ? inferCategory(lookup.product!.name) : undefined
+              const inferredCat = lookup.product!.name
+                ? inferCategory(lookup.product!.name)
+                : undefined
+
               setForm((prev) => ({
                 ...prev,
 
@@ -795,7 +804,10 @@ export default function EntryForm({
 
                 name: prev.name.trim() ? prev.name : lookup.product!.name,
 
-                category: prev.category && prev.category !== "other" ? prev.category : (lookup.product!.category || inferredCat || "other"),
+                category:
+                  prev.category && prev.category !== "other"
+                    ? prev.category
+                    : lookup.product!.category || inferredCat || "other",
 
                 storage_location:
                   prev.storage_location ||

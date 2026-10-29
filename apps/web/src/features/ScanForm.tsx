@@ -7,6 +7,7 @@ import {
 } from "@zxing/browser"
 
 import type { ScanDateCandidate, ScanResult } from "../api/client"
+
 import { inferCategory, CATEGORY_LABELS } from "../store/appStore"
 
 import Button from "../components/ui/Button"
@@ -729,11 +730,7 @@ export default function ScanForm({
                 {error}
               </p>
               <div style={{ display: "flex", gap: "8px" }}>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleClose}
-                >
+                <Button type="button" variant="secondary" onClick={handleClose}>
                   Chuyển sang điền tay
                 </Button>
               </div>
@@ -761,7 +758,9 @@ export default function ScanForm({
                 <p>
                   Danh mục dự kiến:{" "}
                   <strong>
-                    {CATEGORY_LABELS[inferCategory(result.candidates.food_name)] || "Khác"}
+                    {CATEGORY_LABELS[
+                      inferCategory(result.candidates.food_name)
+                    ] || "Khác"}
                   </strong>{" "}
                   <span className="inline-hint">(suy luận tự động)</span>
                 </p>
@@ -808,7 +807,14 @@ export default function ScanForm({
                   <p>{result.raw_text}</p>
                 </details>
               )}
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "12px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  flexWrap: "wrap",
+                  marginTop: "12px",
+                }}
+              >
                 <Button
                   type="button"
                   variant="primary"
@@ -816,11 +822,7 @@ export default function ScanForm({
                 >
                   Áp dụng gợi ý vào biểu mẫu
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={handleClose}
-                >
+                <Button type="button" variant="ghost" onClick={handleClose}>
                   Chuyển sang điền tay
                 </Button>
               </div>
