@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react"
+import { api } from "../api/client"
+import type { Category } from "../store/appStore"
+import type { Draft } from "./FoodForm"
 import Button from "../components/ui/Button"
 import {
   ArrowLeft,
@@ -29,10 +32,13 @@ export function Scanner({
 }: {
   onBack: () => void
   onManual: () => void
-  onReview: (img: string) => void
+  onReview: (img: string, draft?: Draft) => void
 }) {
   const [state, setState] = useState<ScanState>("idle")
   const [image, setImage] = useState<string>()
+  const [detectedDraft, setDetectedDraft] = useState<Draft | undefined>(
+    undefined,
+  )
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -76,10 +82,59 @@ export function Scanner({
     }
   }
 
-  function recognize(img: string) {
+  async function recognize(img: string, file?: File | Blob) {
     setImage(img)
     setState("processing")
-    timer.current = window.setTimeout(() => setState("unrecognized"), 900)
+    setDetectedDraft(undefined)
+    try {
+      let uploadFile: File | Blob
+      if (file) {
+        uploadFile = file
+      } else {
+        const res = await fetch(img)
+        const blob = await res.blob()
+        uploadFile = new File([blob], "capture.jpg", { type: "image/jpeg" })
+      }
+
+      const scanResult = await api.scan(uploadFile)
+      const cand = scanResult.candidates
+      const expDate = cand.expiry_date?.value || ""
+      const mfgDate = cand.manufactured_date?.value || ""
+      const name = cand.food_name?.trim() || ""
+
+      let category: Category | "" = ""
+      const lowerName = name.toLowerCase()
+      if (/thịt|bò|heo|lợn|gà|vịt|cá|tôm|cua|mực|hải sản/.test(lowerName)) {
+        category = "meat_seafood"
+      } else if (
+        /rau|cải|cà|xà lách|dưa|nấm|táo|cam|chuối|xoài/.test(lowerName)
+      ) {
+        category = "fresh_produce"
+      } else if (/sữa|trứng|phô mai|bơ|yogurt|sữa chua/.test(lowerName)) {
+        category = "dairy_eggs"
+      } else if (/trà|cà phê|nước|bia|rượu|nước ngọt|nước ép/.test(lowerName)) {
+        category = "beverage"
+      } else if (/gạo|mì|miến|đường|muối|mắm|tiêu|hạt/.test(lowerName)) {
+        category = "dry_pantry"
+      } else if (name) {
+        category = "other"
+      }
+
+      const draft: Draft = {
+        name,
+        quantity: "1",
+        unit: "cái",
+        category,
+        mfgDate,
+        expDate,
+        location: "",
+      }
+
+      setDetectedDraft(draft)
+      onReview(img, draft)
+    } catch {
+      setState("unrecognized")
+    }
   }
 
   function capture() {
@@ -91,7 +146,21 @@ export function Scanner({
     c.height = v.videoHeight
     c.getContext("2d")?.drawImage(v, 0, 0)
     stop()
-    recognize(c.toDataURL("image/jpeg", 0.8))
+    const dataUrl = c.toDataURL("image/jpeg", 0.85)
+    c.toBlob(
+      (blob) => {
+        if (blob) {
+          const f = new File([blob], "scan-capture.jpg", {
+            type: "image/jpeg",
+          })
+          recognize(dataUrl, f)
+        } else {
+          recognize(dataUrl)
+        }
+      },
+      "image/jpeg",
+      0.85,
+    )
   }
 
   function onFile(f?: File) {
@@ -99,7 +168,7 @@ export function Scanner({
     const r = new FileReader()
     r.onload = () => {
       stop()
-      recognize(String(r.result))
+      recognize(String(r.result), f)
     }
     r.readAsDataURL(f)
   }
@@ -279,7 +348,7 @@ export function Scanner({
             <Button
               variant="primary"
               iconStart={<ScanText size={18} />}
-              onClick={() => onReview(image)}
+              onClick={() => onReview(image, detectedDraft)}
             >
               Kiểm tra thông tin
             </Button>
