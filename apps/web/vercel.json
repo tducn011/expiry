@@ -5,11 +5,19 @@
   "rewrites": [
     {
       "source": "/health",
-      "destination": "https://asthma-casa-saturn-collaboration.trycloudflare.com/health"
+      "destination": "https://homeserver.tailc535bb.ts.net/health"
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://asthma-casa-saturn-collaboration.trycloudflare.com/api/$1"
+      "destination": "https://homeserver.tailc535bb.ts.net/api/$1"
+    },
+    {
+      "source": "/scan/(.*)",
+      "destination": "https://homeserver.tailc535bb.ts.net/scan/$1"
+    },
+    {
+      "source": "/scan",
+      "destination": "https://homeserver.tailc535bb.ts.net/scan"
     },
     {
       "source": "/(.*)",
