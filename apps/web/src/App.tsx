@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 
 import { api, ApiError, decimal, type EditEntryDTO } from "./api/client"
 
@@ -28,6 +28,7 @@ import {
   History as HistoryIcon,
   Home,
   Leaf,
+  Loader2,
   LogIn,
   LogOut,
   Plus,
@@ -170,14 +171,58 @@ export function urlFromRoute(r: Route): string {
 export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const { state, dispatch, problem, retry, reset } = useAppStore()
 
+  const [syncError, setSyncError] = useState<string | null>(null)
+
+  const [isCheckingSession, setIsCheckingSession] = useState(!demoMode)
+
+  const sessionGenRef = useRef(0)
+
+  // 1. Initial Session Verification on mount
+
   useEffect(() => {
-    if (demoMode) return
+    if (demoMode) {
+      setIsCheckingSession(false)
+
+      return
+    }
+
+    let isMounted = true
+
+    const gen = ++sessionGenRef.current
+
+    setIsCheckingSession(true)
+
+    // Revoke any pending offline server logout before checking session
+
+    try {
+      if (localStorage.getItem("expiry_pending_server_logout") === "true") {
+        api
+
+          .logout()
+
+          .catch(() => {})
+
+          .finally(() => {
+            try {
+              localStorage.removeItem("expiry_pending_server_logout")
+            } catch {
+              /* ignore */
+            }
+          })
+      }
+    } catch {
+      /* ignore */
+    }
 
     api
 
       .session()
 
-      .then(async (s) => {
+      .then((s) => {
+        if (!isMounted || sessionGenRef.current !== gen) return
+
+        setSyncError(null)
+
         if (s.user) {
           dispatch({
             type: "login",
@@ -185,73 +230,154 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             mode: "account",
 
             name: s.user.display_name || s.user.email.split("@")[0],
+
+            userId: s.user.id,
+          })
+        } else {
+          if (state.mode === "account") {
+            dispatch({ type: "logout" })
+          }
+        }
+      })
+
+      .catch((err) => {
+        if (!isMounted || sessionGenRef.current !== gen) return
+
+        if (err instanceof ApiError && err.status === 401) {
+          if (state.mode === "account") {
+            dispatch({ type: "logout" })
+          }
+        } else {
+          setSyncError(
+            "Không thể kết nối máy chủ backend. Đang dùng dữ liệu lưu tạm.",
+          )
+        }
+      })
+
+      .finally(() => {
+        if (isMounted && sessionGenRef.current === gen) {
+          setIsCheckingSession(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+
+      sessionGenRef.current++
+    }
+  }, [demoMode, dispatch])
+
+  // 2. Hydrate Account Inventory when verified userId is established
+
+  useEffect(() => {
+    if (demoMode || !state.userId || state.mode !== "account") return
+
+    let isMounted = true
+
+    const gen = ++sessionGenRef.current
+
+    const activeUserId = state.userId
+
+    api
+
+      .entries({ limit: 100 })
+
+      .then((page) => {
+        if (
+          !isMounted ||
+          sessionGenRef.current !== gen ||
+          state.userId !== activeUserId
+        )
+          return
+
+        for (const item of page.items) {
+          if (
+            !isMounted ||
+            sessionGenRef.current !== gen ||
+            state.userId !== activeUserId
+          )
+            return
+
+          dispatch({
+            type: "save",
+
+            food: {
+              id: item.id,
+
+              name: item.name,
+
+              quantity: item.remaining_quantity,
+
+              unit: (item.unit === "piece" ? "cái" : item.unit) as Unit,
+
+              category: item.category as Category || undefined,
+
+              location: item.storage_location || undefined,
+
+              expDate: item.expiry_date || undefined,
+
+              mfgDate: item.opened_on || undefined,
+
+              finishedAt:
+                item.remaining_quantity === 0 ? item.updated_at : undefined,
+
+              version: item.version,
+            },
           })
 
-          try {
-            const [page, prefs] = await Promise.all([
-              api.entries({ limit: 100 }),
-
-              api.preferences().catch(() => null),
-            ])
-
-            if (prefs && prefs.attention_lead_days) {
-              dispatch({
-                type: "settings",
-
-                settings: {
-                  ...state.settings,
-
-                  remindDays: prefs.attention_lead_days,
-                },
-              })
-            }
-
-            for (const item of page.items) {
-              dispatch({
-                type: "save",
-
-                food: {
-                  id: item.id,
-
-                  name: item.name,
-
-                  quantity: item.remaining_quantity,
-
-                  unit: (item.unit === "piece" ? "cái" : item.unit) as Unit,
-
-                  category: item.category as Category || undefined,
-
-                  location: item.storage_location || undefined,
-
-                  expDate: item.expiry_date || undefined,
-
-                  mfgDate: item.opened_on || undefined,
-
-                  finishedAt:
-                    item.remaining_quantity === 0 ? item.updated_at : undefined,
-
-                  version: item.version,
-                },
-              })
-
-              if (
-                item.storage_location &&
-                item.storage_location !== "unspecified" &&
-                !state.locations.includes(item.storage_location)
-              ) {
-                dispatch({ type: "addLocation", name: item.storage_location })
-              }
-            }
-          } catch {
-            // Keep local cached entries if server fetch fails
+          if (
+            item.storage_location &&
+            item.storage_location !== "unspecified" &&
+            !state.locations.includes(item.storage_location)
+          ) {
+            dispatch({ type: "addLocation", name: item.storage_location })
           }
         }
       })
 
       .catch(() => {
-        // No active server session; retain client mode
+        if (
+          isMounted &&
+          sessionGenRef.current === gen &&
+          state.userId === activeUserId
+        ) {
+          setSyncError("Không thể tải đầy đủ danh mục thực phẩm từ máy chủ.")
+        }
       })
-  }, [demoMode, dispatch])
+
+    api
+
+      .preferences()
+
+      .then((prefs) => {
+        if (
+          !isMounted ||
+          sessionGenRef.current !== gen ||
+          state.userId !== activeUserId
+        )
+          return
+
+        if (prefs && prefs.attention_lead_days) {
+          dispatch({
+            type: "settings",
+
+            settings: {
+              ...state.settings,
+
+              remindDays: prefs.attention_lead_days,
+            },
+          })
+        }
+      })
+
+      .catch(() => {})
+
+    return () => {
+      isMounted = false
+
+      sessionGenRef.current++
+    }
+  }, [demoMode, dispatch, state.userId, state.mode])
 
   const [confirmReset, setConfirmReset] = useState(false)
 
@@ -428,6 +554,21 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             hoàn toàn.
           </p>
         </Modal>
+      </div>
+    )
+  }
+
+  if (isCheckingSession && !demoMode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-base">
+        <div className="flex flex-col items-center gap-3 text-text-secondary">
+          <Loader2
+            size={32}
+            className="animate-spin text-brand-primary"
+            aria-hidden="true"
+          />
+          <p className="text-sm font-medium">Đang kiểm tra phiên làm việc…</p>
+        </div>
       </div>
     )
   }
@@ -1023,6 +1164,24 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               Không lưu được vào thiết bị. Thay đổi gần nhất có thể bị mất khi
               đóng ứng dụng.
             </span>
+          </div>
+        )}
+
+        {syncError && !isFullBleed && (
+          <div
+            className="mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/30 px-3.5 py-2 text-xs text-amber-800 dark:text-amber-200 shadow-xs"
+            role="alert"
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="font-medium">⚠️ {syncError}</span>
+            </div>
+            <button
+              type="button"
+              className="shrink-0 font-semibold underline hover:text-amber-900 dark:hover:text-amber-100 cursor-pointer"
+              onClick={() => window.location.reload()}
+            >
+              Thử lại
+            </button>
           </div>
         )}
 

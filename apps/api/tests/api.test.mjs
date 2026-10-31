@@ -143,6 +143,64 @@ test('Production session configuration fails closed without an exact HTTPS origi
   assert.throws(() => createApp({ secureCookies: true, allowedOrigins: ['http://localhost:4174'] }), /trusted HTTP/);
 });
 
+test('Production default allowed origins include verified deployment aliases and reject untrusted origins', async () => {
+  const app = createApp({ secureCookies: true });
+  const server = app.listen(0);
+  const port = server.address().port;
+  const base = 'http://127.0.0.1:' + port;
+
+  try {
+    // 1. Untrusted origin must be rejected with 403 CSRF_FAILED on unsafe method
+    const untrustedRes = await fetch(base + '/api/v1/auth/login', {
+      method: 'POST',
+      headers: {
+        'Origin': 'https://malicious-attacker.com',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email: 'test@example.com', password: 'Password123!' })
+    });
+    assert.equal(untrustedRes.status, 403);
+    const untrustedJson = await untrustedRes.json();
+    assert.equal(untrustedJson.code, 'CSRF_FAILED');
+
+    // 2. Verified Vercel alias uidemo-alpha must be accepted by auth origin boundary
+    const alphaRes = await fetch(base + '/api/v1/auth/login', {
+      method: 'POST',
+      headers: {
+        'Origin': 'https://uidemo-alpha.vercel.app',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email: 'test@example.com', password: 'Password123!' })
+    });
+    // Should pass origin check (not 403 CSRF_FAILED)
+    assert.notEqual(alphaRes.status, 403);
+
+    // 3. Verified Vercel preview alias must be accepted
+    const previewRes = await fetch(base + '/api/v1/auth/login', {
+      method: 'POST',
+      headers: {
+        'Origin': 'https://uidemo-git-develop-ntduc011006dn-3691s-projects.vercel.app',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email: 'test@example.com', password: 'Password123!' })
+    });
+    assert.notEqual(previewRes.status, 403);
+
+    // 4. Tailscale funnel origin must be accepted
+    const funnelRes = await fetch(base + '/api/v1/auth/login', {
+      method: 'POST',
+      headers: {
+        'Origin': 'https://homeserver.tailc535bb.ts.net',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email: 'test@example.com', password: 'Password123!' })
+    });
+    assert.notEqual(funnelRes.status, 403);
+  } finally {
+    server.close();
+  }
+});
+
 test('decimal formats BigInt values correctly for positive, zero, and negative values', () => {
   assert.equal(decimal(0n), '0.000');
   assert.equal(decimal(1n), '0.001');

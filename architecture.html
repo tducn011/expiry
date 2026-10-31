@@ -102,7 +102,7 @@ flowchart TD
     end
 
     subgraph Tunnel["Cổng kết nối ra ngoài"]
-        CF["Cloudflare Quick Tunnel\ntrycloudflare.com"]
+        TF["Tailscale Funnel\nhomeserver.tailc535bb.ts.net"]
         ViteP["Vite Reverse Proxy\n(/api -> 3001)"]
     end
 
@@ -165,7 +165,7 @@ flowchart TD
             <div class="step-num">B</div>
             <div class="step-text">
               <h4>Môi trường Production (Vercel + Cloudflare Tunnel)</h4>
-              <p>Frontend triển khai trên Vercel. Trên homeserver có service <code>cloudflared-tunnel.service</code> tạo đường hầm bảo mật HTTPS <code>trycloudflare.com</code> nối trực tiếp vào <code>http://127.0.0.1:3001</code>. File <code>vercel.json</code> dùng luật rewrite chuyển toàn bộ <code>/api/*</code> sang URL đường hầm này.</p>
+              <p>Frontend triển khai trên Vercel. Trên homeserver có dịch vụ <code>tailscale-funnel</code> tạo đường hầm bảo mật HTTPS cố định <code>https://homeserver.tailc535bb.ts.net</code> chuyển tiếp vào backend API (cổng 3001) và Python OCR service. File <code>vercel.json</code> dùng luật rewrite chuyển toàn bộ <code>/health</code>, <code>/api/*</code>, <code>/scan*</code> sang URL đường hầm cố định này.</p>
             </div>
           </div>
           <div class="step-item">
@@ -277,9 +277,9 @@ flowchart TD
         <span class="icon">🧪</span>
         4. Kiểm tra sức khỏe dịch vụ trực tiếp (Live Ping)
       </div>
-      <p style="color:var(--muted); font-size:13px;">Đường hầm Cloudflare hiện tại: <a href="https://bathrooms-boost-breaking-atlas.trycloudflare.com/health" target="_blank" style="color:var(--accent); font-weight:600;">https://bathrooms-boost-breaking-atlas.trycloudflare.com</a></p>
+      <p style="color:var(--muted); font-size:13px;">Đường hầm Tailscale Funnel hiện tại: <a href="https://homeserver.tailc535bb.ts.net/health" target="_blank" style="color:var(--accent); font-weight:600;">https://homeserver.tailc535bb.ts.net</a></p>
       <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-        <button class="btn-test" style="background:var(--accent); color:#fff;" onclick="checkHealth('https://bathrooms-boost-breaking-atlas.trycloudflare.com/health', 'res-cf')">⚡ Ping Cloudflare Tunnel (Internet)</button>
+        <button class="btn-test" style="background:var(--accent); color:#fff;" onclick="checkHealth('https://homeserver.tailc535bb.ts.net/health', 'res-cf')">⚡ Ping Tailscale Funnel (Internet)</button>
         <button class="btn-test" onclick="checkHealth('http://127.0.0.1:3001/health', 'res-api')">Ping Local API (:3001)</button>
         <button class="btn-test" onclick="checkHealth('http://127.0.0.1:8000/health', 'res-py')">Ping Local Python (:8000)</button>
       </div>
