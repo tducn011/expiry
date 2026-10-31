@@ -216,7 +216,9 @@ export function Scanner({
     } catch {
       if (barcodeProductName || detectedBarcode) {
         const fallbackDraft: Draft = {
-          name: barcodeProductName || "",
+          name:
+            barcodeProductName ||
+            (detectedBarcode ? `Mã vạch ${detectedBarcode}` : ""),
 
           quantity: "1",
 
@@ -232,6 +234,8 @@ export function Scanner({
         }
 
         setDetectedDraft(fallbackDraft)
+        onReview(img, fallbackDraft)
+        return
       }
 
       setState("unrecognized")

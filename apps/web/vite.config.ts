@@ -40,6 +40,10 @@ export default defineConfig(({ mode }) => {
           target: "http://127.0.0.1:3001",
           changeOrigin: true,
         },
+        "/scan": {
+          target: "http://127.0.0.1:8000",
+          changeOrigin: true,
+        },
       },
       watch: {
         ignored: ["**/.figma/**"],
