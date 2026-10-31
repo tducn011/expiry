@@ -105,4 +105,53 @@ describe("Barcode Scanner & ZXing Formats", () => {
 
     expect(mode).toBe("manual")
   })
+
+  it("ApiClient falls back to direct /scan endpoint when /scans returns 401 unauthorized", async () => {
+    const { ApiClient } = await import("../src/api/client")
+
+    const mockFetch = vi.fn(async (url: string) => {
+      if (url.includes("/api/v1/scans")) {
+        return new Response(JSON.stringify({ code: "AUTH_REQUIRED" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        })
+      }
+      if (url.includes("/scan")) {
+        return new Response(
+          JSON.stringify({
+            raw_text: "NSX 01/01/2026\nHSD 01/01/2027",
+            candidates: {
+              food_name: "Milk",
+              expiry_date: {
+                value: "2027-01-01",
+                date_certainty: "exact",
+                date_label_type: "use_by",
+                source_text: "01/01/2027",
+                alternatives: [],
+                ambiguous: false,
+                requires_confirmation: true,
+              },
+              manufactured_date: {
+                value: "2026-01-01",
+                source_text: "01/01/2026",
+              },
+            },
+            warnings: [],
+            errors: [],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        )
+      }
+      return new Response("Not found", { status: 404 })
+    })
+
+    const client = new ApiClient(mockFetch as unknown as typeof fetch)
+    const result = await client.scan(
+      new Blob(["mock-image"], { type: "image/jpeg" }),
+    )
+
+    expect(result.candidates.expiry_date.value).toBe("2027-01-01")
+    expect(result.candidates.food_name).toBe("Milk")
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  })
 })
