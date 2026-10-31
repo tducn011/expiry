@@ -111,7 +111,9 @@ describe("optimizeScanImage", () => {
 
     expect(toBlob).toHaveBeenCalledWith(
       expect.any(Function),
+
       "image/jpeg",
+
       0.85,
     )
 
@@ -168,7 +170,9 @@ describe("optimizeScanImage", () => {
   it("decodes octet-stream uploads and converts them to JPEG", async () => {
     mockImageTools({
       width: 800,
+
       height: 600,
+
       outputSize: () => 300_000,
     })
 
@@ -177,7 +181,9 @@ describe("optimizeScanImage", () => {
     )
 
     expect(optimized.type).toBe("image/jpeg")
+
     expect(optimized.name).toBe("camera-upload.jpg")
+
     expect(optimized.size).toBeLessThan(MAX_OPTIMIZED_IMAGE_BYTES)
   })
 

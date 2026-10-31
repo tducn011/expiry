@@ -2,13 +2,16 @@ import type { ReactNode, SVGProps } from "react"
 
 export interface IconProps extends SVGProps<SVGSVGElement> {
   size?: number | string
+
   className?: string
 }
 
 function createIcon(d: ReactNode, defaultSize = 24) {
   return function IconComponent({
     size = defaultSize,
+
     className = "",
+
     ...props
   }: IconProps) {
     return (
@@ -201,8 +204,11 @@ export const SearchX = createIcon(
 )
 
 export const ChevronRight = createIcon(<path d="m9 18 6-6-6-6" />)
+
 export const ChevronLeft = createIcon(<path d="m15 18-6-6 6-6" />)
+
 export const ChevronDown = createIcon(<path d="m6 9 6 6 6-6" />)
+
 export const PanelLeftClose = createIcon(
   <>
     <rect width="18" height="18" x="3" y="3" rx="2" />
@@ -210,6 +216,7 @@ export const PanelLeftClose = createIcon(
     <path d="m16 15-3-3 3-3" />
   </>,
 )
+
 export const PanelLeftOpen = createIcon(
   <>
     <rect width="18" height="18" x="3" y="3" rx="2" />
@@ -217,18 +224,21 @@ export const PanelLeftOpen = createIcon(
     <path d="m14 9 3 3-3 3" />
   </>,
 )
+
 export const ChevronsLeft = createIcon(
   <>
     <path d="m11 17-5-5 5-5" />
     <path d="m18 17-5-5 5-5" />
   </>,
 )
+
 export const ChevronsRight = createIcon(
   <>
     <path d="m6 17 5-5-5-5" />
     <path d="m13 17 5-5-5-5" />
   </>,
 )
+
 export const ArrowLeft = createIcon(
   <>
     <path d="m12 19-7-7 7-7" />
@@ -492,65 +502,80 @@ export const TrendingUp = createIcon(
 )
 
 // Legacy Icon component for backwards compatibility with existing codebase
+
 const iconRegistry: Record<string, ReactNode> = {
   "chevron-down": <path d="m6 9 6 6 6-6" />,
+
   "chevron-left": <path d="m15 18-6-6 6-6" />,
+
   "chevron-right": <path d="m9 18 6-6-6-6" />,
+
   calendar: (
     <>
       <rect x="3" y="5" width="18" height="16" rx="2" />
       <path d="M16 3v4M8 3v4M3 11h18" />
     </>
   ),
+
   bottle: (
     <>
       <path d="M10 2h4v5l3 3v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V10l3-3V2ZM10 5h4M7 13h10" />
     </>
   ),
+
   leaf: (
     <>
       <path d="M20 4c-8-2-15 1-15 8a7 7 0 0 0 7 7c7 0 10-7 8-15Z" />
       <path d="M4 21 15 10" />
     </>
   ),
+
   box: (
     <>
       <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z" />
       <path d="m4 7.5 8 4.5 8-4.5M12 12v9" />
     </>
   ),
+
   clock: (
     <>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 2" />
     </>
   ),
+
   plus: <path d="M12 5v14M5 12h14" />,
+
   "scan-barcode": (
     <>
       <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" />
       <path d="M7 8v8M10 8v8M14 8v8M17 8v8" />
     </>
   ),
+
   search: (
     <>
       <circle cx="10.5" cy="10.5" r="6.5" />
       <path d="m16 16 4 4" />
     </>
   ),
+
   settings: (
     <>
       <circle cx="12" cy="12" r="3" />
       <path d="M19 13.5v-3l-2-.6-.7-1.7 1-1.9-2.1-2.1-1.9 1-1.8-.7L11 2H8l-.6 2.5-1.7.7-2-1L1.6 6.3l1.1 1.9L2 10v3l2.5.6.7 1.7-1 1.9 2.1 2.1 1.9-1 1.8.7.5 2.5h3l.6-2.5 1.7-.7 2 1 2.1-2.1-1.1-1.9.7-1.8Z" />
     </>
   ),
+
   trash: (
     <>
       <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13" />
       <path d="M10 11v5M14 11v5" />
     </>
   ),
+
   back: <path d="m15 18-6-6 6-6" />,
+
   more: (
     <>
       <circle cx="5" cy="12" r="1" />
@@ -558,8 +583,11 @@ const iconRegistry: Record<string, ReactNode> = {
       <circle cx="19" cy="12" r="1" />
     </>
   ),
+
   arrow: <path d="M5 12h14M14 7l5 5-5 5" />,
+
   close: <path d="m6 6 12 12M18 6 6 18" />,
+
   history: (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -567,13 +595,16 @@ const iconRegistry: Record<string, ReactNode> = {
       <path d="M3 12h2M19 12h2" />
     </>
   ),
+
   check: <path d="m4 12 5 5L20 6" />,
+
   alert: (
     <>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 8v5M12 16h.01" />
     </>
   ),
+
   help: (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -584,17 +615,25 @@ const iconRegistry: Record<string, ReactNode> = {
 
 export default function Icon({
   name,
+
   size = 18,
+
   className = "icon",
+
   ...props
 }: {
   name: string
+
   size?: number | string
+
   className?: string
+
   [key: string]: unknown
 }) {
   const path = iconRegistry[name]
+
   if (!path) return null
+
   return (
     <svg
       viewBox="0 0 24 24"

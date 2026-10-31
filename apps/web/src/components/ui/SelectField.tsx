@@ -1,31 +1,45 @@
 import { type ChangeEvent, type SelectHTMLAttributes, useId } from "react"
+
 import { ChevronDown } from "./Icon"
 
 export interface SelectOption {
   value: string
+
   label: string
 }
 
 export interface SelectFieldProps
   extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "onChange"> {
   label?: string
+
   options: SelectOption[]
+
   description?: string
+
   onChange?: (value: string) => void
 }
 
 export function SelectField({
   label,
+
   options,
+
   description,
+
   value,
+
   onChange,
+
   id: explicitId,
+
   className = "",
+
   disabled,
+
   ...props
 }: SelectFieldProps) {
   const generatedId = useId()
+
   const id = explicitId || generatedId
 
   const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {

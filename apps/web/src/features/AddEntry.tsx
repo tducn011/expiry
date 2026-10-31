@@ -1,15 +1,22 @@
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import { Camera, Keyboard, ScanText, Sparkles } from "../components/ui/Icon"
+
 import PageHeader from "../components/ui/PageHeader"
 
 export function AddEntry({
   onScan,
+
   onManual,
+
   onBack,
 }: {
   onScan: () => void
+
   onManual: () => void
+
   onBack?: () => void
 }) {
   return (

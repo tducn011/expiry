@@ -12,6 +12,8 @@ import type {
 
 import { scanToEntryDraft, type ScanResult } from "../api/client"
 
+import { inferCategory, CATEGORIES, type Category } from "../store/appStore"
+
 import {
   certaintyLabel,
   fmtQty,
@@ -47,6 +49,8 @@ type FormState = {
   quantity: string
 
   unit: Unit
+
+  category: string
 
   storage_location: string
 
@@ -140,6 +144,9 @@ export default function EntryForm({
     quantity: initial ? String(initial.initial_quantity) : "",
 
     unit: base?.unit ?? "piece",
+
+    category:
+      base?.category ?? (base?.name ? inferCategory(base.name) : "other"),
 
     storage_location: base?.storage_location ?? "",
 
@@ -243,6 +250,8 @@ export default function EntryForm({
       name: form.name.trim(),
 
       storage_location: form.storage_location.trim() || null,
+
+      category: form.category || null,
 
       expiry_date: unknown ? null : form.expiry_date,
 
@@ -387,6 +396,12 @@ export default function EntryForm({
                               ...current,
 
                               name: mapped.name || current.name,
+
+                              category:
+                                mapped.category ||
+                                (mapped.name
+                                  ? inferCategory(mapped.name)
+                                  : current.category),
 
                               ...(mapped.expiry_date === null
                                 ? {}
@@ -602,6 +617,23 @@ export default function EntryForm({
                   ))}
                 </div>
               </div>
+              <div className="span-2">
+                <Field
+                  label="Nhóm danh mục"
+                  hint="Tự động suy luận từ tên hoặc mã vạch; có thể đổi lại."
+                >
+                  <select
+                    value={form.category}
+                    onChange={(e) => set("category", e.target.value)}
+                  >
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
             </div>
           ) : (
             <div className="form-grid" key="date">
@@ -759,6 +791,10 @@ export default function EntryForm({
             const lookup = await lookupBarcode(res.text)
 
             if (lookup.found && lookup.product) {
+              const inferredCat = lookup.product!.name
+                ? inferCategory(lookup.product!.name)
+                : undefined
+
               setForm((prev) => ({
                 ...prev,
 
@@ -767,6 +803,11 @@ export default function EntryForm({
                 barcode_format: res.format,
 
                 name: prev.name.trim() ? prev.name : lookup.product!.name,
+
+                category:
+                  prev.category && prev.category !== "other"
+                    ? prev.category
+                    : lookup.product!.category || inferredCat || "other",
 
                 storage_location:
                   prev.storage_location ||

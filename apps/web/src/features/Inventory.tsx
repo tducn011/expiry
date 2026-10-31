@@ -1,10 +1,17 @@
 import { useMemo, useState } from "react"
+
 import type { Food, State } from "../store/appStore"
+
 import { active, formatDate, statusOf, today } from "../store/appStore"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import FilterChips, { type StatusFilter } from "../components/ui/FilterChips"
+
 import {
   Bell,
   CircleAlert,
@@ -15,47 +22,70 @@ import {
   SearchX,
   X,
 } from "../components/ui/Icon"
+
 import IconButton from "../components/ui/IconButton"
+
 import InputField from "../components/ui/InputField"
+
 import PageHeader from "../components/ui/PageHeader"
+
 import StatusBadge from "../components/ui/StatusBadge"
+
 import FoodCard, { getFoodIcon } from "./FoodCard"
 
 export type InventoryFilters = {
   query: string
+
   location: string
+
   lifecycle: "Còn hàng" | "Đã hết" | "Tất cả"
+
   attentionFilter: import("../domain/types").Attention | "all"
 }
 
 export const defaultFilters: InventoryFilters = {
   query: "",
+
   location: "Tất cả vị trí",
+
   lifecycle: "Còn hàng",
+
   attentionFilter: "all",
 }
 
 export interface InventoryProps {
   state: State
+
   onOpenDetail: (id: string) => void
+
   onAdd: () => void
+
   onNavigateAttention: () => void
+
   onOpenNotifications?: () => void
+
   unreadNotificationsCount?: number
 }
 
 function AttentionSummary({
   expired,
+
   soon,
+
   reviewDue,
+
   onOpen,
 }: {
   expired: number
+
   soon: number
+
   reviewDue: number
+
   onOpen: () => void
 }) {
   const total = expired + soon + reviewDue
+
   if (total === 0) return null
 
   return (
@@ -99,21 +129,31 @@ function AttentionSummary({
 
 export function Inventory({
   state,
+
   onOpenDetail,
+
   onAdd,
+
   onNavigateAttention,
+
   onOpenNotifications,
+
   unreadNotificationsCount = 0,
 }: InventoryProps) {
   const [q, setQ] = useState("")
+
   const [filter, setFilter] = useState<StatusFilter>("all")
 
   const remind = state.settings.remindDays
+
   const items = active(state)
+
   const t = today()
 
   const expired = items.filter((f) => statusOf(f, remind) === "expired").length
+
   const soon = items.filter((f) => statusOf(f, remind) === "soon").length
+
   const reviewDue = items.filter(
     (f) =>
       statusOf(f, remind) !== "expired" &&
@@ -124,14 +164,19 @@ export function Inventory({
 
   const list = useMemo(() => {
     const query = q.trim().toLowerCase()
+
     return items
+
       .filter((f) => !query || f.name.toLowerCase().includes(query))
+
       .filter((f) => filter === "all" || statusOf(f, remind) === filter)
+
       .sort((a, b) => (a.expDate ?? "9999").localeCompare(b.expDate ?? "9999"))
   }, [items, q, filter, remind])
 
   const clear = () => {
     setQ("")
+
     setFilter("all")
   }
 
@@ -307,6 +352,7 @@ export function Inventory({
                     <tbody className="divide-y divide-border-primary/40">
                       {list.map((f) => {
                         const IconComp = getFoodIcon(f.name)
+
                         return (
                           <tr
                             key={f.id}

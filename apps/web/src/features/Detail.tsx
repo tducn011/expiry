@@ -1,5 +1,15 @@
 import { useState } from "react"
+
+import {
+  api,
+  ApiError,
+  decimal,
+  errorMessage,
+  type MutationResult,
+} from "../api/client"
+
 import type { Dispatch, Food, State } from "../store/appStore"
+
 import {
   addDays,
   CATEGORY_LABELS,
@@ -8,9 +18,13 @@ import {
   statusOf,
   today,
 } from "../store/appStore"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import {
   CalendarClock,
   CircleAlert,
@@ -19,10 +33,15 @@ import {
   SearchX,
   Trash2,
 } from "../components/ui/Icon"
+
 import InputField from "../components/ui/InputField"
+
 import Modal from "../components/ui/Modal"
+
 import PageHeader from "../components/ui/PageHeader"
+
 import SectionTitle from "../components/ui/SectionTitle"
+
 import StatusBadge from "../components/ui/StatusBadge"
 
 export type DetailAction = "consume" | "discard" | "recount" | "history" | "edit" | "date" | "delete"
@@ -31,43 +50,68 @@ type QtyKind = "consume" | "discard" | "adjust"
 
 interface QtyCopyConfig {
   t: string
+
   label: string
+
   verb: string
 }
 
 const qtyCopy: Record<QtyKind, QtyCopyConfig> = {
   consume: { t: "Ghi nhận đã dùng", label: "Lượng đã dùng", verb: "Đã dùng" },
+
   discard: { t: "Ghi nhận đã bỏ", label: "Lượng đã bỏ", verb: "Đã bỏ" },
+
   adjust: {
     t: "Điều chỉnh số lượng",
+
     label: "Số lượng thực tế",
+
     verb: "Đã chỉnh về",
   },
 }
 
 export function Detail({
   state,
+
   id,
+
   dispatch,
+
   onEdit,
+
   onBack,
+
   notify,
 }: {
   state: State
+
   id: string
+
   dispatch: Dispatch
+
   onEdit: (food: Food) => void
+
   onBack: () => void
+
   notify: (m: string, v?: "success" | "danger" | "warning") => void
 }) {
   const f = state.foods.find((x) => x.id === id)
+
   const [qty, setQty] = useState<QtyKind | null>(null)
+
   const [val, setVal] = useState("")
+
   const [step, setStep] = useState<"enter" | "review">("enter")
+
   const [err, setErr] = useState("")
+
   const [later, setLater] = useState(false)
+
   const [laterDate, setLaterDate] = useState(addDays(today(), 1))
+
   const [confirmTrash, setConfirmTrash] = useState(false)
+
+  const [loading, setLoading] = useState(false)
 
   if (!f || f.deletedAt) {
     return (
@@ -85,44 +129,198 @@ export function Detail({
   }
 
   const rd = state.settings.remindDays
+
   const st = statusOf(f, rd)
+
   const d = daysLeft(f)
+
   const t = today()
+
   const isReviewDue = f.reviewAt !== undefined && f.reviewAt <= t
 
   const n = Number(val.replace(",", "."))
+
   const to = qty === "adjust" ? n : +(f.quantity - n).toFixed(3)
 
   function next() {
     if (!/^\d+([.,]\d{1,3})?$/.test(val.trim())) {
       return setErr("Chỉ nhập số, ví dụ 1 hoặc 0.5.")
     }
+
     if (qty !== "adjust" && n <= 0) return setErr("Lượng phải lớn hơn 0.")
+
     if (qty !== "adjust" && n > f!.quantity) {
       return setErr(`Không thể lớn hơn ${f!.quantity} ${f!.unit} đang có.`)
     }
+
     if (qty === "adjust" && n === f!.quantity) {
       return setErr("Số lượng chưa thay đổi.")
     }
+
     setErr("")
+
     setStep("review")
   }
 
-  function confirm() {
+  async function confirm() {
+    if (state.mode === "account") {
+      setLoading(true)
+
+      setErr("")
+
+      try {
+        const idempotencyKey = `idemp_${crypto.randomUUID()}`
+
+        const expectedVersion = f!.version ?? 1
+
+        let res: MutationResult
+
+        if (qty === "adjust") {
+          res = await api.recount(
+            f!.id,
+
+            {
+              expected_version: expectedVersion,
+
+              actual_quantity: decimal(n),
+
+              reason: "Kiểm kê lại thực tế",
+            },
+
+            idempotencyKey,
+          )
+        } else {
+          res = await api.recordMovement(
+            f!.id,
+
+            {
+              expected_version: expectedVersion,
+
+              kind: qty!,
+
+              amount: decimal(n),
+
+              reason: qty === "consume" ? "Đã dùng thực phẩm" : "Bỏ thực phẩm",
+            },
+
+            idempotencyKey,
+          )
+        }
+
+        dispatch({ type: "qty", id: f!.id, kind: qty!, value: n })
+
+        if (res.entry) {
+          dispatch({
+            type: "save",
+
+            food: {
+              ...f!,
+
+              quantity: res.entry.remaining_quantity,
+
+              version: res.entry.version,
+
+              finishedAt:
+                res.entry.remaining_quantity === 0
+                  ? new Date().toISOString()
+                  : undefined,
+            },
+          })
+        }
+
+        notify(
+          to === 0
+            ? `${f!.name} đã hết — chuyển vào Lịch sử`
+            : `${qtyCopy[qty!].verb}: còn ${to} ${f!.unit}`,
+        )
+
+        setQty(null)
+
+        if (to === 0) onBack()
+
+        return
+      } catch (failure: unknown) {
+        if (failure instanceof ApiError) {
+          if (failure.code === "INSUFFICIENT_QUANTITY") {
+            setErr(
+              "Số lượng còn lại trong kho không đủ để thực hiện thao tác này.",
+            )
+          } else if (
+            failure.code === "VERSION_CONFLICT" ||
+            failure.status === 409
+          ) {
+            setErr(
+              "Dữ liệu đã bị thay đổi ở thiết bị khác. Vui lòng tải lại trang.",
+            )
+          } else {
+            setErr(
+              errorMessage(failure.status, failure.code) ||
+                "Không thể ghi nhận biến động kho.",
+            )
+          }
+        } else {
+          setErr("Lỗi kết nối máy chủ. Vui lòng thử lại sau.")
+        }
+
+        return
+      } finally {
+        setLoading(false)
+      }
+    }
+
     dispatch({ type: "qty", id: f!.id, kind: qty!, value: n })
+
     notify(
       to === 0
         ? `${f!.name} đã hết — chuyển vào Lịch sử`
         : `${qtyCopy[qty!].verb}: còn ${to} ${f!.unit}`,
     )
+
     setQty(null)
+
     if (to === 0) onBack()
+  }
+
+  async function handleTrash() {
+    setLoading(true)
+
+    try {
+      if (state.mode === "account") {
+        const idempotencyKey = `idemp_${crypto.randomUUID()}`
+
+        await api.deleteEntry(f!.id, f!.version ?? 1, idempotencyKey)
+      }
+
+      dispatch({ type: "trash", id: f!.id })
+
+      notify("Đã chuyển vào Thùng rác")
+
+      onBack()
+    } catch (failure: unknown) {
+      if (
+        failure instanceof ApiError &&
+        (failure.code === "VERSION_CONFLICT" || failure.status === 409)
+      ) {
+        notify(
+          "Xung đột phiên bản: Thực phẩm đã thay đổi trước đó. Vui lòng tải lại.",
+        )
+      } else {
+        notify("Lỗi kết nối máy chủ. Không thể chuyển vào Thùng rác.")
+      }
+    } finally {
+      setLoading(false)
+
+      setConfirmTrash(false)
+    }
   }
 
   const openQty = (k: QtyKind) => {
     setQty(k)
+
     setVal(k === "adjust" ? String(f.quantity) : "")
+
     setStep("enter")
+
     setErr("")
   }
 
@@ -221,19 +419,26 @@ export function Detail({
             <dl className="grid grid-cols-2 gap-4 pt-2 border-t border-border-primary/40">
               {[
                 ["Số lượng", `${f.quantity} ${f.unit}`],
+
                 ["Nơi bảo quản", f.location || "Chưa chọn"],
+
                 [
                   "Danh mục",
+
                   f.category
                     ? CATEGORY_LABELS[f.category] || f.category
                     : "Chưa phân loại",
                 ],
+
                 [
                   "Ngày sản xuất",
+
                   f.mfgDate ? formatDate(f.mfgDate) : "Chưa rõ",
                 ],
+
                 [
                   "Hạn sử dụng",
+
                   f.expDate ? formatDate(f.expDate) : "Chưa rõ HSD",
                 ],
               ].map(([k, v]) => (
@@ -299,8 +504,8 @@ export function Detail({
               <Button variant="neutral" onClick={() => setStep("enter")}>
                 Sửa lại
               </Button>
-              <Button variant="primary" onClick={confirm}>
-                Xác nhận
+              <Button variant="primary" onClick={confirm} disabled={loading}>
+                {loading ? "Đang xử lý..." : "Xác nhận"}
               </Button>
             </>
           )
@@ -315,6 +520,7 @@ export function Detail({
                   type="button"
                   onClick={() => {
                     setVal(String(f.quantity))
+
                     setErr("")
                   }}
                   className="rounded-corner-full border border-border-primary bg-surface-bg px-2.5 py-1 text-xs font-medium text-text-primary hover:border-brand-primary transition-colors cursor-pointer"
@@ -327,6 +533,7 @@ export function Detail({
                     type="button"
                     onClick={() => {
                       setVal("1")
+
                       setErr("")
                     }}
                     className="rounded-corner-full border border-border-primary bg-surface-bg px-2.5 py-1 text-xs font-medium text-text-primary hover:border-brand-primary transition-colors cursor-pointer"
@@ -339,6 +546,7 @@ export function Detail({
                     type="button"
                     onClick={() => {
                       setVal(String(+(f.quantity / 2).toFixed(2)))
+
                       setErr("")
                     }}
                     className="rounded-corner-full border border-border-primary bg-surface-bg px-2.5 py-1 text-xs font-medium text-text-primary hover:border-brand-primary transition-colors cursor-pointer"
@@ -354,6 +562,7 @@ export function Detail({
               value={val}
               onChange={(v: string) => {
                 setVal(v)
+
                 setErr("")
               }}
               description={`Đang ghi nhận: ${f.quantity} ${f.unit}`}
@@ -382,6 +591,11 @@ export function Detail({
                 khi mua mới.
               </p>
             )}
+            {err && (
+              <p role="alert" className="text-xs text-danger font-medium">
+                {err}
+              </p>
+            )}
           </div>
         )}
       </Modal>
@@ -402,7 +616,9 @@ export function Detail({
               disabled={!laterDate || laterDate <= today()}
               onClick={() => {
                 dispatch({ type: "review", id: f.id, date: laterDate })
+
                 setLater(false)
+
                 notify(`Sẽ nhắc lại ngày ${formatDate(laterDate)}`)
               }}
             >
@@ -451,15 +667,8 @@ export function Detail({
             <Button variant="neutral" onClick={() => setConfirmTrash(false)}>
               Hủy
             </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                dispatch({ type: "trash", id: f.id })
-                notify("Đã chuyển vào Thùng rác")
-                onBack()
-              }}
-            >
-              Chuyển vào Thùng rác
+            <Button variant="danger" disabled={loading} onClick={handleTrash}>
+              {loading ? "Đang xử lý..." : "Chuyển vào Thùng rác"}
             </Button>
           </>
         }

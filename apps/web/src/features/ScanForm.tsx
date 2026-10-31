@@ -8,6 +8,8 @@ import {
 
 import type { ScanDateCandidate, ScanResult } from "../api/client"
 
+import { inferCategory, CATEGORY_LABELS } from "../store/appStore"
+
 import Button from "../components/ui/Button"
 
 import Field from "../components/ui/Field"
@@ -723,9 +725,16 @@ export default function ScanForm({
             </Button>
           </div>
           {error && (
-            <p className="note-box" role="alert">
-              {error}
-            </p>
+            <div className="stack" style={{ gap: "8px" }}>
+              <p className="note-box" role="alert">
+                {error}
+              </p>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <Button type="button" variant="secondary" onClick={handleClose}>
+                  Chuyển sang điền tay
+                </Button>
+              </div>
+            </div>
           )}
           {result && (
             <div className="stack scan-review">
@@ -745,6 +754,17 @@ export default function ScanForm({
                 {result.candidates.food_name ||
                   "Chưa nhận diện; bạn có thể nhập tay."}
               </p>
+              {result.candidates.food_name && (
+                <p>
+                  Danh mục dự kiến:{" "}
+                  <strong>
+                    {CATEGORY_LABELS[
+                      inferCategory(result.candidates.food_name)
+                    ] || "Khác"}
+                  </strong>{" "}
+                  <span className="inline-hint">(suy luận tự động)</span>
+                </p>
+              )}
               <p>
                 Ngày sản xuất đọc được:{" "}
                 {result.candidates.manufactured_date.value
@@ -787,13 +807,28 @@ export default function ScanForm({
                   <p>{result.raw_text}</p>
                 </details>
               )}
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => onApply(result, selectedDate)}
+              <div
+                style={{
+                  display: "flex",
+
+                  gap: "8px",
+
+                  flexWrap: "wrap",
+
+                  marginTop: "12px",
+                }}
               >
-                Áp dụng gợi ý vào biểu mẫu
-              </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => onApply(result, selectedDate)}
+                >
+                  Áp dụng gợi ý vào biểu mẫu
+                </Button>
+                <Button type="button" variant="ghost" onClick={handleClose}>
+                  Chuyển sang điền tay
+                </Button>
+              </div>
             </div>
           )}
         </div>

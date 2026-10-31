@@ -1,0 +1,4267 @@
+{
+  "source": "../../consolidated/Slide System Engineering.pdf",
+  "sourceSha256": "f0d1c7d4e735695844c49829d8fc5bbceb742fd9bfce73395206f029faaec09b",
+  "pageCount": 129,
+  "pages": [
+    {
+      "page": 1,
+      "image": "pages/001.jpeg",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 619,
+      "sha256": "d3656499fa4ab97ade0f260116870d80e84b99388f5027a3a1a79af3238871e6",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0004,
+          960.0,
+          540.7097
+        ]
+      ],
+      "render": "renders/001.png",
+      "renderSha256": "5a599b71b48ae28b078b9371d406490418255343f2e389292374b3b026290f5d",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "INTRODUCE TO SYSTEM ENGINEERING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 2,
+      "image": "pages/002.png",
+      "mode": "embedded-image",
+      "width": 1094,
+      "height": 615,
+      "sha256": "337ffcf74fa2dad52b893ccbdd3fcb71ef3bfd65723a7ac382d85f45ad3eb046",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.001,
+          960.0,
+          539.671
+        ]
+      ],
+      "render": "renders/002.png",
+      "renderSha256": "258e1fd08bf4607dfdbc13a21852e6ad05f91eaf3a45be9ee06928e55bd61b0b",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "CONTENT",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 3,
+      "image": "pages/003.jpeg",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 617,
+      "sha256": "73c4705df2656280c8c049e5d5c9027a39153b5eecdf51ae6a05342e31bb4cf1",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0019,
+          960.0,
+          537.0081
+        ]
+      ],
+      "render": "renders/003.png",
+      "renderSha256": "9cbb9c83243fb9099dc56f333b668373ce156d2632f5378ea6bc1475e3afb3b2",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WHAT IS A SYSTEM?",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 4,
+      "image": "pages/004.jpeg",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 619,
+      "sha256": "8adcb1c7a1eeaf848b27f945090c1f5ab33b12db945dc22db5e5d9f1d23e6ea1",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.002,
+          960.0,
+          540.218
+        ]
+      ],
+      "render": "renders/004.png",
+      "renderSha256": "65a131c8e27d800b53ddd75a20de9d8dbb03f43ac387bca8735036aff19c2c02",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Examples: Computer System",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 5,
+      "image": "pages/005.jpeg",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 620,
+      "sha256": "a1b4c4d0f00add25aeeb7030fab0a9a030525292c55b42662be8cf1da786dcef",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0004,
+          960.0,
+          542.5704
+        ]
+      ],
+      "render": "renders/005.png",
+      "renderSha256": "b5b82393d21cfceb80cbc5684cbd40cce43348ee1f0473603caaf78ec016ed11",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Example: School System",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 6,
+      "image": "pages/006.png",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 614,
+      "sha256": "55f05312367dbf7f3bcdc4faf54e07f0558799b0ff5e80b474d80683a2d12885",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0024,
+          960.0,
+          535.3676
+        ]
+      ],
+      "render": "renders/006.png",
+      "renderSha256": "5c41fc7b98347f6cfd82dd127e66a77ef39f9e7899726db5a9f85c4d23886818",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WHAT IS A SYSTEM?",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 7,
+      "image": "pages/007.png",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 619,
+      "sha256": "78f4c5a46b5984e69bf58239e4b42913ef5a1e9c5efaf6d28f790e4ba8482c02",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.002,
+          960.0,
+          540.218
+        ]
+      ],
+      "render": "renders/007.png",
+      "renderSha256": "4768100d7da40127dc764c2d4206faffd763e416d760f448f661af167824e2ca",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WHAT IS SYSTEMS THINKING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 8,
+      "image": "pages/008.png",
+      "mode": "embedded-image",
+      "width": 1096,
+      "height": 617,
+      "sha256": "8ae1d911712a961af0cf30b1f89b6b91339d373e11d72b31068fd388f69d1cec",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0021,
+          960.0,
+          540.4379
+        ]
+      ],
+      "render": "renders/008.png",
+      "renderSha256": "f98cfe7fe387a4d8c09d3bc9b4bd1d6df4fb2ecebed3cc6009233e3492dd4547",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WHAT IS SYSTEMS THINKING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 9,
+      "image": "pages/009.png",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 621,
+      "sha256": "4c2e1d0af6cb41b89cba97056a33ed73a7d767ea1d08fe785f2ed8be8cc707ae",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0004,
+          960.0,
+          540.4896
+        ]
+      ],
+      "render": "renders/009.png",
+      "renderSha256": "38e7ded2def6af0f7b686b0cc748064a205bb58706a5e51c913565ee7a975c90",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Q&A",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 10,
+      "image": "pages/010.png",
+      "mode": "embedded-image",
+      "width": 1108,
+      "height": 621,
+      "sha256": "70aa7aa362ad469a33592464f9b659ad98f951799ce0dba98a28afef136aa97f",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0005,
+          960.0,
+          538.0505
+        ]
+      ],
+      "render": "renders/010.png",
+      "renderSha256": "8136ef86b3ce724d6e34bc77434998ce44511393a0d96a2ffc466fbbb913cdbe",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "The Importance of Systems Thinking in Engineering",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 11,
+      "image": "pages/011.png",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 614,
+      "sha256": "dac5dced8395b8f04b6416d909b473d67293f667bf8b499489df7f992cd711e8",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0019,
+          960.0,
+          536.3419
+        ]
+      ],
+      "render": "renders/011.png",
+      "renderSha256": "edecdd69e99873a4372df9e5b4af76236a27e5236ae7e85a3e0c8d4aa444cf6b",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WHAT IS SYSTEMS ENGINEERING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 12,
+      "image": "pages/012.jpeg",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 621,
+      "sha256": "926b465459f255780fce9b33209059bd262425dfa5c34c53625480c41bb61516",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0036,
+          960.0,
+          541.9636
+        ]
+      ],
+      "render": "renders/012.png",
+      "renderSha256": "86af440e3afa43b378f3a3fb34512939b923f31fea9668b5c3a58c9cfb87d503",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WHAT IS SYSTEMS ENGINEERING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 13,
+      "image": "pages/013.jpeg",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 618,
+      "sha256": "611ba6b804e70aa36e80a6c92fd1580765cd9500dbe9b5cf6dbe61d589e1b548",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0045,
+          960.0,
+          539.3455
+        ]
+      ],
+      "render": "renders/013.png",
+      "renderSha256": "3bb45bc020b69b44a5d569e040030e7fc276f320debb10934456d5494a5eb2a4",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WHAT IS SYSTEMS ENGINEERING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 14,
+      "image": "pages/014.png",
+      "mode": "embedded-image",
+      "width": 1106,
+      "height": 617,
+      "sha256": "aead4cc14b06279f2e36520e20437c80ae70e7e837aea15c14a8de9c4cdca48d",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0014,
+          960.0,
+          535.5514
+        ]
+      ],
+      "render": "renders/014.png",
+      "renderSha256": "2de325645752b7d1faf561aa7b79a973f8174f39d82e1927cdeeaaa6e5f63b41",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "TYPES OF SYSTEMS ENGINEERING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 15,
+      "image": "pages/015.jpeg",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 617,
+      "sha256": "9689106ceb4bc04a19430a3f38350b24b1b331f1a3f2e3e73e6d4e45fd8cc189",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0034,
+          960.0,
+          539.4534
+        ]
+      ],
+      "render": "renders/015.png",
+      "renderSha256": "60248ceed36f02d83deb59f5db82ecd317d8fced1f65f231c9777fc2c84e9c00",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SYSTEMS ENGINEERING PROCESS",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 16,
+      "image": "pages/016.jpeg",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 617,
+      "sha256": "71f76b1e5178e73d128fda8b146b1fa1c3770a921b83815c66229f44e4ea0bad",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          2.9899,
+          960.0,
+          539.9999
+        ]
+      ],
+      "render": "renders/016.png",
+      "renderSha256": "bf1e0144506a22eb1f95afe57781a4a41212155af2a0d56bc0649b28ffbe3bcb",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "MANAGING COMPLEXITY",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 17,
+      "image": "pages/017.png",
+      "mode": "embedded-image",
+      "width": 1104,
+      "height": 624,
+      "sha256": "b8362513eac631ba7812668a66097e6efae8dabdd363e76f44910233697185ac",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0015,
+          960.0,
+          542.6085
+        ]
+      ],
+      "render": "renders/017.png",
+      "renderSha256": "54c0a287113086f5c044b4f9116f15d6771104b6832511bfe96bea2b0c23ca71",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SYSTEMS DEVELOPMENT LIFE CYCLE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 18,
+      "image": "pages/018.jpeg",
+      "mode": "embedded-image",
+      "width": 1105,
+      "height": 619,
+      "sha256": "b02dc1bea1478418f22a7206524d092c9e0e80357c918b673c82bcd81a6a219f",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0036,
+          960.0,
+          537.7736
+        ]
+      ],
+      "render": "renders/018.png",
+      "renderSha256": "b934c7bc27db4b497e1d420b718633bf1850a4a605d30255c65fab2f7f86b2c0",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SYSTEMS DEVELOPMENT LIFE CYCLE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 19,
+      "image": "pages/019.jpeg",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 617,
+      "sha256": "afad39fc06ff796a92faa97562f2b2ef62dbc67142e4de7d1d8b301e57c89235",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0034,
+          960.0,
+          539.4534
+        ]
+      ],
+      "render": "renders/019.png",
+      "renderSha256": "dcbd64d3695a993e5f7952ac34a3833929327cdb714b696c727a548dddc559d2",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "INTRODUCE TO SYSTEM DEVELOPMENT LIFE CYCLE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 20,
+      "image": "pages/020.png",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 617,
+      "sha256": "39c1f07d189bf4138c67327aee15fb54f143d38bd10055678f2d59a29765260b",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0019,
+          960.0,
+          537.0081
+        ]
+      ],
+      "render": "renders/020.png",
+      "renderSha256": "4eb3cda6b41b7dedc77bc6fcd6afd8011bef34cc3a06bca762767c9dc852f7de",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "CONTENT",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 21,
+      "image": "pages/021.png",
+      "mode": "embedded-image",
+      "width": 1106,
+      "height": 618,
+      "sha256": "6d2368632fd1bfd36aa18292aa39221fdb0b571836e9b7d5787f6810f60cc588",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0006,
+          960.0,
+          536.4194
+        ]
+      ],
+      "render": "renders/021.png",
+      "renderSha256": "1175af6aa9a5b646a586e1c88f80098d4d0d7dd447a465ddf48a549159c355b4",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SYSTEMS DEVELOPMENT LIFE CYCLE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 22,
+      "image": "pages/022.png",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 619,
+      "sha256": "e21e1197db798f9dd4f416e5cf67f551957fd7f75a9cfdbfb50ea64f6da147a7",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0004,
+          960.0,
+          540.7097
+        ]
+      ],
+      "render": "renders/022.png",
+      "renderSha256": "0f59955caba1d910a136229de03956a6d1330f3c345d2de19f7636aecf3d38c9",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SYSTEMS DEVELOPMENT LIFE CYCLE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 23,
+      "image": "pages/023.jpeg",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 617,
+      "sha256": "0d3211140dfccc4418d4e34c51e07b8e8db34c6b61a6deff3602307334d5245d",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0019,
+          960.0,
+          537.0081
+        ]
+      ],
+      "render": "renders/023.png",
+      "renderSha256": "870769e0927d7055f6ccb08ff210d5b60ec4e13f0cc936f3d6a9326e1febef30",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "9 COMMON STEPS IN SDLC",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 24,
+      "image": "pages/024.png",
+      "mode": "embedded-image",
+      "width": 1092,
+      "height": 620,
+      "sha256": "9673a1046641c48b0ea9a0e908b3bb5f9f0032b5a47e9ccf3e6c74e2d4cde14a",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0047,
+          960.0,
+          545.0547
+        ]
+      ],
+      "render": "renders/024.png",
+      "renderSha256": "164fa2f10bc35a81e9fa568df676f93af7524f6d7e582bfe0c27f85c6b805f7b",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "ANALYSIS",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 25,
+      "image": "pages/025.png",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 620,
+      "sha256": "7817bab4af24939752c3d77a78c753969078ad03150619cb06bcb45097999d7e",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0007,
+          960.0,
+          540.5992
+        ]
+      ],
+      "render": "renders/025.png",
+      "renderSha256": "15a5a7f534a207b4ee598eb72d32b54c262e4aa89a4b2cb472f45c2aed9a5765",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "PLANNING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 26,
+      "image": "pages/026.png",
+      "mode": "embedded-image",
+      "width": 1106,
+      "height": 626,
+      "sha256": "8f08b8645843d82534ae1f4b9bdb986ff4e808362cba2b7bdd21c6ab87aba3cb",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0033,
+          960.0,
+          543.3633
+        ]
+      ],
+      "render": "renders/026.png",
+      "renderSha256": "df3074f94999e04e6349954709739c5f8fe5f66ec8e090418609c5760e0ded3d",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "DESIGN",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 27,
+      "image": "pages/027.jpeg",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 618,
+      "sha256": "dce8cdbf45cd33f15d3b55b33d90cb2d28d6972fb217198df2cd89aec18477dd",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0039,
+          960.0,
+          539.8361
+        ]
+      ],
+      "render": "renders/027.png",
+      "renderSha256": "12229d519915ab4731c843b94ac33f35fd6f472736562bdd9cc2cd409c72e3ac",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "DEVELOPMENT",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 28,
+      "image": "pages/028.jpeg",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 618,
+      "sha256": "4603549d4a656f0b1282b8ade20df81f31dbded93208e6c9aed4e212b92beb34",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0015,
+          960.0,
+          537.8785
+        ]
+      ],
+      "render": "renders/028.png",
+      "renderSha256": "9f8ea8153abe7ef80f41ac149780845e7892dfb1bfb64e1f381c30681e8e9eb7",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "TESTING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 29,
+      "image": "pages/029.jpeg",
+      "mode": "embedded-image",
+      "width": 1107,
+      "height": 619,
+      "sha256": "e6f33f19a8d134e4d9935a93a0b3b7fdd7f87258ac305e17701eee2bb992a8d6",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0019,
+          960.0,
+          536.8019
+        ]
+      ],
+      "render": "renders/029.png",
+      "renderSha256": "17fc1a7a2345ce8907136e7d5a71d56fc93d5760c30fcc34752f69ea2a8e0788",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "DEPLOYMENT",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 30,
+      "image": "pages/030.jpeg",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 619,
+      "sha256": "12d1a350212a6f7942c2f71221f19391124a1cbad91df1a77d51a30a593849b2",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0013,
+          960.0,
+          538.7487
+        ]
+      ],
+      "render": "renders/030.png",
+      "renderSha256": "5c1f956e364e563d487fd3b0d03f625f13d26607900169f6f7c26d9e693452ef",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "MAINTENANCE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 31,
+      "image": "pages/031.png",
+      "mode": "embedded-image",
+      "width": 1096,
+      "height": 616,
+      "sha256": "c8b31c7b023c34839e082a4415c9ab14411f7ea0beef06d3302264fdcb9532e9",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.002,
+          960.0,
+          539.562
+        ]
+      ],
+      "render": "renders/031.png",
+      "renderSha256": "4671f82d09645e282462ab24013619a372749a9caa24e85b3720cd5b3595fb05",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "EVALUATION",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 32,
+      "image": "pages/032.png",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 621,
+      "sha256": "25e472eb60a29e869bb79de517328b8898795afc4e274aa044695d1f32884be7",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0001,
+          953.91,
+          539.9999
+        ]
+      ],
+      "render": "renders/032.png",
+      "renderSha256": "43fe196936c55f3e34942e6de2e35cdba8343975424bb580e1b5d7b1cf02a334",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "DISPOSAL",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 33,
+      "image": "pages/033.png",
+      "mode": "embedded-image",
+      "width": 1095,
+      "height": 616,
+      "sha256": "17c4fd350c230ff63c3c01cf5ea11b77e0740239db147a640267ce6c8432a3d2",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0048,
+          960.0,
+          540.0547
+        ]
+      ],
+      "render": "renders/033.png",
+      "renderSha256": "7fa62f6d6359c6475ad85c113843a2f3198f7e885390aa5ece0cee0991ab4500",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SYSTEMS DEVELOPMENT LIFE CYCLE MODELS",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 34,
+      "image": "pages/034.png",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 620,
+      "sha256": "95d864f1543f304297442f10435f5d73f88431e48b0cec804ff0498d3d8d0678",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0001,
+          958.94,
+          539.9999
+        ]
+      ],
+      "render": "renders/034.png",
+      "renderSha256": "5184fd13399e408d2f79cb154f9935a9e6c776646fdedd49dddcf5729fc180a5",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SYSTEMS DEVELOPMENT LIFE CYCLE MODELS",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 35,
+      "image": "pages/035.png",
+      "mode": "embedded-image",
+      "width": 1104,
+      "height": 619,
+      "sha256": "81cb430d16e248666f9c0169b215b5b237a33298fae1c42575ff0c3526d725d7",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0007,
+          960.0,
+          538.2607
+        ]
+      ],
+      "render": "renders/035.png",
+      "renderSha256": "15ccc1fbcca5106dca4a79abc8ae8f339631149a958f51ed8ea766605c8f47bd",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WATERFALL MODEL",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 36,
+      "image": "pages/036.png",
+      "mode": "embedded-image",
+      "width": 1105,
+      "height": 616,
+      "sha256": "66dde92f13cccba83a8dd1c215c104c71df0ad9afca5826efa0f64ef87f85226",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0027,
+          960.0,
+          535.1673
+        ]
+      ],
+      "render": "renders/036.png",
+      "renderSha256": "b436de8bb44e8da0c7e5aa64f3d08641d5e2b3b284f394b1078449893fcdd5bf",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WATERFALL MODEL",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 37,
+      "image": "pages/037.png",
+      "mode": "embedded-image",
+      "width": 1102,
+      "height": 617,
+      "sha256": "13e29a38fc4d9861e3cde8873c460615ef856d96b9d129d1c3db86520d9ce90a",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0046,
+          960.0,
+          537.4954
+        ]
+      ],
+      "render": "renders/037.png",
+      "renderSha256": "2814c509102b1deefa00496be821cd3f91d06e7cac9e16af1fed92b388051e55",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WATERFALL MODEL",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 38,
+      "image": "pages/038.png",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 624,
+      "sha256": "f327b745dc678ad8b0cf656d4974408d3938d7f788496614202a3b9c9ef3fb4c",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0011,
+          960.0,
+          546.0711
+        ]
+      ],
+      "render": "renders/038.png",
+      "renderSha256": "6a2356c989c9452f9242b619d8e557f4132d92318596e2a37b5b02bbf9537cc4",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "V-MODEL",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 39,
+      "image": "pages/039.png",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 619,
+      "sha256": "8a493a2bafdf2b1bfa10a0fa2ad39b2b922450e2804c669965b91f7373ec1924",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0013,
+          960.0,
+          538.7487
+        ]
+      ],
+      "render": "renders/039.png",
+      "renderSha256": "e2d5f197ac6281ffd9b42b6defc0f1957141168139f271b1efcb4a1a03bef172",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SPIRAL MODEL",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 40,
+      "image": "pages/040.jpeg",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 620,
+      "sha256": "a4d15ab80629a05c4fcfbd646fe282b89642a067f0a465c3bc06d0d12e246cf6",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0038,
+          960.0,
+          542.0762
+        ]
+      ],
+      "render": "renders/040.png",
+      "renderSha256": "1a5ed07c8b3ad999434b775e8f83f38e0e5d1da65c82132b14b9742cd12f9dc8",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "BIG BANG MODEL",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 41,
+      "image": "pages/041.png",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 626,
+      "sha256": "2e4312c27907513594c53e3798de6e2d0113182bc5830eda28c409d841b1db3c",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0011,
+          960.0,
+          547.8211
+        ]
+      ],
+      "render": "renders/041.png",
+      "renderSha256": "3216007950af9f3953977d19c4ebd54f652a11a328a98ca8463bf567903e7316",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "AGILE MODEL",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 42,
+      "image": "pages/042.png",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 620,
+      "sha256": "d38e84a5d58627a2f4f4327ee036869407f796e7c427cab29356a4d7f4fd49aa",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          -0.0001,
+          -0.0001,
+          955.45,
+          539.9999
+        ]
+      ],
+      "render": "renders/042.png",
+      "renderSha256": "89494b913c7bad7568b418ab5b8f81c096c63f9af6d85055fa7e18e0957da94a",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "STRENGTHS AND WEAKNESSES OF SDLC",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 43,
+      "image": "pages/043.png",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 621,
+      "sha256": "e213b62c1b0943bf224ba849029b43f27386a78fe1605a56b954126d05585d9e",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0014,
+          960.0,
+          541.4714
+        ]
+      ],
+      "render": "renders/043.png",
+      "renderSha256": "3a19fe528c49c0a61f8c0b9e17ec03de4fcd053cde9d4e1258564b689b100882",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "STRENGTHS AND WEAKNESSES OF SDLC",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 44,
+      "image": "pages/044.jpeg",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 619,
+      "sha256": "1ba90ffe0a169b50c22f24705b6059b48ca706d96e65fda0ccd2c142235c4477",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0045,
+          960.0,
+          541.6955
+        ]
+      ],
+      "render": "renders/044.png",
+      "renderSha256": "da101287322ae7ec2bc93ffaed87d4fa3ce03c205e9b39defe8f757cc4b87b6a",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "COMPUTER ENGINEERING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 45,
+      "image": "pages/045.png",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 620,
+      "sha256": "c5f18c626e9844a75f9494685a7918761fa532c51ec5bb674594a005868505b7",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.003,
+          960.0,
+          541.583
+        ]
+      ],
+      "render": "renders/045.png",
+      "renderSha256": "75912954c241ee0fae1211d75323a7d9db95848817aafe531278287971a71304",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "CONTENT",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 46,
+      "image": "pages/046.jpeg",
+      "mode": "embedded-image",
+      "width": 1102,
+      "height": 618,
+      "sha256": "05b4da649035c290357cabcf2672b764a4ca497e624fc6d688fbff3b59bb57af",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0034,
+          960.0,
+          538.3666
+        ]
+      ],
+      "render": "renders/046.png",
+      "renderSha256": "a54fb482ab3254caffe9af0720b7c4d1425d411744de63230b735d7660139e9e",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "COMPUTER ENGINEERING",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 47,
+      "image": "pages/047.jpeg",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 616,
+      "sha256": "f7fb604d11133fac0c7665ee18219ede3f9650b5cf982889e318473ef5b39faf",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0017,
+          960.0,
+          537.1117
+        ]
+      ],
+      "render": "renders/047.png",
+      "renderSha256": "f5fc53be8b3357df78990c88691d00fcdd8bbda258e24e1d8fea2bd3fcdf82f6",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "HARDWARE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 48,
+      "image": "pages/048.jpeg",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 624,
+      "sha256": "bb957f8caa4345ea30850b7da66bcc8e829621c22c52ffdfc2b04c7a6f02e4a4",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0018,
+          960.0,
+          544.5818
+        ]
+      ],
+      "render": "renders/048.png",
+      "renderSha256": "febf7f140e38bc1ec9902c563ccd491a1e0160fe89546dc3ced3e8637c3f9032",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SOFTWARE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 49,
+      "image": "pages/049.png",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 616,
+      "sha256": "40daec23fd20faea4c90943c749d74405a3686c9ce03567b3c222065d6ce6ce0",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0001,
+          960.0,
+          537.5999
+        ]
+      ],
+      "render": "renders/049.png",
+      "renderSha256": "9c0f571745c6a45b831b7a0f259c986db5abf25d478ad43724cfa634afa25c25",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SOFTWARE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 50,
+      "image": "pages/050.jpeg",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 617,
+      "sha256": "f3a24735de8a8cfb9dee4cdac6d738481e2dfe35312232103a7cd5f760cc526e",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0027,
+          960.0,
+          538.4727
+        ]
+      ],
+      "render": "renders/050.png",
+      "renderSha256": "ee7edc9825c4501359210e9ab1f9ce632c7e7041de325f7f2382902a83750f2e",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SYSTEM SOFTWARE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 51,
+      "image": "pages/051.jpeg",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 618,
+      "sha256": "9d06869c53b6e121b87409fdad6817dbac3905ee1c1ad4de9dc1449c99d9d2ae",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0045,
+          960.0,
+          539.3455
+        ]
+      ],
+      "render": "renders/051.png",
+      "renderSha256": "942462541ed4f85fcd1a942b75b2c6fa961c02ebc0bc3b2afc076b83e7167d50",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "APPLICATION SOFTWARE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 52,
+      "image": "pages/052.png",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 621,
+      "sha256": "fa2b21f6e91f8c00ba17ec78ce889990ea0dc52170fe9e34753220df950366af",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0033,
+          960.0,
+          542.4567
+        ]
+      ],
+      "render": "renders/052.png",
+      "renderSha256": "1bc35a95aee12d0d23f303787341f28e29ac29cf1e3df3fa0e1ec10af400f9c8",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "APPLICATION SOFTWARE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 53,
+      "image": "pages/053.jpeg",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 620,
+      "sha256": "0d74c97d9b1378df50a89a43514c85c7e9c5b988beba70368635eae621f0522b",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0038,
+          960.0,
+          542.0762
+        ]
+      ],
+      "render": "renders/053.png",
+      "renderSha256": "c1eb464a13b16b4724e91bad743a0eaa08dbb5335a5e217a2e843d6df818e2f3",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "PROGRAMMING SOFTWARE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 54,
+      "image": "pages/054.jpeg",
+      "mode": "embedded-image",
+      "width": 1092,
+      "height": 617,
+      "sha256": "a254dd8ddedd9e18a45cf8f0302eef6186709e1bf6767b61102efea4ea886baa",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0025,
+          960.0,
+          542.4175
+        ]
+      ],
+      "render": "renders/054.png",
+      "renderSha256": "07d28cc4944d8532be3f7f5086431996a363e008752458d5ee14836ab7d5cd22",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "DRIVER SOFTWARE",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 55,
+      "image": "pages/055.jpeg",
+      "mode": "embedded-image",
+      "width": 1104,
+      "height": 620,
+      "sha256": "0f47c6c7e6c85b5d9a0544017c90af248303e8f5280af4ea2c9f50ce200bac0f",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0003,
+          960.0,
+          539.1303
+        ]
+      ],
+      "render": "renders/055.png",
+      "renderSha256": "1b587f7ff5a38ac230bbeff5fee763e9d82b01d7a32f2cd102890c583b4e173b",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "DESKTOP APPLICATIONS",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 56,
+      "image": "pages/056.png",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 619,
+      "sha256": "84240bb2cde87646e62f65f1c20780f2bba0d9029e337ce5ca8c4a9f5d59aa35",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0045,
+          960.0,
+          541.6955
+        ]
+      ],
+      "render": "renders/056.png",
+      "renderSha256": "00c1b30457ec65e0894fb29946a40c7fa5f9cee95d7981251acd225e2f962ca7",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WEB APPLICATION",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 57,
+      "image": "pages/057.jpeg",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 619,
+      "sha256": "e5179d74ba95014b6b294822f3acec414752428b9789ab8b945d8a7f59e900fd",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0021,
+          960.0,
+          541.2021
+        ]
+      ],
+      "render": "renders/057.png",
+      "renderSha256": "3ef94f3d18cea33fd397e41da184d3728d63921d732be9b07b52de746dbf7b8a",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "MOBILE APPLICATION",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 58,
+      "image": "pages/058.jpeg",
+      "mode": "embedded-image",
+      "width": 1096,
+      "height": 618,
+      "sha256": "484dbd6e48594c80ec734d491ec261ca7bfcff12061bdda39d6259852e4196a8",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0037,
+          960.0,
+          541.3137
+        ]
+      ],
+      "render": "renders/058.png",
+      "renderSha256": "a4912c4e1461bd1dce3021867018d1a922042c8118267634d463734f3b673499",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Analysis Phase",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 59,
+      "image": "pages/059.png",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 619,
+      "sha256": "9d7a18490f521b3b272d24954f7979f1162d9b8e2d2817a451e9b091c2abbf73",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0027,
+          960.0,
+          539.7273
+        ]
+      ],
+      "render": "renders/059.png",
+      "renderSha256": "f3ca9ac20fea52062c1d623734cdb16d60269afc4ee6ecad31c53112eccca6fb",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "CONTENT",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 60,
+      "image": "pages/060.jpeg",
+      "mode": "embedded-image",
+      "width": 1106,
+      "height": 616,
+      "sha256": "8b2136f7a40beffdc6e4df6d93b2e5fc21f643f4ce555b258c55ea53bf6ad005",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0035,
+          960.0,
+          534.6835
+        ]
+      ],
+      "render": "renders/060.png",
+      "renderSha256": "1900d32f6c4b190aa725a4904e2fa86a2c755dd80ea07627e347133ed18db515",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Analysis",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 61,
+      "image": "pages/061.jpeg",
+      "mode": "embedded-image",
+      "width": 1094,
+      "height": 616,
+      "sha256": "dd11cf031a4f6dcb016f78d3e92dffaca0fed62476b1db4a5eb47ae75d4e15ce",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0015,
+          960.0,
+          540.5485
+        ]
+      ],
+      "render": "renders/061.png",
+      "renderSha256": "df04a0446c869c6f6b34be94f7d2a5324efff3e46f46a8e12d097d105f4507bc",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Objective of the analysis phase",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 62,
+      "image": "pages/062.png",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 616,
+      "sha256": "df042836544ac7d88b5fe21113384dc24fc8579a032ea10c21c6ee82d01d8244",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0017,
+          960.0,
+          537.1117
+        ]
+      ],
+      "render": "renders/062.png",
+      "renderSha256": "423f08ca736f397a165fe3b00adb0ebd6ab238052054de030250707e4324c69e",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Overview of analysis phase",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 63,
+      "image": "pages/063.png",
+      "mode": "embedded-image",
+      "width": 1093,
+      "height": 617,
+      "sha256": "76268b8c4dcf85e4b1c165960066fbd4242b1442e3e8163c898f3f40d67e2ca7",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0011,
+          960.0,
+          541.9211
+        ]
+      ],
+      "render": "renders/063.png",
+      "renderSha256": "6da8361810c51fa2c4b7c80871b9f4dc668af5ed6e3058cc5d2db06c7467216a",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Input to the analysis phase",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 64,
+      "image": "pages/064.png",
+      "mode": "embedded-image",
+      "width": 1094,
+      "height": 619,
+      "sha256": "2c57078bd66fdc29d5bd7f16e934d1f792d28580251493077750a727250e8ae1",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0008,
+          960.0,
+          543.1808
+        ]
+      ],
+      "render": "renders/064.png",
+      "renderSha256": "0fc3958ba6b574447507f07b618c9f699cd1b247af6547a5db5fe0b1b9d0402a",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Main activities of the analysis phase",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 65,
+      "image": "pages/065.png",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 622,
+      "sha256": "1e3beb8fb2c24e12158ad1a704d5047d6de21f52a07b373cf654e0fc51fb1871",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0001,
+          955.85,
+          539.9999
+        ]
+      ],
+      "render": "renders/065.png",
+      "renderSha256": "d29944fc0c263f24754cc450dbe1a0b5ac428a4e41e193b334e2d0aba2accf47",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Output of the analysis phase",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 66,
+      "image": "pages/066.png",
+      "mode": "embedded-image",
+      "width": 1096,
+      "height": 615,
+      "sha256": "837f46a793495a6fde55e373bd32f843f4cd696acd408010f26ed6fd02615dcf",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0001,
+          962.34,
+          539.9999
+        ]
+      ],
+      "render": "renders/066.png",
+      "renderSha256": "78675244448e7af64e8ac395496e5b8f6722c35901c7840a90056566b7c0c4f0",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Best practices for an analysis phase",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 67,
+      "image": "pages/067.png",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 615,
+      "sha256": "0c1433877b49c81692a46e78f6df98a4173a653c67918e023fa661ff1b2aa4a2",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0002,
+          960.0,
+          536.2398
+        ]
+      ],
+      "render": "renders/067.png",
+      "renderSha256": "e1a82b1a553d0da45da71375e3e66b688bede052030c1bf7a2eccfb535e9e0f7",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Best practices for an analysis phase",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 68,
+      "image": "pages/068.jpeg",
+      "mode": "embedded-image",
+      "width": 1096,
+      "height": 616,
+      "sha256": "93ee252e55c2102bc355717a8056318bb58e9bcdc3f93dde51f9f00229c00c36",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.002,
+          960.0,
+          539.562
+        ]
+      ],
+      "render": "renders/068.png",
+      "renderSha256": "4d43ab92002c29b5692b9fee4d1c88179af966d4aeb267f8d5430df4bdf27e86",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "REQUIREMENT",
+      "detailedExtraction": false,
+      "group": "Requirements"
+    },
+    {
+      "page": 69,
+      "image": "pages/069.png",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 617,
+      "sha256": "203a05ad7f92713e1988ba63dca2ed7cde3b3875153eddafc83c4ece3969617f",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0026,
+          960.0,
+          538.9626
+        ]
+      ],
+      "render": "renders/069.png",
+      "renderSha256": "decf34ab7e0cfe2ddd47d3a16a637f5e8a7402edcedbc2f3bb488dfeee2706b6",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Requirement",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 70,
+      "image": "pages/070.png",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 618,
+      "sha256": "78a713ffae49e7499b8d453c7ccd744bfa55e837c93eb32c02207a5123ff1d7b",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0045,
+          960.0,
+          539.3455
+        ]
+      ],
+      "render": "renders/070.png",
+      "renderSha256": "4e5bbf280b9bb7e41bdf2e15679fc1ad5e84275cbc67a7794fa4520e319a0ec5",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Requirement",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 71,
+      "image": "pages/071.png",
+      "mode": "embedded-image",
+      "width": 1102,
+      "height": 618,
+      "sha256": "eea94a0517c7367f048b117dab9a834f9b33016aef78a2a9d8fca614a652fb9f",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0034,
+          960.0,
+          538.3666
+        ]
+      ],
+      "render": "renders/071.png",
+      "renderSha256": "bd06f34f18248b9588bed01fdae7c1624d44e20647344bf24fc152edba7107a9",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Business requirement",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 72,
+      "image": "pages/072.png",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 618,
+      "sha256": "ac4083667beea2264b02032e5d6e6d4076ad8f732248deeba03d92b5bb159497",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0022,
+          960.0,
+          540.3278
+        ]
+      ],
+      "render": "renders/072.png",
+      "renderSha256": "7f5352feaf6342433831894b0ca31c4a09d555b523fae91bad039d3c2af7d2d2",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Business requirement",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 73,
+      "image": "pages/073.png",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 621,
+      "sha256": "21643064140a7c294dcb72f899964bd7ad5628fb51413cbe7891ac3819a39eec",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0008,
+          960.0,
+          542.9508
+        ]
+      ],
+      "render": "renders/073.png",
+      "renderSha256": "3fc1929d04824d1a394258d151cffa139f6584b626822703739b5cc2b7b9cda0",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Stakeholder requirement",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 74,
+      "image": "pages/074.png",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 617,
+      "sha256": "13e2f7e435587e22ae1e5eae89de08f2353d64e30a641acee78602b244e2d67c",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0027,
+          960.0,
+          538.4727
+        ]
+      ],
+      "render": "renders/074.png",
+      "renderSha256": "9623f17d69f7bd49e69b51501c258acb7b0a3a104ab1211759c79bfac4d0e877",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Functional (solution) requirement",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 75,
+      "image": "pages/075.png",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 620,
+      "sha256": "0c8fdebafd758b0907df276fa68ca3841d457dc61f046430cfd6712c5d2e806f",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0038,
+          960.0,
+          542.0762
+        ]
+      ],
+      "render": "renders/075.png",
+      "renderSha256": "0b53071f82876f85293b0b2b726ad8fe23d4e2b52bf9dba32acc193e814fae68",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Non-functional (quality of service) requirement",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 76,
+      "image": "pages/076.png",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 619,
+      "sha256": "066470a8e3b08d01aae9c6b0b04fdbac565a931a97b0bfb89f0a1dedc7510170",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0004,
+          960.0,
+          540.7097
+        ]
+      ],
+      "render": "renders/076.png",
+      "renderSha256": "3e528db44061b4db7198d230066cef0c304ad45f7567e91aa6b2077b77750c0a",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Some requirement document",
+      "detailedExtraction": true,
+      "group": "Requirements"
+    },
+    {
+      "page": 77,
+      "image": "pages/077.jpeg",
+      "mode": "embedded-image",
+      "width": 1094,
+      "height": 621,
+      "sha256": "797ce5d11f121ec9416ec7cd91bddb9aa83edf4876fd1fdaf550683c2dae3365",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.004,
+          960.0,
+          544.936
+        ]
+      ],
+      "render": "renders/077.png",
+      "renderSha256": "2e3a4e218cb98074b101854d12a45422d5a288a58b63b356ce16cd0a1c3f7486",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Unified Modeling Language",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 78,
+      "image": "pages/078.png",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 621,
+      "sha256": "61edaeeb5d9fe177fb08a799800e1beed10f8a07f1295f2247ee172f7ce42524",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0036,
+          960.0,
+          541.9636
+        ]
+      ],
+      "render": "renders/078.png",
+      "renderSha256": "39d25cf51ac7a57e571b2a0909fb5da56e4b9edac6ece506eb9be51a6b91989d",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "CONTENT",
+      "detailedExtraction": false,
+      "group": "Course context"
+    },
+    {
+      "page": 79,
+      "image": "pages/079.png",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 618,
+      "sha256": "449c11a095a059def868f30ef82703ffd232cd6a4269d6ae5d566f5e6d8f3847",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0004,
+          960.0,
+          540.8204
+        ]
+      ],
+      "render": "renders/079.png",
+      "renderSha256": "390e31f5fd0c012c504ae03e6fbcd7a47138d5c34ec25eed56b302696cde9552",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "What is UML",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 80,
+      "image": "pages/080.png",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 623,
+      "sha256": "8717fd0a3e5924f3ba96f081c6d5f2e534f202f9184e703557e2d52bba781b05",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0002,
+          960.0,
+          542.2302
+        ]
+      ],
+      "render": "renders/080.png",
+      "renderSha256": "0bc859b07de403333c9e909caee445bb2c5c3cd3e6534bd75c9fe6236d33d41e",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 81,
+      "image": "pages/081.png",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 615,
+      "sha256": "3040607999dd1b8663edfe2d915a51290bd4aeda530583167638b9d44198de0f",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0049,
+          960.0,
+          537.7049
+        ]
+      ],
+      "render": "renders/081.png",
+      "renderSha256": "5c92e5931b394b91d01ace81df180648f9753a5e72518ab6af44baca6942b142",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Things",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 82,
+      "image": "pages/082.png",
+      "mode": "embedded-image",
+      "width": 1107,
+      "height": 619,
+      "sha256": "7cb8ece7d04b8eb0489d18ef2b39780e60a140c27b2851decdd899055b4076fa",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0019,
+          960.0,
+          536.8019
+        ]
+      ],
+      "render": "renders/082.png",
+      "renderSha256": "e0520a3f732be80690d667662822288c1a95b53f3e00cfe925b45b069ccecf9e",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Structural Things",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 83,
+      "image": "pages/083.png",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 620,
+      "sha256": "cca69cbbab6584f287f5acbe4ed2490f0c270586d327cd297fa79dbb93dee0e6",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0009,
+          960.0,
+          539.6191
+        ]
+      ],
+      "render": "renders/083.png",
+      "renderSha256": "1b74020baaf12b437be4b2ec04e8be40b32c4966ae0354ba484aa22288ed6280",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Structural Things",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 84,
+      "image": "pages/084.png",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 615,
+      "sha256": "d8d69418bc3d62bc499940677d72fd2c280cb5f01bda2861f4e020c86df30e3c",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          -5.7327,
+          0.0019,
+          959.9973,
+          539.4419
+        ]
+      ],
+      "render": "renders/084.png",
+      "renderSha256": "e9231a104775b29cb896c0dff8b96bac258a0c21eb695016eb5e70ad4bdce769",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Structural Things",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 85,
+      "image": "pages/085.png",
+      "mode": "embedded-image",
+      "width": 1096,
+      "height": 616,
+      "sha256": "f427a028462c96585c0585be032d1ed32d3b199cedf9eed84d08167c85f03988",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.002,
+          960.0,
+          539.562
+        ]
+      ],
+      "render": "renders/085.png",
+      "renderSha256": "d9bcb5848b63796b7b7b6f032c8a1edc5c8e1d4bb0d9854b8799fc802ebac299",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Structural Things",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 86,
+      "image": "pages/086.png",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 619,
+      "sha256": "4c30fb2844b446f740050befedb18e4e1238c7cd240c145f221069e892783a46",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0012,
+          960.0,
+          538.7488
+        ]
+      ],
+      "render": "renders/086.png",
+      "renderSha256": "d956b6cf26ffc3a1d326d8b466115ef6d1614490d3560c35ea35bdcb5e581fd0",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Behavioral Things",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 87,
+      "image": "pages/087.png",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 620,
+      "sha256": "c7b9fae857c86be72b632b901d7f5dcc79c4b51015bf6991fb79a18cccac26e7",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0038,
+          960.0,
+          542.0762
+        ]
+      ],
+      "render": "renders/087.png",
+      "renderSha256": "68c0c2439e7dc980857b8b2c2620dccea7fe2af2c67287bee76f444b23016095",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Behavioral Things",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 88,
+      "image": "pages/088.png",
+      "mode": "embedded-image",
+      "width": 1101,
+      "height": 618,
+      "sha256": "82e1e6409f2ef8341d5ad25263a5f7ca250fb4a760aabb24fe429e4af71be6eb",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0045,
+          960.0,
+          538.8555
+        ]
+      ],
+      "render": "renders/088.png",
+      "renderSha256": "db56962e722f7fc39773876dea11c136644e28fbeb69455478703e40564081c6",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Group Things",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 89,
+      "image": "pages/089.png",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 617,
+      "sha256": "2cccc1d6f1ea7748f9478a8177fd24f69b0bd788ab50c3f0a19425732b28b6fc",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0026,
+          960.0,
+          538.9626
+        ]
+      ],
+      "render": "renders/089.png",
+      "renderSha256": "2bd0d27d7376d294b09cfb32bac0fc9b1caa4dc36dc79e0483ccc0277cdd38f6",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Annotational Things",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 90,
+      "image": "pages/090.png",
+      "mode": "embedded-image",
+      "width": 1112,
+      "height": 619,
+      "sha256": "bdb99b575f4ee13ba5ed4a69da0162196e733c6ac746f5380f5928baaffa8f06",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0016,
+          960.0,
+          534.3884
+        ]
+      ],
+      "render": "renders/090.png",
+      "renderSha256": "02eeef51f6a89d7577a54f8b9e6e2834fded88bd01a112a4ec37a89a8bc9937a",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Relationship",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 91,
+      "image": "pages/091.png",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 619,
+      "sha256": "648cc4a72e6f43bc7bfb1f58f695292e99430c5d350a7b88a0de03d38d9896d3",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0004,
+          960.0,
+          540.7097
+        ]
+      ],
+      "render": "renders/091.png",
+      "renderSha256": "6feb7868615c4c245a664e3b925f063ac13798440769cfd8c144f1d0b1eb149f",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Building blocks - Diagrams",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 92,
+      "image": "pages/092.png",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 615,
+      "sha256": "3744f8c8f38b2f69a968f5d545876c88d0acbbdb573077c87e6ac40d1f142c15",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.005,
+          960.0,
+          538.195
+        ]
+      ],
+      "render": "renders/092.png",
+      "renderSha256": "425facf724ff2065acd05b852e4f91455bee3f6789422e9dfd549cc46d40f5b6",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "UML - Architecture",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 93,
+      "image": "pages/093.png",
+      "mode": "embedded-image",
+      "width": 1103,
+      "height": 618,
+      "sha256": "ddb52a3661750cc6ff1cc079d43a5bbb8430f90aaa27cd54114c3e67b8612877",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0001,
+          963.79,
+          539.9999
+        ]
+      ],
+      "render": "renders/093.png",
+      "renderSha256": "d5ca872552c859e009e12752bcf3936022e1f3cb49e832eb63d4b80d9f29bbb0",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "UML - Architecture",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 94,
+      "image": "pages/094.png",
+      "mode": "embedded-image",
+      "width": 1110,
+      "height": 610,
+      "sha256": "98afdefbefde0e954ef15b6f0a19f4a337ae51b2c450415480b751489726ef46",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0,
+          960.79,
+          528.0
+        ]
+      ],
+      "render": "renders/094.png",
+      "renderSha256": "e840de8b5d9dfd56a0490d370b7c5c12c7944abef7e31032bcd49a74140ce2f7",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Class Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 95,
+      "image": "pages/095.png",
+      "mode": "embedded-image",
+      "width": 1104,
+      "height": 613,
+      "sha256": "7be28a482be66da40bb183bb9f005d9b8545f15a14322452234d92990909c9b1",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0034,
+          960.0,
+          533.0434
+        ]
+      ],
+      "render": "renders/095.png",
+      "renderSha256": "be9a83f120553637dae74000fef6909c4159e5eb2cbe76bb6fe9e693ec01e5a9",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Class Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 96,
+      "image": "pages/096.png",
+      "mode": "embedded-image",
+      "width": 1096,
+      "height": 617,
+      "sha256": "f6493bf9a86dfa4ebab1e9d00ff7fe348a9d84423af51e44a4dbb5177af13632",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0021,
+          960.0,
+          540.4379
+        ]
+      ],
+      "render": "renders/096.png",
+      "renderSha256": "fa10b4d224f7c7b340c8d5729087f4c75622c098ba8e9cf5228ad6a9f69c03f2",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Object Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 97,
+      "image": "pages/097.png",
+      "mode": "embedded-image",
+      "width": 1093,
+      "height": 617,
+      "sha256": "23d752ffc5d6a9942a2a3a622b8099bd04c22aa7d75ac66c9f996fba8ca8d621",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          -0.0001,
+          -0.0001,
+          956.5999,
+          539.9999
+        ]
+      ],
+      "render": "renders/097.png",
+      "renderSha256": "06ebc6d1f2623addf44aca5ba3fba00fd8bb63c0d1fd0302e76d549e552483e7",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Component Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 98,
+      "image": "pages/098.jpeg",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 617,
+      "sha256": "a8a868c761d60f1c46c0fbf1377773043a8a36f0f175c2c3d9e7b946c5f47359",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0034,
+          960.0,
+          539.4534
+        ]
+      ],
+      "render": "renders/098.png",
+      "renderSha256": "b14e068ba534450ce6179b1079a179bb2a35014f3cdc8e8c1fc731085e185048",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Component Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 99,
+      "image": "pages/099.png",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 625,
+      "sha256": "c1b4789eb426af584061c4deffbbfb833c2caf35be1d316120329daf68422b4b",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0044,
+          960.0,
+          545.4544
+        ]
+      ],
+      "render": "renders/099.png",
+      "renderSha256": "5f82ada0affc1bdd7955a96346d67ee919008a7d2b9e65f5f925bfffe82ef55b",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Component Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 100,
+      "image": "pages/100.png",
+      "mode": "embedded-image",
+      "width": 1079,
+      "height": 623,
+      "sha256": "cfa3b17c8e075d8dda11d4b98b881b65378107f40a572cd70a708b581ef16da6",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.004,
+          952.8,
+          550.134
+        ]
+      ],
+      "render": "renders/100.png",
+      "renderSha256": "62cc6ded463f7d371448a11a862220812245098fd70dce46550009d5f54416b5",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Deployment Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 101,
+      "image": "pages/101.png",
+      "mode": "embedded-image",
+      "width": 1095,
+      "height": 612,
+      "sha256": "a55866d7ba62f646fe8591d1b359f28bbbe01e24e384f324e2e61cf9ec8378fb",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0023,
+          960.0,
+          536.5477
+        ]
+      ],
+      "render": "renders/101.png",
+      "renderSha256": "bf793897c7a6ef4ce5e09936fb1b20fe27b3afb803b7e90622db03d0b21761d4",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Use-case Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 102,
+      "image": "pages/102.png",
+      "mode": "embedded-image",
+      "width": 1111,
+      "height": 623,
+      "sha256": "d27e9f8f07cad7509b19841a5f5349bdcdd006af617746dbfe7fa4a6e9632452",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0043,
+          960.0,
+          538.3257
+        ]
+      ],
+      "render": "renders/102.png",
+      "renderSha256": "4462c64a0bcebd40605a981b0394e08e619db6d005985f02953842810f4df460",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Interaction Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 103,
+      "image": "pages/103.jpeg",
+      "mode": "embedded-image",
+      "width": 1099,
+      "height": 617,
+      "sha256": "6afa20d8cb048a3f23ca4efc3036aeae201c307b4900ea3b89d4fa39ef6ce9d1",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0026,
+          960.0,
+          538.9626
+        ]
+      ],
+      "render": "renders/103.png",
+      "renderSha256": "59e1eb21211df18560f8100a15020f57fe6228437426403ed76cf14d9b502283",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Interaction Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 104,
+      "image": "pages/104.png",
+      "mode": "embedded-image",
+      "width": 1102,
+      "height": 617,
+      "sha256": "2ea8c313c125563cb5b60ee9850a059e63ddad3982ae6dfb27a7b902bc5f48a7",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0046,
+          960.0,
+          537.4954
+        ]
+      ],
+      "render": "renders/104.png",
+      "renderSha256": "d271944796b62ff160b4a5746fdd96f0828f6c5396eec6ec789686eefa7a4c86",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Statechart Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 105,
+      "image": "pages/105.png",
+      "mode": "embedded-image",
+      "width": 1095,
+      "height": 616,
+      "sha256": "1e37cda9651799dcc7503950bbfa2d8d3bd46d193dd658dde287560bf0a086ea",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0048,
+          960.0,
+          540.0547
+        ]
+      ],
+      "render": "renders/105.png",
+      "renderSha256": "bd5dcfb79e584cc1964dc93b92402e5e6b9075037679ed8d886870f21938adc7",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "Activity Diagram",
+      "detailedExtraction": true,
+      "group": "UML"
+    },
+    {
+      "page": 106,
+      "image": "pages/106.jpeg",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 617,
+      "sha256": "08bb1b86b9904aa671665af0d1d6573fea3525bdef9a09687fc30cc43233e509",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          -0.0001,
+          -0.0001,
+          960.9699,
+          539.9999
+        ]
+      ],
+      "render": "renders/106.png",
+      "renderSha256": "45773f72596ba0becdce4e09c2070cb9023f13e968bbcce9556ab488463a9a98",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "USE CASE SPECIFICATION",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 107,
+      "image": "pages/107.jpeg",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 620,
+      "sha256": "866404eeb2a25e4d28f68b72a21f7613cc7f789dccd62fe3f761feaf5325e12e",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0038,
+          960.0,
+          542.0762
+        ]
+      ],
+      "render": "renders/107.png",
+      "renderSha256": "362c6c3c6b754631cbfddac71a2543ff4021fe225d8f0888f39618ec4170937b",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "USE CASE SPECIFICATION",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 108,
+      "image": "pages/108.jpeg",
+      "mode": "embedded-image",
+      "width": 1093,
+      "height": 619,
+      "sha256": "33ebcca8193a48b24e0940a04247ebbf09d43126dc7c6b3b4b94e19c56b1bc7e",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0021,
+          960.0,
+          543.6779
+        ]
+      ],
+      "render": "renders/108.png",
+      "renderSha256": "1568026f6204376a6127de5b95eb7076f1a63ad66cdc7578881b5f3b807557f5",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "USE CASE SPECIFICATION",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 109,
+      "image": "pages/109.png",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 619,
+      "sha256": "a342cbd01f6cb19900989e7f957ac035861a07a3d1b9ceba5895406d9f553eff",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0021,
+          960.0,
+          541.2021
+        ]
+      ],
+      "render": "renders/109.png",
+      "renderSha256": "fc8c1c530e3c32267442a9756b713fc39705555ce0f19cf760fc4221bc37f484",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SUMMARY",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 110,
+      "image": "pages/110.jpeg",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 617,
+      "sha256": "7965f47a5f070951acfddea6b86ac00453e4a2d345fdf8c6a1d2a08996446ba6",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0001,
+          962.72,
+          539.9999
+        ]
+      ],
+      "render": "renders/110.png",
+      "renderSha256": "524d4767812e5cc0b70836dfdf6bd90c5101061ca58bea83d54974a2c0c71712",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "SUMMARY",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 111,
+      "image": "pages/111.jpeg",
+      "mode": "embedded-image",
+      "width": 1092,
+      "height": 613,
+      "sha256": "9f997c30af42ae1c820d82ef244531338935bfddd0b5e11003b10b0512aa9d57",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0011,
+          960.0,
+          538.9011
+        ]
+      ],
+      "render": "renders/111.png",
+      "renderSha256": "ed609c81b8bd29d8dff7959f30ece9ea0c918f485c5f224fe8e0d544155153c4",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "THREE TYPES OF FLOW",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 112,
+      "image": "pages/112.jpeg",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 614,
+      "sha256": "82e3c2ca9b1f6802bb1a0ff29b91dea731a099015ace716784252e406b2b71a3",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          -0.0001,
+          -0.0001,
+          967.4299,
+          539.9999
+        ]
+      ],
+      "render": "renders/112.png",
+      "renderSha256": "2b6dce9da5c1ec5804cb7bee6c3b7cb9c26dd84579c5290445aa32c0faeba852",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "FLOW COMPONENTS",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 113,
+      "image": "pages/113.jpeg",
+      "mode": "embedded-image",
+      "width": 1094,
+      "height": 622,
+      "sha256": "00d33d505c30f05355fcf5848b654886ab69fd8979904d8aa6d1906892567349",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0035,
+          960.0,
+          545.8135
+        ]
+      ],
+      "render": "renders/113.png",
+      "renderSha256": "bda591a83104ef8cbb89e80e1fe98177af1667571c8a4258408e644c1f2c22da",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "BASIC FLOWS",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 114,
+      "image": "pages/114.jpeg",
+      "mode": "embedded-image",
+      "width": 1092,
+      "height": 612,
+      "sha256": "8ae9b683863419a49f59ea6494a63b614b2804ea6686b1dc901d6cf25e912a11",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0017,
+          960.0,
+          538.0217
+        ]
+      ],
+      "render": "renders/114.png",
+      "renderSha256": "55bb79400ed9c7adc36fb001456285441bc6dac741d7237d46c7aabd8684f23f",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "THE BASIC FLOW",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 115,
+      "image": "pages/115.jpeg",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 617,
+      "sha256": "beeb6a9c8f25ab231644d608d205bb8dc6b197e977fc4075b274627cb77c7b61",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0048,
+          960.0,
+          539.9452
+        ]
+      ],
+      "render": "renders/115.png",
+      "renderSha256": "4a615789ced5c8c81eeeabd99d1a9da3b1dda9d1e1159bea56e4550c285b441d",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "THE BASIC FLOW",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 116,
+      "image": "pages/116.jpeg",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 613,
+      "sha256": "ef3c6bdbcf0692b8e67d50088a1a3f2a9c11a8c7215787df7fb0f5e26cf5beda",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0001,
+          966.36,
+          539.9999
+        ]
+      ],
+      "render": "renders/116.png",
+      "renderSha256": "3a2a722b9ee47e5a8b3ca3ff555a18b57ae8a6bc3ae4b1e5d8bb6eaec44e35da",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "ALTERNATE FLOWS",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 117,
+      "image": "pages/117.jpeg",
+      "mode": "embedded-image",
+      "width": 1095,
+      "height": 615,
+      "sha256": "74959877c678515bb6a7b4c453e0ddb9c1f71cd66f3054cea3773fcbf8963569",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0001,
+          961.46,
+          539.9999
+        ]
+      ],
+      "render": "renders/117.png",
+      "renderSha256": "535233217e4ba610a15fd68f2bf2380919ce193139ff56aa011227f3b2945fdd",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "ALTERNATE FLOWS",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 118,
+      "image": "pages/118.jpeg",
+      "mode": "embedded-image",
+      "width": 1096,
+      "height": 618,
+      "sha256": "f8bdc12079721cee025773242692dfe9ae2f6e90fea2c60b4df4f37bc3dccf72",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0037,
+          960.0,
+          541.3137
+        ]
+      ],
+      "render": "renders/118.png",
+      "renderSha256": "829fb6f041a9e87373407fa6efd476b485e1d5946cf36f4df757cd33a773e35b",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "ALTERNATE FLOWS",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 119,
+      "image": "pages/119.jpeg",
+      "mode": "embedded-image",
+      "width": 1095,
+      "height": 618,
+      "sha256": "7145b78ab960ded1f4e58aea023f4361f15110cabd9ffd2c74217573af995ef2",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.002,
+          960.0,
+          541.808
+        ]
+      ],
+      "render": "renders/119.png",
+      "renderSha256": "32c0d6d90ebd7d898be4f19ef0b43c803830da0dc19eeb3964065c665e3ceeab",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "ALTERNATE FLOWS",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 120,
+      "image": "pages/120.jpeg",
+      "mode": "embedded-image",
+      "width": 1096,
+      "height": 613,
+      "sha256": "4c7f539fb18c3857f1d9321274c1335ec01a21fe96268cd23e9b01111c7decaa",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0001,
+          965.48,
+          539.9999
+        ]
+      ],
+      "render": "renders/120.png",
+      "renderSha256": "2929652726c66aca53c883ae31cee1174bf57b7a34c3f1c7e79c328006dea676",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "EXCEPTION FLOWS",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 121,
+      "image": "pages/121.jpeg",
+      "mode": "embedded-image",
+      "width": 1096,
+      "height": 616,
+      "sha256": "dfa3045bd51c35088c57716f006bc1185cae62284970262ecdd490e8364708f5",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.002,
+          960.0,
+          539.562
+        ]
+      ],
+      "render": "renders/121.png",
+      "renderSha256": "3c08d1307c4ca6e5a0821a4b3947ddbef9150c071a4a91f02bc0dd109f8dda66",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "EXCEPTION FLOWS",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 122,
+      "image": "pages/122.jpeg",
+      "mode": "embedded-image",
+      "width": 1100,
+      "height": 618,
+      "sha256": "cca58069325a4bab6a1545eef1f31652c4f75f02f434c92a5a712463cb68e7dc",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0045,
+          960.0,
+          539.3455
+        ]
+      ],
+      "render": "renders/122.png",
+      "renderSha256": "bf473a3aa3c3e676bea71f5f9c8f186050b8f242157c99954acdc0fab98f5012",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WRAP UP",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 123,
+      "image": "pages/123.jpeg",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 619,
+      "sha256": "863dd212f95bf5b34e476a81a241ac31562668b265b4f7643a8a9f8b7d168346",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0045,
+          960.0,
+          541.6955
+        ]
+      ],
+      "render": "renders/123.png",
+      "renderSha256": "78289068cee6b891172cb17fa99df77314df2e3bab8eee3ac7f2d25c02748b5e",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "ADDITIONAL INFORMATION",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 124,
+      "image": "pages/124.jpeg",
+      "mode": "embedded-image",
+      "width": 1093,
+      "height": 616,
+      "sha256": "c41628ce61afb274607e4697819ffc9674c4674e992854f2b35a86f3fa5b39e2",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          -0.0001,
+          -0.0001,
+          958.15,
+          539.9999
+        ]
+      ],
+      "render": "renders/124.png",
+      "renderSha256": "913f001d73b6f0c289daa840a331e60d9faf409fbed4d52ee97212e434b2db61",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "BUSINESS RULES",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 125,
+      "image": "pages/125.jpeg",
+      "mode": "embedded-image",
+      "width": 1094,
+      "height": 619,
+      "sha256": "870ed3561b26d49ed5992db07db980aeff8904e60be3d85fa242b0f4383d5e9c",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0008,
+          960.0,
+          543.1808
+        ]
+      ],
+      "render": "renders/125.png",
+      "renderSha256": "db8e2bc97176eccafe89ac2990de4171d48d3670a729f34386aa20cd28710c81",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "BUSINESS RULES",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 126,
+      "image": "pages/126.jpeg",
+      "mode": "embedded-image",
+      "width": 1095,
+      "height": 620,
+      "sha256": "a3e69a392177eb78b334908b0d05406c16689c378239229fce6be88da8fd8196",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          0.0015,
+          960.0,
+          543.5615
+        ]
+      ],
+      "render": "renders/126.png",
+      "renderSha256": "e3a81eb85ee76aaca58592a01b9ec69b10ef827bd174040d5736ab165d847a92",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "BUSINESS RULES",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 127,
+      "image": "pages/127.jpeg",
+      "mode": "embedded-image",
+      "width": 1098,
+      "height": 613,
+      "sha256": "bf7aa6b5452cf5600c744eb41c02e770e6c0ca6f0ef42ee9038d76322e990afa",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          -0.0001,
+          -0.0001,
+          967.2399,
+          539.9999
+        ]
+      ],
+      "render": "renders/127.png",
+      "renderSha256": "9a687232c79cc35f5bc0fda89cf758c39fa0da48feb706998553cfc51fd5f093",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "NON-FUNCTIONAL REQUIREMENTS:",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 128,
+      "image": "pages/128.jpeg",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 619,
+      "sha256": "16d42456408d0fda3c46733f57573d7f5df175c652a68958c47f9aad04a36e7d",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0045,
+          960.0,
+          541.6955
+        ]
+      ],
+      "render": "renders/128.png",
+      "renderSha256": "870baf81a37a372647342341bb51dae9062d14d0eff492cd2868b0d85860203a",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "WIREFRAMES",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    },
+    {
+      "page": 129,
+      "image": "pages/129.jpeg",
+      "mode": "embedded-image",
+      "width": 1097,
+      "height": 614,
+      "sha256": "9812f9c1e8451c20b3bb6887f50a6410c57d1afb5059dce910ee0cadc147d25c",
+      "embeddedImages": 1,
+      "pdfText": "",
+      "pdfPageBounds": [
+        0.0,
+        0.0,
+        960.0,
+        540.0
+      ],
+      "imagePlacementBounds": [
+        [
+          0.0,
+          -0.0003,
+          960.0,
+          537.3197
+        ]
+      ],
+      "render": "renders/129.png",
+      "renderSha256": "edfc474c61a34b2dbb90630a49ea3ab5efcb0529fec99ae66f7928ce7ea72a6a",
+      "renderSize": [
+        1440,
+        810
+      ],
+      "title": "ASSIGNMENT",
+      "detailedExtraction": true,
+      "group": "Use case specification"
+    }
+  ],
+  "imageFidelityNote": "Embedded image bytes are preserved separately. PDF placement clips or scales image edges slightly; renders preserve the physical PDF page composition at 1.5x.",
+  "detailedPageCount": 62,
+  "textMethod": "Manual visual transcription of relevant page images; not OCR. Explicit uncertainties remain visible."
+}

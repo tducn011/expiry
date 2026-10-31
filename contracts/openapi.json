@@ -250,6 +250,23 @@
                 "later"
               ]
             }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "fresh_produce",
+                "meat_seafood",
+                "dairy_eggs",
+                "prepared_food",
+                "dry_pantry",
+                "beverage",
+                "other"
+              ]
+            },
+            "description": "Category of the food entry"
           }
         ],
         "responses": {
@@ -1274,7 +1291,7 @@
               "maxLength": 200,
               "default": ""
             },
-            "description": "T\u00ecm ki\u1ebfm theo t\u00ean th\u1ef1c ph\u1ea9m trong th\u00f9ng r\u00e1c"
+            "description": "Tìm kiếm theo tên thực phẩm trong thùng rác"
           },
           {
             "in": "query",
@@ -1283,7 +1300,7 @@
               "type": "string",
               "maxLength": 100
             },
-            "description": "L\u1ecdc theo v\u1ecb tr\u00ed l\u01b0u tr\u1eef (storage location)"
+            "description": "Lọc theo vị trí lưu trữ (storage location)"
           }
         ],
         "responses": {
@@ -2512,18 +2529,6 @@
               "g",
               "ml"
             ]
-          },
-          "category": {
-            "type": "string",
-            "enum": [
-              "fresh_produce",
-              "meat_seafood",
-              "dairy_eggs",
-              "prepared_food",
-              "dry_pantry",
-              "beverage",
-              "other"
-            ]
           }
         },
         "required": [
@@ -2609,18 +2614,6 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 2147483647
-          },
-          "category": {
-            "type": "string",
-            "enum": [
-              "fresh_produce",
-              "meat_seafood",
-              "dairy_eggs",
-              "prepared_food",
-              "dry_pantry",
-              "beverage",
-              "other"
-            ]
           }
         },
         "required": [
@@ -2825,18 +2818,6 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
-          },
-          "category": {
-            "type": "string",
-            "enum": [
-              "fresh_produce",
-              "meat_seafood",
-              "dairy_eggs",
-              "prepared_food",
-              "dry_pantry",
-              "beverage",
-              "other"
-            ]
           }
         },
         "required": [

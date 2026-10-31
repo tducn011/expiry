@@ -1,23 +1,38 @@
 import type { ReactNode } from "react"
+
 import { ChevronsLeft, ChevronsRight, Leaf } from "./Icon"
 
 export function SidebarButton({
   icon,
+
   "aria-label": ariaLabel,
+
   title,
+
   label,
+
   active = false,
+
   badge,
+
   isExpanded = false,
+
   onClick,
 }: {
   icon: ReactNode
+
   "aria-label"?: string
+
   title?: string
+
   label?: string
+
   active?: boolean
+
   badge?: number
+
   isExpanded?: boolean
+
   onClick?: () => void
 }) {
   const displayLabel = label || title || ariaLabel
@@ -67,13 +82,19 @@ export function SidebarButton({
 
 export function SidebarNavigation({
   children,
+
   footer,
+
   isExpanded = false,
+
   onToggleExpanded,
 }: {
   children: ReactNode
+
   footer?: ReactNode
+
   isExpanded?: boolean
+
   onToggleExpanded?: () => void
 }) {
   return (

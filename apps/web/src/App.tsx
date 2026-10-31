@@ -1,17 +1,24 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
+
+import { api, ApiError, decimal, type EditEntryDTO } from "./api/client"
+
 import {
   attention,
   notifications,
   useAppStore,
+  type Category,
   type Food,
   type State,
+  type Unit,
 } from "./store/appStore"
+
 import {
   emptyDraft,
   draftFrom,
   type Draft,
   type FormMode,
 } from "./features/FoodForm"
+
 import {
   Archive,
   BarChart3,
@@ -26,50 +33,228 @@ import {
   Plus,
   Settings as SettingsIcon,
 } from "./components/ui/Icon"
+
 import Button from "./components/ui/Button"
+
 import Card from "./components/ui/Card"
+
 import Modal from "./components/ui/Modal"
+
 import Toast, { type ToastProps } from "./components/ui/Toast"
+
 import {
   SidebarButton,
   SidebarNavigation,
 } from "./components/ui/SidebarNavigation"
 
 // Feature screens
+
 import Inventory from "./features/Inventory"
+
 import Attention from "./features/Attention"
+
 import StorageView from "./features/StorageView"
+
 import AddEntry from "./features/AddEntry"
+
 import Scanner from "./features/Scanner"
+
 import FoodForm from "./features/FoodForm"
+
 import Detail from "./features/Detail"
+
 import History from "./features/History"
+
 import InsightView from "./features/InsightView"
+
 import Trash from "./features/Trash"
+
 import Notifications from "./features/Notifications"
+
 import Settings from "./features/Settings"
+
 import AuthForm from "./features/AuthForm"
+
 import Onboarding from "./features/Onboarding"
 
-export type Route = { name: "inventory" } | { name: "storage" } | {
-  name: "attention"
-} | {
-  name: "add"
-} | { name: "scan" } | {
+export type Route = { name: "inventory" } | {
+  name: "storage"
+
+  location?: string
+
+  category?: string
+} | { name: "attention" } | { name: "add" } | { name: "scan" } | {
   name: "form"
+
   mode: FormMode
+
   draft: Draft
+
   image?: string
 } | {
   name: "detail"
+
   id: string
-} | { name: "insight" } | { name: "history" } | { name: "trash" } | {
-  name: "notifications"
-} | { name: "settings" }
+} | {
+  name: "insight"
+
+  tab?: string
+} | { name: "history" } | {
+  name: "trash"
+} | { name: "notifications" } | { name: "settings" }
+
+export function routeFromUrl(
+  search = typeof window !== "undefined" ? window.location.search : "",
+): Route[] {
+  const q = new URLSearchParams(search)
+
+  const v = q.get("view")
+
+  const id = q.get("id")
+
+  if (id) return [{ name: "inventory" }, { name: "detail", id }]
+
+  if (v === "storage" || v === "attention") {
+    const loc = q.get("loc") || undefined
+
+    const cat = q.get("cat") || undefined
+
+    return [{ name: "storage", location: loc, category: cat }]
+  }
+
+  if (v === "insight" || v === "history") {
+    const tab = q.get("tab") || undefined
+
+    return [{ name: "insight", tab }]
+  }
+
+  if (v === "trash") return [{ name: "trash" }]
+
+  if (v === "settings") return [{ name: "settings" }]
+
+  if (v === "add") return [{ name: "add" }]
+
+  if (v === "scan") return [{ name: "scan" }]
+
+  if (v === "notifications") return [{ name: "notifications" }]
+
+  return [{ name: "inventory" }]
+}
+
+export function urlFromRoute(r: Route): string {
+  const p = new URLSearchParams()
+
+  if (r.name === "inventory") {
+    return typeof window !== "undefined" ? window.location.pathname : "/"
+  }
+
+  if (r.name === "detail") {
+    p.set("id", r.id)
+
+    return `?${p.toString()}`
+  }
+
+  p.set("view", r.name)
+
+  if (r.name === "storage") {
+    if (r.location && r.location !== "all") p.set("loc", r.location)
+
+    if (r.category && r.category !== "all") p.set("cat", r.category)
+  } else if (r.name === "insight") {
+    if (r.tab && r.tab !== "overview") p.set("tab", r.tab)
+  }
+
+  return `?${p.toString()}`
+}
 
 export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const { state, dispatch, problem, retry, reset } = useAppStore()
+
+  useEffect(() => {
+    if (demoMode) return
+
+    api
+
+      .session()
+
+      .then(async (s) => {
+        if (s.user) {
+          dispatch({
+            type: "login",
+
+            mode: "account",
+
+            name: s.user.display_name || s.user.email.split("@")[0],
+          })
+
+          try {
+            const [page, prefs] = await Promise.all([
+              api.entries({ limit: 100 }),
+
+              api.preferences().catch(() => null),
+            ])
+
+            if (prefs && prefs.attention_lead_days) {
+              dispatch({
+                type: "settings",
+
+                settings: {
+                  ...state.settings,
+
+                  remindDays: prefs.attention_lead_days,
+                },
+              })
+            }
+
+            for (const item of page.items) {
+              dispatch({
+                type: "save",
+
+                food: {
+                  id: item.id,
+
+                  name: item.name,
+
+                  quantity: item.remaining_quantity,
+
+                  unit: (item.unit === "piece" ? "cái" : item.unit) as Unit,
+
+                  category: item.category as Category || undefined,
+
+                  location: item.storage_location || undefined,
+
+                  expDate: item.expiry_date || undefined,
+
+                  mfgDate: item.opened_on || undefined,
+
+                  finishedAt:
+                    item.remaining_quantity === 0 ? item.updated_at : undefined,
+
+                  version: item.version,
+                },
+              })
+
+              if (
+                item.storage_location &&
+                item.storage_location !== "unspecified" &&
+                !state.locations.includes(item.storage_location)
+              ) {
+                dispatch({ type: "addLocation", name: item.storage_location })
+              }
+            }
+          } catch {
+            // Keep local cached entries if server fetch fails
+          }
+        }
+      })
+
+      .catch(() => {
+        // No active server session; retain client mode
+      })
+  }, [demoMode, dispatch])
+
   const [confirmReset, setConfirmReset] = useState(false)
+
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(() => {
     try {
       return localStorage.getItem("expiry_sidebar_expanded") === "true"
@@ -81,48 +266,111 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const toggleSidebar = () => {
     setIsSidebarExpanded((prev) => {
       const next = !prev
+
       try {
         localStorage.setItem("expiry_sidebar_expanded", String(next))
       } catch {}
+
       return next
     })
   }
-  const [stack, setStack] = useState<Route[]>(() => {
+
+  const [stack, setStack] = useState<Route[]>(() => routeFromUrl())
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      const q = new URLSearchParams(window.location.search)
-      const v = q.get("view")
-      const id = q.get("id")
-      if (id) return [{ name: "inventory" }, { name: "detail", id }]
-      if (v === "storage" || v === "attention") return [{ name: "storage" }]
-      if (v === "insight" || v === "history") return [{ name: "insight" }]
-      if (v === "trash") return [{ name: "trash" }]
-      if (v === "settings") return [{ name: "settings" }]
+      const current = stack[stack.length - 1] || { name: "inventory" }
+
+      window.history.replaceState({ stack }, "", urlFromRoute(current))
     }
-    return [{ name: "inventory" }]
-  })
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (
+        event.state &&
+        Array.isArray(event.state.stack) &&
+        event.state.stack.length > 0
+      ) {
+        setStack(event.state.stack)
+      } else {
+        setStack(routeFromUrl())
+      }
+    }
+
+    window.addEventListener("popstate", handlePopState)
+
+    return () => window.removeEventListener("popstate", handlePopState)
+  }, [])
 
   const [toast, setToast] = useState<{
     message: string
+
     variant?: ToastProps["variant"]
   } | null>(null)
+
   const [discard, setDiscard] = useState<null | (() => void)>(null)
+
   const [pendingAuth, setPendingAuth] = useState<Route | null>(null)
 
   const route = stack[stack.length - 1] || { name: "inventory" }
 
-  const go = (r: Route) => setStack((s) => [...s, r])
-  const tab = (r: Route) => setStack([r])
-  const back = () => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s))
+  const go = (r: Route) => {
+    setStack((s) => {
+      const next = [...s, r]
+
+      if (typeof window !== "undefined") {
+        window.history.pushState({ stack: next }, "", urlFromRoute(r))
+      }
+
+      return next
+    })
+  }
+
+  const tab = (r: Route) => {
+    setStack(() => {
+      const next = [r]
+
+      if (typeof window !== "undefined") {
+        window.history.pushState({ stack: next }, "", urlFromRoute(r))
+      }
+
+      return next
+    })
+  }
+
+  const back = () => {
+    setStack((s) => {
+      if (s.length > 1) {
+        const next = s.slice(0, -1)
+
+        const current = next[next.length - 1]
+
+        if (typeof window !== "undefined") {
+          window.history.pushState({ stack: next }, "", urlFromRoute(current))
+        }
+
+        return next
+      }
+
+      return s
+    })
+  }
 
   const notify = (
     message: string,
+
     variant: ToastProps["variant"] = "success",
   ) => {
     setToast({ message, variant })
+
     setTimeout(() => setToast(null), 3200)
   }
 
   // Handle unreadable storage error recovery
+
   if (problem === "read") {
     return (
       <div className="flex min-h-dvh items-center justify-center p-6 bg-brand-tertiary">
@@ -166,6 +414,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 variant="danger"
                 onClick={() => {
                   reset()
+
                   setConfirmReset(false)
                 }}
               >
@@ -184,6 +433,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   }
 
   // Auth flow
+
   if (state.mode !== "account" && pendingAuth) {
     return (
       <AuthForm dispatch={dispatch} onCancel={() => setPendingAuth(null)} />
@@ -191,36 +441,50 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   }
 
   // Onboarding flow
+
   if (state.mode === "account" && !state.onboarded) {
     return <Onboarding onDone={() => dispatch({ type: "onboarded" })} />
   }
 
   if (pendingAuth && state.mode === "account") {
     const target = pendingAuth
+
     setPendingAuth(null)
+
     setStack([target])
   }
 
   const attnCount = attention(state).length
+
   const unreadCount = notifications(state).filter(
     (n) => !state.readNotifs.includes(n.id),
   ).length
 
   const navItems: {
     r: Route["name"]
+
     label: string
+
     icon: ReactNode
+
     badge?: number
   }[] = [
     { r: "inventory", label: "Thực phẩm", icon: <Home size={22} /> },
+
     {
       r: "storage",
+
       label: "Lưu trữ",
+
       icon: <Archive size={22} />,
+
       badge: attnCount,
     },
+
     { r: "add", label: "Thêm", icon: <Plus size={22} /> },
+
     { r: "insight", label: "Insight", icon: <BarChart3 size={22} /> },
+
     { r: "settings", label: "Cài đặt", icon: <SettingsIcon size={22} /> },
   ]
 
@@ -229,23 +493,204 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     route.name === "scan" ||
     (route.name === "form" && route.mode !== "edit")
 
-  const rootName = isAddFlow ? "add" : stack[0].name
+  const rootName = isAddFlow
+    ? "add"
+    : route.name === "detail"
+      ? stack[0]?.name || "inventory"
+      : route.name
+
+  function toBackendUnitAndQty(quantity: number, unit: string): {
+    quantity: number
+
+    unit: "piece" | "g" | "ml"
+  } {
+    if (unit === "kg") return { quantity: quantity * 1000, unit: "g" }
+
+    if (unit === "lít") return { quantity: quantity * 1000, unit: "ml" }
+
+    if (unit === "g") return { quantity, unit: "g" }
+
+    if (unit === "ml") return { quantity, unit: "ml" }
+
+    return { quantity, unit: "piece" }
+  }
 
   async function handleSaveDraft(d: Draft, mode: FormMode) {
+    if (state.mode === "account") {
+      const idempotencyKey = `idemp_${crypto.randomUUID()}`
+
+      if (mode === "edit" && d.id) {
+        const existing = state.foods.find((f) => f.id === d.id)
+
+        const expectedVersion = existing?.version ?? 1
+
+        try {
+          const patch: EditEntryDTO = {
+            name: d.name.trim(),
+
+            storage_location: d.location?.trim() || "unspecified",
+
+            expiry_date: d.expDate || null,
+
+            date_certainty: d.expDate ? "known" : "unknown",
+
+            date_source: d.expDate ? "printed_label" : "unknown",
+
+            date_label_type: "unspecified",
+
+            expected_version: expectedVersion,
+          }
+
+          const updated = await api.updateEntry(d.id, patch, idempotencyKey)
+
+          dispatch({
+            type: "save",
+
+            food: {
+              id: updated.id,
+
+              name: updated.name,
+
+              quantity: updated.remaining_quantity,
+
+              unit: (d.unit || "cái") as Unit,
+
+              category: d.category || "other",
+
+              mfgDate: d.mfgDate || undefined,
+
+              expDate: updated.expiry_date || undefined,
+
+              location: updated.storage_location || undefined,
+
+              finishedAt:
+                updated.remaining_quantity === 0
+                  ? new Date().toISOString()
+                  : undefined,
+
+              version: updated.version,
+            },
+          })
+
+          notify("Đã lưu thay đổi")
+
+          setStack([{ name: "inventory" }])
+
+          return
+        } catch (err: unknown) {
+          if (err instanceof ApiError && err.code === "VERSION_CONFLICT") {
+            notify(
+              "Xung đột phiên bản: Dữ liệu đã thay đổi ở nơi khác. Vui lòng tải lại.",
+            )
+          } else {
+            notify("Lỗi kết nối máy chủ. Không thể lưu thay đổi.")
+          }
+
+          return
+        }
+      } else {
+        try {
+          const rawQty = Number(d.quantity) || 1
+
+          const { quantity, unit } = toBackendUnitAndQty(
+            rawQty,
+
+            d.unit || "cái",
+          )
+
+          const created = await api.createEntry(
+            {
+              name: d.name.trim(),
+
+              storage_location: d.location?.trim() || "unspecified",
+
+              expiry_date: d.expDate || null,
+
+              date_certainty: d.expDate ? "known" : "unknown",
+
+              date_source: d.expDate ? "printed_label" : "unknown",
+
+              date_label_type: "unspecified",
+
+              opened_on: d.mfgDate || null,
+
+              note: null,
+
+              quantity: decimal(quantity),
+
+              unit,
+            },
+
+            idempotencyKey,
+          )
+
+          dispatch({
+            type: "save",
+
+            food: {
+              id: created.id,
+
+              name: created.name,
+
+              quantity: Number(d.quantity),
+
+              unit: (d.unit || "cái") as Unit,
+
+              category: d.category || "other",
+
+              mfgDate: d.mfgDate || undefined,
+
+              expDate: created.expiry_date || undefined,
+
+              location: created.storage_location || undefined,
+
+              finishedAt: undefined,
+
+              version: created.version,
+            },
+          })
+
+          notify(
+            d.expDate
+              ? `Đã lưu ${d.name.trim()}`
+              : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
+          )
+
+          setStack([{ name: "inventory" }])
+
+          return
+        } catch {
+          notify("Lỗi kết nối máy chủ. Không thể tạo thực phẩm.")
+
+          return
+        }
+      }
+    }
+
     dispatch({
       type: "save",
+
       food: {
         id: mode === "edit" ? d.id : undefined,
+
         name: d.name.trim(),
+
         quantity: Number(d.quantity),
+
         unit: d.unit || "cái",
+
         category: d.category || "other",
+
         mfgDate: d.mfgDate || undefined,
+
         expDate: d.expDate || undefined,
+
         location: d.location || undefined,
+
         finishedAt: undefined,
       },
     })
+
     notify(
       mode === "edit"
         ? "Đã lưu thay đổi"
@@ -253,10 +698,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           ? `Đã lưu ${d.name.trim()}`
           : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
     )
+
     setStack([{ name: "inventory" }])
   }
 
   let screenContent: ReactNode
+
   switch (route.name) {
     case "inventory":
       screenContent = (
@@ -269,18 +716,89 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           unreadNotificationsCount={unreadCount}
         />
       )
+
       break
 
     case "storage":
+
     case "attention":
       screenContent = (
         <StorageView
           state={state}
           dispatch={dispatch}
+          isLive={state.mode === "account"}
+          initialLocation={
+            route.name === "storage" ? route.location : undefined
+          }
+          initialCategory={
+            route.name === "storage"
+              ? route.category as Category | "all" | undefined
+              : undefined
+          }
+          onFilterChange={(loc, cat) => {
+            const nextRoute: Route = {
+              name: "storage",
+
+              location: loc !== "all" ? loc : undefined,
+
+              category: cat !== "all" ? cat : undefined,
+            }
+
+            if (typeof window !== "undefined") {
+              window.history.replaceState(
+                { stack: [nextRoute] },
+
+                "",
+
+                urlFromRoute(nextRoute),
+              )
+            }
+          }}
+          onAddLocation={async (name) => {
+            dispatch({ type: "addLocation", name })
+
+            if (state.mode === "account") {
+              try {
+                const curPrefs = JSON.parse(
+                  (typeof localStorage !== "undefined"
+                    ? localStorage.getItem("expiry_user_preferences")
+                    : null) || "{}",
+                )
+
+                const locs = Array.from(
+                  new Set([...(curPrefs.locations || state.locations), name]),
+                )
+
+                if (typeof localStorage !== "undefined")
+                  localStorage.setItem(
+                    "expiry_user_preferences",
+
+                    JSON.stringify({ ...curPrefs, locations: locs }),
+                  )
+              } catch {}
+            }
+          }}
+          onSavePreferences={async (prefs) => {
+            try {
+              const curPrefs = JSON.parse(
+                (typeof localStorage !== "undefined"
+                  ? localStorage.getItem("expiry_user_preferences")
+                  : null) || "{}",
+              )
+
+              if (typeof localStorage !== "undefined")
+                localStorage.setItem(
+                  "expiry_user_preferences",
+
+                  JSON.stringify({ ...curPrefs, ...prefs }),
+                )
+            } catch {}
+          }}
           onOpenDetail={(id) => go({ name: "detail", id })}
           onAdd={() => go({ name: "add" })}
         />
       )
+
       break
 
     case "add":
@@ -293,6 +811,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onBack={back}
         />
       )
+
       break
 
     case "scan":
@@ -302,17 +821,28 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onManual={() =>
             setStack((s) => [
               ...s.slice(0, -1),
+
               { name: "form", mode: "manual", draft: emptyDraft() },
             ])
           }
-          onReview={(image) =>
+          onReview={(image, draft) =>
             setStack((s) => [
               ...s.slice(0, -1),
-              { name: "form", mode: "ocr", draft: emptyDraft(), image },
+
+              {
+                name: "form",
+
+                mode: "ocr",
+
+                draft: draft || emptyDraft(),
+
+                image,
+              },
             ])
           }
         />
       )
+
       break
 
     case "form":
@@ -328,6 +858,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onCancel={(dirty) => (dirty ? setDiscard(() => back) : back())}
         />
       )
+
       break
 
     case "detail":
@@ -343,16 +874,35 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           notify={notify}
         />
       )
+
       break
 
     case "insight":
+
     case "history":
       screenContent = (
         <InsightView
           state={state}
+          dispatch={dispatch}
+          isLive={state.mode === "account"}
+          initialTab={route.name === "insight" ? route.tab : "history"}
+          onTabChange={(t) => {
+            const nextRoute: Route = { name: "insight", tab: t }
+
+            if (typeof window !== "undefined") {
+              window.history.replaceState(
+                { stack: [nextRoute] },
+
+                "",
+
+                urlFromRoute(nextRoute),
+              )
+            }
+          }}
           onOpenDetail={(id) => go({ name: "detail", id })}
         />
       )
+
       break
 
     case "trash":
@@ -364,6 +914,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           notify={notify}
         />
       )
+
       break
 
     case "notifications":
@@ -376,6 +927,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           notify={notify}
         />
       )
+
       break
 
     case "settings":
@@ -388,6 +940,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           notify={notify}
         />
       )
+
       break
   }
 
@@ -506,6 +1059,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           <div className="grid grid-cols-5 w-full">
             {navItems.map((n) => {
               const activeTab = rootName === n.r
+
               return (
                 <button
                   key={n.r}
@@ -577,6 +1131,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               variant="danger"
               onClick={() => {
                 discard?.()
+
                 setDiscard(null)
               }}
             >

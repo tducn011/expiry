@@ -1,28 +1,40 @@
 import { useState } from "react"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import { CircleAlert, Minus, ScanText } from "../components/ui/Icon"
 
 export function Onboarding({ onDone }: { onDone: () => void }) {
   const steps = [
     {
       icon: <ScanText size={36} aria-hidden="true" />,
+
       t: "Quét nhãn hoặc nhập tay",
+
       d: "Chụp nhãn bao bì khi tiện, hoặc tự nhập thông tin. Bạn luôn được xem lại và đối chiếu cẩn thận trước khi bấm lưu.",
     },
+
     {
       icon: <CircleAlert size={36} aria-hidden="true" />,
+
       t: "Xem món cần chú ý",
+
       d: "Những thực phẩm sắp hoặc đã quá hạn sử dụng được ưu tiên đưa lên đầu. Expiry tuyệt đối không tự xóa thực phẩm của bạn.",
     },
+
     {
       icon: <Minus size={36} aria-hidden="true" />,
+
       t: "Cập nhật số lượng dễ dàng",
+
       d: "Ghi lại phần đã dùng, đã bỏ hoặc kiểm lại số lượng tồn kho để lượng thực phẩm luôn phản ánh đúng thực tế trong tủ.",
     },
   ]
 
   const [i, setI] = useState(0)
+
   const s = steps[i]
 
   return (

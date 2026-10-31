@@ -1,5 +1,5 @@
 import { paginationQuery, queryInteger } from '../../shared/public-dto.mjs';
-import { DomainError } from '../../shared/domain.mjs';
+import { DomainError, categories } from '../../shared/domain.mjs';
 
 export class InventoryController {
   constructor(inventoryService) {
@@ -30,13 +30,17 @@ export class InventoryController {
     try {
       const view = req.query.view ?? 'inventory';
       if (!['inventory', 'attention'].includes(view)) throw new DomainError(422, 'VALIDATION_ERROR');
+      if (req.query.category !== undefined && !categories.includes(req.query.category)) {
+        throw new DomainError(422, 'VALIDATION_ERROR');
+      }
       const query = {
         view,
         lifecycle: req.query.lifecycle ?? 'active',
         attention: req.query.attention,
         ...paginationQuery(req.query),
         q: req.query.q ?? '',
-        location: req.query.location
+        location: req.query.location,
+        category: req.query.category
       };
       const result = await this.service.listEntries(req.userId, query);
       return res.status(200).json(result);

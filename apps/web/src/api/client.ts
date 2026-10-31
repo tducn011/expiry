@@ -1,3 +1,5 @@
+import { inferCategory, type Category } from "../store/appStore"
+
 import type {
   Attention,
   CreatePayload,
@@ -147,6 +149,8 @@ export type EntryDraftDTO = {
 
   storage_location?: string
 
+  category?: string | null
+
   expiry_date: string | null
 
   date_certainty: "known" | "estimated" | "unknown"
@@ -266,7 +270,9 @@ export function scanToEntryDraft(
   result: ScanResult,
 
   selectedDate: string | null,
-): Pick<EntryDraft, "name" | "expiry_date" | "expiry_date_certainty" | "expiry_date_source" | "expiry_date_label_type"> {
+): Pick<EntryDraft, "name" | "expiry_date" | "expiry_date_certainty" | "expiry_date_source" | "expiry_date_label_type"> & {
+  category?: Category
+} {
   const candidate = result.candidates.expiry_date
 
   const expiryDate =
@@ -289,8 +295,14 @@ export function scanToEntryDraft(
       ? candidate.date_label_type
       : null
 
+  const name = result.candidates.food_name?.trim() || ""
+
+  const category = name ? inferCategory(name) : undefined
+
   return {
-    name: result.candidates.food_name?.trim() || "",
+    name,
+
+    category,
 
     expiry_date: expiryDate,
 
@@ -680,12 +692,34 @@ export class ApiClient {
       password: string
 
       display_name?: string
+
+      timezone?: string
     },
   ) {
+    const payload =
+      mode === "register"
+        ? {
+            email: input.email,
+
+            password: input.password,
+
+            display_name: input.display_name,
+
+            timezone:
+              input.timezone ||
+              Intl.DateTimeFormat().resolvedOptions().timeZone ||
+              "UTC",
+          }
+        : {
+            email: input.email,
+
+            password: input.password,
+          }
+
     await this.request(`/auth/${mode}`, {
       method: "POST",
 
-      body: JSON.stringify(input),
+      body: JSON.stringify(payload),
     })
 
     // Only the authenticated session read establishes the UI principal.
@@ -895,10 +929,14 @@ export class ApiClient {
     return this.request<Preferences>("/me/preferences")
   }
 
-  async scan(file: File, barcode?: string, locale?: string) {
+  async scan(file: File | Blob, barcode?: string, locale?: string) {
     const body = new FormData()
 
-    body.append("image", file)
+    if (file instanceof File) {
+      body.append("image", file)
+    } else {
+      body.append("image", file, "capture.jpg")
+    }
 
     const params = new URLSearchParams()
 
@@ -950,3 +988,5 @@ export class ApiClient {
     return result
   }
 }
+
+export const api = new ApiClient()

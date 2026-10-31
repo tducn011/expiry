@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from "react"
+
+import { api } from "../api/client"
+
+import type { Category } from "../store/appStore"
+
+import type { Draft } from "./FoodForm"
+
 import Button from "../components/ui/Button"
+
 import {
   ArrowLeft,
   Camera,
@@ -11,63 +19,92 @@ import {
   ScanText,
   ShieldAlert,
 } from "../components/ui/Icon"
+
 import IconButton from "../components/ui/IconButton"
 
 type ScanState = "idle" | "requesting" | "ready" | "capturing" | "processing" | "unrecognized" | "denied" | "unavailable"
 
 const corners = [
   "left-0 top-0 border-l-4 border-t-4 rounded-tl-corner-md",
+
   "right-0 top-0 border-r-4 border-t-4 rounded-tr-corner-md",
+
   "left-0 bottom-0 border-l-4 border-b-4 rounded-bl-corner-md",
+
   "right-0 bottom-0 border-r-4 border-b-4 rounded-br-corner-md",
 ]
 
 export function Scanner({
   onBack,
+
   onManual,
+
   onReview,
 }: {
   onBack: () => void
+
   onManual: () => void
-  onReview: (img: string) => void
+
+  onReview: (img: string, draft?: Draft) => void
 }) {
   const [state, setState] = useState<ScanState>("idle")
+
   const [image, setImage] = useState<string>()
+
+  const [detectedDraft, setDetectedDraft] = useState<Draft | undefined>(
+    undefined,
+  )
+
   const videoRef = useRef<HTMLVideoElement>(null)
+
   const streamRef = useRef<MediaStream | null>(null)
+
   const fileRef = useRef<HTMLInputElement>(null)
+
   const timer = useRef<number | undefined>(undefined)
 
   const stop = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop())
+
     streamRef.current = null
+
     if (videoRef.current) videoRef.current.srcObject = null
   }
 
   useEffect(() => {
     return () => {
       stop()
+
       window.clearTimeout(timer.current)
     }
   }, [])
 
   async function start() {
     if (!navigator.mediaDevices?.getUserMedia) return setState("unavailable")
+
     setImage(undefined)
+
     setState("requesting")
+
     try {
       const s = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
+
         audio: false,
       })
+
       streamRef.current = s
+
       if (videoRef.current) {
         videoRef.current.srcObject = s
+
         await videoRef.current.play().catch(() => {})
       }
+
       setState("ready")
     } catch (err) {
       const name = (err as DOMException)?.name
+
       setState(
         name === "NotAllowedError" || name === "SecurityError"
           ? "denied"
@@ -76,36 +113,135 @@ export function Scanner({
     }
   }
 
-  function recognize(img: string) {
+  async function recognize(img: string, file?: File | Blob) {
     setImage(img)
+
     setState("processing")
-    timer.current = window.setTimeout(() => setState("unrecognized"), 900)
+
+    setDetectedDraft(undefined)
+
+    try {
+      let uploadFile: File | Blob
+
+      if (file) {
+        uploadFile = file
+      } else {
+        const res = await fetch(img)
+
+        const blob = await res.blob()
+
+        uploadFile = new File([blob], "capture.jpg", { type: "image/jpeg" })
+      }
+
+      const scanResult = await api.scan(uploadFile)
+
+      const cand = scanResult.candidates
+
+      const expDate = cand.expiry_date?.value || ""
+
+      const mfgDate = cand.manufactured_date?.value || ""
+
+      const name = cand.food_name?.trim() || ""
+
+      let category: Category | "" = ""
+
+      const lowerName = name.toLowerCase()
+
+      if (/thịt|bò|heo|lợn|gà|vịt|cá|tôm|cua|mực|hải sản/.test(lowerName)) {
+        category = "meat_seafood"
+      } else if (
+        /rau|cải|cà|xà lách|dưa|nấm|táo|cam|chuối|xoài/.test(lowerName)
+      ) {
+        category = "fresh_produce"
+      } else if (/sữa|trứng|phô mai|bơ|yogurt|sữa chua/.test(lowerName)) {
+        category = "dairy_eggs"
+      } else if (/trà|cà phê|nước|bia|rượu|nước ngọt|nước ép/.test(lowerName)) {
+        category = "beverage"
+      } else if (/gạo|mì|miến|đường|muối|mắm|tiêu|hạt/.test(lowerName)) {
+        category = "dry_pantry"
+      } else if (name) {
+        category = "other"
+      }
+
+      const draft: Draft = {
+        name,
+
+        quantity: "1",
+
+        unit: "cái",
+
+        category,
+
+        mfgDate,
+
+        expDate,
+
+        location: "",
+      }
+
+      setDetectedDraft(draft)
+
+      onReview(img, draft)
+    } catch {
+      setState("unrecognized")
+    }
   }
 
   function capture() {
     const v = videoRef.current
+
     if (!v || !v.videoWidth) return
+
     setState("capturing")
+
     const c = document.createElement("canvas")
+
     c.width = v.videoWidth
+
     c.height = v.videoHeight
+
     c.getContext("2d")?.drawImage(v, 0, 0)
+
     stop()
-    recognize(c.toDataURL("image/jpeg", 0.8))
+
+    const dataUrl = c.toDataURL("image/jpeg", 0.85)
+
+    c.toBlob(
+      (blob) => {
+        if (blob) {
+          const f = new File([blob], "scan-capture.jpg", {
+            type: "image/jpeg",
+          })
+
+          recognize(dataUrl, f)
+        } else {
+          recognize(dataUrl)
+        }
+      },
+
+      "image/jpeg",
+
+      0.85,
+    )
   }
 
   function onFile(f?: File) {
     if (!f) return
+
     const r = new FileReader()
+
     r.onload = () => {
       stop()
-      recognize(String(r.result))
+
+      recognize(String(r.result), f)
     }
+
     r.readAsDataURL(f)
   }
 
   const leave = (fn: () => void) => () => {
     stop()
+
     fn()
   }
 
@@ -268,6 +404,7 @@ export function Scanner({
             variant="neutral"
             onClick={() => {
               stop()
+
               setState("idle")
             }}
           >
@@ -279,7 +416,7 @@ export function Scanner({
             <Button
               variant="primary"
               iconStart={<ScanText size={18} />}
-              onClick={() => onReview(image)}
+              onClick={() => onReview(image, detectedDraft)}
             >
               Kiểm tra thông tin
             </Button>
@@ -310,6 +447,7 @@ export function Scanner({
           aria-hidden="true"
           onChange={(e) => {
             onFile(e.target.files?.[0])
+
             e.target.value = ""
           }}
         />
