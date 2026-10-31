@@ -300,11 +300,17 @@ function reducer(s: State, a: Action): State {
         ? loadDemo()
         : {
             ...initial,
+
             onboarded: s.onboarded,
+
             mode: "account",
+
             userName: a.name,
+
             userId: a.userId,
+
             foods: [],
+
             history: [],
           }
 
@@ -947,13 +953,16 @@ interface StoredResult {
 function readStored(): StoredResult {
   try {
     // Preserve legacy unsynced cache to a quarantine backup key instead of destroying user data
+
     const legacy = localStorage.getItem(KEY)
+
     if (legacy && legacy !== "null") {
       try {
         localStorage.setItem("expiry-legacy-backup-v1", legacy)
       } catch {
         /* ignore */
       }
+
       try {
         localStorage.removeItem(KEY)
       } catch {
@@ -962,6 +971,7 @@ function readStored(): StoredResult {
     }
 
     // Always start with demo state; account mode inventory is server-authoritative and only hydrated after verified session
+
     return { state: loadDemo(), problem: null }
   } catch {
     return { state: initial, problem: "read" }
@@ -972,6 +982,7 @@ function signOutStorage() {
   try {
     api.logout().catch(() => {
       // Flag pending server logout if network was offline so cookie is revoked on reconnect
+
       try {
         localStorage.setItem("expiry_pending_server_logout", "true")
       } catch {
@@ -980,6 +991,7 @@ function signOutStorage() {
     })
 
     const legacy = localStorage.getItem(KEY)
+
     if (legacy && legacy !== "null") {
       try {
         localStorage.setItem("expiry-legacy-backup-v1", legacy)
@@ -987,6 +999,7 @@ function signOutStorage() {
         /* ignore */
       }
     }
+
     localStorage.removeItem(KEY)
   } catch {
     /* nothing */
@@ -1004,6 +1017,7 @@ export function useAppStore() {
 
       rawDispatch(a)
     },
+
     [rawDispatch],
   )
 
@@ -1014,6 +1028,7 @@ export function useAppStore() {
 
     try {
       // ONLY persist demo mode data. Account mode is server-authoritative and never written to un-scoped key.
+
       if (state.mode === "demo") {
         localStorage.setItem(DEMO_KEY, JSON.stringify(state))
       }

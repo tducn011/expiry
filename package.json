@@ -15,6 +15,7 @@
     "test:format": "cd apps/web && ./node_modules/.bin/oxfmt --check src/",
     "format": "cd apps/web && ./node_modules/.bin/oxfmt src/",
     "typecheck": "npm --workspace=apps/web run typecheck",
+    "test:ingress": "node scripts/smoke-test-ingress.mjs",
     "test:behavior": "node scripts/test-behavior-contract.mjs",
     "test:all": "npm run test:api && npm run test:python && npm run test:ui && npm run test:dbops && npm run build:web && npm run test:behavior",
     "review:pr": "node scripts/review-pr.mjs",

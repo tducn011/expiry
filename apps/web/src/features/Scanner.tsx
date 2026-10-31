@@ -234,7 +234,9 @@ export function Scanner({
         }
 
         setDetectedDraft(fallbackDraft)
+
         onReview(img, fallbackDraft)
+
         return
       }
 

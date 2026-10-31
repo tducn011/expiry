@@ -170,27 +170,38 @@ export function urlFromRoute(r: Route): string {
 
 export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const { state, dispatch, problem, retry, reset } = useAppStore()
+
   const [syncError, setSyncError] = useState<string | null>(null)
+
   const [isCheckingSession, setIsCheckingSession] = useState(!demoMode)
+
   const sessionGenRef = useRef(0)
 
   // 1. Initial Session Verification on mount
+
   useEffect(() => {
     if (demoMode) {
       setIsCheckingSession(false)
+
       return
     }
 
     let isMounted = true
+
     const gen = ++sessionGenRef.current
+
     setIsCheckingSession(true)
 
     // Revoke any pending offline server logout before checking session
+
     try {
       if (localStorage.getItem("expiry_pending_server_logout") === "true") {
         api
+
           .logout()
+
           .catch(() => {})
+
           .finally(() => {
             try {
               localStorage.removeItem("expiry_pending_server_logout")
@@ -204,16 +215,22 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     }
 
     api
+
       .session()
+
       .then((s) => {
         if (!isMounted || sessionGenRef.current !== gen) return
+
         setSyncError(null)
 
         if (s.user) {
           dispatch({
             type: "login",
+
             mode: "account",
+
             name: s.user.display_name || s.user.email.split("@")[0],
+
             userId: s.user.id,
           })
         } else {
@@ -222,6 +239,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           }
         }
       })
+
       .catch((err) => {
         if (!isMounted || sessionGenRef.current !== gen) return
 
@@ -235,6 +253,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           )
         }
       })
+
       .finally(() => {
         if (isMounted && sessionGenRef.current === gen) {
           setIsCheckingSession(false)
@@ -243,20 +262,26 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     return () => {
       isMounted = false
+
       sessionGenRef.current++
     }
   }, [demoMode, dispatch])
 
   // 2. Hydrate Account Inventory when verified userId is established
+
   useEffect(() => {
     if (demoMode || !state.userId || state.mode !== "account") return
 
     let isMounted = true
+
     const gen = ++sessionGenRef.current
+
     const activeUserId = state.userId
 
     api
+
       .entries({ limit: 100 })
+
       .then((page) => {
         if (
           !isMounted ||
@@ -272,19 +297,30 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             state.userId !== activeUserId
           )
             return
+
           dispatch({
             type: "save",
+
             food: {
               id: item.id,
+
               name: item.name,
+
               quantity: item.remaining_quantity,
+
               unit: (item.unit === "piece" ? "cái" : item.unit) as Unit,
+
               category: item.category as Category || undefined,
+
               location: item.storage_location || undefined,
+
               expDate: item.expiry_date || undefined,
+
               mfgDate: item.opened_on || undefined,
+
               finishedAt:
                 item.remaining_quantity === 0 ? item.updated_at : undefined,
+
               version: item.version,
             },
           })
@@ -298,6 +334,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           }
         }
       })
+
       .catch(() => {
         if (
           isMounted &&
@@ -309,7 +346,9 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       })
 
     api
+
       .preferences()
+
       .then((prefs) => {
         if (
           !isMounted ||
@@ -317,20 +356,25 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           state.userId !== activeUserId
         )
           return
+
         if (prefs && prefs.attention_lead_days) {
           dispatch({
             type: "settings",
+
             settings: {
               ...state.settings,
+
               remindDays: prefs.attention_lead_days,
             },
           })
         }
       })
+
       .catch(() => {})
 
     return () => {
       isMounted = false
+
       sessionGenRef.current++
     }
   }, [demoMode, dispatch, state.userId, state.mode])
