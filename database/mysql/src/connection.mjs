@@ -96,16 +96,37 @@ export async function rootSql(sql, database) {
   }
 }
 export async function migrate(database) {
-  const sql = await readFile(new URL('migrations/001_initial_schema.sql',base),'utf8');
-  const hash = createHash('sha256').update(sql).digest('hex');
-  await rootSql('CREATE TABLE IF NOT EXISTS schema_migrations (version INT PRIMARY KEY, sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, applied_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)) ENGINE=InnoDB;',database);
-  const old = (await rootSql('SELECT sha256 FROM schema_migrations WHERE version=1;',database)).trim();
-  if (old) { if (old !== hash) throw new Error('Applied migration checksum drift: create a new version'); return {applied:false,hash}; }
-  const tables = (await rootSql("SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name <> 'schema_migrations';",database)).trim();
-  if (tables) throw new Error('Unversioned/partial schema found; preserve data and use explicit forward recovery');
-  await rootSql(sql,database);
-  await rootSql(`INSERT INTO schema_migrations(version,sha256) VALUES (1,'${hash}');`,database);
-  return {applied:true,hash};
+  const migrationFiles = [
+    { version: 1, file: 'migrations/001_initial_schema.sql' },
+    { version: 2, file: 'migrations/002_local_auth.sql' },
+    { version: 3, file: 'migrations/003_session_expiry_boundary.sql' },
+    { version: 4, file: 'migrations/004_add_barcode.sql' },
+    { version: 5, file: 'migrations/005_add_category.sql' },
+  ];
+  await rootSql('CREATE TABLE IF NOT EXISTS schema_migrations (version INT PRIMARY KEY, sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, applied_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)) ENGINE=InnoDB;', database);
+  
+  let lastHash = '';
+  let anyApplied = false;
+  for (const m of migrationFiles) {
+    const rawSql = await readFile(new URL(m.file, base), 'utf8');
+    const normSql = rawSql.replace(/\r\n/g, '\n');
+    const hash = createHash('sha256').update(normSql).digest('hex');
+    const old = (await rootSql(`SELECT sha256 FROM schema_migrations WHERE version=${m.version};`, database)).trim();
+    if (old) {
+      if (old !== hash) throw new Error(`Applied migration ${m.version} checksum drift: create a new version`);
+      lastHash = hash;
+      continue;
+    }
+    if (m.version === 1) {
+      const tables = (await rootSql("SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name <> 'schema_migrations';", database)).trim();
+      if (tables) throw new Error('Unversioned/partial schema found; preserve data and use explicit forward recovery');
+    }
+    await rootSql(normSql, database);
+    await rootSql(`INSERT INTO schema_migrations(version,sha256) VALUES (${m.version},'${hash}');`, database);
+    lastHash = hash;
+    anyApplied = true;
+  }
+  return { applied: anyApplied, hash: lastHash };
 }
 export async function grants(database) {
   if (!/^expiry_(dev|test_[a-z0-9_]+)$/.test(database)) throw new Error('Invalid database grants');

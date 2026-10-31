@@ -1,29 +1,112 @@
 import { useState } from "react"
+
+import { api, ApiError } from "../api/client"
+
 import type { Dispatch, Food, State } from "../store/appStore"
+
 import { trashDaysLeft, trashed } from "../store/appStore"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import { Trash2, Undo2 } from "../components/ui/Icon"
+
 import Modal from "../components/ui/Modal"
+
 import PageHeader from "../components/ui/PageHeader"
 
 export function Trash({
   state,
+
   dispatch,
+
   onBack,
+
   notify,
 }: {
   state: State
+
   dispatch: Dispatch
+
   onBack?: () => void
+
   notify: (m: string) => void
 }) {
   const list = trashed(state)
+
   const [confirm, setConfirm] = useState<{
     f: Food
+
     kind: "restore" | "purge"
   } | null>(null)
+
+  const [loading, setLoading] = useState(false)
+
+  async function handleConfirm() {
+    if (!confirm) return
+
+    if (state.mode === "account" && confirm.kind === "restore") {
+      setLoading(true)
+
+      try {
+        const idempotencyKey = `idemp_${crypto.randomUUID()}`
+
+        const restored = await api.restoreEntry(
+          confirm.f.id,
+
+          confirm.f.version ?? 1,
+
+          idempotencyKey,
+        )
+
+        dispatch({ type: "restore", id: confirm.f.id })
+
+        dispatch({
+          type: "save",
+
+          food: {
+            ...confirm.f,
+
+            version: restored.version,
+
+            deletedAt: undefined,
+          },
+        })
+
+        notify(`Đã khôi phục ${confirm.f.name} vào kho`)
+
+        setConfirm(null)
+      } catch (failure: unknown) {
+        if (
+          failure instanceof ApiError &&
+          (failure.code === "VERSION_CONFLICT" || failure.status === 409)
+        ) {
+          notify(
+            "Xung đột phiên bản: Dữ liệu đã thay đổi ở nơi khác. Vui lòng tải lại.",
+          )
+        } else {
+          notify("Lỗi kết nối máy chủ. Không thể khôi phục thực phẩm.")
+        }
+      } finally {
+        setLoading(false)
+      }
+
+      return
+    }
+
+    dispatch({ type: confirm.kind, id: confirm.f.id })
+
+    notify(
+      confirm.kind === "restore"
+        ? `Đã khôi phục ${confirm.f.name} vào kho`
+        : `Đã xóa vĩnh viễn ${confirm.f.name}`,
+    )
+
+    setConfirm(null)
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto">
@@ -93,18 +176,14 @@ export function Trash({
             </Button>
             <Button
               variant={confirm?.kind === "restore" ? "primary" : "danger"}
-              onClick={() => {
-                if (!confirm) return
-                dispatch({ type: confirm.kind, id: confirm.f.id })
-                notify(
-                  confirm.kind === "restore"
-                    ? `Đã khôi phục ${confirm.f.name} vào kho`
-                    : `Đã xóa vĩnh viễn ${confirm.f.name}`,
-                )
-                setConfirm(null)
-              }}
+              disabled={loading}
+              onClick={handleConfirm}
             >
-              {confirm?.kind === "restore" ? "Khôi phục" : "Xóa vĩnh viễn"}
+              {loading
+                ? "Đang xử lý..."
+                : confirm?.kind === "restore"
+                  ? "Khôi phục"
+                  : "Xóa vĩnh viễn"}
             </Button>
           </>
         }

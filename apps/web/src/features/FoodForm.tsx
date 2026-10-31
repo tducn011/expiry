@@ -1,44 +1,74 @@
 import { useRef, useState } from "react"
+
 import type { Category, Food, Unit } from "../store/appStore"
+
 import { CATEGORIES, today, UNITS } from "../store/appStore"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import FieldError from "../components/ui/FieldError"
+
 import { Plus, ScanText, X } from "../components/ui/Icon"
+
 import InputField from "../components/ui/InputField"
+
 import Modal from "../components/ui/Modal"
+
 import SectionTitle from "../components/ui/SectionTitle"
+
 import SelectField from "../components/ui/SelectField"
 
 export interface Draft {
   id?: string
+
   name: string
+
   quantity: string
+
   unit: Unit | ""
+
   category: Category | ""
+
   mfgDate: string
+
   expDate: string
+
   location: string
 }
 
 export const emptyDraft = (): Draft => ({
   name: "",
+
   quantity: "1",
+
   unit: "cái",
+
   category: "other",
+
   mfgDate: "",
+
   expDate: "",
+
   location: "",
 })
 
 export const draftFrom = (f: Food, keepQty = true): Draft => ({
   id: f.id,
+
   name: f.name,
+
   quantity: keepQty ? String(f.quantity) : "",
+
   unit: f.unit,
+
   category: f.category ?? "other",
+
   mfgDate: f.mfgDate ?? "",
+
   expDate: f.expDate ?? "",
+
   location: f.location ?? "",
 })
 
@@ -50,15 +80,22 @@ const validDate = (v: string) =>
 
 export function validate(d: Draft): Errors {
   const e: Errors = {}
+
   if (!d.name.trim()) e.name = "Vui lòng nhập tên thực phẩm."
+
   const q = d.quantity.trim().replace(",", ".")
+
   if (!q) e.quantity = "Vui lòng nhập số lượng."
   else if (!/^\d+(\.\d{1,3})?$/.test(q))
     e.quantity = "Chỉ nhập số, ví dụ 2 hoặc 0.5."
   else if (Number(q) <= 0) e.quantity = "Số lượng phải lớn hơn 0."
+
   if (!d.unit) e.unit = "Vui lòng chọn đơn vị."
+
   if (!validDate(d.mfgDate)) e.mfgDate = "Ngày không hợp lệ."
+
   if (!validDate(d.expDate)) e.expDate = "Ngày không hợp lệ."
+
   if (
     !e.mfgDate &&
     !e.expDate &&
@@ -67,6 +104,7 @@ export function validate(d: Draft): Errors {
     d.expDate < d.mfgDate
   )
     e.expDate = "Hạn sử dụng không thể trước ngày sản xuất."
+
   return e
 }
 
@@ -74,49 +112,76 @@ export type FormMode = "manual" | "ocr" | "edit" | "readd"
 
 const titles: Record<FormMode, string> = {
   manual: "Nhập thực phẩm",
+
   ocr: "Kiểm tra thông tin",
+
   edit: "Sửa thông tin",
+
   readd: "Thêm lại thực phẩm",
 }
 
 export function FoodForm({
   mode,
+
   initial,
+
   capturedImage,
+
   locations,
+
   onAddLocation,
+
   onSubmit,
+
   onCancel,
 }: {
   mode: FormMode
+
   initial: Draft
+
   capturedImage?: string
+
   locations: string[]
+
   onAddLocation: (n: string) => void
+
   onSubmit: (d: Draft) => Promise<void>
+
   onCancel: (dirty: boolean) => void
 }) {
   const [d, setD] = useState<Draft>(initial)
+
   const [errors, setErrors] = useState<Errors>({})
+
   const [saving, setSaving] = useState(false)
+
   const [newLocModal, setNewLocModal] = useState(false)
+
   const [newLocName, setNewLocName] = useState("")
 
   const submitting = useRef(false)
+
   const dirty = JSON.stringify(d) !== JSON.stringify(initial)
 
   const set = (k: keyof Draft) => (v: string) => {
     setD((p) => ({ ...p, [k]: v }))
+
     setErrors((p) => ({ ...p, [k]: undefined, save: undefined }))
   }
 
   async function save() {
     if (submitting.current) return
+
     const e = validate(d)
+
     setErrors(e)
+
     if (Object.keys(e).length) return
+
     submitting.current = true
+
     setSaving(true)
+
     try {
       await onSubmit({ ...d, quantity: d.quantity.replace(",", ".") })
     } catch {
@@ -125,6 +190,7 @@ export function FoodForm({
       })
     } finally {
       submitting.current = false
+
       setSaving(false)
     }
   }
@@ -243,6 +309,7 @@ export function FoodForm({
             <SelectField
               options={[
                 { value: "", label: "Chọn nơi bảo quản..." },
+
                 ...locations.map((loc) => ({ value: loc, label: loc })),
               ]}
               value={d.location}
@@ -316,10 +383,14 @@ export function FoodForm({
               disabled={!newLocName.trim()}
               onClick={() => {
                 const name = newLocName.trim()
+
                 if (name) {
                   onAddLocation(name)
+
                   setD((p) => ({ ...p, location: name }))
+
                   setNewLocName("")
+
                   setNewLocModal(false)
                 }
               }}

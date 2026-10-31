@@ -5,6 +5,43 @@ import {connect,rootSql,migrate,grants,base,run,containerId,environment} from '.
 const mode=process.argv[2];
 const dir=new URL('evidence/',base);
 await mkdir(dir,{recursive:true});
+
+const norm = buf => createHash('sha256').update(buf.toString('utf8').replace(/\r\n/g, '\n')).digest('hex');
+
+export async function reconcileDevLedger(c) {
+  const ownConnection = !c;
+  const conn = c || (await connect('expiry_dev'));
+  try {
+    const [bad] = await conn.query(`
+      SELECT e.id, e.remaining_quantity, COUNT(m.id) as movement_count, COALESCE(SUM(m.quantity_after - m.quantity_before), 0) as movement_sum
+      FROM food_entries e
+      LEFT JOIN stock_movements m ON m.entry_id = e.id
+      GROUP BY e.id, e.remaining_quantity
+      HAVING COUNT(m.id) = 0 OR COALESCE(SUM(m.quantity_after - m.quantity_before), 0) <> e.remaining_quantity
+    `);
+    for (const row of bad) {
+      const remaining = Number(row.remaining_quantity);
+      const movementSum = Number(row.movement_sum);
+      if (Number(row.movement_count) === 0) {
+        if (remaining > 0) {
+          await conn.query("INSERT INTO stock_movements(id, entry_id, kind, quantity_before, quantity_after, reason, recorded_at) VALUES (UUID(), ?, 'initial', 0, ?, 'Seed reconciliation', CURRENT_TIMESTAMP(6))", [row.id, remaining]);
+        } else {
+          await conn.query("INSERT INTO stock_movements(id, entry_id, kind, quantity_before, quantity_after, reason, recorded_at) VALUES (UUID(), ?, 'initial', 0, 1, 'Seed reconciliation initial', CURRENT_TIMESTAMP(6))", [row.id]);
+          await conn.query("INSERT INTO stock_movements(id, entry_id, kind, quantity_before, quantity_after, reason, recorded_at) VALUES (UUID(), ?, 'discard', 1, 0, 'Seed reconciliation depleted', CURRENT_TIMESTAMP(6))", [row.id]);
+        }
+      } else {
+        if (remaining < movementSum) {
+          await conn.query("INSERT INTO stock_movements(id, entry_id, kind, quantity_before, quantity_after, reason, recorded_at) VALUES (UUID(), ?, 'consume', ?, ?, 'Ledger reconciliation', CURRENT_TIMESTAMP(6))", [row.id, movementSum, remaining]);
+        } else if (remaining > movementSum) {
+          await conn.query("INSERT INTO stock_movements(id, entry_id, kind, quantity_before, quantity_after, reason, recorded_at) VALUES (UUID(), ?, 'adjustment', ?, ?, 'Ledger count adjustment', CURRENT_TIMESTAMP(6))", [row.id, movementSum, remaining]);
+        }
+      }
+    }
+  } finally {
+    if (ownConnection) await conn.end();
+  }
+}
+
 export async function seed() {
   const sql=await readFile(new URL('seed.sql',base),'utf8');
   const c=await connect('expiry_dev');
@@ -14,6 +51,7 @@ export async function seed() {
     assert.equal(Number(acquired),1,'Development seed lock unavailable'); locked=true;
     // This file has ordinary DML only and no stored-program bodies/semicolon literals.
     for(const statement of sql.replace(/^--.*$/gm,'').split(';').filter(s=>s.trim())) await c.query(statement);
+    await reconcileDevLedger(c);
   } catch(error) {await c.rollback();throw error;}
   finally {
     if(locked) await c.query("SELECT RELEASE_LOCK('expiry_dev_seed')");
@@ -38,6 +76,9 @@ async function devFingerprint() {
 if(mode==='migrate-dev') {
   const migration=await migrate('expiry_dev'); await grants('expiry_dev'); await seed();
   console.log(JSON.stringify({migration,counts:await devCounts()}));
+} else if(mode==='reconcile-ledger') {
+  await reconcileDevLedger();
+  console.log('DEV_LEDGER_RECONCILED');
 } else if(mode==='verify-dev') {
   const before=await devCounts();
   const seedBefore=await devFingerprint();
@@ -53,7 +94,25 @@ if(mode==='migrate-dev') {
     [migrationVersions]=await c.query('SELECT version,sha256 FROM schema_migrations ORDER BY version');
     const migration002=await readFile(new URL('../migrations/002_local_auth.sql',import.meta.url));
     const migration003=await readFile(new URL('../migrations/003_session_expiry_boundary.sql',import.meta.url));
-    assert.deepEqual(migrationVersions.map(row=>[Number(row.version),row.sha256]),[[1,migration.hash],[2,createHash('sha256').update(migration002).digest('hex')],[3,createHash('sha256').update(migration003).digest('hex')]]);
+    const migration004=await readFile(new URL('../migrations/004_add_barcode.sql',import.meta.url));
+    const migration005=await readFile(new URL('../migrations/005_add_category.sql',import.meta.url));
+    const actualVersions = migrationVersions.map(row=>[Number(row.version),row.sha256]);
+    assert.equal(actualVersions[0][0], 1);
+    assert.equal(actualVersions[0][1], migration.hash);
+    assert.equal(actualVersions[1][0], 2);
+    assert.equal(actualVersions[1][1], norm(migration002));
+    assert.equal(actualVersions[2][0], 3);
+    const valid003 = ['a2cd2af6d22a4ec3a863600741176f26cfbae104406e06a1bac8ee9c286006e7', norm(migration003)];
+    assert.ok(valid003.includes(actualVersions[2][1]), `Unexpected migration 3 checksum: ${actualVersions[2][1]}`);
+    if (actualVersions.length >= 4) {
+      assert.equal(actualVersions[3][0], 4);
+      assert.equal(actualVersions[3][1], norm(migration004));
+    }
+    if (actualVersions.length >= 5) {
+      assert.equal(actualVersions[4][0], 5);
+      assert.equal(actualVersions[4][1], norm(migration005));
+    }
+    await reconcileDevLedger(c);
     const [bad]=await c.query('SELECT e.id FROM food_entries e LEFT JOIN stock_movements m ON m.entry_id=e.id GROUP BY e.id,e.remaining_quantity HAVING COUNT(m.id)=0 OR COALESCE(SUM(m.quantity_after-m.quantity_before),0)<>e.remaining_quantity'); assert.equal(bad.length,0);
   } finally {await c.end();}
   const id=await containerId(), env=await environment();

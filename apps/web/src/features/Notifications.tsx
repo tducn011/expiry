@@ -1,23 +1,38 @@
 import type { Dispatch, State } from "../store/appStore"
+
 import { addDays, notifications, today } from "../store/appStore"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import { BellOff } from "../components/ui/Icon"
+
 import PageHeader from "../components/ui/PageHeader"
+
 import StatusBadge, { Tag } from "../components/ui/StatusBadge"
 
 export function Notifications({
   state,
+
   dispatch,
+
   onOpenDetail,
+
   onBack,
+
   notify,
 }: {
   state: State
+
   dispatch: Dispatch
+
   onOpenDetail: (id: string) => void
+
   onBack?: () => void
+
   notify: (m: string) => void
 }) {
   const list = notifications(state)
@@ -44,6 +59,7 @@ export function Notifications({
         <div className="flex flex-col gap-3">
           {list.map((n) => {
             const read = state.readNotifs.includes(n.id)
+
             return (
               <Card
                 key={n.id}
@@ -72,6 +88,7 @@ export function Notifications({
                     variant="primary"
                     onClick={() => {
                       dispatch({ type: "readNotif", id: n.id })
+
                       onOpenDetail(n.food.id)
                     }}
                   >
@@ -92,9 +109,12 @@ export function Notifications({
                     onClick={() => {
                       dispatch({
                         type: "snooze",
+
                         id: n.id,
+
                         until: addDays(today(), 1),
                       })
+
                       notify("Sẽ nhắc lại vào ngày mai")
                     }}
                   >

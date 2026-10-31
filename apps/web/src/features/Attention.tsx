@@ -1,5 +1,7 @@
 import { useState } from "react"
+
 import type { Food, State } from "../store/appStore"
+
 import {
   attention,
   daysLeft,
@@ -7,43 +9,58 @@ import {
   statusOf,
   today,
 } from "../store/appStore"
+
 import Button from "../components/ui/Button"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import {
   ChevronDown,
   ChevronRight,
   CircleCheck,
   Plus,
 } from "../components/ui/Icon"
+
 import PageHeader from "../components/ui/PageHeader"
+
 import { getFoodIcon } from "./FoodCard"
 
 export type AttentionReason = "expired" | "soon" | "review"
 
 export function AttentionFoodRow({
   food,
+
   reason,
+
   onOpen,
 }: {
   food: Food
+
   reason: AttentionReason
+
   onOpen: () => void
 }) {
   const IconComponent = getFoodIcon(food.name)
+
   const d = daysLeft(food)
 
   let reasonText: string
+
   let reasonClass: string
 
   if (reason === "expired") {
     const overdue = d !== null ? Math.abs(d) : 1
+
     reasonText = `Quá hạn ${overdue} ngày`
+
     reasonClass = "text-status-expired font-medium"
   } else if (reason === "soon") {
     reasonText = d === 0 ? "Hết hạn hôm nay" : `Còn ${d} ngày`
+
     reasonClass = "text-status-soon font-medium"
   } else {
     reasonText = "Đến hẹn kiểm tra"
+
     reasonClass = "text-brand-primary font-medium"
   }
 
@@ -100,21 +117,31 @@ export function AttentionFoodRow({
 
 export function Attention({
   state,
+
   onOpenDetail,
+
   onNavigateInventory,
+
   onAdd,
 }: {
   state: State
+
   onOpenDetail: (id: string) => void
+
   onNavigateInventory: () => void
+
   onAdd: () => void
 }) {
   const list = attention(state)
+
   const rd = state.settings.remindDays
+
   const t = today()
 
   const expired = list.filter((f) => statusOf(f, rd) === "expired")
+
   const soon = list.filter((f) => statusOf(f, rd) === "soon")
+
   const reviewDue = list.filter(
     (f) =>
       statusOf(f, rd) !== "expired" &&
@@ -124,31 +151,47 @@ export function Attention({
   )
 
   const totalCount = expired.length + soon.length + reviewDue.length
+
   const summaryParts: string[] = []
+
   if (expired.length) summaryParts.push(`${expired.length} quá hạn`)
+
   if (soon.length) summaryParts.push(`${soon.length} sắp hết hạn`)
+
   if (reviewDue.length)
     summaryParts.push(`${reviewDue.length} đến hẹn kiểm tra`)
+
   const subtitle =
     totalCount > 0 ? summaryParts.join(" · ") : "Chưa có món nào cần xử lý"
 
   const sections: {
     id: string
+
     title: string
+
     items: Food[]
+
     reason: AttentionReason
   }[] = ([
     {
       id: "expired",
+
       title: "Quá hạn",
+
       items: expired,
+
       reason: "expired" as const,
     },
+
     { id: "soon", title: "Sắp hết hạn", items: soon, reason: "soon" as const },
+
     {
       id: "review",
+
       title: "Đến hẹn kiểm tra",
+
       items: reviewDue,
+
       reason: "review" as const,
     },
   ] as const).filter((s) => s.items.length > 0)
@@ -164,10 +207,13 @@ export function Attention({
 
   const toggleAll = () => {
     const nextState = !allCollapsed
+
     const next: Record<string, boolean> = {}
+
     for (const s of sections) {
       next[s.id] = nextState
     }
+
     setCollapsed(next)
   }
 
@@ -210,6 +256,7 @@ export function Attention({
       ) : (
         sections.map((sec) => {
           const isCollapsed = collapsed[sec.id]
+
           return (
             <section
               key={sec.id}

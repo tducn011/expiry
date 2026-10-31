@@ -1,99 +1,273 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+
 import type { Dispatch, State, Category } from "../store/appStore"
+
 import { statusOf, CATEGORIES } from "../store/appStore"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import EmptyState from "../components/ui/EmptyState"
+
 import {
+  Archive,
   Boxes,
   CircleAlert,
+  Package,
   Plus,
+  Refrigerator,
   Search,
   SearchX,
+  Snowflake,
   X,
 } from "../components/ui/Icon"
+
 import InputField from "../components/ui/InputField"
+
 import Modal from "../components/ui/Modal"
+
 import PageHeader from "../components/ui/PageHeader"
+
 import FoodCard from "./FoodCard"
 
 export interface LocationStatItem {
   total: number
+
   attention: number
+
   expired: number
 }
 
 interface StorageCategoryFilter {
   v: Category | "all"
+
   label: string
+}
+
+export function getLocationIcon(loc: string) {
+  const l = loc.toLowerCase()
+
+  if (l.includes("mát") || l.includes("tủ lạnh")) return Refrigerator
+
+  if (l.includes("đông") || l.includes("băng") || l.includes("đá"))
+    return Snowflake
+
+  if (
+    l.includes("bếp") ||
+    l.includes("kệ") ||
+    l.includes("tủ") ||
+    l.includes("kho")
+  )
+    return Archive
+
+  return Package
+}
+
+export interface StoragePreferences {
+  preferred_location?: string
+
+  category?: Category | "all"
+
+  locations?: string[]
+
+  new_location?: string
 }
 
 export interface StorageViewProps {
   state: State
+
   dispatch: Dispatch
+
   onOpenDetail: (id: string) => void
+
   onAdd: () => void
+
+  initialLocation?: string
+
+  initialCategory?: Category | "all"
+
+  onFilterChange?: (location: string, category: Category | "all") => void
+
+  isLive?: boolean
+
+  onAddLocation?: (name: string) => Promise<void> | void
+
+  onSavePreferences?: (preferences: StoragePreferences) => Promise<void> | void
+}
+
+function getStorage(): Storage | null {
+  try {
+    if (typeof localStorage !== "undefined") return localStorage
+  } catch {}
+
+  return null
 }
 
 export default function StorageView({
   state,
+
   dispatch,
+
   onOpenDetail,
+
   onAdd,
+
+  initialLocation,
+
+  initialCategory,
+
+  onFilterChange,
+
+  isLive: isLiveProp,
+
+  onAddLocation,
+
+  onSavePreferences,
 }: StorageViewProps) {
-  const [selectedLocation, setSelectedLocation] = useState<string>("all")
-  const [selectedCategory, setSelectedCategory] = useState<Category | "all">(
-    "all",
+  const isLive = isLiveProp ?? state.mode === "account"
+
+  const [selectedLocation, setSelectedLocation] = useState<string>(
+    initialLocation || "all",
   )
+
+  const [selectedCategory, setSelectedCategory] = useState<Category | "all">(
+    initialCategory || "all",
+  )
+
+  useEffect(() => {
+    if (initialLocation !== undefined) setSelectedLocation(initialLocation)
+  }, [initialLocation])
+
+  useEffect(() => {
+    if (initialCategory !== undefined) setSelectedCategory(initialCategory)
+  }, [initialCategory])
+
+  useEffect(() => {
+    if (initialLocation === undefined || initialCategory === undefined) {
+      try {
+        const saved = getStorage()?.getItem("expiry_storage_preferences")
+
+        if (saved) {
+          const parsed = JSON.parse(saved)
+
+          if (
+            initialLocation === undefined &&
+            parsed.location &&
+            (parsed.location === "all" ||
+              state.locations.includes(parsed.location) ||
+              parsed.location === "Khác")
+          ) {
+            setSelectedLocation(parsed.location)
+          }
+
+          if (initialCategory === undefined && parsed.category) {
+            setSelectedCategory(parsed.category)
+          }
+        }
+      } catch {}
+    }
+  }, [])
+
+  const handleLocationChange = (loc: string) => {
+    setSelectedLocation(loc)
+
+    onFilterChange?.(loc, selectedCategory)
+
+    try {
+      getStorage()?.setItem(
+        "expiry_storage_preferences",
+
+        JSON.stringify({ location: loc, category: selectedCategory }),
+      )
+    } catch {}
+
+    onSavePreferences?.({ preferred_location: loc, category: selectedCategory })
+  }
+
+  const handleCategoryChange = (cat: Category | "all") => {
+    setSelectedCategory(cat)
+
+    onFilterChange?.(selectedLocation, cat)
+
+    try {
+      getStorage()?.setItem(
+        "expiry_storage_preferences",
+
+        JSON.stringify({ location: selectedLocation, category: cat }),
+      )
+    } catch {}
+
+    onSavePreferences?.({ preferred_location: selectedLocation, category: cat })
+  }
+
   const [query, setQuery] = useState("")
+
   const [onlyAttention, setOnlyAttention] = useState(false)
+
   const [newLocModal, setNewLocModal] = useState(false)
+
   const [newLocName, setNewLocName] = useState("")
 
   const remindDays = state.settings.remindDays
 
   // Active items
+
   const activeFoods = useMemo(
     () => state.foods.filter((f) => !f.deletedAt && !f.finishedAt),
+
     [state.foods],
   )
 
   // Metrics per location
+
   const locationStats = useMemo(() => {
     const stats: Record<string, LocationStatItem> = {}
+
     for (const loc of state.locations) {
       stats[loc] = { total: 0, attention: 0, expired: 0 }
     }
+
     stats["Khác"] = { total: 0, attention: 0, expired: 0 }
 
     for (const f of activeFoods) {
       const locKey =
         f.location && state.locations.includes(f.location) ? f.location : "Khác"
+
       if (!stats[locKey]) stats[locKey] = { total: 0, attention: 0, expired: 0 }
+
       stats[locKey].total++
+
       const st = statusOf(f, remindDays)
+
       if (st === "expired") {
         stats[locKey].expired++
+
         stats[locKey].attention++
       } else if (st === "soon") {
         stats[locKey].attention++
       }
     }
+
     return stats
   }, [activeFoods, state.locations, remindDays])
 
   // Total attention items
+
   const totalAttentionCount = useMemo(() => {
     return activeFoods.filter((f) => {
       const st = statusOf(f, remindDays)
+
       return st === "expired" || st === "soon"
     }).length
   }, [activeFoods, remindDays])
 
   // Filtered food list
+
   const filteredFoods = useMemo(() => {
     return activeFoods.filter((f) => {
       // Location filter
+
       if (selectedLocation !== "all") {
         if (selectedLocation === "Khác") {
           if (f.location && state.locations.includes(f.location)) return false
@@ -101,47 +275,92 @@ export default function StorageView({
           return false
         }
       }
+
       // Category filter
+
       if (selectedCategory !== "all") {
         if (f.category !== selectedCategory) return false
       }
+
       // Only attention toggle
+
       if (onlyAttention) {
         const st = statusOf(f, remindDays)
+
         if (st !== "expired" && st !== "soon") return false
       }
+
       // Search query
+
       if (query.trim()) {
         const q = query.trim().toLowerCase()
+
         const matchName = f.name.toLowerCase().includes(q)
+
         const matchLoc = (f.location || "").toLowerCase().includes(q)
+
         if (!matchName && !matchLoc) return false
       }
+
       return true
     })
   }, [
     activeFoods,
+
     selectedLocation,
+
     selectedCategory,
+
     onlyAttention,
+
     query,
+
     remindDays,
+
     state.locations,
   ])
 
-  const handleAddLocation = () => {
+  const handleAddLocation = async () => {
     const name = newLocName.trim()
+
     if (!name) return
+
     if (!state.locations.includes(name)) {
       dispatch({ type: "addLocation", name })
     }
+
+    if (onAddLocation) {
+      await onAddLocation(name)
+    }
+
+    try {
+      const userPrefs = JSON.parse(
+        getStorage()?.getItem("expiry_user_preferences") || "{}",
+      )
+
+      const locs = Array.from(
+        new Set([...(userPrefs.locations || state.locations), name]),
+      )
+
+      getStorage()?.setItem(
+        "expiry_user_preferences",
+
+        JSON.stringify({ ...userPrefs, locations: locs }),
+      )
+    } catch {}
+
+    onSavePreferences?.({ new_location: name })
+
     setSelectedLocation(name)
+
     setNewLocName("")
+
     setNewLocModal(false)
   }
 
   const categoryOptions: StorageCategoryFilter[] = [
     { v: "all", label: "Tất cả nhóm" },
+
     ...CATEGORIES.map((c) => ({ v: c.value, label: c.label })),
   ]
 
@@ -151,14 +370,25 @@ export default function StorageView({
         title="Nơi lưu trữ"
         subtitle="Tìm duyệt nhanh theo không gian bảo quản & nhóm thực phẩm"
         actions={
-          <Button
-            variant="primary"
-            size="small"
-            iconStart={<Plus size={16} />}
-            onClick={() => setNewLocModal(true)}
-          >
-            Thêm vị trí
-          </Button>
+          <div className="flex items-center gap-2">
+            {isLive && (
+              <span
+                data-testid="live-storage-badge"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+              >
+                <span className="size-2 rounded-full bg-brand-primary animate-pulse" />
+                Trực tuyến
+              </span>
+            )}
+            <Button
+              variant="primary"
+              size="small"
+              iconStart={<Plus size={16} />}
+              onClick={() => setNewLocModal(true)}
+            >
+              Thêm vị trí
+            </Button>
+          </div>
         }
       />
 
@@ -227,7 +457,7 @@ export default function StorageView({
           {/* Card: Tất cả */}
           <button
             type="button"
-            onClick={() => setSelectedLocation("all")}
+            onClick={() => handleLocationChange("all")}
             className={`flex flex-col justify-between p-3.5 rounded-corner-md border text-left transition-all cursor-pointer ${
               selectedLocation === "all"
                 ? "border-brand-primary bg-brand-primary/5 shadow-xs ring-2 ring-brand-primary/20"
@@ -235,7 +465,9 @@ export default function StorageView({
             }`}
           >
             <div className="flex items-center justify-between w-full mb-2">
-              <span className="text-xl">🏠</span>
+              <div className="w-8 h-8 rounded-corner-md flex items-center justify-center bg-brand-primary/10 text-brand-primary">
+                <Boxes size={18} />
+              </div>
               {totalAttentionCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-danger text-white">
                   {totalAttentionCount} cần ăn
@@ -256,26 +488,32 @@ export default function StorageView({
           {state.locations.map((loc) => {
             const stats = locationStats[loc] || {
               total: 0,
+
               attention: 0,
+
               expired: 0,
             }
+
             const isSelected = selectedLocation === loc
-            const iconEmoji =
+
+            const LocIcon = getLocationIcon(loc)
+
+            const iconTone =
               loc.toLowerCase().includes("mát") ||
               loc.toLowerCase().includes("tủ lạnh")
-                ? "❄️"
+                ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
                 : loc.toLowerCase().includes("đông")
-                  ? "🧊"
+                  ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
                   : loc.toLowerCase().includes("bếp") ||
                       loc.toLowerCase().includes("kệ")
-                    ? "🥫"
-                    : "📦"
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                    : "bg-surface-subtle text-text-secondary"
 
             return (
               <button
                 key={loc}
                 type="button"
-                onClick={() => setSelectedLocation(loc)}
+                onClick={() => handleLocationChange(loc)}
                 className={`flex flex-col justify-between p-3.5 rounded-corner-md border text-left transition-all cursor-pointer ${
                   isSelected
                     ? "border-brand-primary bg-brand-primary/5 shadow-xs ring-2 ring-brand-primary/20"
@@ -283,7 +521,11 @@ export default function StorageView({
                 }`}
               >
                 <div className="flex items-center justify-between w-full mb-2">
-                  <span className="text-xl">{iconEmoji}</span>
+                  <div
+                    className={`w-8 h-8 rounded-corner-md flex items-center justify-center ${iconTone}`}
+                  >
+                    <LocIcon size={18} />
+                  </div>
                   {stats.attention > 0 && (
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -318,11 +560,12 @@ export default function StorageView({
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {categoryOptions.map((cat) => {
             const isActive = selectedCategory === cat.v
+
             return (
               <button
                 key={cat.v}
                 type="button"
-                onClick={() => setSelectedCategory(cat.v)}
+                onClick={() => handleCategoryChange(cat.v)}
                 className={`min-h-8 shrink-0 rounded-corner-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
                   isActive
                     ? "bg-brand-primary text-white shadow-xs"
@@ -386,6 +629,7 @@ export default function StorageView({
           description="Đặt tên cho khu vực lưu trữ thực phẩm trong nhà (ví dụ: Tủ gia vị, Ngăn rau...)"
           onClose={() => {
             setNewLocName("")
+
             setNewLocModal(false)
           }}
           footer={
@@ -394,6 +638,7 @@ export default function StorageView({
                 variant="subtle"
                 onClick={() => {
                   setNewLocName("")
+
                   setNewLocModal(false)
                 }}
               >

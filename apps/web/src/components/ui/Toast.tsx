@@ -2,12 +2,15 @@ import { CircleCheck, CircleAlert, X } from "./Icon"
 
 export interface ToastProps {
   message: string
+
   variant?: "success" | "danger" | "warning" | "neutral"
+
   onDismiss?: () => void
 }
 
 export function Toast({ message, variant = "success", onDismiss }: ToastProps) {
   const isDanger = variant === "danger"
+
   const isWarning = variant === "warning"
 
   return (

@@ -82,6 +82,11 @@ async function harness(t, overrides = {}) {
       return { items: [item], page: query.page, limit: query.limit, total: 1, as_of_date: '2026-10-11' };
     },
     get: async (_owner, _id, history) => history ? [movement, { ...movement, id: '00000000-0000-4000-8000-000000000004', kind: 'initial', quantity_before: '0.000', quantity_after: '750.500' }] : { ...row },
+    listMovements: async (_owner, _id, { page = 1, limit = 20 } = {}) => {
+      const all = [movement, { ...movement, id: '00000000-0000-4000-8000-000000000004', kind: 'initial', quantity_before: '0.000', quantity_after: '750.500' }];
+      const start = (Number(page) - 1) * Number(limit);
+      return { events: all.slice(start, start + Number(limit)), total: all.length };
+    },
     create: async () => command(201, { ...row }, true),
     edit: async () => command(200, { ...row }),
     restore: async (_owner, _key, _id, body) => { calls.push(['restore', body]); return command(200, { ...row }); },
@@ -139,6 +144,13 @@ test('detail/list/trash project exact Entry and EntryList contracts, including o
 
   const invalidViewRes = await request('/food-entries?view=invalid_view');
   assert.equal(invalidViewRes.status, 422);
+
+  const filteredCategory = await (await request('/food-entries?category=dairy_eggs')).json();
+  validate(filteredCategory, 'EntryList');
+  assert.equal(calls.at(-1)[1].category, 'dairy_eggs');
+
+  const invalidCategoryRes = await request('/food-entries?category=invalid_category');
+  assert.equal(invalidCategoryRes.status, 422);
 });
 
 test('empty EntryList retains its repository owner-local as_of_date', async t => {

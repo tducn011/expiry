@@ -1,23 +1,36 @@
 import type { ReactNode } from "react"
+
 import Card from "./Card"
 
 export interface EmptyStateProps {
   icon?: ReactNode
+
   eyebrow?: string
+
   title: string
+
   text?: string
+
   body?: string
+
   action?: ReactNode
+
   className?: string
 }
 
 export function EmptyState({
   icon,
+
   eyebrow,
+
   title,
+
   text,
+
   body,
+
   action,
+
   className = "",
 }: EmptyStateProps) {
   const description = text || body

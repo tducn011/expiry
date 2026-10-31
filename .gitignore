@@ -60,4 +60,3 @@ venv/
 
 # Local task orchestration ledgers
 /.unlazy/
-/Leader/
