@@ -946,11 +946,64 @@ export class ApiClient {
 
     const qs = params.toString() ? `?${params.toString()}` : ""
 
-    const result = await this.request<ScanResult>(`/scans${qs}`, {
-      method: "POST",
+    let result: ScanResult
 
-      body,
-    })
+    try {
+      result = await this.request<ScanResult>(`/scans${qs}`, {
+        method: "POST",
+
+        body,
+      })
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status
+
+      if (status === 401 || status === 404 || status === 502) {
+        const directBase = this.base.replace(/\/api\/v1\/?$/, "")
+        const directUrl = `${directBase}/scan${qs}`
+        const resp = await this.transport(directUrl, {
+          method: "POST",
+          body,
+        })
+
+        if (!resp.ok) {
+          throw err
+        }
+
+        const data = (await resp.json()) as any
+
+        result = {
+          raw_text: typeof data?.raw_text === "string" ? data.raw_text : "",
+          warnings: Array.isArray(data?.warnings) ? data.warnings : [],
+          errors: Array.isArray(data?.errors) ? data.errors : [],
+          requires_confirmation: true,
+          candidates: {
+            food_name: data?.candidates?.food_name ?? null,
+            expiry_date: {
+              value: data?.candidates?.expiry_date?.value ?? null,
+              date_certainty:
+                data?.candidates?.expiry_date?.date_certainty ?? null,
+              date_label_type:
+                data?.candidates?.expiry_date?.date_label_type ?? "unknown",
+              source_text: data?.candidates?.expiry_date?.source_text ?? "",
+              alternatives: Array.isArray(
+                data?.candidates?.expiry_date?.alternatives,
+              )
+                ? data.candidates.expiry_date.alternatives
+                : [],
+              ambiguous: Boolean(data?.candidates?.expiry_date?.ambiguous),
+              requires_confirmation: true,
+            },
+            manufactured_date: {
+              value: data?.candidates?.manufactured_date?.value ?? null,
+              source_text:
+                data?.candidates?.manufactured_date?.source_text ?? "",
+            },
+          },
+        }
+      } else {
+        throw err
+      }
+    }
 
     const candidates = result.candidates
 
