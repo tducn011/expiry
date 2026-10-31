@@ -90,15 +90,14 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
 
   // Public health check for OCR microservice monitoring
   v1Router.get('/scan/health', scanController.health);
+  // Extraction is transient and does not reserve a mutation replay key.
+  v1Router.use('/', createScanRouter(scanController));
 
   // Credential endpoints precede domain commands. Ownership comes only from a
   // durable verified session; caller identity headers have no authority.
   v1Router.use('/auth', auth.router);
   v1Router.use(auth.requireAuth);
   v1Router.use(auth.requireCsrf);
-
-  // Extraction is transient and does not reserve a mutation replay key.
-  v1Router.use('/', createScanRouter(scanController));
   v1Router.use(idempotencyMiddleware);
 
   // Initialize modular services

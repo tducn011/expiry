@@ -6,6 +6,8 @@ import type { Category } from "../store/appStore"
 
 import type { Draft } from "./FoodForm"
 
+import { decodeBarcodeFromImage, lookupBarcode } from "../lib/barcode"
+
 import Button from "../components/ui/Button"
 
 import {
@@ -120,6 +122,35 @@ export function Scanner({
 
     setDetectedDraft(undefined)
 
+    // Attempt client-side barcode detection from image
+
+    let detectedBarcode: string | undefined
+
+    let barcodeProductName: string | undefined
+
+    try {
+      const htmlImg = new Image()
+
+      htmlImg.src = img
+
+      await new Promise((resolve) => {
+        if (htmlImg.complete) resolve(true)
+        else htmlImg.onload = () => resolve(true)
+      })
+
+      const barcodeRes = await decodeBarcodeFromImage(htmlImg)
+
+      if (barcodeRes && barcodeRes.text) {
+        detectedBarcode = barcodeRes.text
+
+        const prod = await lookupBarcode(detectedBarcode)
+
+        if (prod.found && prod.product?.name) {
+          barcodeProductName = prod.product.name
+        }
+      }
+    } catch {}
+
     try {
       let uploadFile: File | Blob
 
@@ -133,7 +164,7 @@ export function Scanner({
         uploadFile = new File([blob], "capture.jpg", { type: "image/jpeg" })
       }
 
-      const scanResult = await api.scan(uploadFile)
+      const scanResult = await api.scan(uploadFile, detectedBarcode)
 
       const cand = scanResult.candidates
 
@@ -141,7 +172,7 @@ export function Scanner({
 
       const mfgDate = cand.manufactured_date?.value || ""
 
-      const name = cand.food_name?.trim() || ""
+      const name = (cand.food_name?.trim() || barcodeProductName || "").trim()
 
       let category: Category | "" = ""
 
@@ -183,6 +214,26 @@ export function Scanner({
 
       onReview(img, draft)
     } catch {
+      if (barcodeProductName || detectedBarcode) {
+        const fallbackDraft: Draft = {
+          name: barcodeProductName || "",
+
+          quantity: "1",
+
+          unit: "cái",
+
+          category: "other",
+
+          mfgDate: "",
+
+          expDate: "",
+
+          location: "",
+        }
+
+        setDetectedDraft(fallbackDraft)
+      }
+
       setState("unrecognized")
     }
   }
@@ -343,10 +394,11 @@ export function Scanner({
                 className="text-brand-secondary"
               />
               <p className="text-sm font-medium">
-                Chưa nhận dạng được chữ trên nhãn
+                Chưa tìm thấy ngày HSD trên góc chụp này
               </p>
               <p className="text-xs text-text-tertiary">
-                Bạn có thể dùng ảnh này để đối chiếu và tự nhập thông tin.
+                Hãy đưa khu vực in ngày (HSD/EXP/NSX thường ở nắp hoặc đáy hộp)
+                vào khung, hoặc bấm Kiểm tra để tự điền.
               </p>
             </>
           )}
