@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from "react"
+import { useCallback, useEffect, useReducer, useState } from "react"
 
 import { api } from "../api/client"
 
@@ -133,6 +133,8 @@ export interface State {
 
   userName?: string
 
+  userId?: string
+
   onboarded: boolean
 
   foods: Food[]
@@ -172,6 +174,8 @@ export type Action = {
   mode: "demo" | "account"
 
   name?: string
+
+  userId?: string
 } | { type: "logout" } | { type: "onboarded" } | {
   type: "save"
 
@@ -295,11 +299,13 @@ function reducer(s: State, a: Action): State {
       return a.mode === "demo"
         ? loadDemo()
         : {
-            ...(readAccount() ?? { ...initial, onboarded: s.onboarded }),
-
+            ...initial,
+            onboarded: s.onboarded,
             mode: "account",
-
             userName: a.name,
+            userId: a.userId,
+            foods: [],
+            history: [],
           }
 
     case "logout":
@@ -940,23 +946,23 @@ interface StoredResult {
 
 function readStored(): StoredResult {
   try {
-    const s = parseState(localStorage.getItem(KEY))
-
-    if (!s || s.mode !== "account") return { state: loadDemo(), problem: null }
-
-    const cutoff = Date.now() - TRASH_DAYS * 864e5
-
-    return {
-      state: {
-        ...s,
-
-        foods: s.foods.filter(
-          (f) => !f.deletedAt || new Date(f.deletedAt).getTime() > cutoff,
-        ),
-      },
-
-      problem: null,
+    // Preserve legacy unsynced cache to a quarantine backup key instead of destroying user data
+    const legacy = localStorage.getItem(KEY)
+    if (legacy && legacy !== "null") {
+      try {
+        localStorage.setItem("expiry-legacy-backup-v1", legacy)
+      } catch {
+        /* ignore */
+      }
+      try {
+        localStorage.removeItem(KEY)
+      } catch {
+        /* ignore */
+      }
     }
+
+    // Always start with demo state; account mode inventory is server-authoritative and only hydrated after verified session
+    return { state: loadDemo(), problem: null }
   } catch {
     return { state: initial, problem: "read" }
   }
@@ -964,11 +970,24 @@ function readStored(): StoredResult {
 
 function signOutStorage() {
   try {
-    api.logout().catch(() => {})
+    api.logout().catch(() => {
+      // Flag pending server logout if network was offline so cookie is revoked on reconnect
+      try {
+        localStorage.setItem("expiry_pending_server_logout", "true")
+      } catch {
+        /* ignore */
+      }
+    })
 
-    const s = parseState(localStorage.getItem(KEY))
-
-    if (s) localStorage.setItem(KEY, JSON.stringify({ ...s, mode: "none" }))
+    const legacy = localStorage.getItem(KEY)
+    if (legacy && legacy !== "null") {
+      try {
+        localStorage.setItem("expiry-legacy-backup-v1", legacy)
+      } catch {
+        /* ignore */
+      }
+    }
+    localStorage.removeItem(KEY)
   } catch {
     /* nothing */
   }
@@ -979,11 +998,14 @@ export function useAppStore() {
 
   const [state, rawDispatch] = useReducer(reducer, first.state)
 
-  const dispatch = (a: Action) => {
-    if (a.type === "logout") signOutStorage()
+  const dispatch = useCallback(
+    (a: Action) => {
+      if (a.type === "logout") signOutStorage()
 
-    rawDispatch(a)
-  }
+      rawDispatch(a)
+    },
+    [rawDispatch],
+  )
 
   const [problem, setProblem] = useState<StorageProblem>(first.problem)
 
@@ -991,11 +1013,10 @@ export function useAppStore() {
     if (problem === "read" || state.mode === "none") return
 
     try {
-      localStorage.setItem(
-        state.mode === "demo" ? DEMO_KEY : KEY,
-
-        JSON.stringify(state),
-      )
+      // ONLY persist demo mode data. Account mode is server-authoritative and never written to un-scoped key.
+      if (state.mode === "demo") {
+        localStorage.setItem(DEMO_KEY, JSON.stringify(state))
+      }
 
       if (problem === "write") setProblem(null)
     } catch {
@@ -1003,17 +1024,19 @@ export function useAppStore() {
     }
   }, [state, problem])
 
-  const retry = () => {
+  const retry = useCallback(() => {
     const r = readStored()
 
     if (r.problem === null) rawDispatch({ type: "replace", state: r.state })
 
     setProblem(r.problem)
-  }
+  }, [rawDispatch])
 
-  const reset = () => {
+  const reset = useCallback(() => {
     try {
       localStorage.removeItem(KEY)
+
+      localStorage.removeItem(DEMO_KEY)
     } catch {
       /* ignore */
     }
@@ -1021,7 +1044,7 @@ export function useAppStore() {
     rawDispatch({ type: "replace", state: loadDemo() })
 
     setProblem(null)
-  }
+  }, [rawDispatch])
 
   return { state, dispatch, problem, retry, reset }
 }

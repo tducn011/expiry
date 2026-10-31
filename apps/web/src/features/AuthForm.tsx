@@ -79,6 +79,8 @@ export function AuthForm({
         mode: "account",
 
         name: session.user?.display_name || name || email.split("@")[0],
+
+        userId: session.user?.id,
       })
 
       onCancel()
