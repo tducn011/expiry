@@ -225,4 +225,86 @@ describe("Barcode Scanner & ZXing Formats", () => {
     const parsedEan = parseGs1Barcode("8938541591140")
     expect(parsedEan).toBeNull()
   })
+
+  it("validates retail barcode checksums correctly (EAN-13, UPC-A, EAN-8)", async () => {
+    const { isValidEan13, isValidUpcA, isValidEan8 } = await import(
+      "../src/lib/barcode"
+    )
+
+    // Valid Pepsi EAN-13
+    expect(isValidEan13("8934588012112")).toBe(true)
+    // Invalid EAN-13
+    expect(isValidEan13("8934588012113")).toBe(false)
+
+    // Valid UPC-A
+    expect(isValidUpcA("012345678905")).toBe(true)
+    expect(isValidUpcA("012345678906")).toBe(false)
+
+    // Valid EAN-8
+    expect(isValidEan8("96385074")).toBe(true)
+    expect(isValidEan8("96385075")).toBe(false)
+  })
+
+  it("extracts and validates barcode from raw OCR or package text", async () => {
+    const { extractBarcodeFromText } = await import("../src/lib/barcode")
+
+    const pepsiText = `
+      NƯỚC UỐNG CÓ GAZ PEPSI COLA
+      SẢN XUẤT TẠI CÔNG TY TNHH NƯỚC GIẢI KHÁT SUNTORY PEPSICO VIỆT NAM
+      8 934588 012112
+      THỂ TÍCH THỰC: 320 ml
+      HSD: XEM Ở ĐÁY LON
+    `
+    const extracted = extractBarcodeFromText(pepsiText)
+    expect(extracted).not.toBeNull()
+    expect(extracted?.code).toBe("8934588012112")
+    expect(extracted?.format).toBe("EAN_13")
+
+    // Returns null if no valid barcode digits exist
+    expect(extractBarcodeFromText("CHỈ CÓ CHỮ KHÔNG CÓ MÃ VẠCH")).toBeNull()
+  })
+
+  it("ApiClient extracts barcode and product name from Gemini Vision even when expiry date is on another photo", async () => {
+    const { ApiClient } = await import("../src/api/client")
+    const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/scans") || url.includes("/scan")) {
+        return new Response(JSON.stringify({ code: "NO_LEGIBLE_TEXT" }), { status: 422 })
+      }
+      if (url.includes("generativelanguage.googleapis.com")) {
+        return new Response(
+          JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        food_name: "PEPSI COLA",
+                        barcode: "8934588012112",
+                        expiry_date: null,
+                        manufactured_date: null,
+                        raw_text: "PEPSI COLA 8 934588 012112",
+                      }),
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        )
+      }
+      return new Response("Not found", { status: 404 })
+    })
+
+    const client = new ApiClient(mockFetch as unknown as typeof fetch)
+    const result = await client.scan(
+      new Blob(["mock-pepsi-body"], { type: "image/jpeg" }),
+    )
+
+    expect(result.candidates.food_name).toBe("PEPSI COLA")
+    expect(result.candidates.barcode).toBe("8934588012112")
+    expect(result.candidates.expiry_date.value).toBeNull()
+  })
 })

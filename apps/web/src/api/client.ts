@@ -1,4 +1,5 @@
 import { inferCategory, type Category } from "../store/appStore"
+import { extractBarcodeFromText } from "../lib/barcode"
 
 import type {
   Attention,
@@ -242,6 +243,8 @@ export type ScanDateCandidate = {
 
 export type ScanCandidates = {
   food_name: string | null
+
+  barcode?: string | null
 
   expiry_date: ScanDateCandidate
 
@@ -582,11 +585,13 @@ Analyze this product label image to extract:
 3. Manufacturing Date ("manufactured_date").
    - Keywords: "NSX", "MFG", "MFD", "Ngày sản xuất" mean manufacturing date.
    - Output manufactured_date formatted as an ISO date string "YYYY-MM-DD".
-4. Transcribe all text seen in the image into "raw_text".
+4. Barcode number printed under barcode lines or on packaging ("barcode"). E.g. 13-digit EAN-13, 12-digit UPC, etc.
+5. Transcribe all text seen in the image into "raw_text".
 
 Return STRICT JSON format conforming to this exact structure:
 {
   "food_name": string or null,
+  "barcode": string or null,
   "expiry_date": string or null,
   "manufactured_date": string or null,
   "raw_text": string
@@ -638,6 +643,14 @@ Return STRICT JSON format conforming to this exact structure:
           typeof parsed.food_name === "string" && parsed.food_name.trim()
             ? parsed.food_name.trim()
             : null
+        let barcodeVal =
+          typeof parsed.barcode === "string" && parsed.barcode.trim()
+            ? parsed.barcode.replace(/\s+/g, "")
+            : null
+        if (!barcodeVal && rawText) {
+          const matched = extractBarcodeFromText(rawText)
+          if (matched) barcodeVal = matched.code
+        }
 
         return {
           raw_text: rawText,
@@ -646,6 +659,7 @@ Return STRICT JSON format conforming to this exact structure:
           requires_confirmation: true,
           candidates: {
             food_name: foodName,
+            barcode: barcodeVal,
             expiry_date: {
               value: expVal,
               date_certainty: expVal ? "exact" : null,
@@ -1196,7 +1210,7 @@ export class ApiClient {
               geminiKey,
               this.transport,
             )
-            if (vision?.candidates?.expiry_date?.value) {
+            if (vision?.candidates?.expiry_date?.value || vision?.candidates?.food_name || vision?.candidates?.barcode) {
               return vision
             }
           }
@@ -1216,6 +1230,8 @@ export class ApiClient {
 
           candidates: {
             food_name: data?.candidates?.food_name ?? null,
+
+            barcode: data?.candidates?.barcode ?? null,
 
             expiry_date: {
               value: data?.candidates?.expiry_date?.value ?? null,
@@ -1254,7 +1270,7 @@ export class ApiClient {
             geminiKey,
             this.transport,
           )
-          if (vision?.candidates?.expiry_date?.value) {
+          if (vision?.candidates?.expiry_date?.value || vision?.candidates?.food_name || vision?.candidates?.barcode) {
             return vision
           }
         }
@@ -1268,8 +1284,15 @@ export class ApiClient {
         geminiKey,
         this.transport,
       )
-      if (vision?.candidates?.expiry_date?.value) {
+      if (vision?.candidates?.expiry_date?.value || vision?.candidates?.food_name || vision?.candidates?.barcode) {
         return vision
+      }
+    }
+
+    if (result && !result.candidates?.barcode && result.raw_text) {
+      const b = extractBarcodeFromText(result.raw_text)
+      if (b && result.candidates) {
+        result.candidates.barcode = b.code
       }
     }
 

@@ -6,6 +6,30 @@ import os
 import shutil
 import time
 import pytesseract
+import re
+
+def extract_barcode_from_text(text: str) -> Optional[str]:
+    if not text:
+        return None
+    matches = re.findall(r'(?:\d[\s\-._]*){8,16}', text)
+    for m in matches:
+        clean = re.sub(r'\D', '', m)
+        if len(clean) == 13:
+            digits = [int(c) for c in clean]
+            cs = sum(digits[i] for i in range(0, 12, 2)) + sum(digits[i] * 3 for i in range(1, 12, 2))
+            if (10 - (cs % 10)) % 10 == digits[12]:
+                return clean
+        elif len(clean) == 12:
+            digits = [int(c) for c in clean]
+            cs = sum(digits[i] * 3 for i in range(0, 11, 2)) + sum(digits[i] for i in range(1, 11, 2))
+            if (10 - (cs % 10)) % 10 == digits[11]:
+                return clean
+        elif len(clean) == 8:
+            digits = [int(c) for c in clean]
+            cs = sum(digits[i] * 3 for i in range(0, 7, 2)) + sum(digits[i] for i in range(1, 7, 2))
+            if (10 - (cs % 10)) % 10 == digits[7]:
+                return clean
+    return None
 from PIL import Image
 from fastapi import APIRouter, Request
 from starlette.datastructures import UploadFile
@@ -155,14 +179,27 @@ def process_scan(
                 if v_candidates.get("expiry_date", {}).get("value"):
                     candidates = v_candidates
                     warnings.append(f"VISION_FALLBACK_APPLIED: Resolved via {v_provider}.")
-                elif v_candidates.get("food_name") and candidates is not None:
-                    candidates["food_name"] = v_candidates["food_name"]
+                else:
+                    if candidates is None:
+                        candidates = v_candidates
+                    else:
+                        if v_candidates.get("food_name"):
+                            candidates["food_name"] = v_candidates["food_name"]
+                        if v_candidates.get("barcode"):
+                            candidates["barcode"] = v_candidates["barcode"]
                 if v_raw_text and not raw_text.strip():
                     raw_text = v_raw_text
         except Exception as v_exc:
             warnings.append(f"Vision LLM fallback failed: {v_exc}")
 
-    if not raw_text.strip() and (not candidates or not candidates.get("expiry_date", {}).get("value")):
+    if candidates is not None and not candidates.get("barcode") and raw_text:
+        found_code = extract_barcode_from_text(raw_text)
+        if found_code:
+            candidates["barcode"] = found_code
+
+    has_date = bool(candidates and candidates.get("expiry_date", {}).get("value"))
+    has_product = bool(candidates and (candidates.get("food_name") or candidates.get("barcode")))
+    if not raw_text.strip() and not has_date and not has_product:
         raise ScanError(422, "NO_LEGIBLE_TEXT", "No legible text was detected in the image.")
 
     if candidates is None:

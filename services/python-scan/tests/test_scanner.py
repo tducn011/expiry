@@ -254,6 +254,32 @@ class TestScanRouteEngineSelection(unittest.TestCase):
         self.assertEqual(result.candidates.food_name, "Greek Yogurt")
         self.assertTrue(any("VISION_FALLBACK_APPLIED" in w for w in result.warnings))
 
+    def test_extracts_barcode_and_food_name_from_packaging_label(self):
+        vision_candidates = {
+            "food_name": "PEPSI COLA",
+            "barcode": "8934588012112",
+            "expiry_date": {
+                "value": None,
+                "date_certainty": None,
+                "date_label_type": "unknown",
+                "source_text": "",
+                "alternatives": [],
+                "ambiguous": False,
+                "requires_confirmation": True
+            },
+            "manufactured_date": {"value": None, "source_text": ""}
+        }
+        with patch("app.routes.scan.extract_datereg_text", return_value=""), patch(
+            "app.routes.scan.extract_ocr_text", return_value="PEPSI COLA 8 934588 012112"
+        ), patch(
+            "app.routes.scan.extract_vision_llm_candidates",
+            return_value=(vision_candidates, "PEPSI COLA 8 934588 012112", "Gemini Vision (gemini-3.5-flash-lite)")
+        ):
+            result = self._scan()
+
+        self.assertEqual(result.candidates.food_name, "PEPSI COLA")
+        self.assertEqual(result.candidates.barcode, "8934588012112")
+
 
 class TestMultipartScanCompatibility(unittest.TestCase):
     def _request(self, field: str, media_type: str) -> Request:
