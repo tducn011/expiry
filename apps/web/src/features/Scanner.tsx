@@ -152,6 +152,7 @@ export function Scanner({
         detectedBarcode = barcodeRes.text
 
         // Check if barcode is GS1 encoding expiry/manufactured date directly
+
         const gs1 = parseGs1Barcode(detectedBarcode)
 
         if (gs1?.expiryDate) {

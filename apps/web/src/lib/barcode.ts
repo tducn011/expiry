@@ -169,6 +169,7 @@ export type Gs1ParsedData = {
 }
 
 /** Parses GS1 Application Identifiers from barcodes (e.g. GS1-128 or GS1 DataMatrix) */
+
 export function parseGs1Barcode(rawText: string): Gs1ParsedData | null {
   if (!rawText) return null
 
@@ -183,6 +184,7 @@ export function parseGs1Barcode(rawText: string): Gs1ParsedData | null {
   let batchLot: string | undefined
 
   // Match AI (17) YYMMDD (Expiration Date)
+
   const ai17Match =
     clean.match(/\(17\)(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/) ||
     clean.match(/(?:^01\d{14}|\b)17(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/)
@@ -204,6 +206,7 @@ export function parseGs1Barcode(rawText: string): Gs1ParsedData | null {
   }
 
   // Match AI (11) YYMMDD (Production Date)
+
   const ai11Match =
     clean.match(/\(11\)(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/) ||
     clean.match(/(?:^01\d{14}|\b)11(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/)
@@ -219,6 +222,7 @@ export function parseGs1Barcode(rawText: string): Gs1ParsedData | null {
   }
 
   // Match AI (01) GTIN-14
+
   const ai01Match = clean.match(/(?:\(01\)|(?<=\b)01)(\d{14})/)
 
   if (ai01Match) {
@@ -226,6 +230,7 @@ export function parseGs1Barcode(rawText: string): Gs1ParsedData | null {
   }
 
   // Match AI (10) Batch/Lot
+
   const ai10Match = clean.match(/(?:\(10\)|(?<=\b)10)([A-Za-z0-9\-]+)/)
 
   if (ai10Match) {
