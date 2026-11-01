@@ -78,7 +78,7 @@ def normalize_iso_date(val: Optional[str]) -> Optional[str]:
 def call_gemini_vision(
     image_bytes: bytes,
     api_key: str,
-    model: str = "gemini-2.5-flash",
+    model: str = "gemini-3.5-flash-lite",
     timeout: float = 6.0
 ) -> Dict[str, Any]:
     b64_data = base64.b64encode(image_bytes).decode("utf-8")
@@ -98,19 +98,35 @@ def call_gemini_vision(
         }
     }
 
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST"
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        res = json.loads(resp.read().decode("utf-8"))
-        candidates = res.get("candidates", [])
-        if not candidates:
-            raise RuntimeError("Gemini Vision returned no candidate responses.")
-        text_resp = candidates[0]["content"]["parts"][0]["text"]
-        return json.loads(text_resp)
+    candidate_models = [model]
+    for fallback in ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-flash-latest"]:
+        if fallback not in candidate_models:
+            candidate_models.append(fallback)
+
+    last_exc = None
+    for m in candidate_models:
+        target_url = GEMINI_API_URL.format(model=m, key=api_key)
+        try:
+            req = urllib.request.Request(
+                target_url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                res = json.loads(resp.read().decode("utf-8"))
+                candidates = res.get("candidates", [])
+                if not candidates:
+                    raise RuntimeError("Gemini Vision returned no candidate responses.")
+                text_resp = candidates[0]["content"]["parts"][0]["text"]
+                return json.loads(text_resp)
+        except Exception as exc:
+            last_exc = exc
+            continue
+
+    if last_exc:
+        raise last_exc
+    raise RuntimeError("Gemini Vision call failed across all candidate models.")
 
 
 def call_ollama_vision(
@@ -156,7 +172,7 @@ def extract_vision_llm_candidates(image_bytes: bytes, gemini_api_key: Optional[s
     preferred_provider = os.environ.get("VISION_LLM_PROVIDER", "auto").lower().strip()
     ollama_host = os.environ.get("OLLAMA_HOST", "http://host.docker.internal:11434").strip()
     ollama_model = os.environ.get("OLLAMA_VISION_MODEL", "qwen2.5-vl:3b").strip()
-    gemini_model = os.environ.get("GEMINI_VISION_MODEL", "gemini-2.5-flash").strip()
+    gemini_model = os.environ.get("GEMINI_VISION_MODEL", "gemini-3.5-flash-lite").strip()
 
     # 1. Primary: Gemini Vision
     if preferred_provider in {"auto", "gemini"} and gemini_key:

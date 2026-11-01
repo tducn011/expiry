@@ -110,6 +110,13 @@ class TestScannerLogic(unittest.TestCase):
         self.assertEqual(candidates["manufactured_date"]["value"], "2026-03-01")
         self.assertEqual(candidates["expiry_date"]["value"], "2026-12-31")
         self.assertEqual(candidates["expiry_date"]["date_label_type"], "use_by")
+
+    def test_dot_matrix_can_bottom_dates(self):
+        text = "A tec  _ wo nea\n7 =  . . |\n# A 4 we o a\n. JNSK3071026 Gop\ndHSD2071027 967... |"
+        candidates, warnings = normalized_candidates(text)
+        self.assertEqual(candidates["manufactured_date"]["value"], "2026-10-07")
+        self.assertEqual(candidates["expiry_date"]["value"], "2027-10-07")
+        self.assertEqual(candidates["expiry_date"]["date_label_type"], "use_by")
         self.assertTrue(candidates["expiry_date"]["requires_confirmation"])
         self.assertEqual(warnings, [])
 
@@ -206,6 +213,22 @@ class TestScanRouteEngineSelection(unittest.TestCase):
         self.assertEqual(result.candidates.expiry_date.value, "2026-11-20")
         self.assertEqual(result.candidates.food_name, "Organic Milk")
         self.assertTrue(any("VISION_FALLBACK_APPLIED" in w for w in result.warnings))
+
+    def test_falls_back_to_adaptive_can_bottom_ocr(self):
+        with patch("app.routes.scan.extract_datereg_text", return_value=""), patch(
+            "app.routes.scan.extract_ocr_text", return_value=""
+        ), patch(
+            "app.routes.scan.extract_adaptive_can_text",
+            return_value=". JNSK3071026 Gop\ndHSD2071027 967... |"
+        ), patch(
+            "app.routes.scan.extract_vision_llm_candidates",
+            side_effect=AssertionError("Vision LLM should not be called when adaptive pass succeeds")
+        ):
+            result = self._scan()
+
+        self.assertEqual(result.candidates.manufactured_date.value, "2026-10-07")
+        self.assertEqual(result.candidates.expiry_date.value, "2027-10-07")
+        self.assertEqual(result.candidates.expiry_date.date_label_type, "use_by")
 
     def test_falls_back_to_vision_llm_when_ocr_date_is_ambiguous(self):
         vision_candidates = {
