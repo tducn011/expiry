@@ -74,6 +74,8 @@ import Notifications from "./features/Notifications"
 
 import Settings from "./features/Settings"
 
+import type { FoodEntry } from "./domain/types"
+
 import AuthForm from "./features/AuthForm"
 
 import Onboarding from "./features/Onboarding"
@@ -176,6 +178,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const [isCheckingSession, setIsCheckingSession] = useState(!demoMode)
 
   const sessionGenRef = useRef(0)
+
+  const refreshInventoryRef = useRef<(() => Promise<void>) | null>(null)
 
   // 1. Initial Session Verification on mount
 
@@ -285,6 +289,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
       let hasMore = true
 
+      const allItems: FoodEntry[] = []
+
       while (hasMore) {
         const page = await api.entries({ page: pageNum, limit })
 
@@ -295,49 +301,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         )
           return
 
-        for (const item of page.items) {
-          if (
-            !isMounted ||
-            sessionGenRef.current !== gen ||
-            state.userId !== activeUserId
-          )
-            return
-
-          dispatch({
-            type: "save",
-
-            food: {
-              id: item.id,
-
-              name: item.name,
-
-              quantity: item.remaining_quantity,
-
-              unit: (item.unit === "piece" ? "cái" : item.unit) as Unit,
-
-              category: item.category as Category || undefined,
-
-              location: item.storage_location || undefined,
-
-              expDate: item.expiry_date || undefined,
-
-              mfgDate: item.opened_on || undefined,
-
-              finishedAt:
-                item.remaining_quantity === 0 ? item.updated_at : undefined,
-
-              version: item.version,
-            },
-          })
-
-          if (
-            item.storage_location &&
-            item.storage_location !== "unspecified" &&
-            !state.locations.includes(item.storage_location)
-          ) {
-            dispatch({ type: "addLocation", name: item.storage_location })
-          }
-        }
+        allItems.push(...page.items)
 
         if (
           !page.pagination ||
@@ -349,7 +313,62 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           pageNum++
         }
       }
+
+      if (
+        !isMounted ||
+        sessionGenRef.current !== gen ||
+        state.userId !== activeUserId
+      )
+        return
+
+      const mappedFoods: Food[] = allItems.map((item) => ({
+        id: item.id,
+
+        name: item.name,
+
+        quantity: item.remaining_quantity,
+
+        unit: (item.unit === "piece" ? "cái" : item.unit) as Unit,
+
+        category: item.category as Category || undefined,
+
+        location: item.storage_location || undefined,
+
+        expDate: item.expiry_date || undefined,
+
+        mfgDate: item.opened_on || undefined,
+
+        finishedAt: item.remaining_quantity === 0 ? item.updated_at : undefined,
+
+        deletedAt: item.deleted_at || undefined,
+
+        createdAt: item.created_at,
+
+        version: item.version,
+      }))
+
+      const serverLocations = Array.from(
+        new Set(
+          allItems
+
+            .map((item) => item.storage_location)
+
+            .filter((l): l is string =>
+              Boolean(l && l !== "unspecified" && l.trim()),
+            ),
+        ),
+      )
+
+      dispatch({
+        type: "hydrateInventory",
+
+        foods: mappedFoods,
+
+        locations: serverLocations,
+      })
     }
+
+    refreshInventoryRef.current = hydrateInventory
 
     hydrateInventory().catch(() => {
       if (
@@ -737,8 +756,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         } catch (err: unknown) {
           if (err instanceof ApiError && err.code === "VERSION_CONFLICT") {
             notify(
-              "Xung đột phiên bản: Dữ liệu đã thay đổi ở nơi khác. Vui lòng tải lại.",
+              "Xung đột phiên bản: Dữ liệu đã thay đổi ở nơi khác. Đang tải lại dữ liệu mới nhất...",
+
+              "warning",
             )
+
+            refreshInventoryRef.current?.()
           } else {
             notify("Lỗi kết nối máy chủ. Không thể lưu thay đổi.")
           }
@@ -914,11 +937,13 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onAddLocation={async (name) => {
             dispatch({ type: "addLocation", name })
 
-            if (state.mode === "account") {
+            if (state.mode === "account" && state.userId) {
               try {
+                const key = `expiry_user_preferences_${state.userId}`
+
                 const curPrefs = JSON.parse(
                   (typeof localStorage !== "undefined"
-                    ? localStorage.getItem("expiry_user_preferences")
+                    ? localStorage.getItem(key)
                     : null) || "{}",
                 )
 
@@ -928,24 +953,84 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
                 if (typeof localStorage !== "undefined")
                   localStorage.setItem(
-                    "expiry_user_preferences",
+                    key,
 
                     JSON.stringify({ ...curPrefs, locations: locs }),
                   )
               } catch {}
             }
           }}
+          onRenameLocation={async (oldName, newName) => {
+            dispatch({ type: "renameLocation", oldName, newName })
+
+            if (state.mode === "account") {
+              const affected = state.foods.filter(
+                (f) => !f.deletedAt && !f.finishedAt && f.location === oldName,
+              )
+
+              for (const f of affected) {
+                const idempKey = `idemp_${crypto.randomUUID()}`
+
+                api
+
+                  .updateEntry(
+                    f.id,
+
+                    {
+                      storage_location: newName,
+
+                      expected_version: f.version ?? 1,
+                    },
+
+                    idempKey,
+                  )
+
+                  .catch(() => {})
+              }
+            }
+          }}
+          onRemoveLocation={async (name) => {
+            dispatch({ type: "removeLocation", name })
+
+            if (state.mode === "account") {
+              const affected = state.foods.filter(
+                (f) => !f.deletedAt && !f.finishedAt && f.location === name,
+              )
+
+              for (const f of affected) {
+                const idempKey = `idemp_${crypto.randomUUID()}`
+
+                api
+
+                  .updateEntry(
+                    f.id,
+
+                    {
+                      storage_location: "unspecified",
+
+                      expected_version: f.version ?? 1,
+                    },
+
+                    idempKey,
+                  )
+
+                  .catch(() => {})
+              }
+            }
+          }}
           onSavePreferences={async (prefs) => {
             try {
+              const key = `expiry_user_preferences_${state.userId || "demo"}`
+
               const curPrefs = JSON.parse(
                 (typeof localStorage !== "undefined"
-                  ? localStorage.getItem("expiry_user_preferences")
+                  ? localStorage.getItem(key)
                   : null) || "{}",
               )
 
               if (typeof localStorage !== "undefined")
                 localStorage.setItem(
-                  "expiry_user_preferences",
+                  key,
 
                   JSON.stringify({ ...curPrefs, ...prefs }),
                 )

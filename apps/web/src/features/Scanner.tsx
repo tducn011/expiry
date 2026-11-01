@@ -33,48 +33,54 @@ import {
 
 import IconButton from "../components/ui/IconButton"
 
-type ScanState =
-  | "idle"
-  | "requesting"
-  | "ready"
-  | "capturing"
-  | "processing"
-  | "step2_ready"
-  | "unrecognized"
-  | "denied"
-  | "unavailable"
+type ScanState = "idle" | "requesting" | "ready" | "capturing" | "processing" | "step2_ready" | "unrecognized" | "denied" | "unavailable"
 
 type Step1Data = {
   draft: Draft
+
   image: string
+
   file?: File | Blob
+
   detectedType: "product_only" | "date_only"
 }
 
 const corners = [
   "left-0 top-0 border-l-4 border-t-4 rounded-tl-corner-md",
+
   "right-0 top-0 border-r-4 border-t-4 rounded-tr-corner-md",
+
   "left-0 bottom-0 border-l-4 border-b-4 rounded-bl-corner-md",
+
   "right-0 bottom-0 border-r-4 border-b-4 rounded-br-corner-md",
 ]
 
 export function Scanner({
   onBack,
+
   onManual,
+
   onReview,
 }: {
   onBack: () => void
+
   onManual: () => void
+
   onReview: (img: string | string[], draft?: Draft) => void
 }) {
   const [state, setState] = useState<ScanState>("idle")
+
   const [step, setStep] = useState<1 | 2>(1)
+
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null)
 
   const [image, setImage] = useState<string>()
+
   const [images, setImages] = useState<string[]>([])
+
   const [batchProgress, setBatchProgress] = useState<{
     current: number
+
     total: number
   } | null>(null)
 
@@ -83,20 +89,27 @@ export function Scanner({
   )
 
   const videoRef = useRef<HTMLVideoElement>(null)
+
   const streamRef = useRef<MediaStream | null>(null)
+
   const cameraInputRef = useRef<HTMLInputElement>(null)
+
   const libraryInputRef = useRef<HTMLInputElement>(null)
+
   const timer = useRef<number | undefined>(undefined)
 
   const stop = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop())
+
     streamRef.current = null
+
     if (videoRef.current) videoRef.current.srcObject = null
   }
 
   useEffect(() => {
     return () => {
       stop()
+
       window.clearTimeout(timer.current)
     }
   }, [])
@@ -105,11 +118,13 @@ export function Scanner({
     if (!navigator.mediaDevices?.getUserMedia) return setState("unavailable")
 
     setImage(undefined)
+
     setState("requesting")
 
     try {
       const s = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
+
         audio: false,
       })
 
@@ -117,12 +132,14 @@ export function Scanner({
 
       if (videoRef.current) {
         videoRef.current.srcObject = s
+
         await videoRef.current.play().catch(() => {})
       }
 
       setState(step === 2 && step1Data ? "step2_ready" : "ready")
     } catch (err) {
       const name = (err as DOMException)?.name
+
       setState(
         name === "NotAllowedError" || name === "SecurityError"
           ? "denied"
@@ -133,10 +150,15 @@ export function Scanner({
 
   const resetToStep1 = () => {
     setStep(1)
+
     setStep1Data(null)
+
     setImage(undefined)
+
     setImages([])
+
     setDetectedDraft(undefined)
+
     if (streamRef.current) {
       setState("ready")
     } else {
@@ -146,6 +168,7 @@ export function Scanner({
 
   const skipStep2 = () => {
     stop()
+
     if (step1Data) {
       onReview(step1Data.image, step1Data.draft)
     }
@@ -153,31 +176,45 @@ export function Scanner({
 
   async function recognize(img: string, file?: File | Blob) {
     setImage(img)
+
     setState("processing")
+
     setDetectedDraft(undefined)
 
     // 1. Attempt client-side barcode detection from image
+
     let detectedBarcode: string | undefined
+
     let barcodeProductName: string | undefined
+
     let barcodeExpDate = ""
+
     let barcodeMfgDate = ""
 
     try {
       const htmlImg = new Image()
+
       htmlImg.src = img
+
       await new Promise((resolve) => {
         if (htmlImg.complete) resolve(true)
         else htmlImg.onload = () => resolve(true)
       })
 
       const barcodeRes = await decodeBarcodeFromImage(htmlImg)
+
       if (barcodeRes && barcodeRes.text) {
         detectedBarcode = barcodeRes.text
+
+        // Check if barcode is GS1 encoding expiry/manufactured date directly
         const gs1 = parseGs1Barcode(detectedBarcode)
+
         if (gs1?.expiryDate) barcodeExpDate = gs1.expiryDate
+
         if (gs1?.manufacturedDate) barcodeMfgDate = gs1.manufacturedDate
 
         const prod = await lookupBarcode(detectedBarcode)
+
         if (prod.found && prod.product?.name) {
           barcodeProductName = prod.product.name
         } else {
@@ -188,15 +225,19 @@ export function Scanner({
 
     try {
       let uploadFile: File | Blob
+
       if (file) {
         uploadFile = file
       } else {
         const res = await fetch(img)
+
         const blob = await res.blob()
+
         uploadFile = new File([blob], "capture.jpg", { type: "image/jpeg" })
       }
 
       const scanResult = await api.scan(uploadFile, detectedBarcode)
+
       const cand = scanResult.candidates
 
       if (
@@ -205,14 +246,18 @@ export function Scanner({
       ) {
         detectedBarcode =
           cand.barcode || extractBarcodeFromText(scanResult.raw_text)?.code
+
         if (detectedBarcode) {
           const gs1 = parseGs1Barcode(detectedBarcode)
+
           if (gs1?.expiryDate && !barcodeExpDate)
             barcodeExpDate = gs1.expiryDate
+
           if (gs1?.manufacturedDate && !barcodeMfgDate)
             barcodeMfgDate = gs1.manufacturedDate
 
           const prod = await lookupBarcode(detectedBarcode)
+
           if (prod.found && prod.product?.name) {
             barcodeProductName = prod.product.name
           } else if (!barcodeProductName) {
@@ -222,15 +267,21 @@ export function Scanner({
       }
 
       const expDate = cand.expiry_date?.value || barcodeExpDate || ""
+
       const mfgDate = cand.manufactured_date?.value || barcodeMfgDate || ""
+
       const name = (
         barcodeProductName ||
         cand.food_name?.trim() ||
         (detectedBarcode ? `Mã vạch ${detectedBarcode}` : "")
-      ).trim()
+      )
+
+        .trim()
 
       let category: Category | "" = ""
+
       const lowerName = name.toLowerCase()
+
       if (/thịt|bò|heo|lợn|gà|vịt|cá|tôm|cua|mực|hải sản/.test(lowerName)) {
         category = "meat_seafood"
       } else if (
@@ -249,60 +300,91 @@ export function Scanner({
 
       const currentDraft: Draft = {
         name,
+
         quantity: "1",
+
         unit: "cái",
+
         category,
+
         mfgDate,
+
         expDate,
+
         location: "",
+
         barcode: detectedBarcode,
       }
 
       // --- 2-STEP SEQUENTIAL SCANNING LOGIC ---
+
       if (step === 1) {
         const hasDate = Boolean(expDate)
+
         const hasProduct = Boolean(name || detectedBarcode)
 
         if (hasDate && hasProduct) {
           // Both date and product name/barcode resolved in photo 1!
+
           playBeep()
+
           stop()
+
           setDetectedDraft(currentDraft)
+
           onReview(img, currentDraft)
+
           return
         }
 
         if (hasProduct && !hasDate) {
           // Found product/barcode (e.g. Pepsi can body), prompt for Step 2 (can bottom HSD)
+
           playBeep()
+
           setStep1Data({
             draft: currentDraft,
+
             image: img,
+
             file,
+
             detectedType: "product_only",
           })
+
           setStep(2)
+
           setState("step2_ready")
+
           return
         }
 
         if (hasDate && !hasProduct) {
           // Found date (e.g. can bottom HSD), prompt for Step 2 (can front/barcode)
+
           playBeep()
+
           setStep1Data({
             draft: currentDraft,
+
             image: img,
+
             file,
+
             detectedType: "date_only",
           })
+
           setStep(2)
+
           setState("step2_ready")
+
           return
         }
 
         setState("unrecognized")
       } else if (step === 2 && step1Data) {
         // Step 2 captured! Merge Step 1 + Step 2 seamlessly
+
         const finalName =
           step1Data.draft.name ||
           name ||
@@ -311,10 +393,14 @@ export function Scanner({
             : detectedBarcode
               ? `Mã vạch ${detectedBarcode}`
               : "")
+
         const finalBarcode =
           step1Data.draft.barcode || detectedBarcode || undefined
+
         const finalExpDate = step1Data.draft.expDate || expDate || ""
+
         const finalMfgDate = step1Data.draft.mfgDate || mfgDate || ""
+
         const finalCategory =
           step1Data.draft.category && step1Data.draft.category !== "other"
             ? step1Data.draft.category
@@ -322,50 +408,78 @@ export function Scanner({
 
         const mergedDraft: Draft = {
           name: finalName,
+
           quantity: "1",
+
           unit: "cái",
+
           category: finalCategory,
+
           mfgDate: finalMfgDate,
+
           expDate: finalExpDate,
+
           location: "",
+
           barcode: finalBarcode,
         }
 
         playBeep()
+
         stop()
+
         setDetectedDraft(mergedDraft)
+
         onReview([step1Data.image, img], mergedDraft)
       }
     } catch {
       if (step === 1 && (barcodeProductName || detectedBarcode)) {
         playBeep()
+
         const fallbackDraft: Draft = {
           name:
             barcodeProductName ||
             (detectedBarcode ? `Mã vạch ${detectedBarcode}` : ""),
+
           quantity: "1",
+
           unit: "cái",
+
           category: "other",
+
           mfgDate: barcodeMfgDate,
+
           expDate: barcodeExpDate,
+
           location: "",
+
           barcode: detectedBarcode,
         }
+
         setStep1Data({
           draft: fallbackDraft,
+
           image: img,
+
           file,
+
           detectedType: "product_only",
         })
+
         setStep(2)
+
         setState("step2_ready")
+
         return
       }
 
       if (step === 2 && step1Data) {
         // If step 2 failed to read date, gracefully review with step 1 product
+
         stop()
+
         onReview(step1Data.image, step1Data.draft)
+
         return
       }
 
@@ -375,12 +489,17 @@ export function Scanner({
 
   function capture() {
     const v = videoRef.current
+
     if (!v || !v.videoWidth) return
 
     setState("capturing")
+
     const c = document.createElement("canvas")
+
     c.width = v.videoWidth
+
     c.height = v.videoHeight
+
     c.getContext("2d")?.drawImage(v, 0, 0)
 
     const dataUrl = c.toDataURL("image/jpeg", 0.85)
@@ -391,12 +510,15 @@ export function Scanner({
           const f = new File([blob], `scan-step${step}.jpg`, {
             type: "image/jpeg",
           })
+
           recognize(dataUrl, f)
         } else {
           recognize(dataUrl)
         }
       },
+
       "image/jpeg",
+
       0.85,
     )
   }
@@ -404,56 +526,82 @@ export function Scanner({
   async function onSingleFile(file: File) {
     const dataUrl = await new Promise<string>((resolve) => {
       const r = new FileReader()
+
       r.onload = () => resolve(String(r.result))
+
       r.readAsDataURL(file)
     })
+
     recognize(dataUrl, file)
   }
 
   async function recognizeBatch(files: File[]) {
     if (!files || files.length === 0) return
+
     setState("processing")
+
     setDetectedDraft(undefined)
+
     setBatchProgress({ current: 1, total: files.length })
 
     let finalExpDate = ""
+
     let finalMfgDate = ""
+
     let finalName = ""
+
     let finalBarcode: string | undefined = undefined
+
     let finalCategory: Category = "other"
+
     const loadedImages: string[] = []
 
     for (let i = 0; i < files.length; i++) {
       setBatchProgress({ current: i + 1, total: files.length })
+
       const file = files[i]
+
       const dataUrl = await new Promise<string>((resolve) => {
         const r = new FileReader()
+
         r.onload = () => resolve(String(r.result))
+
         r.readAsDataURL(file)
       })
+
       loadedImages.push(dataUrl)
 
       let detectedBarcode: string | undefined
+
       let barcodeProductName: string | undefined
+
       let barcodeExpDate = ""
+
       let barcodeMfgDate = ""
 
       try {
         const htmlImg = new Image()
+
         htmlImg.src = dataUrl
+
         await new Promise((resolve) => {
           if (htmlImg.complete) resolve(true)
           else htmlImg.onload = () => resolve(true)
         })
 
         const barcodeRes = await decodeBarcodeFromImage(htmlImg)
+
         if (barcodeRes && barcodeRes.text) {
           detectedBarcode = barcodeRes.text
+
           const gs1 = parseGs1Barcode(detectedBarcode)
+
           if (gs1?.expiryDate) barcodeExpDate = gs1.expiryDate
+
           if (gs1?.manufacturedDate) barcodeMfgDate = gs1.manufacturedDate
 
           const prod = await lookupBarcode(detectedBarcode)
+
           if (prod.found && prod.product?.name) {
             barcodeProductName = prod.product.name
           } else {
@@ -464,21 +612,27 @@ export function Scanner({
 
       try {
         const scanResult = await api.scan(file, detectedBarcode)
+
         const cand = scanResult.candidates
+
         if (
           !detectedBarcode &&
           (cand.barcode || extractBarcodeFromText(scanResult.raw_text)?.code)
         ) {
           detectedBarcode =
             cand.barcode || extractBarcodeFromText(scanResult.raw_text)?.code
+
           if (detectedBarcode) {
             const gs1 = parseGs1Barcode(detectedBarcode)
+
             if (gs1?.expiryDate && !barcodeExpDate)
               barcodeExpDate = gs1.expiryDate
+
             if (gs1?.manufacturedDate && !barcodeMfgDate)
               barcodeMfgDate = gs1.manufacturedDate
 
             const prod = await lookupBarcode(detectedBarcode)
+
             if (prod.found && prod.product?.name) {
               barcodeProductName = prod.product.name
             } else if (!barcodeProductName) {
@@ -490,9 +644,11 @@ export function Scanner({
         if (!finalExpDate && cand.expiry_date?.value) {
           finalExpDate = cand.expiry_date.value
         }
+
         if (!finalMfgDate && cand.manufactured_date?.value) {
           finalMfgDate = cand.manufactured_date.value
         }
+
         if (!finalName && cand.food_name?.trim()) {
           finalName = cand.food_name.trim()
         }
@@ -501,22 +657,26 @@ export function Scanner({
       }
 
       if (!finalBarcode && detectedBarcode) finalBarcode = detectedBarcode
+
       if (!finalExpDate && barcodeExpDate) finalExpDate = barcodeExpDate
+
       if (!finalMfgDate && barcodeMfgDate) finalMfgDate = barcodeMfgDate
+
       if (!finalName && barcodeProductName) finalName = barcodeProductName
     }
 
     setBatchProgress(null)
+
     setImages(loadedImages)
+
     setImage(loadedImages[0])
 
     if (finalName) {
       const lower = finalName.toLowerCase()
+
       if (/thịt|bò|heo|lợn|gà|vịt|cá|tôm|cua|mực|hải sản/.test(lower)) {
         finalCategory = "meat_seafood"
-      } else if (
-        /rau|cải|cà|xà lách|dưa|nấm|táo|cam|chuối|xoài/.test(lower)
-      ) {
+      } else if (/rau|cải|cà|xà lách|dưa|nấm|táo|cam|chuối|xoài/.test(lower)) {
         finalCategory = "fresh_produce"
       } else if (/sữa|trứng|phô mai|bơ|yogurt|sữa chua/.test(lower)) {
         finalCategory = "dairy_eggs"
@@ -533,12 +693,19 @@ export function Scanner({
 
     const mergedDraft: Draft = {
       name: finalName,
+
       quantity: "1",
+
       unit: "cái",
+
       category: finalCategory,
+
       mfgDate: finalMfgDate,
+
       expDate: finalExpDate,
+
       location: "",
+
       barcode: finalBarcode,
     }
 
@@ -546,8 +713,10 @@ export function Scanner({
 
     if (finalExpDate || finalName || finalBarcode) {
       playBeep()
+
       onReview(
         loadedImages.length > 1 ? loadedImages : loadedImages[0],
+
         mergedDraft,
       )
     } else {
@@ -557,16 +726,19 @@ export function Scanner({
 
   function onFiles(fileList?: FileList | null) {
     if (!fileList || fileList.length === 0) return
+
     if (fileList.length === 1) {
       onSingleFile(fileList[0])
     } else {
       stop()
+
       recognizeBatch(Array.from(fileList))
     }
   }
 
   const leave = (fn: () => void) => () => {
     stop()
+
     fn()
   }
 
@@ -639,9 +811,7 @@ export function Scanner({
         >
           <span
             className={`size-2 rounded-full shrink-0 ${
-              step === 2
-                ? "bg-brand-secondary animate-pulse"
-                : "bg-white/20"
+              step === 2 ? "bg-brand-secondary animate-pulse" : "bg-white/20"
             }`}
           />
           <span className="truncate">2. Hạn sử dụng</span>
@@ -803,8 +973,8 @@ export function Scanner({
               />
               <p className="text-sm font-medium">Chưa có quyền dùng camera</p>
               <p className="text-xs text-text-tertiary">
-                Cho phép camera trong cài đặt trình duyệt, hoặc dùng nút chụp ảnh
-                bên dưới.
+                Cho phép camera trong cài đặt trình duyệt, hoặc dùng nút chụp
+                ảnh bên dưới.
               </p>
             </>
           )}
@@ -816,7 +986,9 @@ export function Scanner({
                 aria-hidden="true"
                 className="text-status-expired"
               />
-              <p className="text-sm font-medium">Camera trực tiếp chưa khả dụng</p>
+              <p className="text-sm font-medium">
+                Camera trực tiếp chưa khả dụng
+              </p>
               <p className="text-xs text-text-tertiary">
                 Hãy dùng nút &quot;Chụp từ máy ảnh điện thoại&quot; bên dưới.
               </p>
@@ -891,6 +1063,7 @@ export function Scanner({
                   variant="neutral"
                   onClick={() => {
                     stop()
+
                     setState("idle")
                   }}
                 >
@@ -937,6 +1110,7 @@ export function Scanner({
               onClick={() =>
                 onReview(
                   images.length > 1 ? images : image || "",
+
                   detectedDraft,
                 )
               }
@@ -965,7 +1139,9 @@ export function Scanner({
           aria-hidden="true"
           onChange={(e) => {
             const f = e.target.files?.[0]
+
             if (f) onSingleFile(f)
+
             e.target.value = ""
           }}
         />
@@ -981,6 +1157,7 @@ export function Scanner({
           aria-hidden="true"
           onChange={(e) => {
             onFiles(e.target.files)
+
             e.target.value = ""
           }}
         />

@@ -27,6 +27,8 @@ import InputField from "../components/ui/InputField"
 
 import Modal from "../components/ui/Modal"
 
+import LocationManagerModal from "../components/ui/LocationManagerModal"
+
 import PageHeader from "../components/ui/PageHeader"
 
 import FoodCard from "./FoodCard"
@@ -93,6 +95,10 @@ export interface StorageViewProps {
 
   onAddLocation?: (name: string) => Promise<void> | void
 
+  onRenameLocation?: (oldName: string, newName: string) => Promise<void> | void
+
+  onRemoveLocation?: (name: string) => Promise<void> | void
+
   onSavePreferences?: (preferences: StoragePreferences) => Promise<void> | void
 }
 
@@ -123,9 +129,16 @@ export default function StorageView({
 
   onAddLocation,
 
+  onRenameLocation,
+
+  onRemoveLocation,
+
   onSavePreferences,
 }: StorageViewProps) {
   const isLive = isLiveProp ?? state.mode === "account"
+
+  const storagePrefKey = `expiry_storage_preferences_${state.userId || "demo"}`
+  const userPrefKey = `expiry_user_preferences_${state.userId || "demo"}`
 
   const [selectedLocation, setSelectedLocation] = useState<string>(
     initialLocation || "all",
@@ -146,7 +159,9 @@ export default function StorageView({
   useEffect(() => {
     if (initialLocation === undefined || initialCategory === undefined) {
       try {
-        const saved = getStorage()?.getItem("expiry_storage_preferences")
+        const saved =
+          getStorage()?.getItem(storagePrefKey) ||
+          getStorage()?.getItem("expiry_storage_preferences")
 
         if (saved) {
           const parsed = JSON.parse(saved)
@@ -167,7 +182,7 @@ export default function StorageView({
         }
       } catch {}
     }
-  }, [])
+  }, [storagePrefKey])
 
   const handleLocationChange = (loc: string) => {
     setSelectedLocation(loc)
@@ -176,7 +191,7 @@ export default function StorageView({
 
     try {
       getStorage()?.setItem(
-        "expiry_storage_preferences",
+        storagePrefKey,
 
         JSON.stringify({ location: loc, category: selectedCategory }),
       )
@@ -192,7 +207,7 @@ export default function StorageView({
 
     try {
       getStorage()?.setItem(
-        "expiry_storage_preferences",
+        storagePrefKey,
 
         JSON.stringify({ location: selectedLocation, category: cat }),
       )
@@ -206,6 +221,8 @@ export default function StorageView({
   const [onlyAttention, setOnlyAttention] = useState(false)
 
   const [newLocModal, setNewLocModal] = useState(false)
+
+  const [manageLocModal, setManageLocModal] = useState(false)
 
   const [newLocName, setNewLocName] = useState("")
 
@@ -335,7 +352,9 @@ export default function StorageView({
 
     try {
       const userPrefs = JSON.parse(
-        getStorage()?.getItem("expiry_user_preferences") || "{}",
+        getStorage()?.getItem(userPrefKey) ||
+          getStorage()?.getItem("expiry_user_preferences") ||
+          "{}",
       )
 
       const locs = Array.from(
@@ -343,7 +362,7 @@ export default function StorageView({
       )
 
       getStorage()?.setItem(
-        "expiry_user_preferences",
+        userPrefKey,
 
         JSON.stringify({ ...userPrefs, locations: locs }),
       )
@@ -448,9 +467,18 @@ export default function StorageView({
             <Boxes size={18} className="text-brand-primary" />
             <span>Khu vực bảo quản</span>
           </h2>
-          <span className="text-xs text-text-secondary">
-            {state.locations.length} vị trí khả dụng
-          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="small"
+              variant="neutral"
+              onClick={() => setManageLocModal(true)}
+            >
+              Quản lý vị trí
+            </Button>
+            <span className="text-xs text-text-secondary">
+              {state.locations.length} vị trí
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -621,6 +649,17 @@ export default function StorageView({
           </Card>
         )}
       </div>
+
+      {/* Modal: Quản lý nơi bảo quản */}
+      <LocationManagerModal
+        isOpen={manageLocModal}
+        onClose={() => setManageLocModal(false)}
+        state={state}
+        dispatch={dispatch}
+        onAddLocation={onAddLocation}
+        onRenameLocation={onRenameLocation}
+        onRemoveLocation={onRemoveLocation}
+      />
 
       {/* Modal: Thêm vị trí mới */}
       {newLocModal && (

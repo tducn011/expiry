@@ -152,12 +152,15 @@ export function FoodForm({
   onCancel: (dirty: boolean) => void
 }) {
   const [d, setD] = useState<Draft>(initial)
+
   const capturedImages = Array.isArray(capturedImage)
     ? capturedImage
     : capturedImage
       ? [capturedImage]
       : []
+
   const [selectedImgIdx, setSelectedImgIdx] = useState(0)
+
   const currentImg = capturedImages[selectedImgIdx] || capturedImages[0]
 
   const [errors, setErrors] = useState<Errors>({})

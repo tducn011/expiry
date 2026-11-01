@@ -1,4 +1,5 @@
 import { inferCategory, type Category } from "../store/appStore"
+
 import { extractBarcodeFromText } from "../lib/barcode"
 
 import type {
@@ -551,31 +552,44 @@ async function fileToBase64(file: File | Blob): Promise<string> {
   if (typeof FileReader !== "undefined") {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
+
       reader.onload = () => {
         const dataUrl = reader.result as string
+
         const base64 = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl
+
         resolve(base64)
       }
+
       reader.onerror = reject
+
       reader.readAsDataURL(file)
     })
   }
+
   if (typeof (file as any).arrayBuffer === "function") {
     const buf = await (file as any).arrayBuffer()
+
     return Buffer.from(buf).toString("base64")
   }
+
   return ""
 }
 
 async function callClientGeminiVision(
   file: File | Blob,
+
   apiKey: string,
+
   transport: typeof fetch = fetch,
 ): Promise<ScanResult | null> {
   try {
     const base64Data = await fileToBase64(file)
+
     if (!base64Data) return null
+
     const mimeType = file.type || "image/jpeg"
+
     const prompt = `You are an expert food product OCR and label analyzer.
 Analyze this product label image to extract:
 1. Product or food name ("food_name").
@@ -599,78 +613,113 @@ Return STRICT JSON format conforming to this exact structure:
 
     const models = [
       "gemini-3.5-flash-lite",
+
       "gemini-3.5-flash",
+
       "gemini-flash-latest",
     ]
+
     for (const m of models) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`
+
         const res = await transport(url, {
           method: "POST",
+
           headers: { "Content-Type": "application/json" },
+
           body: JSON.stringify({
             contents: [
               {
                 parts: [
                   { text: prompt },
+
                   { inline_data: { mime_type: mimeType, data: base64Data } },
                 ],
               },
             ],
+
             generationConfig: {
               response_mime_type: "application/json",
+
               temperature: 0.1,
             },
           }),
         })
+
         if (!res.ok) continue
+
         const data = await res.json()
+
         const textResp = data.candidates?.[0]?.content?.parts?.[0]?.text
+
         if (!textResp) continue
+
         const parsed = JSON.parse(textResp)
+
         const expVal =
           typeof parsed.expiry_date === "string" && parsed.expiry_date.trim()
             ? parsed.expiry_date.trim()
             : null
+
         const mfgVal =
           typeof parsed.manufactured_date === "string" &&
           parsed.manufactured_date.trim()
             ? parsed.manufactured_date.trim()
             : null
+
         const rawText =
           typeof parsed.raw_text === "string" ? parsed.raw_text : ""
+
         const foodName =
           typeof parsed.food_name === "string" && parsed.food_name.trim()
             ? parsed.food_name.trim()
             : null
+
         let barcodeVal =
           typeof parsed.barcode === "string" && parsed.barcode.trim()
             ? parsed.barcode.replace(/\s+/g, "")
             : null
+
         if (!barcodeVal && rawText) {
           const matched = extractBarcodeFromText(rawText)
+
           if (matched) barcodeVal = matched.code
         }
 
         return {
           raw_text: rawText,
+
           warnings: [`CLIENT_VISION_FALLBACK_APPLIED: Resolved via ${m}`],
+
           errors: [],
+
           requires_confirmation: true,
+
           candidates: {
             food_name: foodName,
+
             barcode: barcodeVal,
+
             expiry_date: {
               value: expVal,
+
               date_certainty: expVal ? "exact" : null,
+
               date_label_type: "use_by",
+
               source_text: expVal || "",
+
               alternatives: [],
+
               ambiguous: false,
+
               requires_confirmation: true,
             },
+
             manufactured_date: {
               value: mfgVal,
+
               source_text: mfgVal || "",
             },
           },
@@ -682,6 +731,7 @@ Return STRICT JSON format conforming to this exact structure:
   } catch {
     return null
   }
+
   return null
 }
 
@@ -1207,13 +1257,21 @@ export class ApiClient {
           if (geminiKey) {
             const vision = await callClientGeminiVision(
               file,
+
               geminiKey,
+
               this.transport,
             )
-            if (vision?.candidates?.expiry_date?.value || vision?.candidates?.food_name || vision?.candidates?.barcode) {
+
+            if (
+              vision?.candidates?.expiry_date?.value ||
+              vision?.candidates?.food_name ||
+              vision?.candidates?.barcode
+            ) {
               return vision
             }
           }
+
           throw err
         }
 
@@ -1267,13 +1325,21 @@ export class ApiClient {
         if (geminiKey) {
           const vision = await callClientGeminiVision(
             file,
+
             geminiKey,
+
             this.transport,
           )
-          if (vision?.candidates?.expiry_date?.value || vision?.candidates?.food_name || vision?.candidates?.barcode) {
+
+          if (
+            vision?.candidates?.expiry_date?.value ||
+            vision?.candidates?.food_name ||
+            vision?.candidates?.barcode
+          ) {
             return vision
           }
         }
+
         throw err
       }
     }
@@ -1281,16 +1347,24 @@ export class ApiClient {
     if (!result?.candidates?.expiry_date?.value && geminiKey) {
       const vision = await callClientGeminiVision(
         file,
+
         geminiKey,
+
         this.transport,
       )
-      if (vision?.candidates?.expiry_date?.value || vision?.candidates?.food_name || vision?.candidates?.barcode) {
+
+      if (
+        vision?.candidates?.expiry_date?.value ||
+        vision?.candidates?.food_name ||
+        vision?.candidates?.barcode
+      ) {
         return vision
       }
     }
 
     if (result && !result.candidates?.barcode && result.raw_text) {
       const b = extractBarcodeFromText(result.raw_text)
+
       if (b && result.candidates) {
         result.candidates.barcode = b.code
       }

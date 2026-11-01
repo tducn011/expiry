@@ -150,6 +150,8 @@ export interface State {
   settings: Settings
 }
 
+export const DEFAULT_LOCATIONS: string[] = ["Ngăn mát", "Ngăn đông", "Tủ bếp"]
+
 const initial: State = {
   mode: "none",
 
@@ -159,7 +161,7 @@ const initial: State = {
 
   history: [],
 
-  locations: ["Ngăn mát", "Ngăn đông", "Tủ bếp"],
+  locations: [...DEFAULT_LOCATIONS],
 
   readNotifs: [],
 
@@ -211,7 +213,23 @@ export type Action = {
 
   id: string
 } | {
+  type: "hydrateInventory"
+
+  foods: Food[]
+
+  locations?: string[]
+} | {
   type: "addLocation"
+
+  name: string
+} | {
+  type: "renameLocation"
+
+  oldName: string
+
+  newName: string
+} | {
+  type: "removeLocation"
 
   name: string
 } | {
@@ -290,7 +308,7 @@ function ev(
   }
 }
 
-function reducer(s: State, a: Action): State {
+export function reducer(s: State, a: Action): State {
   switch (a.type) {
     case "replace":
       return a.state
@@ -298,6 +316,7 @@ function reducer(s: State, a: Action): State {
     case "login": {
       if (a.mode === "demo") return loadDemo()
       const userNotifs = loadUserNotifs(a.userId)
+      const userLocations = loadUserLocations(a.userId)
       return {
         ...initial,
         onboarded: s.onboarded,
@@ -306,6 +325,7 @@ function reducer(s: State, a: Action): State {
         userId: a.userId,
         foods: [],
         history: [],
+        locations: userLocations,
         readNotifs: userNotifs.readNotifs,
         snoozed: userNotifs.snoozed,
       }
@@ -464,10 +484,54 @@ function reducer(s: State, a: Action): State {
     case "purge":
       return { ...s, foods: s.foods.filter((x) => x.id !== a.id) }
 
+    case "hydrateInventory": {
+      const mergedLocations = Array.from(
+        new Set([...s.locations, ...(a.locations || [])]),
+      )
+      return {
+        ...s,
+        foods: a.foods,
+        locations: mergedLocations,
+      }
+    }
+
     case "addLocation":
       return s.locations.includes(a.name)
         ? s
         : { ...s, locations: [...s.locations, a.name] }
+
+    case "renameLocation": {
+      const oldName = a.oldName.trim()
+      const newName = a.newName.trim()
+      if (!oldName || !newName || oldName === newName) return s
+
+      const updatedLocations = Array.from(
+        new Set(s.locations.map((loc) => (loc === oldName ? newName : loc))),
+      )
+      const updatedFoods = s.foods.map((f) =>
+        f.location === oldName ? { ...f, location: newName } : f,
+      )
+      return {
+        ...s,
+        locations: updatedLocations,
+        foods: updatedFoods,
+      }
+    }
+
+    case "removeLocation": {
+      const target = a.name.trim()
+      if (!target) return s
+
+      const updatedLocations = s.locations.filter((loc) => loc !== target)
+      const updatedFoods = s.foods.map((f) =>
+        f.location === target ? { ...f, location: undefined } : f,
+      )
+      return {
+        ...s,
+        locations: updatedLocations,
+        foods: updatedFoods,
+      }
+    }
 
     case "readNotif":
       return s.readNotifs.includes(a.id)
@@ -1024,6 +1088,54 @@ export function clearUserNotifs(userId?: string) {
   }
 }
 
+export function getUserLocationsKey(userId?: string): string {
+  return `expiry_user_locations_${userId || "guest"}`
+}
+
+export function loadUserLocations(userId?: string): string[] {
+  try {
+    const raw = localStorage.getItem(getUserLocationsKey(userId))
+    if (!raw) return [...DEFAULT_LOCATIONS]
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return Array.from(new Set([...DEFAULT_LOCATIONS, ...parsed]))
+    }
+    return [...DEFAULT_LOCATIONS]
+  } catch {
+    return [...DEFAULT_LOCATIONS]
+  }
+}
+
+export function saveUserLocations(
+  userId: string | undefined,
+  locations: string[],
+): void {
+  try {
+    if (userId) {
+      localStorage.setItem(
+        getUserLocationsKey(userId),
+        JSON.stringify(locations),
+      )
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearUserLocations(userId?: string): void {
+  try {
+    if (userId) {
+      localStorage.removeItem(getUserLocationsKey(userId))
+      localStorage.removeItem(`expiry_user_preferences_${userId}`)
+      localStorage.removeItem(`expiry_storage_preferences_${userId}`)
+    }
+    localStorage.removeItem("expiry_user_preferences")
+    localStorage.removeItem("expiry_storage_preferences")
+  } catch {
+    /* ignore */
+  }
+}
+
 function signOutStorage(userId?: string) {
   try {
     api.logout().catch(() => {
@@ -1038,6 +1150,7 @@ function signOutStorage(userId?: string) {
 
     if (userId) {
       clearUserNotifs(userId)
+      clearUserLocations(userId)
     }
 
     const legacy = localStorage.getItem(KEY)
@@ -1086,6 +1199,7 @@ export function useAppStore() {
           snoozed: state.snoozed,
           readNotifs: state.readNotifs,
         })
+        saveUserLocations(state.userId, state.locations)
       }
 
       if (problem === "write") setProblem(null)
