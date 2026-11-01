@@ -54,6 +54,45 @@ def extract_ocr_text(image_bytes: bytes) -> str:
         raise ScanError(500, "OCR_FAILED", "The OCR engine could not process the image.") from None
 
 
+def extract_adaptive_can_text(image_bytes: bytes) -> str:
+    """Adaptive OCR pass specifically tuned for dot-matrix prints on concave can bottoms and high-glare surfaces."""
+    try:
+        import cv2
+        import numpy as np
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        cv_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if cv_img is None:
+            return ""
+        h, w = cv_img.shape[:2]
+        cy, cx = h // 2, w // 2
+        crop = cv_img[int(cy - h * 0.3) : int(cy + h * 0.3), int(cx - w * 0.3) : int(cx + w * 0.3)]
+        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        scaled = cv2.resize(gray, None, fx=2.5, fy=2.5, interpolation=cv2.INTER_CUBIC)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        cl = clahe.apply(scaled)
+        th = cv2.adaptiveThreshold(cl, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 31, 8)
+        txt = pytesseract.image_to_string(th, config="--psm 6", timeout=OCR_TIMEOUT_SECONDS).strip()
+        return txt
+    except Exception:
+        try:
+            import numpy as np
+            from PIL import ImageOps, ImageFilter
+            with Image.open(io.BytesIO(image_bytes)) as pil_img:
+                w, h = pil_img.size
+                cw, ch = int(w * 0.6), int(h * 0.6)
+                crop = pil_img.crop(((w - cw) // 2, (h - ch) // 2, (w + cw) // 2, (h + ch) // 2))
+                gray = ImageOps.grayscale(crop)
+                scaled = gray.resize((int(cw * 2.5), int(ch * 2.5)), Image.Resampling.BICUBIC)
+                blur = scaled.filter(ImageFilter.BoxBlur(15))
+                arr_img = np.array(scaled, dtype=np.int16)
+                arr_blur = np.array(blur, dtype=np.int16)
+                th = np.where(arr_img < (arr_blur - 8), 0, 255).astype(np.uint8)
+                th_img = Image.fromarray(th)
+                return pytesseract.image_to_string(th_img, config="--psm 6", timeout=OCR_TIMEOUT_SECONDS).strip()
+        except Exception:
+            return ""
+
+
 def process_scan(
     raw_bytes: bytes,
     barcode: Optional[str] = None,
@@ -91,6 +130,21 @@ def process_scan(
         and candidates.get("expiry_date", {}).get("value") is not None
         and not candidates.get("expiry_date", {}).get("ambiguous", False)
     )
+
+    # 2.5 Local Adaptive Fallback for metallic concave surfaces, can bottoms, and dot-matrix inkjet prints
+    if not fast_path_ok:
+        try:
+            can_text = extract_adaptive_can_text(raw_bytes)
+            if can_text:
+                combined_text = f"{raw_text}\n{can_text}".strip()
+                cands_adapt, warns_adapt = normalized_candidates(combined_text, barcode=barcode, locale=locale)
+                if cands_adapt.get("expiry_date", {}).get("value"):
+                    raw_text = combined_text
+                    candidates = cands_adapt
+                    warnings.extend(warns_adapt)
+                    fast_path_ok = True
+        except Exception as adapt_exc:
+            warnings.append(f"Adaptive can bottom pass failed: {adapt_exc}")
 
     # 3. Fallback Path (Option C): Invoke Vision LLM if fast path failed or is ambiguous
     if not fast_path_ok:
