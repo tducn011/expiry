@@ -82,6 +82,8 @@ export function Notifications({
                   />
                 </div>
 
+                <p className="text-xs text-text-secondary">{n.message}</p>
+
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border-primary/40">
                   <Button
                     size="small"
