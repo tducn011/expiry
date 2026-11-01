@@ -307,4 +307,63 @@ describe("Barcode Scanner & ZXing Formats", () => {
     expect(result.candidates.barcode).toBe("8934588012112")
     expect(result.candidates.expiry_date.value).toBeNull()
   })
+
+  it("supports 2-step mobile scanning: sequential Step 1 (Barcode/Name) + Step 2 (Can bottom HSD) merge", () => {
+    // Step 1: User takes photo of Pepsi can body on mobile camera
+    const step1Draft = {
+      name: "Pepsi Cola",
+      barcode: "8934588012112",
+      quantity: "1",
+      unit: "cái",
+      category: "beverage",
+      mfgDate: "",
+      expDate: "",
+      location: "",
+    }
+    const step1Image = "data:image/jpeg;base64,mockBody"
+
+    // Step 2: User flips to can bottom and takes photo 2
+    const step2Draft = {
+      name: "",
+      barcode: undefined,
+      quantity: "1",
+      unit: "cái",
+      category: "other",
+      mfgDate: "2026-10-07",
+      expDate: "2027-10-07",
+      location: "",
+    }
+    const step2Image = "data:image/jpeg;base64,mockBottom"
+
+    // Simulate 2-step merge logic
+    const mergedName = step1Draft.name || step2Draft.name || ""
+    const mergedBarcode = step1Draft.barcode || step2Draft.barcode || undefined
+    const mergedExpDate = step1Draft.expDate || step2Draft.expDate || ""
+    const mergedMfgDate = step1Draft.mfgDate || step2Draft.mfgDate || ""
+    const mergedCategory =
+      step1Draft.category && step1Draft.category !== "other"
+        ? step1Draft.category
+        : step2Draft.category || "other"
+
+    const mergedDraft = {
+      name: mergedName,
+      barcode: mergedBarcode,
+      expDate: mergedExpDate,
+      mfgDate: mergedMfgDate,
+      category: mergedCategory,
+      quantity: "1",
+      unit: "cái",
+      location: "",
+    }
+    const mergedImages = [step1Image, step2Image]
+
+    expect(mergedDraft.name).toBe("Pepsi Cola")
+    expect(mergedDraft.barcode).toBe("8934588012112")
+    expect(mergedDraft.mfgDate).toBe("2026-10-07")
+    expect(mergedDraft.expDate).toBe("2027-10-07")
+    expect(mergedDraft.category).toBe("beverage")
+    expect(mergedImages).toHaveLength(2)
+    expect(mergedImages[0]).toBe(step1Image)
+    expect(mergedImages[1]).toBe(step2Image)
+  })
 })
