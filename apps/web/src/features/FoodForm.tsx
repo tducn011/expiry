@@ -139,7 +139,7 @@ export function FoodForm({
 
   initial: Draft
 
-  capturedImage?: string
+  capturedImage?: string | string[]
 
   locations: string[]
 
@@ -150,6 +150,13 @@ export function FoodForm({
   onCancel: (dirty: boolean) => void
 }) {
   const [d, setD] = useState<Draft>(initial)
+  const capturedImages = Array.isArray(capturedImage)
+    ? capturedImage
+    : capturedImage
+      ? [capturedImage]
+      : []
+  const [selectedImgIdx, setSelectedImgIdx] = useState(0)
+  const currentImg = capturedImages[selectedImgIdx] || capturedImages[0]
 
   const [errors, setErrors] = useState<Errors>({})
 
@@ -215,12 +222,31 @@ export function FoodForm({
 
       {mode === "ocr" && (
         <Card className="flex items-start gap-4 border-brand-primary/30 bg-brand-tertiary/60">
-          {capturedImage ? (
-            <img
-              src={capturedImage}
-              alt="Ảnh nhãn đã chụp"
-              className="size-20 shrink-0 rounded-corner-md object-cover border border-border-primary/50 shadow-xs"
-            />
+          {currentImg ? (
+            <div className="flex flex-col gap-1.5 shrink-0 items-center">
+              <img
+                src={currentImg}
+                alt="Ảnh nhãn đã chụp"
+                className="size-20 shrink-0 rounded-corner-md object-cover border border-border-primary/50 shadow-xs"
+              />
+              {capturedImages.length > 1 && (
+                <div className="flex items-center gap-1 justify-center pt-0.5">
+                  {capturedImages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedImgIdx(idx)}
+                      className={`h-1.5 rounded-full transition-all ${
+                        idx === selectedImgIdx
+                          ? "bg-brand-primary w-3.5"
+                          : "bg-border-secondary hover:bg-text-secondary w-1.5"
+                      }`}
+                      aria-label={`Xem ảnh ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="flex size-12 shrink-0 items-center justify-center rounded-corner-md bg-brand-primary text-white">
               <ScanText size={24} aria-hidden="true" />

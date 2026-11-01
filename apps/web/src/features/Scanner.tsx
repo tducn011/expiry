@@ -51,11 +51,16 @@ export function Scanner({
 
   onManual: () => void
 
-  onReview: (img: string, draft?: Draft) => void
+  onReview: (img: string | string[], draft?: Draft) => void
 }) {
   const [state, setState] = useState<ScanState>("idle")
 
   const [image, setImage] = useState<string>()
+  const [images, setImages] = useState<string[]>([])
+  const [batchProgress, setBatchProgress] = useState<{
+    current: number
+    total: number
+  } | null>(null)
 
   const [detectedDraft, setDetectedDraft] = useState<Draft | undefined>(
     undefined,
@@ -291,7 +296,7 @@ export function Scanner({
             type: "image/jpeg",
           })
 
-          recognize(dataUrl, f)
+          recognizeBatch([f])
         } else {
           recognize(dataUrl)
         }
@@ -303,18 +308,123 @@ export function Scanner({
     )
   }
 
-  function onFile(f?: File) {
-    if (!f) return
+  async function recognizeBatch(files: File[]) {
+    if (!files || files.length === 0) return
+    setState("processing")
+    setDetectedDraft(undefined)
+    setBatchProgress({ current: 1, total: files.length })
 
-    const r = new FileReader()
+    let finalExpDate = ""
+    let finalMfgDate = ""
+    let finalName = ""
+    let finalCategory: Category = "other"
+    const loadedImages: string[] = []
 
-    r.onload = () => {
-      stop()
+    for (let i = 0; i < files.length; i++) {
+      setBatchProgress({ current: i + 1, total: files.length })
+      const file = files[i]
+      const dataUrl = await new Promise<string>((resolve) => {
+        const r = new FileReader()
+        r.onload = () => resolve(String(r.result))
+        r.readAsDataURL(file)
+      })
+      loadedImages.push(dataUrl)
 
-      recognize(String(r.result), f)
+      let detectedBarcode: string | undefined
+      let barcodeProductName: string | undefined
+      let barcodeExpDate = ""
+      let barcodeMfgDate = ""
+
+      try {
+        const htmlImg = new Image()
+        htmlImg.src = dataUrl
+        await new Promise((resolve) => {
+          if (htmlImg.complete) resolve(true)
+          else htmlImg.onload = () => resolve(true)
+        })
+
+        const barcodeRes = await decodeBarcodeFromImage(htmlImg)
+        if (barcodeRes && barcodeRes.text) {
+          detectedBarcode = barcodeRes.text
+          const gs1 = parseGs1Barcode(detectedBarcode)
+          if (gs1?.expiryDate) barcodeExpDate = gs1.expiryDate
+          if (gs1?.manufacturedDate) barcodeMfgDate = gs1.manufacturedDate
+
+          const prod = await lookupBarcode(detectedBarcode)
+          if (prod.found && prod.product?.name) {
+            barcodeProductName = prod.product.name
+          } else {
+            barcodeProductName = `Mã vạch ${detectedBarcode}`
+          }
+        }
+      } catch {}
+
+      if (!finalExpDate && barcodeExpDate) finalExpDate = barcodeExpDate
+      if (!finalMfgDate && barcodeMfgDate) finalMfgDate = barcodeMfgDate
+      if (!finalName && barcodeProductName) finalName = barcodeProductName
+
+      try {
+        const scanResult = await api.scan(file, detectedBarcode)
+        const cand = scanResult.candidates
+        if (!finalExpDate && cand.expiry_date?.value) {
+          finalExpDate = cand.expiry_date.value
+        }
+        if (!finalMfgDate && cand.manufactured_date?.value) {
+          finalMfgDate = cand.manufactured_date.value
+        }
+        if (!finalName && cand.food_name?.trim()) {
+          finalName = cand.food_name.trim()
+        }
+      } catch (err) {
+        console.warn(`Scan error on image ${i + 1}:`, err)
+      }
     }
 
-    r.readAsDataURL(f)
+    setBatchProgress(null)
+    setImages(loadedImages)
+    setImage(loadedImages[0])
+
+    if (finalName) {
+      const lower = finalName.toLowerCase()
+      if (/thịt|bò|heo|lợn|gà|vịt|cá|tôm|cua|mực|hải sản/.test(lower)) {
+        finalCategory = "meat_seafood"
+      } else if (/rau|cải|cà|xà lách|dưa|nấm|táo|cam|chuối|xoài/.test(lower)) {
+        finalCategory = "fresh_produce"
+      } else if (/sữa|trứng|phô mai|bơ|yogurt|sữa chua/.test(lower)) {
+        finalCategory = "dairy_eggs"
+      } else if (/trà|cà phê|nước|bia|rượu|nước ngọt|nước ép/.test(lower)) {
+        finalCategory = "beverage"
+      } else if (/gạo|mì|miến|đường|muối|mắm|tiêu|hạt/.test(lower)) {
+        finalCategory = "dry_pantry"
+      }
+    }
+
+    const mergedDraft: Draft = {
+      name: finalName,
+      quantity: "1",
+      unit: "cái",
+      category: finalCategory,
+      mfgDate: finalMfgDate,
+      expDate: finalExpDate,
+      location: "",
+    }
+
+    setDetectedDraft(mergedDraft)
+
+    if (finalExpDate || finalName) {
+      onReview(
+        loadedImages.length > 1 ? loadedImages : loadedImages[0],
+        mergedDraft,
+      )
+    } else {
+      setState("unrecognized")
+    }
+  }
+
+  function onFiles(fileList?: FileList | null) {
+    if (!fileList || fileList.length === 0) return
+    stop()
+    recognizeBatch(Array.from(fileList))
   }
 
   const leave = (fn: () => void) => () => {
@@ -410,7 +520,11 @@ export function Scanner({
                 className="animate-spin text-brand-secondary"
                 aria-hidden="true"
               />
-              <p className="text-sm font-medium">Đang đọc nhãn…</p>
+              <p className="text-sm font-medium">
+                {batchProgress && batchProgress.total > 1
+                  ? `Đang đọc ảnh ${batchProgress.current}/${batchProgress.total}…`
+                  : "Đang đọc nhãn…"}
+              </p>
             </>
           )}
           {state === "unrecognized" && (
@@ -490,12 +604,17 @@ export function Scanner({
             Tắt camera
           </Button>
         )}
-        {state === "unrecognized" && image && (
+        {state === "unrecognized" && (image || images.length > 0) && (
           <>
             <Button
               variant="primary"
               iconStart={<ScanText size={18} />}
-              onClick={() => onReview(image, detectedDraft)}
+              onClick={() =>
+                onReview(
+                  images.length > 1 ? images : image || "",
+                  detectedDraft,
+                )
+              }
             >
               Kiểm tra thông tin
             </Button>
@@ -514,18 +633,21 @@ export function Scanner({
             iconStart={<ImageUp size={18} />}
             onClick={() => fileRef.current?.click()}
           >
-            {image ? "Chọn ảnh khác" : "Chọn ảnh từ máy"}
+            {image || images.length > 0
+              ? "Chọn ảnh khác"
+              : "Chọn 1 hoặc nhiều ảnh (Mã vạch + HSD)"}
           </Button>
         )}
         <input
           ref={fileRef}
           type="file"
           accept="image/*"
+          multiple
           className="sr-only"
           tabIndex={-1}
           aria-hidden="true"
           onChange={(e) => {
-            onFile(e.target.files?.[0])
+            onFiles(e.target.files)
 
             e.target.value = ""
           }}
