@@ -10,6 +10,7 @@ import {
   decodeBarcodeFromImage,
   lookupBarcode,
   parseGs1Barcode,
+  extractBarcodeFromText,
 } from "../lib/barcode"
 
 import Button from "../components/ui/Button"
@@ -194,11 +195,27 @@ export function Scanner({
 
       const cand = scanResult.candidates
 
+      if (!detectedBarcode && (cand.barcode || extractBarcodeFromText(scanResult.raw_text)?.code)) {
+        detectedBarcode = cand.barcode || extractBarcodeFromText(scanResult.raw_text)?.code
+        if (detectedBarcode) {
+          const gs1 = parseGs1Barcode(detectedBarcode)
+          if (gs1?.expiryDate && !barcodeExpDate) barcodeExpDate = gs1.expiryDate
+          if (gs1?.manufacturedDate && !barcodeMfgDate) barcodeMfgDate = gs1.manufacturedDate
+
+          const prod = await lookupBarcode(detectedBarcode)
+          if (prod.found && prod.product?.name) {
+            barcodeProductName = prod.product.name
+          } else if (!barcodeProductName) {
+            barcodeProductName = `Mã vạch ${detectedBarcode}`
+          }
+        }
+      }
+
       const expDate = cand.expiry_date?.value || barcodeExpDate || ""
 
       const mfgDate = cand.manufactured_date?.value || barcodeMfgDate || ""
 
-      const name = (cand.food_name?.trim() || barcodeProductName || "").trim()
+      const name = (barcodeProductName || cand.food_name?.trim() || (detectedBarcode ? `Mã vạch ${detectedBarcode}` : "")).trim()
 
       let category: Category | "" = ""
 
@@ -234,11 +251,17 @@ export function Scanner({
         expDate,
 
         location: "",
+
+        barcode: detectedBarcode,
       }
 
       setDetectedDraft(draft)
 
-      onReview(img, draft)
+      if (name || expDate || detectedBarcode) {
+        onReview(img, draft)
+      } else {
+        setState("unrecognized")
+      }
     } catch {
       if (barcodeProductName || detectedBarcode) {
         const fallbackDraft: Draft = {
@@ -257,6 +280,8 @@ export function Scanner({
           expDate: barcodeExpDate,
 
           location: "",
+
+          barcode: detectedBarcode,
         }
 
         setDetectedDraft(fallbackDraft)
@@ -317,6 +342,7 @@ export function Scanner({
     let finalExpDate = ""
     let finalMfgDate = ""
     let finalName = ""
+    let finalBarcode: string | undefined = undefined
     let finalCategory: Category = "other"
     const loadedImages: string[] = []
 
@@ -359,13 +385,25 @@ export function Scanner({
         }
       } catch {}
 
-      if (!finalExpDate && barcodeExpDate) finalExpDate = barcodeExpDate
-      if (!finalMfgDate && barcodeMfgDate) finalMfgDate = barcodeMfgDate
-      if (!finalName && barcodeProductName) finalName = barcodeProductName
-
       try {
         const scanResult = await api.scan(file, detectedBarcode)
         const cand = scanResult.candidates
+        if (!detectedBarcode && (cand.barcode || extractBarcodeFromText(scanResult.raw_text)?.code)) {
+          detectedBarcode = cand.barcode || extractBarcodeFromText(scanResult.raw_text)?.code
+          if (detectedBarcode) {
+            const gs1 = parseGs1Barcode(detectedBarcode)
+            if (gs1?.expiryDate && !barcodeExpDate) barcodeExpDate = gs1.expiryDate
+            if (gs1?.manufacturedDate && !barcodeMfgDate) barcodeMfgDate = gs1.manufacturedDate
+
+            const prod = await lookupBarcode(detectedBarcode)
+            if (prod.found && prod.product?.name) {
+              barcodeProductName = prod.product.name
+            } else if (!barcodeProductName) {
+              barcodeProductName = `Mã vạch ${detectedBarcode}`
+            }
+          }
+        }
+
         if (!finalExpDate && cand.expiry_date?.value) {
           finalExpDate = cand.expiry_date.value
         }
@@ -378,6 +416,11 @@ export function Scanner({
       } catch (err) {
         console.warn(`Scan error on image ${i + 1}:`, err)
       }
+
+      if (!finalBarcode && detectedBarcode) finalBarcode = detectedBarcode
+      if (!finalExpDate && barcodeExpDate) finalExpDate = barcodeExpDate
+      if (!finalMfgDate && barcodeMfgDate) finalMfgDate = barcodeMfgDate
+      if (!finalName && barcodeProductName) finalName = barcodeProductName
     }
 
     setBatchProgress(null)
@@ -399,6 +442,10 @@ export function Scanner({
       }
     }
 
+    if (!finalName && finalBarcode) {
+      finalName = `Mã vạch ${finalBarcode}`
+    }
+
     const mergedDraft: Draft = {
       name: finalName,
       quantity: "1",
@@ -407,11 +454,12 @@ export function Scanner({
       mfgDate: finalMfgDate,
       expDate: finalExpDate,
       location: "",
+      barcode: finalBarcode,
     }
 
     setDetectedDraft(mergedDraft)
 
-    if (finalExpDate || finalName) {
+    if (finalExpDate || finalName || finalBarcode) {
       onReview(
         loadedImages.length > 1 ? loadedImages : loadedImages[0],
         mergedDraft,

@@ -36,6 +36,8 @@ export interface Draft {
   expDate: string
 
   location: string
+
+  barcode?: string
 }
 
 export const emptyDraft = (): Draft => ({

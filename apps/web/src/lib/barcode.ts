@@ -483,6 +483,64 @@ export function createConfiguredReader(): BrowserMultiFormatReader {
   return new BrowserMultiFormatReader(hints)
 }
 
+export function isValidEan13(code: string): boolean {
+  const clean = code.replace(/\D/g, "")
+  if (clean.length !== 13) return false
+  const digits = clean.split("").map(Number)
+  let sum = 0
+  for (let i = 0; i < 12; i++) {
+    sum += i % 2 === 0 ? digits[i] : digits[i] * 3
+  }
+  const checkDigit = (10 - (sum % 10)) % 10
+  return checkDigit === digits[12]
+}
+
+export function isValidUpcA(code: string): boolean {
+  const clean = code.replace(/\D/g, "")
+  if (clean.length !== 12) return false
+  const digits = clean.split("").map(Number)
+  let sum = 0
+  for (let i = 0; i < 11; i++) {
+    sum += i % 2 === 0 ? digits[i] * 3 : digits[i]
+  }
+  const checkDigit = (10 - (sum % 10)) % 10
+  return checkDigit === digits[11]
+}
+
+export function isValidEan8(code: string): boolean {
+  const clean = code.replace(/\D/g, "")
+  if (clean.length !== 8) return false
+  const digits = clean.split("").map(Number)
+  let sum = 0
+  for (let i = 0; i < 7; i++) {
+    sum += i % 2 === 0 ? digits[i] * 3 : digits[i]
+  }
+  const checkDigit = (10 - (sum % 10)) % 10
+  return checkDigit === digits[7]
+}
+
+export function extractBarcodeFromText(
+  text: string,
+): { code: string; format: string } | null {
+  if (!text) return null
+  const matches = text.match(/(?:\d[\s\-._]*){8,16}/g)
+  if (!matches) return null
+
+  for (const match of matches) {
+    const clean = match.replace(/\D/g, "")
+    if (clean.length === 13 && isValidEan13(clean)) {
+      return { code: clean, format: "EAN_13" }
+    }
+    if (clean.length === 12 && isValidUpcA(clean)) {
+      return { code: clean, format: "UPC_A" }
+    }
+    if (clean.length === 8 && isValidEan8(clean)) {
+      return { code: clean, format: "EAN_8" }
+    }
+  }
+  return null
+}
+
 let sharedReaderInstance: BrowserMultiFormatReader | null = null
 
 function getSharedReader(): BrowserMultiFormatReader {
@@ -696,7 +754,40 @@ export async function decodeBarcodeFromImage(
 
   if (p5) return p5
 
-  // Pass 6: Contrast stretching / Grayscale on scaled normal image
+  // Pass 6: Bottom crop (where barcodes on cans and bottles are located, bottom 45%)
+  const botW = targetW
+  const botH = Math.round(targetH * 0.45)
+  const botY = Math.round(targetH * 0.55)
+
+  canvas.width = botW
+  canvas.height = botH
+  ctx.drawImage(image, 0, botY, botW, botH, 0, 0, botW, botH)
+  const pBot = tryDecode(canvas)
+  if (pBot) return pBot
+
+  // Pass 7: Bottom crop rotated 90°
+  canvas.width = botH
+  canvas.height = botW
+  ctx.save()
+  ctx.translate(botH, 0)
+  ctx.rotate(Math.PI / 2)
+  ctx.drawImage(image, 0, botY, botW, botH, 0, 0, botW, botH)
+  ctx.restore()
+  const pBot90 = tryDecode(canvas)
+  if (pBot90) return pBot90
+
+  // Pass 8: Bottom crop rotated 270°
+  canvas.width = botH
+  canvas.height = botW
+  ctx.save()
+  ctx.translate(0, botW)
+  ctx.rotate(-Math.PI / 2)
+  ctx.drawImage(image, 0, botY, botW, botH, 0, 0, botW, botH)
+  ctx.restore()
+  const pBot270 = tryDecode(canvas)
+  if (pBot270) return pBot270
+
+  // Pass 9: Contrast stretching / Grayscale on scaled normal image
 
   canvas.width = targetW
 

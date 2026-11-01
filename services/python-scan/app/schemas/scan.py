@@ -32,6 +32,7 @@ class ManufacturedCandidate(BaseModel):
 
 class Candidates(BaseModel):
     food_name: str | None = None
+    barcode: str | None = None
     expiry_date: ExpiryCandidate = Field(default_factory=ExpiryCandidate)
     manufactured_date: ManufacturedCandidate = Field(default_factory=ManufacturedCandidate)
 

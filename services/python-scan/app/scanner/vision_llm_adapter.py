@@ -27,11 +27,13 @@ Analyze this product label image to extract:
 3. Manufacturing Date ("manufactured_date").
    - Keywords: "NSX", "MFG", "MFD", "Ngày sản xuất" mean manufacturing date.
    - Output manufactured_date formatted as an ISO date string "YYYY-MM-DD".
-4. Transcribe all text seen in the image into "raw_text".
+4. Barcode number printed under barcode or on package ("barcode"). E.g. 13-digit EAN-13, 12-digit UPC, etc.
+5. Transcribe all text seen in the image into "raw_text".
 
 Return STRICT JSON format conforming to this exact structure:
 {
   "food_name": string or null,
+  "barcode": string or null,
   "expiry_date": {
     "value": "YYYY-MM-DD" or null,
     "date_certainty": "exact" | "inferred" | null,
@@ -214,8 +216,11 @@ def extract_vision_llm_candidates(image_bytes: bytes, gemini_api_key: Optional[s
             else:
                 mfg_obj = {"value": None, "source_text": ""}
 
+            barcode_raw = parsed.get("barcode")
+            barcode_clean = str(barcode_raw).strip() if barcode_raw else None
             candidates = {
                 "food_name": parsed.get("food_name"),
+                "barcode": barcode_clean,
                 "expiry_date": expiry_obj,
                 "manufactured_date": mfg_obj
             }
