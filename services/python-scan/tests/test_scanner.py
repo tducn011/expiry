@@ -55,6 +55,8 @@ class TestScannerLogic(unittest.TestCase):
             ("HSD 15 Thg10 2026", "2026-10-15", "use_by"),
             ("BBE 20 Tháng 5 2025", "2025-05-20", "best_before"),
             ("EXP 01 Thg1 2027", "2027-01-01", "use_by"),
+            ("NSX: Tháng 1/2026", "2026-01-01", "manufactured"),
+            ("HSD: 12/2027", "2027-12-01", "use_by"),
         )
 
         for text, expected_date, expected_label in cases:
@@ -63,6 +65,13 @@ class TestScannerLogic(unittest.TestCase):
                 self.assertEqual(len(parsed), 1)
                 self.assertEqual(parsed[0]["parsed_date"], expected_date)
                 self.assertEqual(parsed[0]["date_label_type"], expected_label)
+
+    def test_relative_shelf_life_calculation(self):
+        text = "NSX: Tháng 1/2026\nHSD: 3 năm kể từ ngày sản xuất"
+        candidates, warnings = normalized_candidates(text)
+        self.assertEqual(candidates["manufactured_date"]["value"], "2026-01-01")
+        self.assertEqual(candidates["expiry_date"]["value"], "2029-01-01")
+        self.assertEqual(candidates["expiry_date"]["date_certainty"], "inferred")
 
     def test_ambiguous_expiry_is_not_selected_automatically(self):
         candidates, warnings = normalized_candidates("EXP 05/06/2026")

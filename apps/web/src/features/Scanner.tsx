@@ -6,7 +6,11 @@ import type { Category } from "../store/appStore"
 
 import type { Draft } from "./FoodForm"
 
-import { decodeBarcodeFromImage, lookupBarcode } from "../lib/barcode"
+import {
+  decodeBarcodeFromImage,
+  lookupBarcode,
+  parseGs1Barcode,
+} from "../lib/barcode"
 
 import Button from "../components/ui/Button"
 
@@ -128,6 +132,10 @@ export function Scanner({
 
     let barcodeProductName: string | undefined
 
+    let barcodeExpDate = ""
+
+    let barcodeMfgDate = ""
+
     try {
       const htmlImg = new Image()
 
@@ -143,10 +151,23 @@ export function Scanner({
       if (barcodeRes && barcodeRes.text) {
         detectedBarcode = barcodeRes.text
 
+        // Check if barcode is GS1 encoding expiry/manufactured date directly
+        const gs1 = parseGs1Barcode(detectedBarcode)
+
+        if (gs1?.expiryDate) {
+          barcodeExpDate = gs1.expiryDate
+        }
+
+        if (gs1?.manufacturedDate) {
+          barcodeMfgDate = gs1.manufacturedDate
+        }
+
         const prod = await lookupBarcode(detectedBarcode)
 
         if (prod.found && prod.product?.name) {
           barcodeProductName = prod.product.name
+        } else {
+          barcodeProductName = `Mã vạch ${detectedBarcode}`
         }
       }
     } catch {}
@@ -168,9 +189,9 @@ export function Scanner({
 
       const cand = scanResult.candidates
 
-      const expDate = cand.expiry_date?.value || ""
+      const expDate = cand.expiry_date?.value || barcodeExpDate || ""
 
-      const mfgDate = cand.manufactured_date?.value || ""
+      const mfgDate = cand.manufactured_date?.value || barcodeMfgDate || ""
 
       const name = (cand.food_name?.trim() || barcodeProductName || "").trim()
 
@@ -226,9 +247,9 @@ export function Scanner({
 
           category: "other",
 
-          mfgDate: "",
+          mfgDate: barcodeMfgDate,
 
-          expDate: "",
+          expDate: barcodeExpDate,
 
           location: "",
         }

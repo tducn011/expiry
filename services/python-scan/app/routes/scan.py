@@ -31,8 +31,21 @@ def extract_ocr_text(image_bytes: bytes) -> str:
     if not tesseract_available():
         raise ScanError(503, "OCR_ENGINE_UNAVAILABLE", "The OCR engine is unavailable.")
     try:
+        lang = os.environ.get("OCR_LANGUAGES", "eng+vie")
         with Image.open(io.BytesIO(image_bytes)) as image:
-            return pytesseract.image_to_string(image, lang=os.environ.get("OCR_LANGUAGES", "eng+vie"), timeout=OCR_TIMEOUT_SECONDS).strip()
+            text = pytesseract.image_to_string(image, lang=lang, timeout=OCR_TIMEOUT_SECONDS).strip()
+            if text:
+                return text
+            # Sparse text mode (catches stamps, sparse labels, slanted text)
+            try:
+                sparse_text = pytesseract.image_to_string(
+                    image, lang=lang, config="--psm 11", timeout=OCR_TIMEOUT_SECONDS
+                ).strip()
+                if sparse_text:
+                    return sparse_text
+            except Exception:
+                pass
+            return ""
     except pytesseract.TesseractNotFoundError:
         raise ScanError(503, "OCR_ENGINE_UNAVAILABLE", "The OCR engine is unavailable.") from None
     except RuntimeError:

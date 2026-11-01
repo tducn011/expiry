@@ -158,6 +158,87 @@ export function getGs1Info(barcode: string): Gs1Info | null {
   return null
 }
 
+export type Gs1ParsedData = {
+  gtin?: string
+
+  expiryDate?: string
+
+  manufacturedDate?: string
+
+  batchLot?: string
+}
+
+/** Parses GS1 Application Identifiers from barcodes (e.g. GS1-128 or GS1 DataMatrix) */
+export function parseGs1Barcode(rawText: string): Gs1ParsedData | null {
+  if (!rawText) return null
+
+  const clean = rawText.trim()
+
+  let expiryDate: string | undefined
+
+  let manufacturedDate: string | undefined
+
+  let gtin: string | undefined
+
+  let batchLot: string | undefined
+
+  // Match AI (17) YYMMDD (Expiration Date)
+  const ai17Match =
+    clean.match(/\(17\)(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/) ||
+    clean.match(/(?:^01\d{14}|\b)17(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/)
+
+  if (ai17Match) {
+    const [, yy, mm, dd] = ai17Match
+
+    const year = 2000 + parseInt(yy, 10)
+
+    let day = parseInt(dd, 10)
+
+    if (day === 0) {
+      const lastDay = new Date(year, parseInt(mm, 10), 0).getDate()
+
+      day = lastDay
+    }
+
+    expiryDate = `${year}-${mm}-${String(day).padStart(2, "0")}`
+  }
+
+  // Match AI (11) YYMMDD (Production Date)
+  const ai11Match =
+    clean.match(/\(11\)(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/) ||
+    clean.match(/(?:^01\d{14}|\b)11(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/)
+
+  if (ai11Match) {
+    const [, yy, mm, dd] = ai11Match
+
+    const year = 2000 + parseInt(yy, 10)
+
+    const day = parseInt(dd, 10) || 1
+
+    manufacturedDate = `${year}-${mm}-${String(day).padStart(2, "0")}`
+  }
+
+  // Match AI (01) GTIN-14
+  const ai01Match = clean.match(/(?:\(01\)|(?<=\b)01)(\d{14})/)
+
+  if (ai01Match) {
+    gtin = ai01Match[1]
+  }
+
+  // Match AI (10) Batch/Lot
+  const ai10Match = clean.match(/(?:\(10\)|(?<=\b)10)([A-Za-z0-9\-]+)/)
+
+  if (ai10Match) {
+    batchLot = ai10Match[1]
+  }
+
+  if (expiryDate || manufacturedDate || gtin || batchLot) {
+    return { gtin, expiryDate, manufacturedDate, batchLot }
+  }
+
+  return null
+}
+
 function inferStorage(categories: string): string {
   const lower = categories.toLowerCase()
 

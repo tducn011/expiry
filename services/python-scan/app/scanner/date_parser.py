@@ -252,6 +252,56 @@ def parse_date_candidates(
                 except ValueError:
                     continue
 
+        # 4. Vietnamese Month-Year pattern (e.g. "Tháng 1/2026", "Thg 1/2026", "ng 1/2026")
+        vn_my_pattern = r"(?<![\d/.-])(?:tháng|thg|\bng)\s*([1-9]|0[1-9]|1[0-2])\s*[-/.]\s*(20\d{2})\b"
+        for match in re.finditer(vn_my_pattern, cleaned_line, re.IGNORECASE):
+            label_type = label_before_date(cleaned_line, match.start())
+            mon_str, year_str = match.groups()
+            month_num = int(mon_str)
+            year_num = int(year_str)
+            day_num = 1
+            try:
+                iso_date = f"{year_num:04d}-{month_num:02d}-{day_num:02d}"
+                datetime.strptime(iso_date, "%Y-%m-%d")
+                identity = (iso_date, label_type, match.group(0))
+                if identity not in seen_dates:
+                    seen_dates.add(identity)
+                    candidates.append({
+                        "raw_text": match.group(0),
+                        "parsed_date": iso_date,
+                        "certainty": "inferred",
+                        "confidence": 0.90 if label_type != "unspecified" else 0.75,
+                        "date_label_type": label_type,
+                        "source": "printed_label",
+                        "alternatives": [],
+                        "ambiguous": False
+                    })
+            except ValueError:
+                continue
+
+        # 5. Labelled MM/YYYY pattern (e.g., "HSD: 12/2026" or "EXP: 01/2027")
+        my_pattern = r"(?<![\d/.-])(0[1-9]|1[0-2])[-/.](20\d{2})\b"
+        for match in re.finditer(my_pattern, cleaned_line, re.IGNORECASE):
+            label_type = label_before_date(cleaned_line, match.start())
+            if label_type != "unspecified":
+                mon_str, year_str = match.groups()
+                month_num = int(mon_str)
+                year_num = int(year_str)
+                iso_date = f"{year_num:04d}-{month_num:02d}-01"
+                identity = (iso_date, label_type, match.group(0))
+                if identity not in seen_dates:
+                    seen_dates.add(identity)
+                    candidates.append({
+                        "raw_text": match.group(0),
+                        "parsed_date": iso_date,
+                        "certainty": "inferred",
+                        "confidence": 0.85,
+                        "date_label_type": label_type,
+                        "source": "printed_label",
+                        "alternatives": [],
+                        "ambiguous": False
+                    })
+
     return candidates
 
 
@@ -291,6 +341,43 @@ def normalized_candidates(
         }
         if len(dates) > 1:
             warnings.append("AMBIGUOUS_MANUFACTURED_DATE: review the original label.")
+
+    # Calculate relative expiry if text specifies relative shelf life (e.g. "HSD: 3 năm kể từ ngày sản xuất")
+    rel_match = re.search(r"(\d{1,2})\s*(năm|tháng|ngày)\s*kể\s*từ\s*(?:ngày\s*sản\s*xuất|nsx)", raw_text, re.IGNORECASE)
+    if rel_match and result["manufactured_date"]["value"] and not result["expiry_date"]["value"]:
+        mfg_str = result["manufactured_date"]["value"]
+        val = int(rel_match.group(1))
+        unit = rel_match.group(2).lower()
+        try:
+            mfg_dt = datetime.strptime(mfg_str, "%Y-%m-%d")
+            if unit == "năm":
+                target_year = mfg_dt.year + val
+                target_day = min(mfg_dt.day, 28) if mfg_dt.month == 2 else mfg_dt.day
+                exp_dt = mfg_dt.replace(year=target_year, day=target_day)
+            elif unit == "tháng":
+                total_months = mfg_dt.month + val
+                target_year = mfg_dt.year + (total_months - 1) // 12
+                target_month = (total_months - 1) % 12 + 1
+                target_day = min(mfg_dt.day, 28) if target_month == 2 else mfg_dt.day
+                exp_dt = mfg_dt.replace(year=target_year, month=target_month, day=target_day)
+            else:
+                from datetime import timedelta
+                exp_dt = mfg_dt + timedelta(days=val)
+
+            exp_iso = exp_dt.strftime("%Y-%m-%d")
+            result["expiry_date"] = {
+                "value": exp_iso,
+                "date_certainty": "inferred",
+                "date_label_type": "use_by",
+                "source_text": rel_match.group(0),
+                "alternatives": [],
+                "ambiguous": False,
+                "requires_confirmation": True
+            }
+            warnings.append(f"RELATIVE_EXPIRY_RESOLVED: Calculated {exp_iso} from manufacturing date + {val} {unit}.")
+        except Exception:
+            pass
+
     if any(candidate["date_label_type"] == "unspecified" for candidate in parsed):
         warnings.append("UNLABELLED_DATE: no expiry meaning inferred from an unlabelled date.")
     return result, warnings
