@@ -145,7 +145,9 @@ describe("Storage & Insight Feature Integration", () => {
 
     const storageRoute = {
       name: "storage" as const,
+
       location: "Tủ đông",
+
       category: "meat_seafood",
     }
 
@@ -338,7 +340,9 @@ describe("Storage & Insight Feature Integration", () => {
 
       entries: async () => ({
         items: [],
+
         pagination: { page: 1, limit: 20, total: 0 },
+
         as_of_date: "",
       }),
     }
@@ -360,19 +364,29 @@ describe("Storage & Insight Feature Integration", () => {
 
   it("persists and restores storage space preferences", () => {
     const store = new Map<string, string>()
+
     const mockStorage = {
       getItem: (k: string) => store.get(k) || null,
+
       setItem: (k: string, v: string) => store.set(k, v),
+
       removeItem: (k: string) => store.delete(k),
     }
+
     const testKey = "expiry_storage_preferences"
+
     const testPref = { location: "Ngăn đông", category: "meat_seafood" }
+
     mockStorage.setItem(testKey, JSON.stringify(testPref))
 
     const loaded = JSON.parse(mockStorage.getItem(testKey) || "{}")
+
     expect(loaded.location).toBe("Ngăn đông")
+
     expect(loaded.category).toBe("meat_seafood")
+
     mockStorage.removeItem(testKey)
+
     expect(mockStorage.getItem(testKey)).toBeNull()
   })
 })

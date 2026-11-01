@@ -138,6 +138,7 @@ export default function StorageView({
   const isLive = isLiveProp ?? state.mode === "account"
 
   const storagePrefKey = `expiry_storage_preferences_${state.userId || "demo"}`
+
   const userPrefKey = `expiry_user_preferences_${state.userId || "demo"}`
 
   const [selectedLocation, setSelectedLocation] = useState<string>(
