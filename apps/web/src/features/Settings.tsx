@@ -146,11 +146,30 @@ export function Settings({
       return
     }
 
-    const p = await Notification.requestPermission()
+    try {
+      const p = await Notification.requestPermission()
 
-    setPerm(p)
+      setPerm(p)
 
-    setS({ ...s, push: p === "granted" })
+      setS({ ...s, push: p === "granted" })
+    } catch {
+      setS({ ...s, push: false })
+    }
+  }
+
+  function sendTestNotification() {
+    try {
+      if (pushSupported && Notification.permission === "granted") {
+        new Notification("Expiry - Nhắc nhở mẫu", {
+          body: "Đây là thông báo thử nghiệm trên trình duyệt khi mở ứng dụng.",
+          icon: "/favicon.ico",
+        })
+
+        notify("Đã gửi thông báo thử nghiệm trên trình duyệt")
+      }
+    } catch {
+      notify("Không thể gửi thông báo trên trình duyệt", "warning")
+    }
   }
 
   return (
@@ -170,8 +189,8 @@ export function Settings({
           perm === "denied"
             ? undefined
             : perm === "unsupported"
-              ? "Trình duyệt này không hỗ trợ nhận thông báo đẩy hệ thống."
-              : "Thông báo đẩy hệ thống giúp bạn nhận thông báo kể cả khi đóng ứng dụng."
+              ? "Trình duyệt này không hỗ trợ Web Notification API. Bạn vẫn nhận được thông báo bên trong ứng dụng."
+              : "Thông báo trên trình duyệt chỉ hoạt động khi bạn đang mở tab hoặc trình duyệt đang chạy. Để nhận thông báo trên điện thoại khi đóng ứng dụng, vui lòng sử dụng Webhook tích hợp (Telegram/Discord)."
         }
       >
         <SettingsRow
@@ -190,13 +209,31 @@ export function Settings({
         </div>
         <div className="min-h-14 px-4 py-3">
           <SwitchField
-            label="Thông báo trên thiết bị"
-            description="Cho phép trình duyệt gửi thông báo đẩy"
+            label="Thông báo trên trình duyệt"
+            description={
+              perm === "unsupported"
+                ? "Trình duyệt hiện tại không hỗ trợ Web Notification API"
+                : "Gửi thông báo trên trình duyệt khi ứng dụng đang mở"
+            }
             selected={s.push}
             disabled={perm === "denied" || perm === "unsupported"}
             onChange={togglePush}
           />
         </div>
+        {perm === "granted" && s.push && (
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-border-primary/40 bg-surface-subtle/40">
+            <span className="text-xs text-text-secondary">
+              Kiểm tra quyền thông báo trên trình duyệt:
+            </span>
+            <Button
+              size="small"
+              variant="neutral"
+              onClick={sendTestNotification}
+            >
+              Gửi thông báo thử
+            </Button>
+          </div>
+        )}
         {perm === "denied" && (
           <div
             role="alert"
@@ -205,13 +242,26 @@ export function Settings({
             <BellOff size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
             <div>
               <p className="font-semibold">
-                Thông báo trên thiết bị đang bị chặn trong trình duyệt.
+                Thông báo trên trình duyệt đang bị chặn.
               </p>
               <p>
-                Mở cài đặt trang web này trong trình duyệt của bạn và chọn Cho
-                phép thông báo.
+                Trình duyệt đã từ chối quyền gửi thông báo. Để bật lại, hãy mở
+                cài đặt trang web này trong trình duyệt của bạn (Site Settings /
+                Page info) và chọn Cho phép thông báo.
               </p>
             </div>
+          </div>
+        )}
+        {perm === "unsupported" && (
+          <div
+            role="status"
+            className="flex items-start gap-3 bg-bg-subtle px-4 py-3 text-xs text-text-secondary border-t border-border-primary/40"
+          >
+            <BellOff size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
+            <p>
+              Trình duyệt hiện tại không hỗ trợ Web Notification API. Bạn vẫn
+              nhận được lời nhắc bên trong ứng dụng.
+            </p>
           </div>
         )}
       </SettingsGroup>

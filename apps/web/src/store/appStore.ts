@@ -295,24 +295,21 @@ function reducer(s: State, a: Action): State {
     case "replace":
       return a.state
 
-    case "login":
-      return a.mode === "demo"
-        ? loadDemo()
-        : {
-            ...initial,
-
-            onboarded: s.onboarded,
-
-            mode: "account",
-
-            userName: a.name,
-
-            userId: a.userId,
-
-            foods: [],
-
-            history: [],
-          }
+    case "login": {
+      if (a.mode === "demo") return loadDemo()
+      const userNotifs = loadUserNotifs(a.userId)
+      return {
+        ...initial,
+        onboarded: s.onboarded,
+        mode: "account",
+        userName: a.name,
+        userId: a.userId,
+        foods: [],
+        history: [],
+        readNotifs: userNotifs.readNotifs,
+        snoozed: userNotifs.snoozed,
+      }
+    }
 
     case "logout":
       return loadDemo()
@@ -978,7 +975,56 @@ function readStored(): StoredResult {
   }
 }
 
-function signOutStorage() {
+export const NOTIF_PREFIX = "expiry_notifs_"
+
+export function getNotifKey(userId?: string): string {
+  return `${NOTIF_PREFIX}${userId || "guest"}`
+}
+
+export interface UserNotifData {
+  snoozed: Record<string, string>
+  readNotifs: string[]
+}
+
+export function loadUserNotifs(userId?: string): UserNotifData {
+  try {
+    const raw = localStorage.getItem(getNotifKey(userId))
+    if (!raw) return { snoozed: {}, readNotifs: [] }
+    const parsed = JSON.parse(raw)
+    return {
+      snoozed:
+        typeof parsed.snoozed === "object" && parsed.snoozed !== null
+          ? parsed.snoozed
+          : {},
+      readNotifs: Array.isArray(parsed.readNotifs) ? parsed.readNotifs : [],
+    }
+  } catch {
+    return { snoozed: {}, readNotifs: [] }
+  }
+}
+
+export function saveUserNotifs(
+  userId: string | undefined,
+  data: UserNotifData,
+) {
+  try {
+    localStorage.setItem(getNotifKey(userId), JSON.stringify(data))
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearUserNotifs(userId?: string) {
+  try {
+    if (userId) {
+      localStorage.removeItem(getNotifKey(userId))
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function signOutStorage(userId?: string) {
   try {
     api.logout().catch(() => {
       // Flag pending server logout if network was offline so cookie is revoked on reconnect
@@ -989,6 +1035,10 @@ function signOutStorage() {
         /* ignore */
       }
     })
+
+    if (userId) {
+      clearUserNotifs(userId)
+    }
 
     const legacy = localStorage.getItem(KEY)
 
@@ -1013,12 +1063,12 @@ export function useAppStore() {
 
   const dispatch = useCallback(
     (a: Action) => {
-      if (a.type === "logout") signOutStorage()
+      if (a.type === "logout") signOutStorage(state.userId)
 
       rawDispatch(a)
     },
 
-    [rawDispatch],
+    [rawDispatch, state.userId],
   )
 
   const [problem, setProblem] = useState<StorageProblem>(first.problem)
@@ -1031,6 +1081,11 @@ export function useAppStore() {
 
       if (state.mode === "demo") {
         localStorage.setItem(DEMO_KEY, JSON.stringify(state))
+      } else if (state.mode === "account" && state.userId) {
+        saveUserNotifs(state.userId, {
+          snoozed: state.snoozed,
+          readNotifs: state.readNotifs,
+        })
       }
 
       if (problem === "write") setProblem(null)
@@ -1124,34 +1179,88 @@ export function attention(s: State) {
     .sort((a, b) => (daysLeft(a) ?? 9999) - (daysLeft(b) ?? 9999))
 }
 
+export type NotificationRule = "soon" | "due_today" | "expired" | "review"
+
 export interface Notif {
   id: string
 
   food: Food
 
   status: Status
+
+  rule: NotificationRule
+
+  title: string
+
+  message: string
 }
 
 export function notifications(s: State): Notif[] {
   if (!s.settings.inApp) return []
 
   const t = today()
+  const seenIds = new Set<string>()
+  const notifs: Notif[] = []
 
-  return attention(s)
+  for (const f of attention(s)) {
+    const d = daysLeft(f)
+    let rule: NotificationRule
+    let status: Status = "unknown"
+    let title = ""
+    let message = ""
 
-    .map((f) => {
-      const status = statusOf(f, s.settings.remindDays)
-
-      return {
-        id: `${f.id}:${f.expDate ?? "review"}:${status}`,
-
-        food: f,
-
-        status,
+    if (f.expDate) {
+      if (d !== null && d < 0) {
+        rule = "expired"
+        status = "expired"
+        title = "Đã quá hạn"
+        message = `${f.name} đã quá hạn ${Math.abs(d)} ngày`
+      } else if (d === 0) {
+        rule = "due_today"
+        status = "soon"
+        title = "Hết hạn hôm nay"
+        message = `${f.name} hết hạn sử dụng hôm nay`
+      } else if (d !== null && d <= s.settings.remindDays) {
+        rule = "soon"
+        status = "soon"
+        title = "Sắp hết hạn"
+        message = `${f.name} còn ${d} ngày là hết hạn`
+      } else {
+        continue
       }
-    })
+    } else {
+      rule = "review"
+      status = "unknown"
+      title = "Cần kiểm tra lại"
+      message = `${f.name} chưa rõ hạn sử dụng, đã đến lịch kiểm tra`
+    }
 
-    .filter((n) => !(s.snoozed[n.id] && s.snoozed[n.id] > t))
+    const id = `${f.id}:${f.expDate ?? f.reviewAt ?? "review"}:${rule}`
+    const legacyId = `${f.id}:${f.expDate ?? "review"}:${status}`
+
+    if (seenIds.has(id)) continue
+    seenIds.add(id)
+
+    const isSnoozed =
+      (s.snoozed[id] && s.snoozed[id] > t) ||
+      (s.snoozed[legacyId] && s.snoozed[legacyId] > t) ||
+      (s.snoozed[f.id] && s.snoozed[f.id] > t)
+
+    if (isSnoozed) {
+      continue
+    }
+
+    notifs.push({
+      id,
+      food: f,
+      status,
+      rule,
+      title,
+      message,
+    })
+  }
+
+  return notifs
 }
 
 export function formatDate(d?: string) {
