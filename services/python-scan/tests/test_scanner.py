@@ -137,6 +137,13 @@ class TestScannerLogic(unittest.TestCase):
         self.assertTrue(candidates["expiry_date"]["requires_confirmation"])
         self.assertTrue(any("UNLABELLED_DATE" in warning for warning in warnings))
 
+    def test_labeled_condensed_ddmmyy_dates(self):
+        text = "LÔ SX: 5425\nNSX: 270725\nHD: 270728"
+        candidates, _ = normalized_candidates(text)
+        self.assertEqual(candidates["manufactured_date"]["value"], "2025-07-27")
+        self.assertEqual(candidates["expiry_date"]["value"], "2028-07-27")
+        self.assertEqual(candidates["expiry_date"]["date_label_type"], "use_by")
+
     def test_preprocess_empty_and_invalid_images_raise_scan_error(self):
         for payload in (b"", b"not an image"):
             with self.subTest(payload=payload):

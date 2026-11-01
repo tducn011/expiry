@@ -231,9 +231,9 @@ export function FoodForm({
               Đối chiếu với ảnh nhãn
             </p>
             <p className="text-text-secondary leading-relaxed">
-              Chưa nhận dạng được chữ tự động. Hãy nhìn ảnh và đối chiếu để nhập
-              NSX, HSD. Chưa có gì được lưu cho tới khi bạn bấm &quot;Lưu thực
-              phẩm&quot;.
+              {d.expDate || d.name
+                ? "Đã tự động điền thông tin trích xuất từ nhãn. Vui lòng đối chiếu với ảnh bên cạnh trước khi lưu."
+                : "Chưa nhận dạng được ngày tự động trên góc chụp này (thường do chữ in kim ma trận điểm hoặc góc chụp). Hãy nhìn ảnh bên cạnh để đối chiếu nhập NSX, HSD."}
             </p>
           </div>
         </Card>
