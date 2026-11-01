@@ -307,15 +307,19 @@ function inferUnit(categories: string, productName: string): Unit {
 
 const barcodeMemoryCache = new Map<string, {
   result: ProductLookupResult
+
   timestamp: number
 }>()
+
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 export function getCachedProduct(barcode: string): ProductLookupResult | null {
   const clean = barcode.trim()
+
   if (!clean) return null
 
   const mem = barcodeMemoryCache.get(clean)
+
   if (mem && Date.now() - mem.timestamp < CACHE_TTL_MS) {
     return mem.result
   }
@@ -323,13 +327,17 @@ export function getCachedProduct(barcode: string): ProductLookupResult | null {
   if (typeof window !== "undefined" && window.localStorage) {
     try {
       const stored = window.localStorage.getItem(`expiry_bc_${clean}`)
+
       if (stored) {
         const parsed = JSON.parse(stored) as {
           result: ProductLookupResult
+
           timestamp: number
         }
+
         if (parsed?.result && Date.now() - parsed.timestamp < CACHE_TTL_MS) {
           barcodeMemoryCache.set(clean, parsed)
+
           return parsed.result
         }
       }
@@ -341,12 +349,15 @@ export function getCachedProduct(barcode: string): ProductLookupResult | null {
 
 export function setCachedProduct(
   barcode: string,
+
   result: ProductLookupResult,
 ): void {
   const clean = barcode.trim()
+
   if (!clean) return
 
   const item = { result, timestamp: Date.now() }
+
   barcodeMemoryCache.set(clean, item)
 
   if (typeof window !== "undefined" && window.localStorage && result.found) {
@@ -396,13 +407,17 @@ export async function lookupBarcode(
 
         source: "inventory",
       }
+
       setCachedProduct(trimmed, res)
+
       return res
     }
   }
 
   // 1.5. Layer 1.5: Persistent & in-memory cache (0ms instant return)
+
   const cached = getCachedProduct(trimmed)
+
   if (cached) {
     return cached
   }
@@ -468,7 +483,9 @@ export async function lookupBarcode(
 
             source: "open_food_facts",
           }
+
           setCachedProduct(trimmed, foundResult)
+
           return foundResult
         }
       }
@@ -478,6 +495,7 @@ export async function lookupBarcode(
   }
 
   // 3. Layer 3: Not found -> user manual entry or AI fallback
+
   const notFoundResult: ProductLookupResult = {
     found: false,
 
@@ -485,7 +503,9 @@ export async function lookupBarcode(
 
     source: "none",
   }
+
   setCachedProduct(trimmed, notFoundResult)
+
   return notFoundResult
 }
 
@@ -614,10 +634,13 @@ export function validateBarcode(
   code: string,
 ): {
   valid: boolean
+
   format?: "EAN_13" | "EAN_8" | "UPC_A" | "CUSTOM"
+
   error?: string
 } {
   const clean = code.trim().replace(/\D/g, "")
+
   if (!clean) {
     return { valid: false, error: "Vui lòng nhập mã số vạch (GTIN/EAN)." }
   }
@@ -626,10 +649,12 @@ export function validateBarcode(
     if (!isValidEan13(clean)) {
       return {
         valid: false,
+
         error:
           "Chữ số kiểm tra (check digit) của mã EAN-13 không hợp lệ. Vui lòng kiểm tra lại số in dưới mã vạch.",
       }
     }
+
     return { valid: true, format: "EAN_13" }
   }
 
@@ -637,10 +662,12 @@ export function validateBarcode(
     if (!isValidUpcA(clean)) {
       return {
         valid: false,
+
         error:
           "Chữ số kiểm tra (check digit) của mã UPC-A không hợp lệ. Vui lòng kiểm tra lại số in dưới mã vạch.",
       }
     }
+
     return { valid: true, format: "UPC_A" }
   }
 
@@ -648,10 +675,12 @@ export function validateBarcode(
     if (!isValidEan8(clean)) {
       return {
         valid: false,
+
         error:
           "Chữ số kiểm tra (check digit) của mã EAN-8 không hợp lệ. Vui lòng kiểm tra lại số in dưới mã vạch.",
       }
     }
+
     return { valid: true, format: "EAN_8" }
   }
 
@@ -661,6 +690,7 @@ export function validateBarcode(
 
   return {
     valid: false,
+
     error:
       "Độ dài mã số không hợp lệ (chuẩn EAN-13 có 13 chữ số, EAN-8 có 8 chữ số, UPC có 12 chữ số).",
   }
@@ -782,6 +812,7 @@ export async function decodeBarcodeFromImage(
   if (!origW || !origH) return null
 
   // Target max dimension around 960px for optimal barcode decode speed and line resolution
+
   const maxDim = 960
 
   const scale = Math.min(1, maxDim / Math.max(origW, origH))

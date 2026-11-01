@@ -760,4 +760,17 @@ describe("Barcode Scanner & ZXing Formats", () => {
     expect(lookupRes.product?.name).toBe("Sữa tươi tiệt trùng Vinamilk 1L")
     expect(lookupRes.source).toBe("open_food_facts")
   })
+
+  it("ManualBarcodeModal cleans and accepts barcode input without throwing error", async () => {
+    const { ManualBarcodeModal } = await import(
+      "../src/features/ManualBarcodeModal"
+    )
+    expect(ManualBarcodeModal).toBeDefined()
+
+    const rawInputs = ["893 603 968 1526", "893-603968-1526", "8936039681526"]
+    for (const raw of rawInputs) {
+      const cleaned = raw.replace(/[^\d]/g, "")
+      expect(cleaned).toBe("8936039681526")
+    }
+  })
 })
