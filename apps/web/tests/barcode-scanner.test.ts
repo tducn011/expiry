@@ -155,6 +155,55 @@ describe("Barcode Scanner & ZXing Formats", () => {
     expect(mockFetch).toHaveBeenCalledTimes(2)
   })
 
+  it("ApiClient falls back to Gemini Vision when backend scan fails with 422 NO_LEGIBLE_TEXT", async () => {
+    const { ApiClient } = await import("../src/api/client")
+    const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/scans")) {
+        return new Response(JSON.stringify({ code: "AUTH_REQUIRED" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        })
+      }
+      if (url.includes("/scan")) {
+        return new Response(JSON.stringify({ code: "NO_LEGIBLE_TEXT" }), { status: 422 })
+      }
+      if (url.includes("generativelanguage.googleapis.com")) {
+        return new Response(
+          JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        food_name: "Yogurt Can",
+                        expiry_date: "2027-10-07",
+                        manufactured_date: "2026-10-07",
+                        raw_text: "NSX:071026 HSD:071027",
+                      }),
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        )
+      }
+      return new Response("Not found", { status: 404 })
+    })
+
+    const client = new ApiClient(mockFetch as unknown as typeof fetch)
+    const result = await client.scan(
+      new Blob(["mock-can-image"], { type: "image/png" }),
+    )
+
+    expect(result.candidates.expiry_date.value).toBe("2027-10-07")
+    expect(result.candidates.manufactured_date.value).toBe("2026-10-07")
+    expect(result.candidates.food_name).toBe("Yogurt Can")
+  })
+
   it("parses GS1 Application Identifier (17) expiration date and (11) production date from barcode", async () => {
     const { parseGs1Barcode } = await import("../src/lib/barcode")
 
