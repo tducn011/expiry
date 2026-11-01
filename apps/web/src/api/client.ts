@@ -526,6 +526,11 @@ const fromMutationResult = (dto: MutationResultDTO): MutationResult => {
   }
 }
 
+export type HistoryOptions = {
+  page?: number
+  limit?: number
+}
+
 export class ApiClient {
   csrf = ""
 
@@ -917,15 +922,20 @@ export class ApiClient {
 
   async allEntries(
     query: Record<string, string | number> = {},
+
     trash = false,
   ): Promise<FoodEntry[]> {
     let page = 1
+
     const limit = 100
+
     const allItems: FoodEntry[] = []
 
     while (true) {
       const pageResult = await this.entries({ ...query, page, limit }, trash)
+
       allItems.push(...pageResult.items)
+
       if (
         !pageResult.pagination ||
         allItems.length >= pageResult.pagination.total ||
@@ -933,6 +943,7 @@ export class ApiClient {
       ) {
         break
       }
+
       page++
     }
 
@@ -941,11 +952,14 @@ export class ApiClient {
 
   async history(
     id: string,
-    options?: { page?: number; limit?: number },
+
+    options?: HistoryOptions,
   ): Promise<QuantityMovement[]> {
     if (options?.page !== undefined) {
       const page = options.page
+
       const limit = options.limit ?? 50
+
       const next = await this.request<Page<MovementResponseDTO>>(
         `/food-entries/${encodeURIComponent(id)}/movements?page=${page}&limit=${limit}`,
       )
@@ -956,7 +970,9 @@ export class ApiClient {
     }
 
     let page = 1
+
     const limit = options?.limit ?? 50
+
     const allItems: QuantityMovement[] = []
 
     while (true) {

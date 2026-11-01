@@ -280,7 +280,9 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     const hydrateInventory = async () => {
       let pageNum = 1
+
       const limit = 100
+
       let hasMore = true
 
       while (hasMore) {
@@ -313,7 +315,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
               unit: (item.unit === "piece" ? "cái" : item.unit) as Unit,
 
-              category: (item.category as Category) || undefined,
+              category: item.category as Category || undefined,
 
               location: item.storage_location || undefined,
 

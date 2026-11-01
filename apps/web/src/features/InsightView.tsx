@@ -11,7 +11,12 @@ import type {
   Category,
 } from "../store/appStore"
 
-import { CATEGORIES, CATEGORY_LABELS, formatDate, today } from "../store/appStore"
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  formatDate,
+  today,
+} from "../store/appStore"
 
 import type { QuantityMovement } from "../domain/types"
 
@@ -85,12 +90,17 @@ export function fromQuantityMovement(
   }
 }
 
+export type LiveMovementsOptions = {
+  maxItems?: number
+  concurrency?: number
+}
+
 export async function fetchLiveMovements(
   client: ApiClient = api,
 
   foods: Food[] = [],
 
-  options: { maxItems?: number; concurrency?: number } = {},
+  options: LiveMovementsOptions = {},
 ): Promise<HistoryEvent[]> {
   let targetFoods = foods
 
@@ -108,7 +118,7 @@ export async function fetchLiveMovements(
 
           unit: (item.unit === "piece" ? "cái" : item.unit) as any,
 
-          category: (item.category as Category) || "other",
+          category: item.category as Category || "other",
 
           location: item.storage_location || undefined,
 
@@ -130,7 +140,7 @@ export async function fetchLiveMovements(
 
           unit: (item.unit === "piece" ? "cái" : item.unit) as any,
 
-          category: (item.category as Category) || "other",
+          category: item.category as Category || "other",
 
           location: item.storage_location || undefined,
 
@@ -147,12 +157,14 @@ export async function fetchLiveMovements(
   }
 
   // Bound candidates to avoid unbounded N+1 query storms and excessive RAM usage
+
   const maxItems = options.maxItems ?? 50
 
   let candidateFoods = targetFoods
 
   if (targetFoods.length > maxItems) {
     candidateFoods = [...targetFoods]
+
       .sort((a, b) => {
         const aScore = (a.finishedAt ? 2 : 0) + ((a.version ?? 1) > 1 ? 1 : 0)
 
@@ -160,10 +172,12 @@ export async function fetchLiveMovements(
 
         return bScore - aScore
       })
+
       .slice(0, maxItems)
   }
 
   // Execute requests with bounded concurrency
+
   const concurrency = options.concurrency ?? 5
 
   const results: PromiseSettledResult<any>[] = []
