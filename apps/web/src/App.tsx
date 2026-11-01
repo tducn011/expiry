@@ -93,7 +93,7 @@ export type Route = { name: "inventory" } | {
 
   draft: Draft
 
-  image?: string
+  image?: string | string[]
 } | {
   name: "detail"
 
@@ -350,7 +350,9 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       const serverLocations = Array.from(
         new Set(
           allItems
+
             .map((item) => item.storage_location)
+
             .filter((l): l is string =>
               Boolean(l && l !== "unspecified" && l.trim()),
             ),
@@ -755,8 +757,10 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           if (err instanceof ApiError && err.code === "VERSION_CONFLICT") {
             notify(
               "Xung đột phiên bản: Dữ liệu đã thay đổi ở nơi khác. Đang tải lại dữ liệu mới nhất...",
+
               "warning",
             )
+
             refreshInventoryRef.current?.()
           } else {
             notify("Lỗi kết nối máy chủ. Không thể lưu thay đổi.")
@@ -936,6 +940,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             if (state.mode === "account" && state.userId) {
               try {
                 const key = `expiry_user_preferences_${state.userId}`
+
                 const curPrefs = JSON.parse(
                   (typeof localStorage !== "undefined"
                     ? localStorage.getItem(key)
@@ -962,17 +967,24 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               const affected = state.foods.filter(
                 (f) => !f.deletedAt && !f.finishedAt && f.location === oldName,
               )
+
               for (const f of affected) {
                 const idempKey = `idemp_${crypto.randomUUID()}`
+
                 api
+
                   .updateEntry(
                     f.id,
+
                     {
                       storage_location: newName,
+
                       expected_version: f.version ?? 1,
                     },
+
                     idempKey,
                   )
+
                   .catch(() => {})
               }
             }
@@ -984,17 +996,24 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               const affected = state.foods.filter(
                 (f) => !f.deletedAt && !f.finishedAt && f.location === name,
               )
+
               for (const f of affected) {
                 const idempKey = `idemp_${crypto.randomUUID()}`
+
                 api
+
                   .updateEntry(
                     f.id,
+
                     {
                       storage_location: "unspecified",
+
                       expected_version: f.version ?? 1,
                     },
+
                     idempKey,
                   )
+
                   .catch(() => {})
               }
             }
@@ -1002,6 +1021,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onSavePreferences={async (prefs) => {
             try {
               const key = `expiry_user_preferences_${state.userId || "demo"}`
+
               const curPrefs = JSON.parse(
                 (typeof localStorage !== "undefined"
                   ? localStorage.getItem(key)
