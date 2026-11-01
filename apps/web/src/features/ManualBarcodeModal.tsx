@@ -1,58 +1,87 @@
 import { useState } from "react"
+
 import Button from "../components/ui/Button"
+
 import InputField from "../components/ui/InputField"
+
 import Modal from "../components/ui/Modal"
+
 import { Barcode, Search, Sparkles } from "../components/ui/Icon"
+
 import { lookupBarcode, validateBarcode } from "../lib/barcode"
+
 import type { Food } from "../store/appStore"
 
 export interface BarcodeDraft {
   name: string
+
   barcode: string
 }
 
 export interface ManualBarcodeModalProps {
   isOpen: boolean
+
   onClose: () => void
+
   existingFoods?: Food[]
+
   onSelect: (draft: BarcodeDraft) => void
+
   onSkip?: () => void
 }
 
 export function ManualBarcodeModal({
   isOpen,
+
   onClose,
+
   existingFoods,
+
   onSelect,
+
   onSkip,
 }: ManualBarcodeModalProps) {
   const [code, setCode] = useState("")
+
   const [loading, setLoading] = useState(false)
+
   const [error, setError] = useState<string | null>(null)
+
   const [foundName, setFoundName] = useState<string | null>(null)
+
   const [infoMessage, setInfoMessage] = useState<string | null>(null)
 
   const handleLookup = async (inputCode: string) => {
     const trimmed = inputCode.trim()
+
     if (!trimmed) {
       setError("Vui lòng nhập mã số vạch.")
+
       return
     }
 
     const check = validateBarcode(trimmed)
+
     if (!check.valid) {
       setError(check.error || "Mã số vạch không đúng định dạng.")
+
       setFoundName(null)
+
       setInfoMessage(null)
+
       return
     }
 
     setError(null)
+
     setLoading(true)
+
     try {
       const res = await lookupBarcode(trimmed, existingFoods as any)
+
       if (res.found && res.product?.name) {
         setFoundName(res.product.name)
+
         setInfoMessage(
           `Đã tìm thấy sản phẩm: ${res.product.name}${
             res.product.brand ? ` (${res.product.brand})` : ""
@@ -60,12 +89,14 @@ export function ManualBarcodeModal({
         )
       } else {
         setFoundName(null)
+
         setInfoMessage(
           "Mã hợp lệ nhưng chưa có trong danh mục. Bạn có thể tự đặt tên cho sản phẩm sau khi bấm tiếp tục.",
         )
       }
     } catch {
       setFoundName(null)
+
       setInfoMessage(
         "Không thể tra cứu trực tuyến lúc này (ngoại tuyến). Bạn vẫn có thể tiếp tục và đặt tên cho sản phẩm.",
       )
@@ -76,20 +107,27 @@ export function ManualBarcodeModal({
 
   const handleApply = () => {
     const trimmed = code.trim()
+
     if (!trimmed) {
       setError("Vui lòng nhập mã vạch.")
+
       return
     }
+
     const check = validateBarcode(trimmed)
+
     if (!check.valid) {
       setError(check.error || "Mã số vạch không đúng định dạng.")
+
       return
     }
 
     onSelect({
       name: foundName || `Mã vạch ${trimmed}`,
+
       barcode: trimmed,
     })
+
     onClose()
   }
 
@@ -107,6 +145,7 @@ export function ManualBarcodeModal({
               variant="neutral"
               onClick={() => {
                 onClose()
+
                 onSkip()
               }}
             >
@@ -138,14 +177,19 @@ export function ManualBarcodeModal({
               value={code}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 const val = e.target.value.replace(/[^\d]/g, "")
+
                 setCode(val)
+
                 setError(null)
+
                 setInfoMessage(null)
+
                 setFoundName(null)
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault()
+
                   handleLookup(code)
                 }
               }}

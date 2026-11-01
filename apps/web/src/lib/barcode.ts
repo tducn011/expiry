@@ -305,6 +305,57 @@ function inferUnit(categories: string, productName: string): Unit {
   return "piece"
 }
 
+const barcodeMemoryCache = new Map<string, {
+  result: ProductLookupResult
+  timestamp: number
+}>()
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000
+
+export function getCachedProduct(barcode: string): ProductLookupResult | null {
+  const clean = barcode.trim()
+  if (!clean) return null
+
+  const mem = barcodeMemoryCache.get(clean)
+  if (mem && Date.now() - mem.timestamp < CACHE_TTL_MS) {
+    return mem.result
+  }
+
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      const stored = window.localStorage.getItem(`expiry_bc_${clean}`)
+      if (stored) {
+        const parsed = JSON.parse(stored) as {
+          result: ProductLookupResult
+          timestamp: number
+        }
+        if (parsed?.result && Date.now() - parsed.timestamp < CACHE_TTL_MS) {
+          barcodeMemoryCache.set(clean, parsed)
+          return parsed.result
+        }
+      }
+    } catch {}
+  }
+
+  return null
+}
+
+export function setCachedProduct(
+  barcode: string,
+  result: ProductLookupResult,
+): void {
+  const clean = barcode.trim()
+  if (!clean) return
+
+  const item = { result, timestamp: Date.now() }
+  barcodeMemoryCache.set(clean, item)
+
+  if (typeof window !== "undefined" && window.localStorage && result.found) {
+    try {
+      window.localStorage.setItem(`expiry_bc_${clean}`, JSON.stringify(item))
+    } catch {}
+  }
+}
+
 export async function lookupBarcode(
   code: string,
 
@@ -327,7 +378,7 @@ export async function lookupBarcode(
     )
 
     if (matched) {
-      return {
+      const res: ProductLookupResult = {
         found: true,
 
         barcode: trimmed,
@@ -345,15 +396,23 @@ export async function lookupBarcode(
 
         source: "inventory",
       }
+      setCachedProduct(trimmed, res)
+      return res
     }
   }
 
-  // 2. Layer 2: Open Food Facts API
+  // 1.5. Layer 1.5: Persistent & in-memory cache (0ms instant return)
+  const cached = getCachedProduct(trimmed)
+  if (cached) {
+    return cached
+  }
+
+  // 2. Layer 2: Open Food Facts API (fast snappy 1800ms timeout)
 
   try {
     const controller = new AbortController()
 
-    const timer = setTimeout(() => controller.abort(), 4000)
+    const timer = setTimeout(() => controller.abort(), 1800)
 
     const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(
       trimmed,
@@ -388,7 +447,7 @@ export async function lookupBarcode(
 
           const categories = p.categories ? String(p.categories) : ""
 
-          return {
+          const foundResult: ProductLookupResult = {
             found: true,
 
             barcode: trimmed,
@@ -409,6 +468,8 @@ export async function lookupBarcode(
 
             source: "open_food_facts",
           }
+          setCachedProduct(trimmed, foundResult)
+          return foundResult
         }
       }
     }
@@ -416,15 +477,16 @@ export async function lookupBarcode(
     // Network / timeout / CORS fallback - graceful degradation
   }
 
-  // 3. Layer 3: Not found -> user manual entry
-
-  return {
+  // 3. Layer 3: Not found -> user manual entry or AI fallback
+  const notFoundResult: ProductLookupResult = {
     found: false,
 
     barcode: trimmed,
 
     source: "none",
   }
+  setCachedProduct(trimmed, notFoundResult)
+  return notFoundResult
 }
 
 /** Web Audio synthesized beep for scanning feedback without external audio files */
@@ -719,9 +781,8 @@ export async function decodeBarcodeFromImage(
 
   if (!origW || !origH) return null
 
-  // Target max dimension around 1200px for optimal barcode line resolution
-
-  const maxDim = 1200
+  // Target max dimension around 960px for optimal barcode decode speed and line resolution
+  const maxDim = 960
 
   const scale = Math.min(1, maxDim / Math.max(origW, origH))
 

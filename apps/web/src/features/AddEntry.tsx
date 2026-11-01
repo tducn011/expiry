@@ -1,6 +1,9 @@
 import { useState } from "react"
+
 import Button from "../components/ui/Button"
+
 import Card from "../components/ui/Card"
+
 import {
   Barcode,
   Camera,
@@ -8,23 +11,34 @@ import {
   ScanText,
   Sparkles,
 } from "../components/ui/Icon"
+
 import PageHeader from "../components/ui/PageHeader"
+
 import ManualBarcodeModal, { type BarcodeDraft } from "./ManualBarcodeModal"
+
 import type { Food } from "../store/appStore"
 
 export interface AddEntryProps {
   onScan: () => void
+
   onManual: () => void
+
   onBarcodeSelect?: (draft: BarcodeDraft) => void
+
   existingFoods?: Food[]
+
   onBack?: () => void
 }
 
 export function AddEntry({
   onScan,
+
   onManual,
+
   onBarcodeSelect,
+
   existingFoods,
+
   onBack,
 }: AddEntryProps) {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false)
@@ -139,6 +153,7 @@ export function AddEntry({
           existingFoods={existingFoods}
           onSelect={(draft) => {
             setShowBarcodeModal(false)
+
             if (onBarcodeSelect) {
               onBarcodeSelect(draft)
             } else {
@@ -147,6 +162,7 @@ export function AddEntry({
           }}
           onSkip={() => {
             setShowBarcodeModal(false)
+
             onManual()
           }}
         />
