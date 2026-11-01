@@ -85,6 +85,8 @@ export interface Food {
 
   location?: string
 
+  barcode?: string
+
   createdAt: string
 
   reviewAt?: string // later-check date; never overwrites expDate

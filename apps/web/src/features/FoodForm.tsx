@@ -1,4 +1,6 @@
 import { useRef, useState } from "react"
+import { api } from "../api/client"
+import { playBeep } from "../lib/barcode"
 
 import type { Category, Food, Unit } from "../store/appStore"
 
@@ -10,7 +12,7 @@ import Card from "../components/ui/Card"
 
 import FieldError from "../components/ui/FieldError"
 
-import { Plus, ScanText, X } from "../components/ui/Icon"
+import { Barcode, Camera, Plus, ScanText, X } from "../components/ui/Icon"
 
 import InputField from "../components/ui/InputField"
 
@@ -152,16 +154,54 @@ export function FoodForm({
   onCancel: (dirty: boolean) => void
 }) {
   const [d, setD] = useState<Draft>(initial)
-
-  const capturedImages = Array.isArray(capturedImage)
-    ? capturedImage
-    : capturedImage
-      ? [capturedImage]
-      : []
-
+  const [capturedImages, setCapturedImages] = useState<string[]>(() =>
+    Array.isArray(capturedImage)
+      ? capturedImage
+      : capturedImage
+        ? [capturedImage]
+        : [],
+  )
   const [selectedImgIdx, setSelectedImgIdx] = useState(0)
 
   const currentImg = capturedImages[selectedImgIdx] || capturedImages[0]
+  const [scanningHsd, setScanningHsd] = useState(false)
+  const scanHsdInputRef = useRef<HTMLInputElement>(null)
+
+  const handleScanHsdPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ""
+    setScanningHsd(true)
+    try {
+      const dataUrl = await new Promise<string>((resolve) => {
+        const r = new FileReader()
+        r.onload = () => resolve(String(r.result))
+        r.readAsDataURL(file)
+      })
+      const result = await api.scan(file)
+      const cand = result.candidates
+      const exp = cand.expiry_date?.value || ""
+      const mfg = cand.manufactured_date?.value || ""
+      if (exp) {
+        setD((p) => ({ ...p, expDate: exp, mfgDate: mfg || p.mfgDate }))
+        setErrors((p) => ({ ...p, expDate: undefined, mfgDate: undefined }))
+      } else if (mfg) {
+        setD((p) => ({ ...p, mfgDate: mfg }))
+        setErrors((p) => ({ ...p, mfgDate: undefined }))
+      }
+      setCapturedImages((prev) => [...prev, dataUrl])
+      setSelectedImgIdx(capturedImages.length)
+      playBeep()
+    } catch {
+      setErrors((p) => ({
+        ...p,
+        expDate:
+          "Chưa đọc được ngày từ ảnh này, vui lòng nhập tay hoặc chụp lại gần hơn.",
+      }))
+    } finally {
+      setScanningHsd(false)
+    }
+  }
 
   const [errors, setErrors] = useState<Errors>({})
 
@@ -287,6 +327,17 @@ export function FoodForm({
             aria-describedby="e-name"
             autoFocus
           />
+          {d.barcode && (
+            <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-1">
+              <Barcode size={14} className="text-brand-primary shrink-0" />
+              <span>
+                Mã vạch:{" "}
+                <strong className="font-mono text-text-primary">
+                  {d.barcode}
+                </strong>
+              </span>
+            </div>
+          )}
           <FieldError id="e-name" msg={errors.name} />
         </div>
 
@@ -351,7 +402,29 @@ export function FoodForm({
       </Card>
 
       <Card className="flex flex-col gap-4">
-        <SectionTitle>Ngày trên bao bì</SectionTitle>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <SectionTitle>Ngày trên bao bì</SectionTitle>
+          <Button
+            type="button"
+            size="sm"
+            variant="neutral"
+            iconStart={<Camera size={16} />}
+            loading={scanningHsd}
+            onClick={() => scanHsdInputRef.current?.click()}
+          >
+            {scanningHsd ? "Đang đọc HSD..." : "📸 Quét HSD (Đáy lon / Nắp)"}
+          </Button>
+          <input
+            ref={scanHsdInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={handleScanHsdPhoto}
+          />
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <InputField

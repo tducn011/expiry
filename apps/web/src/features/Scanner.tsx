@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { api } from "../api/client"
 
-import type { Category } from "../store/appStore"
+import type { Category, Food } from "../store/appStore"
 
 import type { Draft } from "./FoodForm"
 
@@ -61,12 +61,14 @@ export function Scanner({
   onManual,
 
   onReview,
+  existingFoods,
 }: {
   onBack: () => void
 
   onManual: () => void
 
   onReview: (img: string | string[], draft?: Draft) => void
+  existingFoods?: Food[]
 }) {
   const [state, setState] = useState<ScanState>("idle")
 
@@ -213,12 +215,9 @@ export function Scanner({
 
         if (gs1?.manufacturedDate) barcodeMfgDate = gs1.manufacturedDate
 
-        const prod = await lookupBarcode(detectedBarcode)
-
+        const prod = await lookupBarcode(detectedBarcode, existingFoods as any)
         if (prod.found && prod.product?.name) {
           barcodeProductName = prod.product.name
-        } else {
-          barcodeProductName = `Mã vạch ${detectedBarcode}`
         }
       }
     } catch {}
@@ -256,12 +255,12 @@ export function Scanner({
           if (gs1?.manufacturedDate && !barcodeMfgDate)
             barcodeMfgDate = gs1.manufacturedDate
 
-          const prod = await lookupBarcode(detectedBarcode)
-
+          const prod = await lookupBarcode(
+            detectedBarcode,
+            existingFoods as any,
+          )
           if (prod.found && prod.product?.name) {
             barcodeProductName = prod.product.name
-          } else if (!barcodeProductName) {
-            barcodeProductName = `Mã vạch ${detectedBarcode}`
           }
         }
       }
@@ -384,16 +383,26 @@ export function Scanner({
         setState("unrecognized")
       } else if (step === 2 && step1Data) {
         // Step 2 captured! Merge Step 1 + Step 2 seamlessly
+        const step1Name = step1Data.draft.name?.trim() || ""
+        const step2Name = name?.trim() || ""
+        const isStep1Placeholder = !step1Name || step1Name.startsWith("Mã vạch")
+        const isStep2Placeholder = !step2Name || step2Name.startsWith("Mã vạch")
 
-        const finalName =
-          step1Data.draft.name ||
-          name ||
-          (step1Data.draft.barcode
-            ? `Mã vạch ${step1Data.draft.barcode}`
-            : detectedBarcode
-              ? `Mã vạch ${detectedBarcode}`
-              : "")
-
+        let finalName = ""
+        if (!isStep1Placeholder) {
+          finalName = step1Name
+        } else if (!isStep2Placeholder) {
+          finalName = step2Name
+        } else {
+          finalName =
+            step1Name ||
+            step2Name ||
+            (step1Data.draft.barcode
+              ? `Mã vạch ${step1Data.draft.barcode}`
+              : detectedBarcode
+                ? `Mã vạch ${detectedBarcode}`
+                : "")
+        }
         const finalBarcode =
           step1Data.draft.barcode || detectedBarcode || undefined
 
@@ -600,12 +609,12 @@ export function Scanner({
 
           if (gs1?.manufacturedDate) barcodeMfgDate = gs1.manufacturedDate
 
-          const prod = await lookupBarcode(detectedBarcode)
-
+          const prod = await lookupBarcode(
+            detectedBarcode,
+            existingFoods as any,
+          )
           if (prod.found && prod.product?.name) {
             barcodeProductName = prod.product.name
-          } else {
-            barcodeProductName = `Mã vạch ${detectedBarcode}`
           }
         }
       } catch {}
@@ -631,12 +640,12 @@ export function Scanner({
             if (gs1?.manufacturedDate && !barcodeMfgDate)
               barcodeMfgDate = gs1.manufacturedDate
 
-            const prod = await lookupBarcode(detectedBarcode)
-
+            const prod = await lookupBarcode(
+              detectedBarcode,
+              existingFoods as any,
+            )
             if (prod.found && prod.product?.name) {
               barcodeProductName = prod.product.name
-            } else if (!barcodeProductName) {
-              barcodeProductName = `Mã vạch ${detectedBarcode}`
             }
           }
         }
@@ -648,9 +657,10 @@ export function Scanner({
         if (!finalMfgDate && cand.manufactured_date?.value) {
           finalMfgDate = cand.manufactured_date.value
         }
-
-        if (!finalName && cand.food_name?.trim()) {
-          finalName = cand.food_name.trim()
+        if (cand.food_name?.trim()) {
+          if (!finalName || finalName.startsWith("Mã vạch")) {
+            finalName = cand.food_name.trim()
+          }
         }
       } catch (err) {
         console.warn(`Scan error on image ${i + 1}:`, err)
@@ -661,8 +671,12 @@ export function Scanner({
       if (!finalExpDate && barcodeExpDate) finalExpDate = barcodeExpDate
 
       if (!finalMfgDate && barcodeMfgDate) finalMfgDate = barcodeMfgDate
-
-      if (!finalName && barcodeProductName) finalName = barcodeProductName
+      if (
+        barcodeProductName &&
+        (!finalName || finalName.startsWith("Mã vạch"))
+      ) {
+        finalName = barcodeProductName
+      }
     }
 
     setBatchProgress(null)
@@ -954,12 +968,16 @@ export function Scanner({
                 aria-hidden="true"
                 className="text-brand-secondary"
               />
-              <p className="text-sm font-medium">
-                Chưa nhận diện được góc chụp này
+              <p className="text-sm font-semibold">
+                Chưa thấy ngày HSD trên góc chụp này
               </p>
               <p className="text-xs text-text-tertiary">
-                Hãy đưa mã vạch hoặc khu vực in ngày (HSD/NSX) vào giữa khung,
-                hoặc bấm Kiểm tra để tự điền.
+                Hạn sử dụng trên lon/hộp thường in riêng ở{" "}
+                <strong>đáy lon</strong> hoặc <strong>nắp hộp</strong>.
+              </p>
+              <p className="text-xs text-amber-300 font-medium">
+                👉 Bấm &quot;Chụp thêm góc HSD&quot; bên dưới để quét tiếp đáy
+                lon mà không mất ảnh này!
               </p>
             </>
           )}
@@ -1101,30 +1119,59 @@ export function Scanner({
         )}
 
         {/* Unrecognized Actions */}
-        {state === "unrecognized" && (image || images.length > 0) && (
-          <div className="flex gap-2 w-full max-w-sm">
-            <Button
-              variant="primary"
-              className="flex-1"
-              iconStart={<ScanText size={18} />}
-              onClick={() =>
-                onReview(
-                  images.length > 1 ? images : image || "",
-
-                  detectedDraft,
-                )
-              }
-            >
-              Kiểm tra thông tin
-            </Button>
-            <Button
-              variant="neutral"
-              className="flex-1"
-              iconStart={<RefreshCw size={18} />}
-              onClick={resetToStep1}
-            >
-              Quét lại
-            </Button>
+        {state === "unrecognized" && (
+          <div className="flex flex-col gap-2.5 w-full max-w-sm">
+            {image && (
+              <Button
+                variant="primary"
+                iconStart={<Camera size={20} />}
+                onClick={() => {
+                  setStep1Data({
+                    draft: detectedDraft || {
+                      name: "",
+                      quantity: "1",
+                      unit: "cái",
+                      category: "other",
+                      mfgDate: "",
+                      expDate: "",
+                      location: "",
+                    },
+                    image,
+                    detectedType: "product_only",
+                  })
+                  setStep(2)
+                  setState("step2_ready")
+                  if (!live) {
+                    cameraInputRef.current?.click()
+                  }
+                }}
+              >
+                📸 Chụp thêm góc HSD (Đáy lon / Nắp hộp)
+              </Button>
+            )}
+            <div className="flex gap-2">
+              <Button
+                variant="neutral"
+                className="flex-1 text-xs"
+                iconStart={<ScanText size={16} />}
+                onClick={() =>
+                  onReview(
+                    images.length > 1 ? images : image || "",
+                    detectedDraft,
+                  )
+                }
+              >
+                Kiểm tra thông tin
+              </Button>
+              <Button
+                variant="neutral"
+                className="flex-1 text-xs"
+                iconStart={<RefreshCw size={16} />}
+                onClick={resetToStep1}
+              >
+                Quét lại từ đầu
+              </Button>
+            </div>
           </div>
         )}
 

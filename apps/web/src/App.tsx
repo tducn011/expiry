@@ -714,6 +714,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
             date_label_type: "unspecified",
 
+            barcode: d.barcode || null,
+
             expected_version: expectedVersion,
           }
 
@@ -795,6 +797,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               opened_on: d.mfgDate || null,
 
               note: null,
+
+              barcode: d.barcode || null,
 
               quantity: decimal(quantity),
 
@@ -1067,6 +1071,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               { name: "form", mode: "manual", draft: emptyDraft() },
             ])
           }
+          existingFoods={state.foods}
           onReview={(image, draft) =>
             setStack((s) => [
               ...s.slice(0, -1),

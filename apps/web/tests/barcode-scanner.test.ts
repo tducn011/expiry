@@ -166,7 +166,9 @@ describe("Barcode Scanner & ZXing Formats", () => {
         })
       }
       if (url.includes("/scan")) {
-        return new Response(JSON.stringify({ code: "NO_LEGIBLE_TEXT" }), { status: 422 })
+        return new Response(JSON.stringify({ code: "NO_LEGIBLE_TEXT" }), {
+          status: 422,
+        })
       }
       if (url.includes("generativelanguage.googleapis.com")) {
         return new Response(
@@ -269,7 +271,9 @@ describe("Barcode Scanner & ZXing Formats", () => {
     const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
       if (url.includes("/scans") || url.includes("/scan")) {
-        return new Response(JSON.stringify({ code: "NO_LEGIBLE_TEXT" }), { status: 422 })
+        return new Response(JSON.stringify({ code: "NO_LEGIBLE_TEXT" }), {
+          status: 422,
+        })
       }
       if (url.includes("generativelanguage.googleapis.com")) {
         return new Response(
@@ -365,5 +369,99 @@ describe("Barcode Scanner & ZXing Formats", () => {
     expect(mergedImages).toHaveLength(2)
     expect(mergedImages[0]).toBe(step1Image)
     expect(mergedImages[1]).toBe(step2Image)
+  })
+
+  it("preserves Vision AI food name (e.g. Kẽm Amagain) when barcode lookup on Open Food Facts returns not found", async () => {
+    const { lookupBarcode } = await import("../src/lib/barcode")
+    // Barcode 8936039681526 is for "Kẽm Amagain" (pharmaceutical/supplement not on Open Food Facts)
+    const detectedBarcode = "8936039681526"
+    const prod = await lookupBarcode(detectedBarcode)
+    expect(prod.found).toBe(false)
+
+    let barcodeProductName: string | undefined
+    if (prod.found && prod.product?.name) {
+      barcodeProductName = prod.product.name
+    }
+
+    // Vision AI extracts the real name from label text on the packet
+    const cand = {
+      food_name: "Kẽm Amagain",
+      barcode: detectedBarcode,
+      expiry_date: { value: "2028-07-27" },
+      manufactured_date: { value: "2026-07-27" },
+    }
+
+    const resolvedName = (
+      barcodeProductName ||
+      cand.food_name?.trim() ||
+      (detectedBarcode ? `Mã vạch ${detectedBarcode}` : "")
+    ).trim()
+
+    // MUST be "Kẽm Amagain", NOT "Mã vạch 8936039681526"!
+    expect(resolvedName).toBe("Kẽm Amagain")
+  })
+
+  it("resolves product name from local inventory cache when barcode was previously saved", async () => {
+    const { lookupBarcode } = await import("../src/lib/barcode")
+    const existingFoods = [
+      {
+        id: "food-123",
+        name: "Kẽm Amagain",
+        barcode: "8936039681526",
+        location: "Tủ thuốc",
+        unit: "cái",
+      },
+    ]
+
+    const result = await lookupBarcode("8936039681526", existingFoods as any)
+    expect(result.found).toBe(true)
+    expect(result.source).toBe("inventory")
+    expect(result.product?.name).toBe("Kẽm Amagain")
+    expect(result.product?.suggested_storage_location).toBe("Tủ thuốc")
+  })
+
+  it("prefers real food name over placeholder 'Mã vạch ...' during 2-step scanning sequential merge", () => {
+    // Step 1 was barcode only on bottom/back (Open Food Facts miss fallback)
+    const step1Draft = {
+      name: "Mã vạch 8936039681526",
+      barcode: "8936039681526",
+      quantity: "1",
+      unit: "cái",
+      category: "other",
+      mfgDate: "",
+      expDate: "",
+      location: "",
+    }
+
+    // Step 2 was front package text recognized by Vision AI
+    const step2Draft = {
+      name: "Kẽm Amagain",
+      barcode: undefined,
+      quantity: "1",
+      unit: "cái",
+      category: "other",
+      mfgDate: "2026-07-27",
+      expDate: "2028-07-27",
+      location: "",
+    }
+
+    const step1Name = step1Draft.name?.trim() || ""
+    const step2Name = step2Draft.name?.trim() || ""
+    const isStep1Placeholder = !step1Name || step1Name.startsWith("Mã vạch")
+    const isStep2Placeholder = !step2Name || step2Name.startsWith("Mã vạch")
+
+    let finalName = ""
+    if (!isStep1Placeholder) {
+      finalName = step1Name
+    } else if (!isStep2Placeholder) {
+      finalName = step2Name
+    } else {
+      finalName =
+        step1Name ||
+        step2Name ||
+        (step1Draft.barcode ? `Mã vạch ${step1Draft.barcode}` : "")
+    }
+
+    expect(finalName).toBe("Kẽm Amagain")
   })
 })

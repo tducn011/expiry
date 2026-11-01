@@ -62,6 +62,16 @@ export const Drumstick = createIcon(
   </>,
 )
 
+export const Barcode = createIcon(
+  <>
+    <path d="M3 5v14" />
+    <path d="M8 5v14" />
+    <path d="M12 5v14" />
+    <path d="M17 5v14" />
+    <path d="M21 5v14" />
+  </>,
+)
+
 export const Beef = createIcon(
   <>
     <circle cx="12.5" cy="8.5" r="2.5" />
