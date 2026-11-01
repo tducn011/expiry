@@ -154,4 +154,26 @@ describe("Barcode Scanner & ZXing Formats", () => {
     expect(result.candidates.food_name).toBe("Milk")
     expect(mockFetch).toHaveBeenCalledTimes(2)
   })
+
+  it("parses GS1 Application Identifier (17) expiration date and (11) production date from barcode", async () => {
+    const { parseGs1Barcode } = await import("../src/lib/barcode")
+
+    // GS1-128 formatted: (01)08938541591140(17)261231(10)LOT123
+    const parsed1 = parseGs1Barcode("(01)08938541591140(17)261231(10)LOT123")
+    expect(parsed1?.expiryDate).toBe("2026-12-31")
+    expect(parsed1?.batchLot).toBe("LOT123")
+
+    // GS1 with month-only (day=00 means end of month, e.g. 260200 -> 2026-02-28)
+    const parsed2 = parseGs1Barcode("01089385415911401726020010LOT456")
+    expect(parsed2?.expiryDate).toBe("2026-02-28")
+
+    // GS1 with AI (11) production date: (11)260115
+    const parsed3 = parseGs1Barcode("(01)08938541591140(11)260115(17)270115")
+    expect(parsed3?.manufacturedDate).toBe("2026-01-15")
+    expect(parsed3?.expiryDate).toBe("2027-01-15")
+
+    // Non-GS1 regular EAN-13 retail barcode returns null for expiry
+    const parsedEan = parseGs1Barcode("8938541591140")
+    expect(parsedEan).toBeNull()
+  })
 })
