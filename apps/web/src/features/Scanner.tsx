@@ -16,7 +16,9 @@ import {
 } from "../lib/barcode"
 
 import Button from "../components/ui/Button"
+
 import ManualBarcodeModal from "./ManualBarcodeModal"
+
 import { Barcode } from "../components/ui/Icon"
 
 import {
@@ -64,6 +66,7 @@ export function Scanner({
   onManual,
 
   onReview,
+
   existingFoods,
 }: {
   onBack: () => void
@@ -71,6 +74,7 @@ export function Scanner({
   onManual: () => void
 
   onReview: (img: string | string[], draft?: Draft) => void
+
   existingFoods?: Food[]
 }) {
   const [state, setState] = useState<ScanState>("idle")
@@ -92,7 +96,9 @@ export function Scanner({
   const [detectedDraft, setDetectedDraft] = useState<Draft | undefined>(
     undefined,
   )
+
   const [showStep2Notice, setShowStep2Notice] = useState(true)
+
   const [showManualBarcode, setShowManualBarcode] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -128,15 +134,18 @@ export function Scanner({
       const t = window.setTimeout(() => {
         setShowStep2Notice(false)
       }, 3000)
+
       return () => window.clearTimeout(t)
     }
   }, [state, step1Data, showStep2Notice])
 
   // Real-time continuous live frame barcode detection (instant auto-scan)
+
   useEffect(() => {
     if (state !== "ready" && state !== "step2_ready") return
 
     let isCancelled = false
+
     let isProcessingFrame = false
 
     const hasNativeBarcodeDetector =
@@ -146,11 +155,17 @@ export function Scanner({
       ? new (window as any).BarcodeDetector({
           formats: [
             "ean_13",
+
             "ean_8",
+
             "code_128",
+
             "code_39",
+
             "upc_a",
+
             "upc_e",
+
             "qr_code",
           ],
         })
@@ -158,33 +173,47 @@ export function Scanner({
 
     const checkFrame = async () => {
       if (isCancelled || isProcessingFrame || isLiveScanningRef.current) return
+
       const v = videoRef.current
+
       if (!v || v.readyState < 2 || !v.videoWidth || !v.videoHeight) return
 
       isProcessingFrame = true
+
       try {
         let detectedCode: string | null = null
 
         if (detector) {
           const detections = await detector.detect(v)
+
           if (detections && detections.length > 0 && detections[0].rawValue) {
             detectedCode = detections[0].rawValue.trim()
           }
         } else {
           const sampleW = 480
+
           const sampleH =
             Math.round((v.videoHeight / v.videoWidth) * sampleW) || 360
+
           const c = document.createElement("canvas")
+
           c.width = sampleW
+
           c.height = sampleH
+
           const ctx = c.getContext("2d", { willReadFrequently: true })
+
           if (ctx) {
             ctx.drawImage(v, 0, 0, sampleW, sampleH)
+
             const htmlImg = new Image()
+
             htmlImg.src = c.toDataURL("image/jpeg", 0.7)
+
             const barcodeRes = await decodeBarcodeFromImage(htmlImg).catch(
               () => null,
             )
+
             if (barcodeRes && barcodeRes.text) {
               detectedCode = barcodeRes.text.trim()
             }
@@ -193,7 +222,9 @@ export function Scanner({
 
         if (detectedCode && !isCancelled && !isLiveScanningRef.current) {
           isLiveScanningRef.current = true
+
           playBeep()
+
           capture(detectedCode)
         }
       } catch {
@@ -206,6 +237,7 @@ export function Scanner({
 
     return () => {
       isCancelled = true
+
       window.clearInterval(intervalId)
     }
   }, [state, step, step1Data])
@@ -246,8 +278,11 @@ export function Scanner({
 
   const resetToStep1 = () => {
     isLiveScanningRef.current = false
+
     setStep(1)
+
     setShowStep2Notice(true)
+
     setStep1Data(null)
 
     setImage(undefined)
@@ -273,7 +308,9 @@ export function Scanner({
 
   async function recognize(
     img: string,
+
     file?: File | Blob,
+
     preDetectedBarcode?: string,
   ) {
     setImage(img)
@@ -313,6 +350,7 @@ export function Scanner({
 
     if (detectedBarcode) {
       // Check if barcode is GS1 encoding expiry/manufactured date directly
+
       const gs1 = parseGs1Barcode(detectedBarcode)
 
       if (gs1?.expiryDate) barcodeExpDate = gs1.expiryDate
@@ -334,10 +372,13 @@ export function Scanner({
       }
 
       // Parallelize product metadata lookup & backend OCR scanning for maximum speed
+
       const lookupPromise: Promise<ProductLookupResult | null> = detectedBarcode
         ? lookupBarcode(detectedBarcode, existingFoods as any).catch(() => ({
             found: false,
+
             barcode: detectedBarcode!,
+
             source: "none" as const,
           }))
         : Promise.resolve(null)
@@ -346,6 +387,7 @@ export function Scanner({
 
       const [lookupRes, scanResult] = await Promise.all([
         lookupPromise,
+
         scanPromise,
       ])
 
@@ -373,8 +415,10 @@ export function Scanner({
 
           const prod = await lookupBarcode(
             detectedBarcode,
+
             existingFoods as any,
           )
+
           if (prod.found && prod.product?.name) {
             barcodeProductName = prod.product.name
           }
@@ -468,7 +512,9 @@ export function Scanner({
           })
 
           setStep(2)
+
           setShowStep2Notice(true)
+
           setState("step2_ready")
 
           return
@@ -490,7 +536,9 @@ export function Scanner({
           })
 
           setStep(2)
+
           setShowStep2Notice(true)
+
           setState("step2_ready")
 
           return
@@ -499,12 +547,17 @@ export function Scanner({
         setState("unrecognized")
       } else if (step === 2 && step1Data) {
         // Step 2 captured! Merge Step 1 + Step 2 seamlessly
+
         const step1Name = step1Data.draft.name?.trim() || ""
+
         const step2Name = name?.trim() || ""
+
         const isStep1Placeholder = !step1Name || step1Name.startsWith("Mã vạch")
+
         const isStep2Placeholder = !step2Name || step2Name.startsWith("Mã vạch")
 
         let finalName = ""
+
         if (!isStep1Placeholder) {
           finalName = step1Name
         } else if (!isStep2Placeholder) {
@@ -519,6 +572,7 @@ export function Scanner({
                 ? `Mã vạch ${detectedBarcode}`
                 : "")
         }
+
         const finalBarcode =
           step1Data.draft.barcode || detectedBarcode || undefined
 
@@ -609,6 +663,7 @@ export function Scanner({
       }
 
       isLiveScanningRef.current = false
+
       setState("unrecognized")
     }
   }
@@ -621,16 +676,25 @@ export function Scanner({
     setState("capturing")
 
     // Optimize frame resolution: max 1200px dimension preserves full OCR precision while reducing upload payload
+
     const maxDim = 1200
+
     const origW = v.videoWidth
+
     const origH = v.videoHeight
+
     const scale = Math.min(1, maxDim / Math.max(origW, origH))
+
     const targetW = Math.round(origW * scale)
+
     const targetH = Math.round(origH * scale)
 
     const c = document.createElement("canvas")
+
     c.width = targetW
+
     c.height = targetH
+
     c.getContext("2d")?.drawImage(v, 0, 0, targetW, targetH)
 
     const dataUrl = c.toDataURL("image/jpeg", 0.8)
@@ -739,7 +803,9 @@ export function Scanner({
             ? lookupBarcode(detectedBarcode, existingFoods as any).catch(
                 () => ({
                   found: false,
+
                   barcode: detectedBarcode!,
+
                   source: "none" as const,
                 }),
               )
@@ -749,6 +815,7 @@ export function Scanner({
 
         const [lookupRes, scanResult] = await Promise.all([
           lookupPromise,
+
           scanPromise,
         ])
 
@@ -776,8 +843,10 @@ export function Scanner({
 
             const prod = await lookupBarcode(
               detectedBarcode,
+
               existingFoods as any,
             )
+
             if (prod.found && prod.product?.name) {
               barcodeProductName = prod.product.name
             }
@@ -791,6 +860,7 @@ export function Scanner({
         if (!finalMfgDate && cand.manufactured_date?.value) {
           finalMfgDate = cand.manufactured_date.value
         }
+
         if (cand.food_name?.trim()) {
           if (!finalName || finalName.startsWith("Mã vạch")) {
             finalName = cand.food_name.trim()
@@ -805,6 +875,7 @@ export function Scanner({
       if (!finalExpDate && barcodeExpDate) finalExpDate = barcodeExpDate
 
       if (!finalMfgDate && barcodeMfgDate) finalMfgDate = barcodeMfgDate
+
       if (
         barcodeProductName &&
         (!finalName || finalName.startsWith("Mã vạch"))
@@ -1292,18 +1363,29 @@ export function Scanner({
                   setStep1Data({
                     draft: detectedDraft || {
                       name: "",
+
                       quantity: "1",
+
                       unit: "cái",
+
                       category: "other",
+
                       mfgDate: "",
+
                       expDate: "",
+
                       location: "",
                     },
+
                     image,
+
                     detectedType: "product_only",
                   })
+
                   setStep(2)
+
                   setState("step2_ready")
+
                   if (!live) {
                     cameraInputRef.current?.click()
                   }
@@ -1320,6 +1402,7 @@ export function Scanner({
                 onClick={() =>
                   onReview(
                     images.length > 1 ? images : image || "",
+
                     detectedDraft,
                   )
                 }
@@ -1380,26 +1463,40 @@ export function Scanner({
           existingFoods={existingFoods}
           onSelect={(barcodeDraft) => {
             setShowManualBarcode(false)
+
             const draft: Draft = {
               name: barcodeDraft.name,
+
               barcode: barcodeDraft.barcode,
+
               quantity: "1",
+
               unit: "cái",
+
               category: "other",
+
               mfgDate: "",
+
               expDate: "",
+
               location: "",
             }
+
             setStep1Data({
               image: "",
+
               draft,
+
               detectedType: "product_only",
             })
+
             setStep(2)
+
             setShowStep2Notice(true)
           }}
           onSkip={() => {
             setShowManualBarcode(false)
+
             onManual?.()
           }}
         />

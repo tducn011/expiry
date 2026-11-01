@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import Button from "../components/ui/Button"
 
@@ -50,6 +50,16 @@ export function ManualBarcodeModal({
   const [foundName, setFoundName] = useState<string | null>(null)
 
   const [infoMessage, setInfoMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      setCode("")
+      setLoading(false)
+      setError(null)
+      setFoundName(null)
+      setInfoMessage(null)
+    }
+  }, [isOpen])
 
   const handleLookup = async (inputCode: string) => {
     const trimmed = inputCode.trim()
@@ -105,7 +115,7 @@ export function ManualBarcodeModal({
     }
   }
 
-  const handleApply = () => {
+  const handleApply = async () => {
     const trimmed = code.trim()
 
     if (!trimmed) {
@@ -122,8 +132,22 @@ export function ManualBarcodeModal({
       return
     }
 
+    let finalName = foundName
+    if (!finalName) {
+      try {
+        setLoading(true)
+        const res = await lookupBarcode(trimmed, existingFoods as any)
+        if (res.found && res.product?.name) {
+          finalName = res.product.name
+        }
+      } catch {
+      } finally {
+        setLoading(false)
+      }
+    }
+
     onSelect({
-      name: foundName || `Mã vạch ${trimmed}`,
+      name: finalName || `Mã vạch ${trimmed}`,
 
       barcode: trimmed,
     })
@@ -175,8 +199,13 @@ export function ManualBarcodeModal({
               inputMode="numeric"
               placeholder="Ví dụ: 8936039681526"
               value={code}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                const val = e.target.value.replace(/[^\d]/g, "")
+              autoFocus
+              onChange={(valOrEvent: any) => {
+                const raw =
+                  typeof valOrEvent === "string"
+                    ? valOrEvent
+                    : (valOrEvent?.target?.value ?? "")
+                const val = raw.replace(/[^\d]/g, "")
 
                 setCode(val)
 
