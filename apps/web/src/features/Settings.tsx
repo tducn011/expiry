@@ -18,6 +18,8 @@ import {
 
 import Modal from "../components/ui/Modal"
 
+import LocationManagerModal from "../components/ui/LocationManagerModal"
+
 import PageHeader from "../components/ui/PageHeader"
 
 import SwitchField from "../components/ui/SwitchField"
@@ -122,6 +124,8 @@ export function Settings({
   const [s, setS] = useState(state.settings)
 
   const [pickDays, setPickDays] = useState(false)
+
+  const [showLocations, setShowLocations] = useState(false)
 
   const pushSupported =
     typeof window !== "undefined" && "Notification" in window
@@ -305,6 +309,7 @@ export function Settings({
           icon={<MapPin size={20} />}
           label="Nơi bảo quản"
           value={`${state.locations.length} vị trí`}
+          onClick={() => setShowLocations(true)}
         />
       </SettingsGroup>
 
@@ -374,6 +379,15 @@ export function Settings({
           ))}
         </div>
       </Modal>
+
+      {/* Location Manager Modal */}
+      <LocationManagerModal
+        isOpen={showLocations}
+        onClose={() => setShowLocations(false)}
+        state={state}
+        dispatch={dispatch}
+        notify={notify}
+      />
     </div>
   )
 }

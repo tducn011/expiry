@@ -92,6 +92,7 @@ export function fromQuantityMovement(
 
 export type LiveMovementsOptions = {
   maxItems?: number
+
   concurrency?: number
 }
 
