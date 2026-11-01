@@ -15,6 +15,8 @@ import {
 } from "../lib/barcode"
 
 import Button from "../components/ui/Button"
+import ManualBarcodeModal from "./ManualBarcodeModal"
+import { Barcode } from "../components/ui/Icon"
 
 import {
   ArrowLeft,
@@ -90,6 +92,7 @@ export function Scanner({
     undefined,
   )
   const [showStep2Notice, setShowStep2Notice] = useState(true)
+  const [showManualBarcode, setShowManualBarcode] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -1135,6 +1138,13 @@ export function Scanner({
                 >
                   🖼️ Thư viện ảnh
                 </Button>
+                <Button
+                  variant="neutral"
+                  iconStart={<Barcode size={18} />}
+                  onClick={() => setShowManualBarcode(true)}
+                >
+                  ⌨️ Nhập số vạch
+                </Button>
               </>
             )}
           </div>
@@ -1231,6 +1241,38 @@ export function Scanner({
           }}
         />
       </div>
+
+      {showManualBarcode && (
+        <ManualBarcodeModal
+          isOpen={showManualBarcode}
+          onClose={() => setShowManualBarcode(false)}
+          existingFoods={existingFoods}
+          onSelect={(barcodeDraft) => {
+            setShowManualBarcode(false)
+            const draft: Draft = {
+              name: barcodeDraft.name,
+              barcode: barcodeDraft.barcode,
+              quantity: "1",
+              unit: "cái",
+              category: "other",
+              mfgDate: "",
+              expDate: "",
+              location: "",
+            }
+            setStep1Data({
+              image: "",
+              draft,
+              detectedType: "product_only",
+            })
+            setStep(2)
+            setShowStep2Notice(true)
+          }}
+          onSkip={() => {
+            setShowManualBarcode(false)
+            onManual?.()
+          }}
+        />
+      )}
 
       {/* Manual Input Fallback */}
       <div className="px-6 pt-2 pb-5">

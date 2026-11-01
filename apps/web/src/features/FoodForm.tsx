@@ -37,6 +37,8 @@ export interface Draft {
 
   mfgDate: string
 
+  opened_on?: string
+
   expDate: string
 
   location: string
@@ -54,6 +56,8 @@ export const emptyDraft = (): Draft => ({
   category: "other",
 
   mfgDate: "",
+
+  opened_on: "",
 
   expDate: "",
 
@@ -73,12 +77,16 @@ export const draftFrom = (f: Food, keepQty = true): Draft => ({
 
   mfgDate: f.mfgDate ?? "",
 
+  opened_on: f.opened_on ?? "",
+
   expDate: f.expDate ?? "",
 
   location: f.location ?? "",
+
+  barcode: f.barcode ?? undefined,
 })
 
-export type Errors = Partial<Record<"name" | "quantity" | "unit" | "mfgDate" | "expDate" | "save", string>>
+export type Errors = Partial<Record<"name" | "quantity" | "unit" | "mfgDate" | "opened_on" | "expDate" | "save", string>>
 
 const validDate = (v: string) =>
   !v ||
@@ -100,6 +108,8 @@ export function validate(d: Draft): Errors {
 
   if (!validDate(d.mfgDate)) e.mfgDate = "Ngày không hợp lệ."
 
+  if (!validDate(d.opened_on ?? "")) e.opened_on = "Ngày không hợp lệ."
+
   if (!validDate(d.expDate)) e.expDate = "Ngày không hợp lệ."
 
   if (
@@ -110,6 +120,15 @@ export function validate(d: Draft): Errors {
     d.expDate < d.mfgDate
   )
     e.expDate = "Hạn sử dụng không thể trước ngày sản xuất."
+
+  if (
+    !e.opened_on &&
+    !e.expDate &&
+    d.opened_on &&
+    d.expDate &&
+    d.expDate < d.opened_on
+  )
+    e.expDate = "Hạn sử dụng không thể trước ngày mở bao bì."
 
   return e
 }
@@ -448,7 +467,7 @@ export function FoodForm({
             onChange={handleScanHsdPhoto}
           />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <InputField
               label="Ngày sản xuất (NSX)"
@@ -458,6 +477,17 @@ export function FoodForm({
               aria-describedby="e-mfg"
             />
             <FieldError id="e-mfg" msg={errors.mfgDate} />
+          </div>
+          <div>
+            <InputField
+              label="Ngày mở bao bì"
+              type="date"
+              value={d.opened_on || ""}
+              onChange={set("opened_on")}
+              aria-describedby="e-opened"
+              description="Tùy chọn theo dõi sau mở"
+            />
+            <FieldError id="e-opened" msg={errors.opened_on} />
           </div>
           <div>
             <InputField

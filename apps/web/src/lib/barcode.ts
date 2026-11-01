@@ -548,6 +548,62 @@ export function isValidEan8(code: string): boolean {
   return checkDigit === digits[7]
 }
 
+export function validateBarcode(
+  code: string,
+): {
+  valid: boolean
+  format?: "EAN_13" | "EAN_8" | "UPC_A" | "CUSTOM"
+  error?: string
+} {
+  const clean = code.trim().replace(/\D/g, "")
+  if (!clean) {
+    return { valid: false, error: "Vui lòng nhập mã số vạch (GTIN/EAN)." }
+  }
+
+  if (clean.length === 13) {
+    if (!isValidEan13(clean)) {
+      return {
+        valid: false,
+        error:
+          "Chữ số kiểm tra (check digit) của mã EAN-13 không hợp lệ. Vui lòng kiểm tra lại số in dưới mã vạch.",
+      }
+    }
+    return { valid: true, format: "EAN_13" }
+  }
+
+  if (clean.length === 12) {
+    if (!isValidUpcA(clean)) {
+      return {
+        valid: false,
+        error:
+          "Chữ số kiểm tra (check digit) của mã UPC-A không hợp lệ. Vui lòng kiểm tra lại số in dưới mã vạch.",
+      }
+    }
+    return { valid: true, format: "UPC_A" }
+  }
+
+  if (clean.length === 8) {
+    if (!isValidEan8(clean)) {
+      return {
+        valid: false,
+        error:
+          "Chữ số kiểm tra (check digit) của mã EAN-8 không hợp lệ. Vui lòng kiểm tra lại số in dưới mã vạch.",
+      }
+    }
+    return { valid: true, format: "EAN_8" }
+  }
+
+  if (clean.length >= 4 && clean.length <= 64) {
+    return { valid: true, format: "CUSTOM" }
+  }
+
+  return {
+    valid: false,
+    error:
+      "Độ dài mã số không hợp lệ (chuẩn EAN-13 có 13 chữ số, EAN-8 có 8 chữ số, UPC có 12 chữ số).",
+  }
+}
+
 export function extractBarcodeFromText(
   text: string,
 ): {

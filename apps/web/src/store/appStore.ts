@@ -81,6 +81,8 @@ export interface Food {
 
   mfgDate?: string // NSX, ISO yyyy-mm-dd
 
+  opened_on?: string // Ngày mở bao bì, ISO yyyy-mm-dd
+
   expDate?: string // HSD; unknown stays undefined
 
   location?: string

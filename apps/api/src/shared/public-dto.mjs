@@ -32,6 +32,7 @@ export function entryDTO(entry, projection) {
     date_source: entry.date_source,
     date_label_type: entry.date_label_type,
     opened_on: entry.opened_on,
+    manufactured_on: entry.manufactured_on ?? null,
     note: entry.note,
     version: entry.version,
     lifecycle: milli(entry.remaining_quantity, entry.unit) === 0n ? 'depleted' : 'active',
