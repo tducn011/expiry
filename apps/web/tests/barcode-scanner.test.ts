@@ -728,4 +728,36 @@ describe("Barcode Scanner & ZXing Formats", () => {
     expect((dto as any).manufactured_on).toBe("2026-05-01")
   })
 
+  it("caches barcode lookup results for instant 0ms repeated product lookups", async () => {
+    const { lookupBarcode, getCachedProduct, setCachedProduct } = await import(
+      "../src/lib/barcode"
+    )
+
+    const sampleBarcode = "8935001799999"
+    const mockProductResult = {
+      found: true,
+      barcode: sampleBarcode,
+      product: {
+        name: "Sữa tươi tiệt trùng Vinamilk 1L",
+        brand: "Vinamilk",
+        category: "dairy_eggs",
+        suggested_storage_location: "Ngăn mát",
+        suggested_unit: "piece" as const,
+      },
+      source: "open_food_facts" as const,
+    }
+
+    setCachedProduct(sampleBarcode, mockProductResult)
+
+    const cached = getCachedProduct(sampleBarcode)
+    expect(cached).toBeDefined()
+    expect(cached?.found).toBe(true)
+    expect(cached?.product?.name).toBe("Sữa tươi tiệt trùng Vinamilk 1L")
+
+    // lookupBarcode should return immediately from cache without network fetch
+    const lookupRes = await lookupBarcode(sampleBarcode)
+    expect(lookupRes.found).toBe(true)
+    expect(lookupRes.product?.name).toBe("Sữa tươi tiệt trùng Vinamilk 1L")
+    expect(lookupRes.source).toBe("open_food_facts")
+  })
 })

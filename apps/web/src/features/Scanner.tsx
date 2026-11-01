@@ -12,6 +12,7 @@ import {
   parseGs1Barcode,
   extractBarcodeFromText,
   playBeep,
+  type ProductLookupResult,
 } from "../lib/barcode"
 
 import Button from "../components/ui/Button"
@@ -104,6 +105,8 @@ export function Scanner({
 
   const timer = useRef<number | undefined>(undefined)
 
+  const isLiveScanningRef = useRef(false)
+
   const stop = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop())
 
@@ -128,6 +131,84 @@ export function Scanner({
       return () => window.clearTimeout(t)
     }
   }, [state, step1Data, showStep2Notice])
+
+  // Real-time continuous live frame barcode detection (instant auto-scan)
+  useEffect(() => {
+    if (state !== "ready" && state !== "step2_ready") return
+
+    let isCancelled = false
+    let isProcessingFrame = false
+
+    const hasNativeBarcodeDetector =
+      typeof window !== "undefined" && "BarcodeDetector" in window
+
+    const detector = hasNativeBarcodeDetector
+      ? new (window as any).BarcodeDetector({
+          formats: [
+            "ean_13",
+            "ean_8",
+            "code_128",
+            "code_39",
+            "upc_a",
+            "upc_e",
+            "qr_code",
+          ],
+        })
+      : null
+
+    const checkFrame = async () => {
+      if (isCancelled || isProcessingFrame || isLiveScanningRef.current) return
+      const v = videoRef.current
+      if (!v || v.readyState < 2 || !v.videoWidth || !v.videoHeight) return
+
+      isProcessingFrame = true
+      try {
+        let detectedCode: string | null = null
+
+        if (detector) {
+          const detections = await detector.detect(v)
+          if (detections && detections.length > 0 && detections[0].rawValue) {
+            detectedCode = detections[0].rawValue.trim()
+          }
+        } else {
+          const sampleW = 480
+          const sampleH =
+            Math.round((v.videoHeight / v.videoWidth) * sampleW) || 360
+          const c = document.createElement("canvas")
+          c.width = sampleW
+          c.height = sampleH
+          const ctx = c.getContext("2d", { willReadFrequently: true })
+          if (ctx) {
+            ctx.drawImage(v, 0, 0, sampleW, sampleH)
+            const htmlImg = new Image()
+            htmlImg.src = c.toDataURL("image/jpeg", 0.7)
+            const barcodeRes = await decodeBarcodeFromImage(htmlImg).catch(
+              () => null,
+            )
+            if (barcodeRes && barcodeRes.text) {
+              detectedCode = barcodeRes.text.trim()
+            }
+          }
+        }
+
+        if (detectedCode && !isCancelled && !isLiveScanningRef.current) {
+          isLiveScanningRef.current = true
+          playBeep()
+          capture(detectedCode)
+        }
+      } catch {
+      } finally {
+        isProcessingFrame = false
+      }
+    }
+
+    const intervalId = window.setInterval(checkFrame, 280)
+
+    return () => {
+      isCancelled = true
+      window.clearInterval(intervalId)
+    }
+  }, [state, step, step1Data])
 
   async function start() {
     if (!navigator.mediaDevices?.getUserMedia) return setState("unavailable")
@@ -164,6 +245,7 @@ export function Scanner({
   }
 
   const resetToStep1 = () => {
+    isLiveScanningRef.current = false
     setStep(1)
     setShowStep2Notice(true)
     setStep1Data(null)
@@ -189,16 +271,20 @@ export function Scanner({
     }
   }
 
-  async function recognize(img: string, file?: File | Blob) {
+  async function recognize(
+    img: string,
+    file?: File | Blob,
+    preDetectedBarcode?: string,
+  ) {
     setImage(img)
 
     setState("processing")
 
     setDetectedDraft(undefined)
 
-    // 1. Attempt client-side barcode detection from image
+    // 1. Attempt client-side barcode detection from image (if not pre-detected)
 
-    let detectedBarcode: string | undefined
+    let detectedBarcode: string | undefined = preDetectedBarcode
 
     let barcodeProductName: string | undefined
 
@@ -206,34 +292,33 @@ export function Scanner({
 
     let barcodeMfgDate = ""
 
-    try {
-      const htmlImg = new Image()
+    if (!detectedBarcode) {
+      try {
+        const htmlImg = new Image()
 
-      htmlImg.src = img
+        htmlImg.src = img
 
-      await new Promise((resolve) => {
-        if (htmlImg.complete) resolve(true)
-        else htmlImg.onload = () => resolve(true)
-      })
+        await new Promise((resolve) => {
+          if (htmlImg.complete) resolve(true)
+          else htmlImg.onload = () => resolve(true)
+        })
 
-      const barcodeRes = await decodeBarcodeFromImage(htmlImg)
+        const barcodeRes = await decodeBarcodeFromImage(htmlImg)
 
-      if (barcodeRes && barcodeRes.text) {
-        detectedBarcode = barcodeRes.text
-
-        // Check if barcode is GS1 encoding expiry/manufactured date directly
-        const gs1 = parseGs1Barcode(detectedBarcode)
-
-        if (gs1?.expiryDate) barcodeExpDate = gs1.expiryDate
-
-        if (gs1?.manufacturedDate) barcodeMfgDate = gs1.manufacturedDate
-
-        const prod = await lookupBarcode(detectedBarcode, existingFoods as any)
-        if (prod.found && prod.product?.name) {
-          barcodeProductName = prod.product.name
+        if (barcodeRes && barcodeRes.text) {
+          detectedBarcode = barcodeRes.text
         }
-      }
-    } catch {}
+      } catch {}
+    }
+
+    if (detectedBarcode) {
+      // Check if barcode is GS1 encoding expiry/manufactured date directly
+      const gs1 = parseGs1Barcode(detectedBarcode)
+
+      if (gs1?.expiryDate) barcodeExpDate = gs1.expiryDate
+
+      if (gs1?.manufacturedDate) barcodeMfgDate = gs1.manufacturedDate
+    }
 
     try {
       let uploadFile: File | Blob
@@ -248,7 +333,25 @@ export function Scanner({
         uploadFile = new File([blob], "capture.jpg", { type: "image/jpeg" })
       }
 
-      const scanResult = await api.scan(uploadFile, detectedBarcode)
+      // Parallelize product metadata lookup & backend OCR scanning for maximum speed
+      const lookupPromise: Promise<ProductLookupResult | null> = detectedBarcode
+        ? lookupBarcode(detectedBarcode, existingFoods as any).catch(() => ({
+            found: false,
+            barcode: detectedBarcode!,
+            source: "none" as const,
+          }))
+        : Promise.resolve(null)
+
+      const scanPromise = api.scan(uploadFile, detectedBarcode)
+
+      const [lookupRes, scanResult] = await Promise.all([
+        lookupPromise,
+        scanPromise,
+      ])
+
+      if (lookupRes?.found && lookupRes.product?.name) {
+        barcodeProductName = lookupRes.product.name
+      }
 
       const cand = scanResult.candidates
 
@@ -505,26 +608,32 @@ export function Scanner({
         return
       }
 
+      isLiveScanningRef.current = false
       setState("unrecognized")
     }
   }
 
-  function capture() {
+  function capture(preDetectedBarcode?: string) {
     const v = videoRef.current
 
     if (!v || !v.videoWidth) return
 
     setState("capturing")
 
+    // Optimize frame resolution: max 1200px dimension preserves full OCR precision while reducing upload payload
+    const maxDim = 1200
+    const origW = v.videoWidth
+    const origH = v.videoHeight
+    const scale = Math.min(1, maxDim / Math.max(origW, origH))
+    const targetW = Math.round(origW * scale)
+    const targetH = Math.round(origH * scale)
+
     const c = document.createElement("canvas")
+    c.width = targetW
+    c.height = targetH
+    c.getContext("2d")?.drawImage(v, 0, 0, targetW, targetH)
 
-    c.width = v.videoWidth
-
-    c.height = v.videoHeight
-
-    c.getContext("2d")?.drawImage(v, 0, 0)
-
-    const dataUrl = c.toDataURL("image/jpeg", 0.85)
+    const dataUrl = c.toDataURL("image/jpeg", 0.8)
 
     c.toBlob(
       (blob) => {
@@ -533,15 +642,15 @@ export function Scanner({
             type: "image/jpeg",
           })
 
-          recognize(dataUrl, f)
+          recognize(dataUrl, f, preDetectedBarcode)
         } else {
-          recognize(dataUrl)
+          recognize(dataUrl, undefined, preDetectedBarcode)
         }
       },
 
       "image/jpeg",
 
-      0.85,
+      0.8,
     )
   }
 
@@ -621,19 +730,31 @@ export function Scanner({
           if (gs1?.expiryDate) barcodeExpDate = gs1.expiryDate
 
           if (gs1?.manufacturedDate) barcodeMfgDate = gs1.manufacturedDate
-
-          const prod = await lookupBarcode(
-            detectedBarcode,
-            existingFoods as any,
-          )
-          if (prod.found && prod.product?.name) {
-            barcodeProductName = prod.product.name
-          }
         }
       } catch {}
 
       try {
-        const scanResult = await api.scan(file, detectedBarcode)
+        const lookupPromise: Promise<ProductLookupResult | null> =
+          detectedBarcode
+            ? lookupBarcode(detectedBarcode, existingFoods as any).catch(
+                () => ({
+                  found: false,
+                  barcode: detectedBarcode!,
+                  source: "none" as const,
+                }),
+              )
+            : Promise.resolve(null)
+
+        const scanPromise = api.scan(file, detectedBarcode)
+
+        const [lookupRes, scanResult] = await Promise.all([
+          lookupPromise,
+          scanPromise,
+        ])
+
+        if (lookupRes?.found && lookupRes.product?.name) {
+          barcodeProductName = lookupRes.product.name
+        }
 
         const cand = scanResult.candidates
 
@@ -880,6 +1001,16 @@ export function Scanner({
           )}
         </div>
 
+        {live && state === "ready" && (
+          <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-xs px-3 py-1 text-[11px] font-medium text-brand-secondary shadow-sm">
+            <Sparkles
+              size={12}
+              className="animate-pulse text-brand-secondary"
+            />
+            <span>Tự động nhận diện tức thì</span>
+          </div>
+        )}
+
         {/* Status Messages & Overlay */}
         {(state === "idle" ||
           state === "requesting" ||
@@ -1049,7 +1180,7 @@ export function Scanner({
               <Button
                 variant="primary"
                 iconStart={<Camera size={20} />}
-                onClick={capture}
+                onClick={() => capture()}
                 disabled={state === "capturing"}
               >
                 {step1Data.detectedType === "product_only"
@@ -1097,7 +1228,7 @@ export function Scanner({
                 <Button
                   variant="primary"
                   iconStart={<Camera size={18} />}
-                  onClick={capture}
+                  onClick={() => capture()}
                   disabled={state === "capturing"}
                 >
                   Chụp ảnh Bước 1

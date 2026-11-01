@@ -1087,10 +1087,14 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onBarcodeSelect={(barcodeDraft) =>
             go({
               name: "form",
+
               mode: "manual",
+
               draft: {
                 ...emptyDraft(),
+
                 name: barcodeDraft.name,
+
                 barcode: barcodeDraft.barcode,
               },
             })
