@@ -278,11 +278,14 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     const activeUserId = state.userId
 
-    api
+    const hydrateInventory = async () => {
+      let pageNum = 1
+      const limit = 100
+      let hasMore = true
 
-      .entries({ limit: 100 })
+      while (hasMore) {
+        const page = await api.entries({ page: pageNum, limit })
 
-      .then((page) => {
         if (
           !isMounted ||
           sessionGenRef.current !== gen ||
@@ -310,7 +313,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
               unit: (item.unit === "piece" ? "cái" : item.unit) as Unit,
 
-              category: item.category as Category || undefined,
+              category: (item.category as Category) || undefined,
 
               location: item.storage_location || undefined,
 
@@ -333,17 +336,28 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             dispatch({ type: "addLocation", name: item.storage_location })
           }
         }
-      })
 
-      .catch(() => {
         if (
-          isMounted &&
-          sessionGenRef.current === gen &&
-          state.userId === activeUserId
+          !page.pagination ||
+          pageNum * limit >= page.pagination.total ||
+          page.items.length === 0
         ) {
-          setSyncError("Không thể tải đầy đủ danh mục thực phẩm từ máy chủ.")
+          hasMore = false
+        } else {
+          pageNum++
         }
-      })
+      }
+    }
+
+    hydrateInventory().catch(() => {
+      if (
+        isMounted &&
+        sessionGenRef.current === gen &&
+        state.userId === activeUserId
+      ) {
+        setSyncError("Không thể tải đầy đủ danh mục thực phẩm từ máy chủ.")
+      }
+    })
 
     api
 

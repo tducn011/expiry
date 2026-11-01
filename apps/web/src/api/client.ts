@@ -915,14 +915,71 @@ export class ApiClient {
     )
   }
 
-  async history(id: string) {
-    const next = await this.request<Page<MovementResponseDTO>>(
-      `/food-entries/${encodeURIComponent(id)}/movements?page=1&limit=50`,
-    )
+  async allEntries(
+    query: Record<string, string | number> = {},
+    trash = false,
+  ): Promise<FoodEntry[]> {
+    let page = 1
+    const limit = 100
+    const allItems: FoodEntry[] = []
 
-    if (!Array.isArray(next.items) || !next.pagination) throw contractError()
+    while (true) {
+      const pageResult = await this.entries({ ...query, page, limit }, trash)
+      allItems.push(...pageResult.items)
+      if (
+        !pageResult.pagination ||
+        allItems.length >= pageResult.pagination.total ||
+        pageResult.items.length === 0
+      ) {
+        break
+      }
+      page++
+    }
 
-    return next.items.map(fromMovement)
+    return allItems
+  }
+
+  async history(
+    id: string,
+    options?: { page?: number; limit?: number },
+  ): Promise<QuantityMovement[]> {
+    if (options?.page !== undefined) {
+      const page = options.page
+      const limit = options.limit ?? 50
+      const next = await this.request<Page<MovementResponseDTO>>(
+        `/food-entries/${encodeURIComponent(id)}/movements?page=${page}&limit=${limit}`,
+      )
+
+      if (!Array.isArray(next.items) || !next.pagination) throw contractError()
+
+      return next.items.map(fromMovement)
+    }
+
+    let page = 1
+    const limit = options?.limit ?? 50
+    const allItems: QuantityMovement[] = []
+
+    while (true) {
+      const next = await this.request<Page<MovementResponseDTO>>(
+        `/food-entries/${encodeURIComponent(id)}/movements?page=${page}&limit=${limit}`,
+      )
+
+      if (!Array.isArray(next.items) || !next.pagination) throw contractError()
+
+      allItems.push(...next.items.map(fromMovement))
+
+      if (
+        !next.pagination ||
+        allItems.length >= next.pagination.total ||
+        next.items.length === 0
+      ) {
+        break
+      }
+
+      page++
+    }
+
+    return allItems
   }
 
   preferences() {
