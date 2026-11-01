@@ -91,7 +91,7 @@ export type Route = { name: "inventory" } | {
 
   draft: Draft
 
-  image?: string
+  image?: string | string[]
 } | {
   name: "detail"
 
