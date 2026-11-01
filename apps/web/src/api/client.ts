@@ -528,7 +528,6 @@ const fromMutationResult = (dto: MutationResultDTO): MutationResult => {
 
 export type HistoryOptions = {
   page?: number
-
   limit?: number
 }
 
