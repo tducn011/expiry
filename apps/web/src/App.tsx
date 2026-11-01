@@ -336,11 +336,15 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
         expDate: item.expiry_date || undefined,
 
-        mfgDate: item.opened_on || undefined,
+        mfgDate: item.manufactured_on || undefined,
+
+        opened_on: item.opened_on || undefined,
 
         finishedAt: item.remaining_quantity === 0 ? item.updated_at : undefined,
 
         deletedAt: item.deleted_at || undefined,
+
+        barcode: item.barcode || undefined,
 
         createdAt: item.created_at,
 
@@ -714,6 +718,10 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
             date_label_type: "unspecified",
 
+            opened_on: d.opened_on || null,
+
+            manufactured_on: d.mfgDate || null,
+
             category: d.category || null,
 
             barcode: d.barcode || null,
@@ -739,9 +747,13 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
               mfgDate: d.mfgDate || undefined,
 
+              opened_on: d.opened_on || undefined,
+
               expDate: updated.expiry_date || undefined,
 
               location: updated.storage_location || undefined,
+
+              barcode: d.barcode || undefined,
 
               finishedAt:
                 updated.remaining_quantity === 0
@@ -792,11 +804,17 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
               date_certainty: d.expDate ? "known" : "unknown",
 
-              date_source: d.expDate ? "printed_label" : "unknown",
+              date_source: d.expDate
+                ? mode === "ocr"
+                  ? "printed_label"
+                  : "user_entered"
+                : "unknown",
 
               date_label_type: "unspecified",
 
-              opened_on: d.mfgDate || null,
+              opened_on: d.opened_on || null,
+
+              manufactured_on: d.mfgDate || null,
 
               note: null,
 
@@ -828,9 +846,13 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
               mfgDate: d.mfgDate || undefined,
 
+              opened_on: d.opened_on || undefined,
+
               expDate: created.expiry_date || undefined,
 
               location: created.storage_location || undefined,
+
+              barcode: d.barcode || undefined,
 
               finishedAt: undefined,
 
@@ -871,9 +893,13 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
         mfgDate: d.mfgDate || undefined,
 
+        opened_on: d.opened_on || undefined,
+
         expDate: d.expDate || undefined,
 
         location: d.location || undefined,
+
+        barcode: d.barcode || undefined,
 
         finishedAt: undefined,
       },
@@ -1058,6 +1084,18 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onManual={() =>
             go({ name: "form", mode: "manual", draft: emptyDraft() })
           }
+          onBarcodeSelect={(barcodeDraft) =>
+            go({
+              name: "form",
+              mode: "manual",
+              draft: {
+                ...emptyDraft(),
+                name: barcodeDraft.name,
+                barcode: barcodeDraft.barcode,
+              },
+            })
+          }
+          existingFoods={state.foods}
           onBack={back}
         />
       )

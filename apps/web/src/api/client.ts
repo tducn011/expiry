@@ -163,6 +163,8 @@ export type EntryDraftDTO = {
 
   opened_on: string | null
 
+  manufactured_on?: string | null
+
   note: string | null
 
   barcode?: string | null
@@ -394,6 +396,9 @@ export function fromEntry(dto: EntryDTO): FoodEntry {
 
     opened_on: dto.opened_on,
 
+    manufactured_on:
+      (dto as Record<string, unknown>).manufactured_on as string | null ?? null,
+
     note: dto.note,
 
     barcode: (dto as Record<string, unknown>).barcode as string | null ?? null,
@@ -446,6 +451,10 @@ export function draftDTO(draft: EntryDraft): EntryDraftDTO {
         : draft.expiry_date_label_type,
 
     opened_on: draft.opened_on,
+
+    manufactured_on:
+      (draft as Record<string, unknown>).manufactured_on as string | null ??
+      null,
 
     note: draft.note,
   }

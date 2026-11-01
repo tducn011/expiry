@@ -627,4 +627,105 @@ describe("Barcode Scanner & ZXing Formats", () => {
     clearTimeout(timer)
     vi.useRealTimers()
   })
+
+  it("validates barcode check digits strictly without guessing torn digits (Issue #208)", async () => {
+    const { validateBarcode } = await import("../src/lib/barcode")
+
+    // Valid EAN-13
+    const valid13 = validateBarcode("8936039681526")
+    expect(valid13.valid).toBe(true)
+    expect(valid13.format).toBe("EAN_13")
+
+    // Another valid EAN-13 (893467312345 with check digit 7)
+    const valid13B = validateBarcode("8934673123457")
+    expect(valid13B.valid).toBe(true)
+    expect(valid13B.format).toBe("EAN_13")
+
+    // Invalid check digit EAN-13 (8936039681527 has check digit 7 instead of 6)
+    const invalid13 = validateBarcode("8936039681527")
+    expect(invalid13.valid).toBe(false)
+    expect(invalid13.error?.toLowerCase()).toContain("chữ số kiểm tra")
+
+    // Valid EAN-8
+    const valid8 = validateBarcode("96385074")
+    expect(valid8.valid).toBe(true)
+    expect(valid8.format).toBe("EAN_8")
+
+    // Invalid check digit EAN-8
+    const invalid8 = validateBarcode("96385075")
+    expect(invalid8.valid).toBe(false)
+    expect(invalid8.error?.toLowerCase()).toContain("chữ số kiểm tra")
+
+    // Empty / short code
+    const emptyRes = validateBarcode("")
+    expect(emptyRes.valid).toBe(false)
+
+    // Custom internal SKU (e.g. 5 digits)
+    const customRes = validateBarcode("12345")
+    expect(customRes.valid).toBe(true)
+    expect(customRes.format).toBe("CUSTOM")
+  })
+
+  it("validates that FoodForm separates mfgDate from opened_on and enforces mfgDate <= expDate (Issue #209)", async () => {
+    const { validate, emptyDraft } = await import("../src/features/FoodForm")
+
+    // Normal valid entry with NSX and HSD
+    const draft1 = {
+      ...emptyDraft(),
+      name: "Sữa tiệt trùng",
+      mfgDate: "2026-10-01",
+      opened_on: "2026-10-05",
+      expDate: "2026-11-01",
+    }
+    const errs1 = validate(draft1)
+    expect(errs1.expDate).toBeUndefined()
+    expect(errs1.mfgDate).toBeUndefined()
+    expect(errs1.opened_on).toBeUndefined()
+
+    // Invalid: HSD before NSX
+    const draftInvalid = {
+      ...emptyDraft(),
+      name: "Sữa tiệt trùng",
+      mfgDate: "2026-11-01",
+      expDate: "2026-10-01",
+    }
+    const errsInvalid = validate(draftInvalid)
+    expect(errsInvalid.expDate).toBe("Hạn sử dụng không thể trước ngày sản xuất.")
+
+    // Missing NSX is allowed (optional field)
+    const draftNoMfg = {
+      ...emptyDraft(),
+      name: "Rau tươi",
+      expDate: "2026-11-05",
+    }
+    const errsNoMfg = validate(draftNoMfg)
+    expect(errsNoMfg.mfgDate).toBeUndefined()
+    expect(errsNoMfg.expDate).toBeUndefined()
+  })
+
+  it("preserves category, barcode, and date provenance metadata (Issue #210)", async () => {
+    const { draftDTO } = await import("../src/api/client")
+
+    const draft = {
+      name: "Nước ngọt",
+      storage_location: "Tủ lạnh",
+      category: "beverage",
+      barcode: "8935001701124",
+      barcode_format: "EAN_13",
+      expiry_date: "2027-01-01",
+      expiry_date_certainty: "exact" as const,
+      expiry_date_source: "printed_label" as const,
+      expiry_date_label_type: "use_by" as const,
+      opened_on: "2026-11-01",
+      manufactured_on: "2026-05-01",
+      note: "Để ngăn dưới",
+    }
+
+    const dto = draftDTO(draft as any)
+    expect(dto.barcode).toBe("8935001701124")
+    expect(dto.date_source).toBe("printed_label")
+    expect(dto.opened_on).toBe("2026-11-01")
+    expect((dto as any).manufactured_on).toBe("2026-05-01")
+  })
+
 })

@@ -29,6 +29,42 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
   app.use(cors({ credentials: true, origin: (origin, callback) => callback(null, !origin || configuredOrigins.includes(origin)) }));
   app.use(express.json({ limit: '10mb' }));
 
+  // Liveness check (process running, does not depend on database)
+  app.get('/health/live', (_req, res) => {
+    res.status(200).json({
+      status: 'ok',
+      service: 'expiry-api',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Readiness check (checks database dependency, fails with 503 if down)
+  app.get('/health/ready', async (req, res) => {
+    try {
+      const c = await connect(database);
+      const [rows] = await c.query('SELECT 1 as connected');
+      await c.end();
+      if (Number(rows?.[0]?.connected) === 1) {
+        return res.status(200).json({
+          status: 'ready',
+          service: 'expiry-api',
+          database: 'connected',
+          timestamp: new Date().toISOString()
+        });
+      }
+      throw new Error('Database ping returned invalid result');
+    } catch (err) {
+      return res.status(503).json({
+        status: 'unhealthy',
+        service: 'expiry-api',
+        database: 'unavailable',
+        error: err.message || 'Database unavailable',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Root healthcheck
   app.get('/health', async (req, res) => {
     let dbStatus = 'unverified';
@@ -41,8 +77,10 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
       dbStatus = 'unavailable';
     }
 
-    res.json({
-      status: 'ok',
+    const isHealthy = dbStatus === 'connected';
+    const code = isHealthy || (req.query?.strict !== 'true' && database === undefined) ? 200 : 503;
+    res.status(code).json({
+      status: isHealthy ? 'ok' : (code === 200 ? 'ok' : 'degraded'),
       service: 'expiry-api',
       version: '1.0.0',
       database: dbStatus,
@@ -88,7 +126,23 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
   const scanService = new ScanService(scanServiceUrl, scanOptions);
   const scanController = new ScanController(scanService);
 
-  // Public health check for OCR microservice monitoring
+  // Public health checks for monitoring
+  v1Router.get('/health/live', (_req, res) => {
+    res.status(200).json({ status: 'ok', service: 'expiry-api', uptime: process.uptime(), timestamp: new Date().toISOString() });
+  });
+  v1Router.get('/health/ready', async (req, res) => {
+    try {
+      const c = await connect(database);
+      const [rows] = await c.query('SELECT 1 as connected');
+      await c.end();
+      if (Number(rows?.[0]?.connected) === 1) {
+        return res.status(200).json({ status: 'ready', service: 'expiry-api', database: 'connected', timestamp: new Date().toISOString() });
+      }
+      throw new Error('Database ping failed');
+    } catch (err) {
+      return res.status(503).json({ status: 'unhealthy', service: 'expiry-api', database: 'unavailable', error: err.message, timestamp: new Date().toISOString() });
+    }
+  });
   v1Router.get('/scan/health', scanController.health);
   // Extraction is transient and does not reserve a mutation replay key.
   v1Router.use('/', createScanRouter(scanController));

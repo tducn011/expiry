@@ -11,7 +11,9 @@ const shas = [
   'ac71b3ac50d19b10aac1df391920d26fed1d8c67',
   '0f1070a00f694393899c3d20cbe3077ec7b7e6ab',
   'e5f2fcee6850298aec8b31dc6cd3fb88fefe8dfd',
-  '3d475d745041db63f09badff98a3ff874c1251f9'
+  '3d475d745041db63f09badff98a3ff874c1251f9',
+  '65a28f73111bdf2efee37947702f37e42d72551a',
+  '74d669d2f25d4ce669b2b2b1ff958742ca86d795'
 ];
 
 const checkNames = [
