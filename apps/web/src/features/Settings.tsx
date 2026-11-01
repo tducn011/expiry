@@ -166,6 +166,7 @@ export function Settings({
       if (pushSupported && Notification.permission === "granted") {
         new Notification("Expiry - Nhắc nhở mẫu", {
           body: "Đây là thông báo thử nghiệm trên trình duyệt khi mở ứng dụng.",
+
           icon: "/favicon.ico",
         })
 

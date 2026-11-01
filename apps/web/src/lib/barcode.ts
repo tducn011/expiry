@@ -552,6 +552,7 @@ export function extractBarcodeFromText(
   text: string,
 ): {
   code: string
+
   format: string
 } | null {
   if (!text) return null

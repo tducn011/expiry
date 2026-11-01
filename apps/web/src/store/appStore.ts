@@ -317,18 +317,30 @@ export function reducer(s: State, a: Action): State {
 
     case "login": {
       if (a.mode === "demo") return loadDemo()
+
       const userNotifs = loadUserNotifs(a.userId)
+
       const userLocations = loadUserLocations(a.userId)
+
       return {
         ...initial,
+
         onboarded: s.onboarded,
+
         mode: "account",
+
         userName: a.name,
+
         userId: a.userId,
+
         foods: [],
+
         history: [],
+
         locations: userLocations,
+
         readNotifs: userNotifs.readNotifs,
+
         snoozed: userNotifs.snoozed,
       }
     }
@@ -490,9 +502,12 @@ export function reducer(s: State, a: Action): State {
       const mergedLocations = Array.from(
         new Set([...s.locations, ...(a.locations || [])]),
       )
+
       return {
         ...s,
+
         foods: a.foods,
+
         locations: mergedLocations,
       }
     }
@@ -504,33 +519,44 @@ export function reducer(s: State, a: Action): State {
 
     case "renameLocation": {
       const oldName = a.oldName.trim()
+
       const newName = a.newName.trim()
+
       if (!oldName || !newName || oldName === newName) return s
 
       const updatedLocations = Array.from(
         new Set(s.locations.map((loc) => (loc === oldName ? newName : loc))),
       )
+
       const updatedFoods = s.foods.map((f) =>
         f.location === oldName ? { ...f, location: newName } : f,
       )
+
       return {
         ...s,
+
         locations: updatedLocations,
+
         foods: updatedFoods,
       }
     }
 
     case "removeLocation": {
       const target = a.name.trim()
+
       if (!target) return s
 
       const updatedLocations = s.locations.filter((loc) => loc !== target)
+
       const updatedFoods = s.foods.map((f) =>
         f.location === target ? { ...f, location: undefined } : f,
       )
+
       return {
         ...s,
+
         locations: updatedLocations,
+
         foods: updatedFoods,
       }
     }
@@ -1049,19 +1075,24 @@ export function getNotifKey(userId?: string): string {
 
 export interface UserNotifData {
   snoozed: Record<string, string>
+
   readNotifs: string[]
 }
 
 export function loadUserNotifs(userId?: string): UserNotifData {
   try {
     const raw = localStorage.getItem(getNotifKey(userId))
+
     if (!raw) return { snoozed: {}, readNotifs: [] }
+
     const parsed = JSON.parse(raw)
+
     return {
       snoozed:
         typeof parsed.snoozed === "object" && parsed.snoozed !== null
           ? parsed.snoozed
           : {},
+
       readNotifs: Array.isArray(parsed.readNotifs) ? parsed.readNotifs : [],
     }
   } catch {
@@ -1071,6 +1102,7 @@ export function loadUserNotifs(userId?: string): UserNotifData {
 
 export function saveUserNotifs(
   userId: string | undefined,
+
   data: UserNotifData,
 ) {
   try {
@@ -1097,11 +1129,15 @@ export function getUserLocationsKey(userId?: string): string {
 export function loadUserLocations(userId?: string): string[] {
   try {
     const raw = localStorage.getItem(getUserLocationsKey(userId))
+
     if (!raw) return [...DEFAULT_LOCATIONS]
+
     const parsed = JSON.parse(raw)
+
     if (Array.isArray(parsed) && parsed.length > 0) {
       return Array.from(new Set([...DEFAULT_LOCATIONS, ...parsed]))
     }
+
     return [...DEFAULT_LOCATIONS]
   } catch {
     return [...DEFAULT_LOCATIONS]
@@ -1110,12 +1146,14 @@ export function loadUserLocations(userId?: string): string[] {
 
 export function saveUserLocations(
   userId: string | undefined,
+
   locations: string[],
 ): void {
   try {
     if (userId) {
       localStorage.setItem(
         getUserLocationsKey(userId),
+
         JSON.stringify(locations),
       )
     }
@@ -1128,10 +1166,14 @@ export function clearUserLocations(userId?: string): void {
   try {
     if (userId) {
       localStorage.removeItem(getUserLocationsKey(userId))
+
       localStorage.removeItem(`expiry_user_preferences_${userId}`)
+
       localStorage.removeItem(`expiry_storage_preferences_${userId}`)
     }
+
     localStorage.removeItem("expiry_user_preferences")
+
     localStorage.removeItem("expiry_storage_preferences")
   } catch {
     /* ignore */
@@ -1152,6 +1194,7 @@ function signOutStorage(userId?: string) {
 
     if (userId) {
       clearUserNotifs(userId)
+
       clearUserLocations(userId)
     }
 
@@ -1199,8 +1242,10 @@ export function useAppStore() {
       } else if (state.mode === "account" && state.userId) {
         saveUserNotifs(state.userId, {
           snoozed: state.snoozed,
+
           readNotifs: state.readNotifs,
         })
+
         saveUserLocations(state.userId, state.locations)
       }
 
@@ -1315,46 +1360,66 @@ export function notifications(s: State): Notif[] {
   if (!s.settings.inApp) return []
 
   const t = today()
+
   const seenIds = new Set<string>()
+
   const notifs: Notif[] = []
 
   for (const f of attention(s)) {
     const d = daysLeft(f)
+
     let rule: NotificationRule
+
     let status: Status = "unknown"
+
     let title = ""
+
     let message = ""
 
     if (f.expDate) {
       if (d !== null && d < 0) {
         rule = "expired"
+
         status = "expired"
+
         title = "Đã quá hạn"
+
         message = `${f.name} đã quá hạn ${Math.abs(d)} ngày`
       } else if (d === 0) {
         rule = "due_today"
+
         status = "soon"
+
         title = "Hết hạn hôm nay"
+
         message = `${f.name} hết hạn sử dụng hôm nay`
       } else if (d !== null && d <= s.settings.remindDays) {
         rule = "soon"
+
         status = "soon"
+
         title = "Sắp hết hạn"
+
         message = `${f.name} còn ${d} ngày là hết hạn`
       } else {
         continue
       }
     } else {
       rule = "review"
+
       status = "unknown"
+
       title = "Cần kiểm tra lại"
+
       message = `${f.name} chưa rõ hạn sử dụng, đã đến lịch kiểm tra`
     }
 
     const id = `${f.id}:${f.expDate ?? f.reviewAt ?? "review"}:${rule}`
+
     const legacyId = `${f.id}:${f.expDate ?? "review"}:${status}`
 
     if (seenIds.has(id)) continue
+
     seenIds.add(id)
 
     const isSnoozed =
@@ -1368,10 +1433,15 @@ export function notifications(s: State): Notif[] {
 
     notifs.push({
       id,
+
       food: f,
+
       status,
+
       rule,
+
       title,
+
       message,
     })
   }

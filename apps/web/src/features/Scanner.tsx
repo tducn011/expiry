@@ -89,6 +89,7 @@ export function Scanner({
   const [detectedDraft, setDetectedDraft] = useState<Draft | undefined>(
     undefined,
   )
+  const [showStep2Notice, setShowStep2Notice] = useState(true)
 
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -115,6 +116,15 @@ export function Scanner({
       window.clearTimeout(timer.current)
     }
   }, [])
+
+  useEffect(() => {
+    if (state === "step2_ready" && step1Data && showStep2Notice) {
+      const t = window.setTimeout(() => {
+        setShowStep2Notice(false)
+      }, 3000)
+      return () => window.clearTimeout(t)
+    }
+  }, [state, step1Data, showStep2Notice])
 
   async function start() {
     if (!navigator.mediaDevices?.getUserMedia) return setState("unavailable")
@@ -152,7 +162,7 @@ export function Scanner({
 
   const resetToStep1 = () => {
     setStep(1)
-
+    setShowStep2Notice(true)
     setStep1Data(null)
 
     setImage(undefined)
@@ -352,7 +362,7 @@ export function Scanner({
           })
 
           setStep(2)
-
+          setShowStep2Notice(true)
           setState("step2_ready")
 
           return
@@ -374,7 +384,7 @@ export function Scanner({
           })
 
           setStep(2)
-
+          setShowStep2Notice(true)
           setState("step2_ready")
 
           return
@@ -868,151 +878,163 @@ export function Scanner({
         </div>
 
         {/* Status Messages & Overlay */}
-        <div
-          className="relative z-10 flex max-w-sm flex-col items-center gap-3 rounded-corner-lg p-5 text-center bg-black/60 backdrop-blur-xs shadow-lg mx-4"
-          aria-live="polite"
-        >
-          {state === "idle" && (
-            <>
-              <Camera
-                size={32}
-                aria-hidden="true"
-                className="text-brand-secondary"
-              />
-              <p className="text-sm font-medium">Camera chưa bật</p>
-              <p className="text-xs text-text-tertiary">
-                Bấm bật camera hoặc dùng nút chụp ảnh điện thoại bên dưới.
-              </p>
-            </>
-          )}
+        {(state === "idle" ||
+          state === "requesting" ||
+          state === "capturing" ||
+          state === "processing" ||
+          (state === "step2_ready" && Boolean(step1Data) && showStep2Notice) ||
+          state === "unrecognized" ||
+          state === "denied" ||
+          state === "unavailable") && (
+          <div
+            className="relative z-10 flex max-w-sm flex-col items-center gap-3 rounded-corner-lg p-5 text-center bg-black/60 backdrop-blur-xs shadow-lg mx-4 transition-all duration-300"
+            aria-live="polite"
+            onClick={() => {
+              if (state === "step2_ready") setShowStep2Notice(false)
+            }}
+          >
+            {state === "idle" && (
+              <>
+                <Camera
+                  size={32}
+                  aria-hidden="true"
+                  className="text-brand-secondary"
+                />
+                <p className="text-sm font-medium">Camera chưa bật</p>
+                <p className="text-xs text-text-tertiary">
+                  Bấm bật camera hoặc dùng nút chụp ảnh điện thoại bên dưới.
+                </p>
+              </>
+            )}
 
-          {state === "requesting" && (
-            <>
-              <Loader2
-                size={32}
-                className="animate-spin text-brand-secondary"
-                aria-hidden="true"
-              />
-              <p className="text-sm font-medium">Đang mở camera…</p>
-            </>
-          )}
+            {state === "requesting" && (
+              <>
+                <Loader2
+                  size={32}
+                  className="animate-spin text-brand-secondary"
+                  aria-hidden="true"
+                />
+                <p className="text-sm font-medium">Đang mở camera…</p>
+              </>
+            )}
 
-          {state === "capturing" && (
-            <p className="text-sm font-medium">Đang chụp…</p>
-          )}
+            {state === "capturing" && (
+              <p className="text-sm font-medium">Đang chụp…</p>
+            )}
 
-          {state === "processing" && (
-            <>
-              <Loader2
-                size={32}
-                className="animate-spin text-brand-secondary"
-                aria-hidden="true"
-              />
-              <p className="text-sm font-medium">
-                {batchProgress && batchProgress.total > 1
-                  ? `Đang đọc ảnh ${batchProgress.current}/${batchProgress.total}…`
-                  : step === 2
-                    ? "Đang đọc ngày HSD (Lần 2)…"
-                    : "Đang đọc thông tin sản phẩm…"}
-              </p>
-            </>
-          )}
+            {state === "processing" && (
+              <>
+                <Loader2
+                  size={32}
+                  className="animate-spin text-brand-secondary"
+                  aria-hidden="true"
+                />
+                <p className="text-sm font-medium">
+                  {batchProgress && batchProgress.total > 1
+                    ? `Đang đọc ảnh ${batchProgress.current}/${batchProgress.total}…`
+                    : step === 2
+                      ? "Đang đọc ngày HSD (Lần 2)…"
+                      : "Đang đọc thông tin sản phẩm…"}
+                </p>
+              </>
+            )}
 
-          {state === "step2_ready" && step1Data && (
-            <div className="flex flex-col items-center gap-2 text-center">
-              <div className="flex items-center gap-1.5 text-status-good font-semibold text-sm">
-                <CircleCheck size={18} />
-                <span>
-                  {step1Data.detectedType === "product_only"
-                    ? "Đã nhận diện sản phẩm!"
-                    : "Đã đọc ngày HSD!"}
-                </span>
+            {state === "step2_ready" && step1Data && (
+              <div className="flex flex-col items-center gap-2 text-center">
+                <div className="flex items-center gap-1.5 text-status-good font-semibold text-sm">
+                  <CircleCheck size={18} />
+                  <span>
+                    {step1Data.detectedType === "product_only"
+                      ? "Đã nhận diện sản phẩm!"
+                      : "Đã đọc ngày HSD!"}
+                  </span>
+                </div>
+
+                {step1Data.detectedType === "product_only" ? (
+                  <div className="text-xs space-y-1">
+                    <p className="font-bold text-sm text-brand-secondary truncate max-w-[240px]">
+                      {step1Data.draft.name}
+                    </p>
+                    {step1Data.draft.barcode && (
+                      <p className="text-text-tertiary text-[11px]">
+                        Mã: {step1Data.draft.barcode}
+                      </p>
+                    )}
+                    <p className="mt-2 text-amber-300 font-medium leading-relaxed">
+                      👉 Lật đáy lon hoặc nắp hộp để quét ngày HSD
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-xs space-y-1">
+                    <p className="font-bold text-sm text-brand-secondary">
+                      HSD: {step1Data.draft.expDate}
+                    </p>
+                    {step1Data.draft.mfgDate && (
+                      <p className="text-text-tertiary text-[11px]">
+                        NSX: {step1Data.draft.mfgDate}
+                      </p>
+                    )}
+                    <p className="mt-2 text-amber-300 font-medium leading-relaxed">
+                      👉 Hướng vào Mã vạch / Mặt trước để lấy tên sản phẩm
+                    </p>
+                  </div>
+                )}
               </div>
+            )}
 
-              {step1Data.detectedType === "product_only" ? (
-                <div className="text-xs space-y-1">
-                  <p className="font-bold text-sm text-brand-secondary truncate max-w-[240px]">
-                    {step1Data.draft.name}
-                  </p>
-                  {step1Data.draft.barcode && (
-                    <p className="text-text-tertiary text-[11px]">
-                      Mã: {step1Data.draft.barcode}
-                    </p>
-                  )}
-                  <p className="mt-2 text-amber-300 font-medium leading-relaxed">
-                    👉 Lật đáy lon hoặc nắp hộp để quét ngày HSD
-                  </p>
-                </div>
-              ) : (
-                <div className="text-xs space-y-1">
-                  <p className="font-bold text-sm text-brand-secondary">
-                    HSD: {step1Data.draft.expDate}
-                  </p>
-                  {step1Data.draft.mfgDate && (
-                    <p className="text-text-tertiary text-[11px]">
-                      NSX: {step1Data.draft.mfgDate}
-                    </p>
-                  )}
-                  <p className="mt-2 text-amber-300 font-medium leading-relaxed">
-                    👉 Hướng vào Mã vạch / Mặt trước để lấy tên sản phẩm
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+            {state === "unrecognized" && (
+              <>
+                <ScanText
+                  size={32}
+                  aria-hidden="true"
+                  className="text-brand-secondary"
+                />
+                <p className="text-sm font-semibold">
+                  Chưa thấy ngày HSD trên góc chụp này
+                </p>
+                <p className="text-xs text-text-tertiary">
+                  Hạn sử dụng trên lon/hộp thường in riêng ở{" "}
+                  <strong>đáy lon</strong> hoặc <strong>nắp hộp</strong>.
+                </p>
+                <p className="text-xs text-amber-300 font-medium">
+                  👉 Bấm &quot;Chụp thêm góc HSD&quot; bên dưới để quét tiếp đáy
+                  lon mà không mất ảnh này!
+                </p>
+              </>
+            )}
 
-          {state === "unrecognized" && (
-            <>
-              <ScanText
-                size={32}
-                aria-hidden="true"
-                className="text-brand-secondary"
-              />
-              <p className="text-sm font-semibold">
-                Chưa thấy ngày HSD trên góc chụp này
-              </p>
-              <p className="text-xs text-text-tertiary">
-                Hạn sử dụng trên lon/hộp thường in riêng ở{" "}
-                <strong>đáy lon</strong> hoặc <strong>nắp hộp</strong>.
-              </p>
-              <p className="text-xs text-amber-300 font-medium">
-                👉 Bấm &quot;Chụp thêm góc HSD&quot; bên dưới để quét tiếp đáy
-                lon mà không mất ảnh này!
-              </p>
-            </>
-          )}
+            {state === "denied" && (
+              <>
+                <ShieldAlert
+                  size={32}
+                  aria-hidden="true"
+                  className="text-status-expired"
+                />
+                <p className="text-sm font-medium">Chưa có quyền dùng camera</p>
+                <p className="text-xs text-text-tertiary">
+                  Cho phép camera trong cài đặt trình duyệt, hoặc dùng nút chụp
+                  ảnh bên dưới.
+                </p>
+              </>
+            )}
 
-          {state === "denied" && (
-            <>
-              <ShieldAlert
-                size={32}
-                aria-hidden="true"
-                className="text-status-expired"
-              />
-              <p className="text-sm font-medium">Chưa có quyền dùng camera</p>
-              <p className="text-xs text-text-tertiary">
-                Cho phép camera trong cài đặt trình duyệt, hoặc dùng nút chụp
-                ảnh bên dưới.
-              </p>
-            </>
-          )}
-
-          {state === "unavailable" && (
-            <>
-              <CameraOff
-                size={32}
-                aria-hidden="true"
-                className="text-status-expired"
-              />
-              <p className="text-sm font-medium">
-                Camera trực tiếp chưa khả dụng
-              </p>
-              <p className="text-xs text-text-tertiary">
-                Hãy dùng nút &quot;Chụp từ máy ảnh điện thoại&quot; bên dưới.
-              </p>
-            </>
-          )}
-        </div>
+            {state === "unavailable" && (
+              <>
+                <CameraOff
+                  size={32}
+                  aria-hidden="true"
+                  className="text-status-expired"
+                />
+                <p className="text-sm font-medium">
+                  Camera trực tiếp chưa khả dụng
+                </p>
+                <p className="text-xs text-text-tertiary">
+                  Hãy dùng nút &quot;Chụp từ máy ảnh điện thoại&quot; bên dưới.
+                </p>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Mobile-Friendly Control Panel */}

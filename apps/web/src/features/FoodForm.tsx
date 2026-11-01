@@ -1,5 +1,7 @@
 import { useRef, useState } from "react"
+
 import { api } from "../api/client"
+
 import { playBeep } from "../lib/barcode"
 
 import type { Category, Food, Unit } from "../store/appStore"
@@ -154,6 +156,7 @@ export function FoodForm({
   onCancel: (dirty: boolean) => void
 }) {
   const [d, setD] = useState<Draft>(initial)
+
   const [capturedImages, setCapturedImages] = useState<string[]>(() =>
     Array.isArray(capturedImage)
       ? capturedImage
@@ -161,40 +164,60 @@ export function FoodForm({
         ? [capturedImage]
         : [],
   )
+
   const [selectedImgIdx, setSelectedImgIdx] = useState(0)
 
   const currentImg = capturedImages[selectedImgIdx] || capturedImages[0]
+
   const [scanningHsd, setScanningHsd] = useState(false)
+
   const scanHsdInputRef = useRef<HTMLInputElement>(null)
 
   const handleScanHsdPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+
     if (!file) return
+
     e.target.value = ""
+
     setScanningHsd(true)
+
     try {
       const dataUrl = await new Promise<string>((resolve) => {
         const r = new FileReader()
+
         r.onload = () => resolve(String(r.result))
+
         r.readAsDataURL(file)
       })
+
       const result = await api.scan(file)
+
       const cand = result.candidates
+
       const exp = cand.expiry_date?.value || ""
+
       const mfg = cand.manufactured_date?.value || ""
+
       if (exp) {
         setD((p) => ({ ...p, expDate: exp, mfgDate: mfg || p.mfgDate }))
+
         setErrors((p) => ({ ...p, expDate: undefined, mfgDate: undefined }))
       } else if (mfg) {
         setD((p) => ({ ...p, mfgDate: mfg }))
+
         setErrors((p) => ({ ...p, mfgDate: undefined }))
       }
+
       setCapturedImages((prev) => [...prev, dataUrl])
+
       setSelectedImgIdx(capturedImages.length)
+
       playBeep()
     } catch {
       setErrors((p) => ({
         ...p,
+
         expDate:
           "Chưa đọc được ngày từ ảnh này, vui lòng nhập tay hoặc chụp lại gần hơn.",
       }))

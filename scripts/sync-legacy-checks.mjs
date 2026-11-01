@@ -9,7 +9,9 @@ if (!token) {
 const shas = [
   '4b24f99f8e98e73c2c9c0f7352e2d7e109824b8e',
   'ac71b3ac50d19b10aac1df391920d26fed1d8c67',
-  '0f1070a00f694393899c3d20cbe3077ec7b7e6ab'
+  '0f1070a00f694393899c3d20cbe3077ec7b7e6ab',
+  'e5f2fcee6850298aec8b31dc6cd3fb88fefe8dfd',
+  '3d475d745041db63f09badff98a3ff874c1251f9'
 ];
 
 const checkNames = [

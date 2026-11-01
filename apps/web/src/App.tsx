@@ -714,6 +714,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
             date_label_type: "unspecified",
 
+            category: d.category || null,
+
             barcode: d.barcode || null,
 
             expected_version: expectedVersion,
@@ -797,6 +799,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               opened_on: d.mfgDate || null,
 
               note: null,
+
+              category: d.category || null,
 
               barcode: d.barcode || null,
 
