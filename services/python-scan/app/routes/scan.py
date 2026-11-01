@@ -57,7 +57,8 @@ def extract_ocr_text(image_bytes: bytes) -> str:
 def process_scan(
     raw_bytes: bytes,
     barcode: Optional[str] = None,
-    locale: Optional[str] = None
+    locale: Optional[str] = None,
+    gemini_api_key: Optional[str] = None
 ) -> ScanResult:
     started = time.monotonic()
     processed, _warning = preprocess_image(raw_bytes)
@@ -94,7 +95,7 @@ def process_scan(
     # 3. Fallback Path (Option C): Invoke Vision LLM if fast path failed or is ambiguous
     if not fast_path_ok:
         try:
-            vision_res = extract_vision_llm_candidates(raw_bytes)
+            vision_res = extract_vision_llm_candidates(raw_bytes, gemini_api_key=gemini_api_key)
             if vision_res is not None:
                 v_candidates, v_raw_text, v_provider = vision_res
                 if v_candidates.get("expiry_date", {}).get("value"):
@@ -143,6 +144,7 @@ async def scan_image(request: Request):
     media_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
     barcode = request.query_params.get("barcode")
     locale = request.query_params.get("locale") or request.headers.get("accept-language")
+    gemini_key = request.headers.get("x-gemini-api-key") or request.query_params.get("gemini_api_key")
 
     if media_type == "application/json":
         try:
@@ -171,4 +173,4 @@ async def scan_image(request: Request):
             raise ScanError(400, "INVALID_MULTIPART", "The image upload is malformed.") from None
     else:
         raise ScanError(415, "UNSUPPORTED_MEDIA_TYPE", "Use multipart/form-data or application/json.")
-    return await run_in_threadpool(process_scan, raw_bytes, barcode, locale)
+    return await run_in_threadpool(process_scan, raw_bytes, barcode, locale, gemini_key)

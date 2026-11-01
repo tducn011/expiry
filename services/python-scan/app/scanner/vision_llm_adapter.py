@@ -147,12 +147,12 @@ def call_ollama_vision(
         return json.loads(msg)
 
 
-def extract_vision_llm_candidates(image_bytes: bytes) -> Optional[Tuple[Dict[str, Any], str, str]]:
+def extract_vision_llm_candidates(image_bytes: bytes, gemini_api_key: Optional[str] = None) -> Optional[Tuple[Dict[str, Any], str, str]]:
     """
     Attempt to extract candidates using available Vision LLM providers.
     Returns: (candidates_dict, raw_text, provider_info) or None if unavailable/failed.
     """
-    gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    gemini_key = (gemini_api_key or os.environ.get("GEMINI_API_KEY", "")).strip()
     preferred_provider = os.environ.get("VISION_LLM_PROVIDER", "auto").lower().strip()
     ollama_host = os.environ.get("OLLAMA_HOST", "http://host.docker.internal:11434").strip()
     ollama_model = os.environ.get("OLLAMA_VISION_MODEL", "qwen2.5-vl:3b").strip()
