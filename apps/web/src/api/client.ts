@@ -526,6 +526,11 @@ const fromMutationResult = (dto: MutationResultDTO): MutationResult => {
   }
 }
 
+export type HistoryOptions = {
+  page?: number
+  limit?: number
+}
+
 export class ApiClient {
   csrf = ""
 
@@ -915,14 +920,82 @@ export class ApiClient {
     )
   }
 
-  async history(id: string) {
-    const next = await this.request<Page<MovementResponseDTO>>(
-      `/food-entries/${encodeURIComponent(id)}/movements?page=1&limit=50`,
-    )
+  async allEntries(
+    query: Record<string, string | number> = {},
 
-    if (!Array.isArray(next.items) || !next.pagination) throw contractError()
+    trash = false,
+  ): Promise<FoodEntry[]> {
+    let page = 1
 
-    return next.items.map(fromMovement)
+    const limit = 100
+
+    const allItems: FoodEntry[] = []
+
+    while (true) {
+      const pageResult = await this.entries({ ...query, page, limit }, trash)
+
+      allItems.push(...pageResult.items)
+
+      if (
+        !pageResult.pagination ||
+        allItems.length >= pageResult.pagination.total ||
+        pageResult.items.length === 0
+      ) {
+        break
+      }
+
+      page++
+    }
+
+    return allItems
+  }
+
+  async history(
+    id: string,
+
+    options?: HistoryOptions,
+  ): Promise<QuantityMovement[]> {
+    if (options?.page !== undefined) {
+      const page = options.page
+
+      const limit = options.limit ?? 50
+
+      const next = await this.request<Page<MovementResponseDTO>>(
+        `/food-entries/${encodeURIComponent(id)}/movements?page=${page}&limit=${limit}`,
+      )
+
+      if (!Array.isArray(next.items) || !next.pagination) throw contractError()
+
+      return next.items.map(fromMovement)
+    }
+
+    let page = 1
+
+    const limit = options?.limit ?? 50
+
+    const allItems: QuantityMovement[] = []
+
+    while (true) {
+      const next = await this.request<Page<MovementResponseDTO>>(
+        `/food-entries/${encodeURIComponent(id)}/movements?page=${page}&limit=${limit}`,
+      )
+
+      if (!Array.isArray(next.items) || !next.pagination) throw contractError()
+
+      allItems.push(...next.items.map(fromMovement))
+
+      if (
+        !next.pagination ||
+        allItems.length >= next.pagination.total ||
+        next.items.length === 0
+      ) {
+        break
+      }
+
+      page++
+    }
+
+    return allItems
   }
 
   preferences() {

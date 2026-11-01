@@ -11,7 +11,12 @@ import type {
   Category,
 } from "../store/appStore"
 
-import { CATEGORIES, CATEGORY_LABELS, formatDate } from "../store/appStore"
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  formatDate,
+  today,
+} from "../store/appStore"
 
 import type { QuantityMovement } from "../domain/types"
 
@@ -85,50 +90,113 @@ export function fromQuantityMovement(
   }
 }
 
+export type LiveMovementsOptions = {
+  maxItems?: number
+  concurrency?: number
+}
+
 export async function fetchLiveMovements(
   client: ApiClient = api,
 
   foods: Food[] = [],
+
+  options: LiveMovementsOptions = {},
 ): Promise<HistoryEvent[]> {
   let targetFoods = foods
 
   if (targetFoods.length === 0) {
     try {
-      const page = await client.entries({ limit: 50 })
+      if (typeof (client as any).allEntries === "function") {
+        const items = await (client as any).allEntries()
 
-      targetFoods = page.items.map((item) => ({
-        id: item.id,
+        targetFoods = items.map((item: any) => ({
+          id: item.id,
 
-        name: item.name,
+          name: item.name,
 
-        quantity: item.remaining_quantity,
+          quantity: item.remaining_quantity,
 
-        unit: (item.unit === "piece" ? "cái" : item.unit) as any,
+          unit: (item.unit === "piece" ? "cái" : item.unit) as any,
 
-        category: item.category as Category || "other",
+          category: item.category as Category || "other",
 
-        location: item.storage_location || undefined,
+          location: item.storage_location || undefined,
 
-        expDate: item.expiry_date || undefined,
+          expDate: item.expiry_date || undefined,
 
-        createdAt: item.created_at,
+          createdAt: item.created_at,
 
-        version: item.version,
-      }))
+          version: item.version,
+        }))
+      } else {
+        const page = await client.entries({ limit: 100 })
+
+        targetFoods = page.items.map((item) => ({
+          id: item.id,
+
+          name: item.name,
+
+          quantity: item.remaining_quantity,
+
+          unit: (item.unit === "piece" ? "cái" : item.unit) as any,
+
+          category: item.category as Category || "other",
+
+          location: item.storage_location || undefined,
+
+          expDate: item.expiry_date || undefined,
+
+          createdAt: item.created_at,
+
+          version: item.version,
+        }))
+      }
     } catch {
       return []
     }
   }
 
-  const results = await Promise.allSettled(
-    targetFoods.map((f) => client.history(f.id)),
-  )
+  // Bound candidates to avoid unbounded N+1 query storms and excessive RAM usage
+
+  const maxItems = options.maxItems ?? 50
+
+  let candidateFoods = targetFoods
+
+  if (targetFoods.length > maxItems) {
+    candidateFoods = [...targetFoods]
+
+      .sort((a, b) => {
+        const aScore = (a.finishedAt ? 2 : 0) + ((a.version ?? 1) > 1 ? 1 : 0)
+
+        const bScore = (b.finishedAt ? 2 : 0) + ((b.version ?? 1) > 1 ? 1 : 0)
+
+        return bScore - aScore
+      })
+
+      .slice(0, maxItems)
+  }
+
+  // Execute requests with bounded concurrency
+
+  const concurrency = options.concurrency ?? 5
+
+  const results: PromiseSettledResult<any>[] = []
+
+  for (let i = 0; i < candidateFoods.length; i += concurrency) {
+    const chunk = candidateFoods.slice(i, i + concurrency)
+
+    const chunkResults = await Promise.allSettled(
+      chunk.map((f) => client.history(f.id)),
+    )
+
+    results.push(...chunkResults)
+  }
 
   const events: HistoryEvent[] = []
 
   results.forEach((res, idx) => {
     if (res.status === "fulfilled" && Array.isArray(res.value)) {
-      const food = targetFoods[idx]
+      const food = candidateFoods[idx]
 
       for (const movement of res.value) {
         events.push(fromQuantityMovement(movement, food))
@@ -400,16 +468,26 @@ export default function InsightView({
         title="Insight & Hiệu quả tiêu dùng"
         subtitle="Đo lường giá trị chống lãng phí và phân tích thói quen mua sắm"
         actions={
-          <div className="flex items-center gap-2">
-            {isLive && (
+          <div className="flex flex-col items-end gap-1.5 md:flex-row md:items-center md:gap-2">
+            <div className="flex items-center gap-2">
+              {isLive && (
+                <span
+                  data-testid="live-insight-badge"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+                >
+                  <span className="size-2 rounded-full bg-brand-primary animate-pulse" />
+                  {loadingLive ? "Đang đồng bộ..." : "Dữ liệu thực tế"}
+                </span>
+              )}
               <span
-                data-testid="live-insight-badge"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+                data-testid="insight-scope-badge"
+                className="inline-flex items-center text-xs font-medium text-text-secondary bg-surface-bg px-2 py-0.5 rounded-corner-sm border border-border-primary"
               >
-                <span className="size-2 rounded-full bg-brand-primary animate-pulse" />
-                {loadingLive ? "Đang đồng bộ..." : "Dữ liệu thực tế"}
+                {state.foods.length > 50
+                  ? `Phạm vi: Giới hạn 50/${state.foods.length} thực phẩm gần nhất · As-of ${today()}`
+                  : `Phạm vi: Toàn bộ ${state.foods.length} thực phẩm · As-of ${today()}`}
               </span>
-            )}
+            </div>
             <div className="flex rounded-corner-md border border-border-primary bg-surface-bg p-0.5 text-xs font-semibold">
               {([
                 ["7d", "7 ngày"],
