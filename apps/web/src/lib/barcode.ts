@@ -320,7 +320,10 @@ export async function lookupBarcode(
 
   if (existingEntries && existingEntries.length > 0) {
     const matched = existingEntries.find(
-      (e) => e.barcode === trimmed && !e.deleted_at,
+      (e) =>
+        e.barcode === trimmed &&
+        !e.deleted_at &&
+        !(e as { deletedAt?: string }).deletedAt,
     )
 
     if (matched) {
@@ -332,7 +335,10 @@ export async function lookupBarcode(
         product: {
           name: matched.name,
 
-          suggested_storage_location: matched.storage_location ?? "Tủ bếp",
+          suggested_storage_location:
+            matched.storage_location ??
+            (matched as { location?: string }).location ??
+            "Tủ bếp",
 
           suggested_unit: matched.unit,
         },
