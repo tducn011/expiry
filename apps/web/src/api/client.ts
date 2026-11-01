@@ -528,6 +528,7 @@ const fromMutationResult = (dto: MutationResultDTO): MutationResult => {
 
 export type HistoryOptions = {
   page?: number
+
   limit?: number
 }
 
@@ -1016,6 +1017,14 @@ export class ApiClient {
     if (barcode) params.set("barcode", barcode)
 
     if (locale) params.set("locale", locale)
+
+    const geminiKey =
+      typeof window !== "undefined"
+        ? window.localStorage?.getItem("expiry_gemini_api_key") ||
+          (import.meta as any).env?.VITE_GEMINI_API_KEY
+        : undefined
+
+    if (geminiKey) params.set("gemini_api_key", geminiKey)
 
     const qs = params.toString() ? `?${params.toString()}` : ""
 
