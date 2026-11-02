@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 
 import type { Food, State } from "../store/appStore"
 
-import { active, formatDate, statusOf, today } from "../store/appStore"
+import { CATEGORIES, active, formatDate, statusOf, today } from "../store/appStore"
 
 import Button from "../components/ui/Button"
 
@@ -10,7 +10,7 @@ import Card from "../components/ui/Card"
 
 import EmptyState from "../components/ui/EmptyState"
 
-import FilterChips, { type StatusFilter } from "../components/ui/FilterChips"
+import { FilterDropdown } from "../components/ui/FilterChips"
 
 import {
   Bell,
@@ -142,7 +142,27 @@ export function Inventory({
 }: InventoryProps) {
   const [q, setQ] = useState("")
 
-  const [filter, setFilter] = useState<StatusFilter>("all")
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+
+  const [selectedLocation, setSelectedLocation] = useState<string>("all")
+
+  const categoryOptions = useMemo(
+    () =>
+      CATEGORIES.map((c) => ({
+        v: c.value,
+        label: c.label,
+      })),
+    [],
+  )
+
+  const locationOptions = useMemo(() => {
+    const locs = state.locations.map((loc) => ({
+      v: loc,
+      label: loc,
+    }))
+    locs.push({ v: "Khác", label: "Khác" })
+    return locs
+  }, [state.locations])
 
   const remind = state.settings.remindDays
 
@@ -169,15 +189,27 @@ export function Inventory({
 
       .filter((f) => !query || f.name.toLowerCase().includes(query))
 
-      .filter((f) => filter === "all" || statusOf(f, remind) === filter)
+      .filter((f) => {
+        if (selectedCategory === "all") return true
+        return f.category === selectedCategory
+      })
+      .filter((f) => {
+        if (selectedLocation === "all") return true
+        if (selectedLocation === "Khác") {
+          return !f.location || !state.locations.includes(f.location)
+        }
+        return f.location === selectedLocation
+      })
 
       .sort((a, b) => (a.expDate ?? "9999").localeCompare(b.expDate ?? "9999"))
-  }, [items, q, filter, remind])
+  }, [items, q, selectedCategory, selectedLocation, state.locations])
 
   const clear = () => {
     setQ("")
 
-    setFilter("all")
+    setSelectedCategory("all")
+
+    setSelectedLocation("all")
   }
 
   return (
@@ -281,7 +313,20 @@ export function Inventory({
               }
             />
 
-            <FilterChips value={filter} onChange={setFilter} />
+            <div className="flex flex-wrap items-center gap-2">
+              <FilterDropdown
+                label="Danh mục"
+                value={selectedCategory}
+                onChange={setSelectedCategory}
+                options={categoryOptions}
+              />
+              <FilterDropdown
+                label="Lưu trữ"
+                value={selectedLocation}
+                onChange={setSelectedLocation}
+                options={locationOptions}
+              />
+            </div>
           </div>
 
           <section
@@ -295,7 +340,7 @@ export function Inventory({
               >
                 Danh sách ({list.length})
               </h2>
-              {(q || filter !== "all") && (
+              {(q || selectedCategory !== "all" || selectedLocation !== "all") && (
                 <Button size="small" variant="subtle" onClick={clear}>
                   Xóa bộ lọc
                 </Button>

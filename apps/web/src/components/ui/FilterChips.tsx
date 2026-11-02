@@ -1,41 +1,48 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ChevronDown } from "./Icon"
 
 export type StatusFilter = "all" | "soon" | "expired" | "unknown"
 
 export interface FilterChipItem {
-  v: "soon" | "expired" | "unknown"
+  v: "soon" | "expired" | "unknown" | string
   label: string
+  color?: string
 }
 
 export const defaultHsdOptions: FilterChipItem[] = [
-  { v: "soon", label: "Sắp HSD" },
-  { v: "expired", label: "Quá HSD" },
-  { v: "unknown", label: "Chưa rõ HSD" },
+  { v: "soon", label: "Sắp HSD", color: "bg-status-soon" },
+  { v: "expired", label: "Quá HSD", color: "bg-status-expired" },
+  { v: "unknown", label: "Chưa rõ HSD", color: "bg-text-tertiary" },
 ]
 
-// Keep alias for backwards compatibility
 export const defaultFilterChips = defaultHsdOptions
 
-export interface FilterChipsProps {
-  value: StatusFilter
-  onChange: (v: StatusFilter) => void
-  options?: FilterChipItem[]
-  chips?: FilterChipItem[]
-  className?: string
+export interface FilterDropdownOption<T extends string = string> {
+  v: T
+  label: string
+  color?: string
+  icon?: ReactNode
 }
 
-export function FilterChips({
+export interface FilterDropdownProps<T extends string = string> {
+  label: string
+  value: T | "all"
+  onChange: (v: T | "all") => void
+  options: FilterDropdownOption<T>[]
+  className?: string
+  ariaLabel?: string
+}
+
+export function FilterDropdown<T extends string = string>({
+  label,
   value,
   onChange,
   options,
-  chips,
   className = "",
-}: FilterChipsProps) {
+  ariaLabel,
+}: FilterDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  const hsdList = options || chips || defaultHsdOptions
 
   useEffect(() => {
     if (!isOpen) return
@@ -66,8 +73,8 @@ export function FilterChips({
     }
   }, [isOpen])
 
-  const activeOption = hsdList.find((c) => c.v === value)
-  const isFiltered = Boolean(activeOption)
+  const activeOption = options.find((c) => c.v === value)
+  const isFiltered = value !== "all" && Boolean(activeOption)
 
   return (
     <div ref={dropdownRef} className={`relative inline-block text-left ${className}`}>
@@ -82,7 +89,7 @@ export function FilterChips({
             : "bg-surface-bg border border-border-primary text-text-primary hover:bg-surface-hover hover:border-brand-primary/40"
         }`}
       >
-        <span>{isFiltered ? `HSD: ${activeOption?.label}` : "HSD"}</span>
+        <span>{isFiltered ? `${label}: ${activeOption?.label}` : label}</span>
         <ChevronDown
           size={14}
           aria-hidden="true"
@@ -93,10 +100,10 @@ export function FilterChips({
       {isOpen && (
         <div
           role="listbox"
-          aria-label="Lọc theo trạng thái HSD"
-          className="absolute left-0 top-full mt-1.5 z-40 min-w-44 overflow-hidden rounded-corner-md border border-border-primary/60 bg-surface-bg p-1 shadow-lg animate-in fade-in zoom-in-95 duration-100"
+          aria-label={ariaLabel || `Lọc theo ${label}`}
+          className="absolute left-0 top-full mt-1.5 z-40 min-w-44 max-h-64 overflow-y-auto rounded-corner-md border border-border-primary/60 bg-surface-bg p-1 shadow-lg animate-in fade-in zoom-in-95 duration-100 scrollbar-thin"
         >
-          {hsdList.map((c) => {
+          {options.map((c) => {
             const isSelected = value === c.v
 
             return (
@@ -106,7 +113,7 @@ export function FilterChips({
                 role="option"
                 aria-selected={isSelected}
                 onClick={() => {
-                  onChange(isSelected ? "all" : c.v)
+                  onChange(isSelected ? ("all" as T | "all") : c.v)
                   setIsOpen(false)
                 }}
                 className={`flex w-full items-center justify-between gap-3 rounded-corner-sm px-3 py-2 text-xs font-medium transition-colors cursor-pointer text-left ${
@@ -116,15 +123,10 @@ export function FilterChips({
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  {c.v === "expired" && (
-                    <span className="size-2 rounded-full bg-status-expired shrink-0" aria-hidden="true" />
-                  )}
-                  {c.v === "soon" && (
-                    <span className="size-2 rounded-full bg-status-soon shrink-0" aria-hidden="true" />
-                  )}
-                  {c.v === "unknown" && (
-                    <span className="size-2 rounded-full bg-text-tertiary shrink-0" aria-hidden="true" />
-                  )}
+                  <span
+                    className={`size-2 rounded-full shrink-0 ${c.color || "bg-brand-primary/50"}`}
+                    aria-hidden="true"
+                  />
                   <span>{c.label}</span>
                 </div>
                 {isSelected && (
@@ -150,12 +152,12 @@ export function FilterChips({
               <button
                 type="button"
                 onClick={() => {
-                  onChange("all")
+                  onChange("all" as T | "all")
                   setIsOpen(false)
                 }}
                 className="flex w-full items-center gap-2 rounded-corner-sm px-3 py-1.5 text-xs text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer text-left"
               >
-                <span>✕ Bỏ lọc HSD</span>
+                <span>✕ Bỏ lọc {label}</span>
               </button>
             </div>
           )}
@@ -165,4 +167,31 @@ export function FilterChips({
   )
 }
 
-export default FilterChips
+export interface FilterChipsProps {
+  value: StatusFilter
+  onChange: (v: StatusFilter) => void
+  options?: FilterChipItem[]
+  chips?: FilterChipItem[]
+  className?: string
+}
+
+export function FilterChips({
+  value,
+  onChange,
+  options,
+  chips,
+  className = "",
+}: FilterChipsProps) {
+  const hsdList = (options || chips || defaultHsdOptions) as FilterDropdownOption<StatusFilter>[]
+  return (
+    <FilterDropdown<StatusFilter>
+      label="Danh mục"
+      value={value}
+      onChange={onChange}
+      options={hsdList}
+      className={className}
+    />
+  )
+}
+
+export default FilterDropdown
