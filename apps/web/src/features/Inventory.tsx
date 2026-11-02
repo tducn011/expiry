@@ -60,7 +60,7 @@ export interface InventoryProps {
 
   onAdd: () => void
 
-  onNavigateAttention: () => void
+  onNavigateAttention?: () => void
 
   onOpenNotifications?: () => void
 
@@ -257,7 +257,7 @@ export function Inventory({
             expired={expired}
             soon={soon}
             reviewDue={reviewDue}
-            onOpen={onNavigateAttention}
+            onOpen={onNavigateAttention ?? onOpenNotifications ?? (() => {})}
           />
 
           <div className="flex flex-col gap-3">

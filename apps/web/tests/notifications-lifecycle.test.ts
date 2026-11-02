@@ -555,4 +555,16 @@ describe("Issue #213: UX Writing & In-Browser Notification Lifecycle", () => {
 
     expect(settingsCode).toContain("không hỗ trợ Web Notification API")
   })
+
+  it("navigates to notifications when clicking attention summary in Inventory", async () => {
+    const fs = await import("fs")
+    const path = await import("path")
+    const appCode = fs.readFileSync(
+      path.resolve(__dirname, "../src/App.tsx"),
+      "utf-8",
+    )
+    expect(appCode).toMatch(
+      /onNavigateAttention=\{\(\)\s*=>\s*go\(\{\s*name:\s*"notifications"\s*\}\)\}/,
+    )
+  })
 })

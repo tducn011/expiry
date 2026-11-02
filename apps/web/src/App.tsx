@@ -925,7 +925,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           state={state}
           onOpenDetail={(id) => go({ name: "detail", id })}
           onAdd={() => go({ name: "add" })}
-          onNavigateAttention={() => tab({ name: "storage" })}
+          onNavigateAttention={() => go({ name: "notifications" })}
           onOpenNotifications={() => go({ name: "notifications" })}
           unreadNotificationsCount={unreadCount}
         />
