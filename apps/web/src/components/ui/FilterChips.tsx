@@ -9,20 +9,20 @@ export interface FilterChipItem {
   color?: string
 }
 
-export const defaultHsdOptions: FilterChipItem[] = [
-  { v: "soon", label: "Sắp HSD", color: "bg-status-soon" },
-  { v: "expired", label: "Quá HSD", color: "bg-status-expired" },
-  { v: "unknown", label: "Chưa rõ HSD", color: "bg-text-tertiary" },
-]
-
-export const defaultFilterChips = defaultHsdOptions
-
 export interface FilterDropdownOption<T extends string = string> {
   v: T
   label: string
   color?: string
   icon?: ReactNode
 }
+
+export const defaultHsdOptions: FilterDropdownOption<StatusFilter>[] = [
+  { v: "soon", label: "Sắp HSD", color: "bg-status-soon" },
+  { v: "expired", label: "Quá HSD", color: "bg-status-expired" },
+  { v: "unknown", label: "Chưa rõ HSD", color: "bg-text-tertiary" },
+]
+
+export const defaultFilterChips = defaultHsdOptions
 
 export interface FilterDropdownProps<T extends string = string> {
   label: string
