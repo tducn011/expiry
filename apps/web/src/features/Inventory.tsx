@@ -10,7 +10,11 @@ import Card from "../components/ui/Card"
 
 import EmptyState from "../components/ui/EmptyState"
 
-import { FilterDropdown } from "../components/ui/FilterChips"
+import {
+  FilterDropdown,
+  defaultHsdOptions,
+  type StatusFilter,
+} from "../components/ui/FilterChips"
 
 import {
   Bell,
@@ -142,6 +146,8 @@ export function Inventory({
 }: InventoryProps) {
   const [q, setQ] = useState("")
 
+  const [filterHsd, setFilterHsd] = useState<StatusFilter>("all")
+
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
 
   const [selectedLocation, setSelectedLocation] = useState<string>("all")
@@ -189,6 +195,8 @@ export function Inventory({
 
       .filter((f) => !query || f.name.toLowerCase().includes(query))
 
+      .filter((f) => filterHsd === "all" || statusOf(f, remind) === filterHsd)
+
       .filter((f) => {
         if (selectedCategory === "all") return true
         return f.category === selectedCategory
@@ -202,10 +210,12 @@ export function Inventory({
       })
 
       .sort((a, b) => (a.expDate ?? "9999").localeCompare(b.expDate ?? "9999"))
-  }, [items, q, selectedCategory, selectedLocation, state.locations])
+  }, [items, q, filterHsd, selectedCategory, selectedLocation, remind, state.locations])
 
   const clear = () => {
     setQ("")
+
+    setFilterHsd("all")
 
     setSelectedCategory("all")
 
@@ -314,6 +324,12 @@ export function Inventory({
             />
 
             <div className="flex flex-wrap items-center gap-2">
+              <FilterDropdown<StatusFilter>
+                label="HSD"
+                value={filterHsd}
+                onChange={setFilterHsd}
+                options={defaultHsdOptions}
+              />
               <FilterDropdown
                 label="Danh mục"
                 value={selectedCategory}
@@ -340,7 +356,7 @@ export function Inventory({
               >
                 Danh sách ({list.length})
               </h2>
-              {(q || selectedCategory !== "all" || selectedLocation !== "all") && (
+              {(q || filterHsd !== "all" || selectedCategory !== "all" || selectedLocation !== "all") && (
                 <Button size="small" variant="subtle" onClick={clear}>
                   Xóa bộ lọc
                 </Button>
