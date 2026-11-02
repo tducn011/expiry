@@ -454,7 +454,7 @@ export function FoodForm({
             loading={scanningHsd}
             onClick={() => scanHsdInputRef.current?.click()}
           >
-            {scanningHsd ? "Đang đọc HSD..." : "📸 Quét HSD (Đáy lon / Nắp)"}
+            {scanningHsd ? "Đang đọc HSD..." : "Quét HSD (Đáy lon / Nắp)"}
           </Button>
           <input
             ref={scanHsdInputRef}

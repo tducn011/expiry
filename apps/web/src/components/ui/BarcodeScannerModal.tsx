@@ -4,7 +4,7 @@ import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser"
 
 import Button from "./Button"
 
-import { Camera, ImageUp, Sparkles } from "./Icon"
+import { Camera, ImageUp, Keyboard, Loader2, Sparkles } from "./Icon"
 
 import Modal from "./Modal"
 
@@ -665,8 +665,19 @@ export default function BarcodeScannerModal({
                   fontWeight: 500,
                 }}
               >
-                ⏳ Đang phân tích mã vạch (thử góc xoay 90°/270° & tăng độ tương
-                phản)...
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <Loader2 size={15} className="animate-spin" />
+                  <span>
+                    Đang phân tích mã vạch (thử góc xoay 90°/270° & tăng độ
+                    tương phản)...
+                  </span>
+                </span>
               </p>
             )}
 
@@ -715,7 +726,16 @@ export default function BarcodeScannerModal({
               color: "var(--text-color, #374151)",
             }}
           >
-            ⌨️ Hoặc nhập dãy số mã vạch thủ công:
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <Keyboard size={16} />
+              <span>Hoặc nhập dãy số mã vạch thủ công:</span>
+            </span>
           </div>
           <form
             onSubmit={handleManualSubmit}

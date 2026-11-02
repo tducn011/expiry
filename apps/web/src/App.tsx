@@ -1333,7 +1333,11 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             role="alert"
           >
             <div className="flex min-w-0 items-center gap-2">
-              <span className="font-medium">⚠️ {syncError}</span>
+              <CircleAlert
+                size={16}
+                className="shrink-0 text-amber-600 dark:text-amber-400"
+              />
+              <span className="font-medium">{syncError}</span>
             </div>
             <button
               type="button"

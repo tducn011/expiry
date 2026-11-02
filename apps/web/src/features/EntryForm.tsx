@@ -495,8 +495,7 @@ export default function EntryForm({
                       <strong>{form.barcode}</strong>
                       {getGs1Info(form.barcode) && (
                         <span style={{ color: "var(--text-muted, #6b7280)" }}>
-                          ({getGs1Info(form.barcode)?.flag}{" "}
-                          {getGs1Info(form.barcode)?.country})
+                          ({getGs1Info(form.barcode)?.country})
                         </span>
                       )}
                     </div>
@@ -784,7 +783,7 @@ export default function EntryForm({
           const gs1 = getGs1Info(res.text)
 
           const gs1Text = gs1
-            ? `${gs1.flag} ${gs1.country} (${gs1.preferredDateFormat})`
+            ? `${gs1.country} (${gs1.preferredDateFormat})`
             : ""
 
           try {

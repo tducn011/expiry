@@ -51,7 +51,7 @@ export function getGs1Info(barcode: string): Gs1Info | null {
     return {
       country: "USA / Canada",
 
-      flag: "🇺🇸",
+      flag: "",
 
       preferredDateFormat: "MM/DD/YYYY",
     }
@@ -64,7 +64,7 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "Việt Nam",
 
-        flag: "🇻🇳",
+        flag: "",
 
         preferredDateFormat: "DD/MM/YYYY",
       }
@@ -76,7 +76,7 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "USA / Canada",
 
-        flag: "🇺🇸",
+        flag: "",
 
         preferredDateFormat: "MM/DD/YYYY",
       }
@@ -86,7 +86,7 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "Nhật Bản",
 
-        flag: "🇯🇵",
+        flag: "",
 
         preferredDateFormat: "YYYY/MM/DD",
       }
@@ -96,7 +96,7 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "Hàn Quốc",
 
-        flag: "🇰🇷",
+        flag: "",
 
         preferredDateFormat: "YYYY/MM/DD",
       }
@@ -106,25 +106,25 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "Vương quốc Anh",
 
-        flag: "🇬🇧",
+        flag: "",
 
         preferredDateFormat: "DD/MM/YYYY",
       }
     }
 
     if (num >= 300 && num <= 379) {
-      return { country: "Pháp", flag: "🇫🇷", preferredDateFormat: "DD/MM/YYYY" }
+      return { country: "Pháp", flag: "", preferredDateFormat: "DD/MM/YYYY" }
     }
 
     if (num >= 400 && num <= 440) {
-      return { country: "Đức", flag: "🇩🇪", preferredDateFormat: "DD/MM/YYYY" }
+      return { country: "Đức", flag: "", preferredDateFormat: "DD/MM/YYYY" }
     }
 
     if (num === 885) {
       return {
         country: "Thái Lan",
 
-        flag: "🇹🇭",
+        flag: "",
 
         preferredDateFormat: "DD/MM/YYYY",
       }
@@ -134,21 +134,21 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "Singapore",
 
-        flag: "🇸🇬",
+        flag: "",
 
         preferredDateFormat: "DD/MM/YYYY",
       }
     }
 
     if (num >= 930 && num <= 939) {
-      return { country: "Úc", flag: "🇦🇺", preferredDateFormat: "DD/MM/YYYY" }
+      return { country: "Úc", flag: "", preferredDateFormat: "DD/MM/YYYY" }
     }
 
     if (num >= 690 && num <= 699) {
       return {
         country: "Trung Quốc",
 
-        flag: "🇨🇳",
+        flag: "",
 
         preferredDateFormat: "DD/MM/YYYY",
       }
@@ -307,189 +307,322 @@ function inferUnit(categories: string, productName: string): Unit {
 
 export const VIETNAMESE_RETAIL_CATALOG: Record<string, ProductInfo> = {
   // Suntory PepsiCo Vietnam (Aquafina, Pepsi, 7Up, Mirinda, Sting, Tea+)
+
   "8934588063145": {
     name: "Nước tinh khiết Aquafina 355ml",
+
     brand: "Suntory PepsiCo",
+
     category: "beverage",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8934588063114": {
     name: "Nước tinh khiết Aquafina 500ml",
+
     brand: "Suntory PepsiCo",
+
     category: "beverage",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8934588063121": {
     name: "Nước tinh khiết Aquafina 1.5L",
+
     brand: "Suntory PepsiCo",
+
     category: "beverage",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8934588063053": {
     name: "Nước tinh khiết Aquafina 5L",
+
     brand: "Suntory PepsiCo",
+
     category: "beverage",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8934588012112": {
     name: "Nước ngọt Pepsi có ga lon 320ml",
+
     brand: "Pepsi",
+
     category: "beverage",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   "8934588012228": {
     name: "Nước ngọt Pepsi có ga chai 390ml",
+
     brand: "Pepsi",
+
     category: "beverage",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   "8934588022111": {
     name: "Nước ngọt 7Up lon 320ml",
+
     brand: "7Up",
+
     category: "beverage",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   "8934588042119": {
     name: "Nước ngọt Mirinda vị cam lon 320ml",
+
     brand: "Mirinda",
+
     category: "beverage",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   "8934588072116": {
     name: "Nước tăng lực Sting dâu lon 320ml",
+
     brand: "Sting",
+
     category: "beverage",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   "8934588072222": {
     name: "Nước tăng lực Sting dâu chai 330ml",
+
     brand: "Sting",
+
     category: "beverage",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   "8934588082115": {
     name: "Trà Ô Long Tea+ Plus 455ml",
+
     brand: "Tea+ Plus",
+
     category: "beverage",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   // Acecook Vietnam (Hảo Hảo, Nhớ Mãi Mãi, Đệ Nhất)
+
   "8934560110023": {
     name: "Mì Hảo Hảo tôm chua cay 75g",
+
     brand: "Acecook",
+
     category: "dry_pantry",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8934560110016": {
     name: "Mì Hảo Hảo sa tế hành 75g",
+
     brand: "Acecook",
+
     category: "dry_pantry",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8934560150029": {
     name: "Hủ tiếu Nam Vang Nhớ Mãi Mãi 69g",
+
     brand: "Acecook",
+
     category: "dry_pantry",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8934560120022": {
     name: "Phở Đệ Nhất vị bò 65g",
+
     brand: "Acecook",
+
     category: "dry_pantry",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   // Vinamilk & TH True Milk
+
   "8934673123457": {
     name: "Sữa tươi tiệt trùng Vinamilk có đường 180ml",
+
     brand: "Vinamilk",
+
     category: "dairy_eggs",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   "8934673123464": {
     name: "Sữa tươi tiệt trùng Vinamilk ít đường 180ml",
+
     brand: "Vinamilk",
+
     category: "dairy_eggs",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   "8934673551106": {
     name: "Sữa đặc có đường Ông Thọ xanh lon 380g",
+
     brand: "Vinamilk",
+
     category: "dairy_eggs",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8934673552202": {
     name: "Sữa đặc Ngôi Sao Phương Nam xanh lon 380g",
+
     brand: "Vinamilk",
+
     category: "dairy_eggs",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8935001701124": {
     name: "Sữa tươi tiệt trùng TH True Milk ít đường 180ml",
+
     brand: "TH True Milk",
+
     category: "dairy_eggs",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   "8935001701117": {
     name: "Sữa tươi tiệt trùng TH True Milk có đường 180ml",
+
     brand: "TH True Milk",
+
     category: "dairy_eggs",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   "8935001701131": {
     name: "Sữa tươi tiệt trùng TH True Milk nguyên chất 180ml",
+
     brand: "TH True Milk",
+
     category: "dairy_eggs",
+
     suggested_storage_location: "Ngăn mát",
+
     suggested_unit: "piece",
   },
+
   // Gia vị & nhu yếu phẩm
+
   "8934822001111": {
     name: "Nước mắm Nam Ngư Đệ Nhị 900ml",
+
     brand: "Masan Nam Ngư",
+
     category: "dry_pantry",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8934822002224": {
     name: "Nước mắm Chinsu hương cá hồi 500ml",
+
     brand: "Chinsu",
+
     category: "dry_pantry",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8934822003337": {
     name: "Tương ớt Chinsu chai 250g",
+
     brand: "Chinsu",
+
     category: "dry_pantry",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
+
   "8935049500543": {
     name: "Dầu ăn thực vật Tường An Cooking Oil 1L",
+
     brand: "Tường An",
+
     category: "dry_pantry",
+
     suggested_storage_location: "Tủ bếp",
+
     suggested_unit: "piece",
   },
 }
@@ -604,6 +737,7 @@ export async function lookupBarcode(
   }
 
   // 1.5. Layer 1.5: Persistent & in-memory cache (0ms instant return)
+
   const cached = getCachedProduct(trimmed)
 
   if (cached && cached.found) {
@@ -611,15 +745,22 @@ export async function lookupBarcode(
   }
 
   // 1.6. Layer 1.6: Built-in Vietnam retail catalog (instant 0ms lookup for common FMCG items)
+
   if (VIETNAMESE_RETAIL_CATALOG[trimmed]) {
     const p = VIETNAMESE_RETAIL_CATALOG[trimmed]
+
     const res: ProductLookupResult = {
       found: true,
+
       barcode: trimmed,
+
       product: p,
+
       source: "inventory",
     }
+
     setCachedProduct(trimmed, res)
+
     return res
   }
 
@@ -633,14 +774,18 @@ export async function lookupBarcode(
     let data: any = null
 
     // Try v0 API first (more reliable in Vietnam / fewer 502 Bad Gateways than v2)
+
     const v0Url = `https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(
       trimmed,
     )}.json`
+
     try {
       const res0 = await fetch(v0Url, {
         signal: controller.signal,
+
         headers: { Accept: "application/json" },
       })
+
       if (res0.ok) {
         data = await res0.json()
       }
@@ -650,11 +795,14 @@ export async function lookupBarcode(
       const v2Url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(
         trimmed,
       )}.json?fields=product_name,product_name_vi,product_name_en,generic_name,brands,categories,image_url`
+
       try {
         const res2 = await fetch(v2Url, {
           signal: controller.signal,
+
           headers: { Accept: "application/json" },
         })
+
         if (res2.ok) {
           data = await res2.json()
         }
