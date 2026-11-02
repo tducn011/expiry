@@ -54,9 +54,13 @@ export function ManualBarcodeModal({
   useEffect(() => {
     if (isOpen) {
       setCode("")
+
       setLoading(false)
+
       setError(null)
+
       setFoundName(null)
+
       setInfoMessage(null)
     }
   }, [isOpen])
@@ -133,10 +137,13 @@ export function ManualBarcodeModal({
     }
 
     let finalName = foundName
+
     if (!finalName) {
       try {
         setLoading(true)
+
         const res = await lookupBarcode(trimmed, existingFoods as any)
+
         if (res.found && res.product?.name) {
           finalName = res.product.name
         }
@@ -205,6 +212,7 @@ export function ManualBarcodeModal({
                   typeof valOrEvent === "string"
                     ? valOrEvent
                     : (valOrEvent?.target?.value ?? "")
+
                 const val = raw.replace(/[^\d]/g, "")
 
                 setCode(val)
