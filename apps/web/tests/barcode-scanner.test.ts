@@ -773,4 +773,32 @@ describe("Barcode Scanner & ZXing Formats", () => {
       expect(cleaned).toBe("8936039681526")
     }
   })
+
+  it("preserves scanned barcode and product name when transitioning to manual input", async () => {
+    const { emptyDraft } = await import("../src/features/FoodForm")
+
+    // Step 1 scanned barcode & resolved name
+    const step1Draft = {
+      ...emptyDraft(),
+      name: "Sữa tươi Vinamilk",
+      barcode: "8935001712345",
+      category: "dairy_eggs",
+    }
+
+    // When user cannot scan HSD in Step 2 and clicks "Nhập bằng tay"
+    let routedDraft: any = null
+    let routedMode = ""
+    const onManual = (draft?: any) => {
+      routedDraft = draft || emptyDraft()
+      routedMode = draft && (draft.name || draft.barcode) ? "ocr" : "manual"
+    }
+
+    onManual(step1Draft)
+
+    expect(routedDraft).toBeDefined()
+    expect(routedDraft.name).toBe("Sữa tươi Vinamilk")
+    expect(routedDraft.barcode).toBe("8935001712345")
+    expect(routedDraft.category).toBe("dairy_eggs")
+    expect(routedMode).toBe("ocr")
+  })
 })

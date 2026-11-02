@@ -1110,11 +1110,19 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       screenContent = (
         <Scanner
           onBack={back}
-          onManual={() =>
+          onManual={(draft, image) =>
             setStack((s) => [
               ...s.slice(0, -1),
 
-              { name: "form", mode: "manual", draft: emptyDraft() },
+              {
+                name: "form",
+
+                mode: draft && (draft.name || draft.barcode) ? "ocr" : "manual",
+
+                draft: draft || emptyDraft(),
+
+                image,
+              },
             ])
           }
           existingFoods={state.foods}

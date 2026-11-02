@@ -71,7 +71,7 @@ export function Scanner({
 }: {
   onBack: () => void
 
-  onManual: () => void
+  onManual: (draft?: Draft, image?: string | string[]) => void
 
   onReview: (img: string | string[], draft?: Draft) => void
 
@@ -1277,7 +1277,7 @@ export function Scanner({
                 iconStart={<ScanText size={16} />}
                 onClick={skipStep2}
               >
-                Bỏ qua & Xem lại
+                Bỏ qua HSD & Điền tay
               </Button>
               <Button
                 variant="neutral"
@@ -1508,7 +1508,11 @@ export function Scanner({
           variant="neutral"
           block
           iconStart={<Keyboard size={18} />}
-          onClick={leave(onManual)}
+          onClick={leave(() => {
+            const currentDraft = step1Data?.draft || detectedDraft
+            const currentImg = step1Data?.image || image
+            onManual(currentDraft, currentImg)
+          })}
         >
           Nhập bằng tay
         </Button>
