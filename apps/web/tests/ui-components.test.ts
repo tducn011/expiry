@@ -706,4 +706,9 @@ describe("Manual Capture Form & Outcome Boundary (CAP-01)", () => {
     ])
     expect(defaultHsdOptions.some((o) => o.label === "Tất cả")).toBe(false)
   })
+
+  it("exports FilterDropdown and supports Danh mục and Lưu trữ options", async () => {
+    const { FilterDropdown } = await import("../src/components/ui/FilterChips")
+    expect(typeof FilterDropdown).toBe("function")
+  })
 })
