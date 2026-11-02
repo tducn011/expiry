@@ -2,7 +2,13 @@ import { useMemo, useState } from "react"
 
 import type { Food, State } from "../store/appStore"
 
-import { CATEGORIES, active, formatDate, statusOf, today } from "../store/appStore"
+import {
+  CATEGORIES,
+  active,
+  formatDate,
+  statusOf,
+  today,
+} from "../store/appStore"
 
 import Button from "../components/ui/Button"
 
@@ -156,17 +162,22 @@ export function Inventory({
     () =>
       CATEGORIES.map((c) => ({
         v: c.value,
+
         label: c.label,
       })),
+
     [],
   )
 
   const locationOptions = useMemo(() => {
     const locs = state.locations.map((loc) => ({
       v: loc,
+
       label: loc,
     }))
+
     locs.push({ v: "Khác", label: "Khác" })
+
     return locs
   }, [state.locations])
 
@@ -199,18 +210,30 @@ export function Inventory({
 
       .filter((f) => {
         if (selectedCategory === "all") return true
+
         return f.category === selectedCategory
       })
+
       .filter((f) => {
         if (selectedLocation === "all") return true
+
         if (selectedLocation === "Khác") {
           return !f.location || !state.locations.includes(f.location)
         }
+
         return f.location === selectedLocation
       })
 
       .sort((a, b) => (a.expDate ?? "9999").localeCompare(b.expDate ?? "9999"))
-  }, [items, q, filterHsd, selectedCategory, selectedLocation, remind, state.locations])
+  }, [
+    items,
+    q,
+    filterHsd,
+    selectedCategory,
+    selectedLocation,
+    remind,
+    state.locations,
+  ])
 
   const clear = () => {
     setQ("")
@@ -356,7 +379,10 @@ export function Inventory({
               >
                 Danh sách ({list.length})
               </h2>
-              {(q || filterHsd !== "all" || selectedCategory !== "all" || selectedLocation !== "all") && (
+              {(q ||
+                filterHsd !== "all" ||
+                selectedCategory !== "all" ||
+                selectedLocation !== "all") && (
                 <Button size="small" variant="subtle" onClick={clear}>
                   Xóa bộ lọc
                 </Button>

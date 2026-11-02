@@ -51,8 +51,7 @@ export function AuthForm({
 
     if (!/^\S+@\S+\.\S+$/.test(email)) e.email = "Email không hợp lệ."
 
-    if (pw.length < 8)
-      e.pw = "Mật khẩu cần ít nhất 8 ký tự."
+    if (pw.length < 8) e.pw = "Mật khẩu cần ít nhất 8 ký tự."
 
     setErr(e)
 
