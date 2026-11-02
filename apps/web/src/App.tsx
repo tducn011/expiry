@@ -755,6 +755,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
               barcode: d.barcode || undefined,
 
+              reviewAt: d.reviewAt || undefined,
+
               finishedAt:
                 updated.remaining_quantity === 0
                   ? new Date().toISOString()
@@ -853,6 +855,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               location: created.storage_location || undefined,
 
               barcode: d.barcode || undefined,
+
+              reviewAt: d.reviewAt || undefined,
 
               finishedAt: undefined,
 

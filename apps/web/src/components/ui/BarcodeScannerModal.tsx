@@ -668,7 +668,9 @@ export default function BarcodeScannerModal({
                 <span
                   style={{
                     display: "inline-flex",
+
                     alignItems: "center",
+
                     gap: "6px",
                   }}
                 >
@@ -729,7 +731,9 @@ export default function BarcodeScannerModal({
             <span
               style={{
                 display: "inline-flex",
+
                 alignItems: "center",
+
                 gap: "6px",
               }}
             >

@@ -6,7 +6,13 @@ import { playBeep } from "../lib/barcode"
 
 import type { Category, Food, Unit } from "../store/appStore"
 
-import { CATEGORIES, today, UNITS } from "../store/appStore"
+import {
+  CATEGORIES,
+  today,
+  UNITS,
+  addDays,
+  formatDate,
+} from "../store/appStore"
 
 import Button from "../components/ui/Button"
 
@@ -14,7 +20,15 @@ import Card from "../components/ui/Card"
 
 import FieldError from "../components/ui/FieldError"
 
-import { Barcode, Camera, Plus, ScanText, X } from "../components/ui/Icon"
+import {
+  Barcode,
+  Camera,
+  Plus,
+  ScanText,
+  X,
+  Bell,
+  CalendarClock,
+} from "../components/ui/Icon"
 
 import InputField from "../components/ui/InputField"
 
@@ -23,6 +37,8 @@ import Modal from "../components/ui/Modal"
 import SectionTitle from "../components/ui/SectionTitle"
 
 import SelectField from "../components/ui/SelectField"
+
+import GoogleReminderPicker, { formatGoogleDate } from "./GoogleReminderPicker"
 
 export interface Draft {
   id?: string
@@ -44,6 +60,8 @@ export interface Draft {
   location: string
 
   barcode?: string
+
+  reviewAt?: string
 }
 
 export const emptyDraft = (): Draft => ({
@@ -62,6 +80,8 @@ export const emptyDraft = (): Draft => ({
   expDate: "",
 
   location: "",
+
+  reviewAt: "",
 })
 
 export const draftFrom = (f: Food, keepQty = true): Draft => ({
@@ -84,6 +104,8 @@ export const draftFrom = (f: Food, keepQty = true): Draft => ({
   location: f.location ?? "",
 
   barcode: f.barcode ?? undefined,
+
+  reviewAt: f.reviewAt ?? "",
 })
 
 export type Errors = Partial<Record<"name" | "quantity" | "unit" | "mfgDate" | "opened_on" | "expDate" | "save", string>>
@@ -175,6 +197,10 @@ export function FoodForm({
   onCancel: (dirty: boolean) => void
 }) {
   const [d, setD] = useState<Draft>(initial)
+
+  const [showReminderPicker, setShowReminderPicker] = useState<boolean>(
+    () => !!initial.reviewAt,
+  )
 
   const [capturedImages, setCapturedImages] = useState<string[]>(() =>
     Array.isArray(capturedImage)
@@ -477,6 +503,36 @@ export function FoodForm({
               aria-describedby="e-mfg"
             />
             <FieldError id="e-mfg" msg={errors.mfgDate} />
+            {/* Icon tùy chỉnh nhắc nhở ngay dưới NSX */}
+            <div className="mt-1.5 flex items-center">
+              <button
+                type="button"
+                onClick={() => setShowReminderPicker((v) => !v)}
+                className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md transition-all cursor-pointer ${
+                  d.reviewAt
+                    ? "bg-[#0b57d0]/10 text-[#0b57d0] dark:text-blue-400 border border-[#0b57d0]/30 hover:bg-[#0b57d0]/20 font-semibold"
+                    : showReminderPicker
+                      ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/40 shadow-xs"
+                      : "text-text-secondary hover:text-brand-primary hover:bg-surface-secondary border border-transparent hover:border-border-primary/40"
+                }`}
+                title="Tùy chỉnh nhắc nhở"
+                aria-expanded={showReminderPicker}
+              >
+                <Bell
+                  size={14}
+                  className={
+                    d.reviewAt
+                      ? "text-[#0b57d0] dark:text-blue-400"
+                      : "text-text-secondary"
+                  }
+                />
+                <span>
+                  {d.reviewAt
+                    ? `Nhắc lại: ${formatGoogleDate(d.reviewAt)}`
+                    : "Tùy chỉnh nhắc nhở"}
+                </span>
+              </button>
+            </div>
           </div>
           <div>
             <InputField
@@ -485,7 +541,6 @@ export function FoodForm({
               value={d.opened_on || ""}
               onChange={set("opened_on")}
               aria-describedby="e-opened"
-              description="Tùy chọn theo dõi sau mở"
             />
             <FieldError id="e-opened" msg={errors.opened_on} />
           </div>
@@ -496,15 +551,82 @@ export function FoodForm({
               value={d.expDate}
               onChange={set("expDate")}
               aria-describedby="e-exp"
-              description={
-                d.expDate
-                  ? undefined
-                  : 'Bỏ trống nếu chưa rõ — sẽ hiển thị "Chưa rõ HSD".'
-              }
             />
             <FieldError id="e-exp" msg={errors.expDate} />
           </div>
         </div>
+
+        {/* Khung Tùy chỉnh nhắc nhở (Google Calendar style) chỉ hiện ra khi ấn vào icon */}
+        {showReminderPicker && (
+          <div className="mt-2 pt-4 border-t border-border-primary/60 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Bell size={16} className="text-[#0b57d0] dark:text-blue-400" />
+                <span className="text-sm font-semibold text-text-primary">
+                  Tùy chỉnh nhắc nhở
+                </span>
+                {d.reviewAt && (
+                  <span className="text-xs font-medium text-[#0b57d0] dark:text-blue-400 bg-[#0b57d0]/10 px-2 py-0.5 rounded-full">
+                    Đã bật lịch nhắc
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReminderPicker(false)}
+                className="text-xs text-text-secondary hover:text-text-primary underline cursor-pointer"
+              >
+                Thu gọn
+              </button>
+            </div>
+
+            <GoogleReminderPicker
+              value={d.reviewAt}
+              onChange={(date: string) =>
+                setD((p) => ({ ...p, reviewAt: date }))
+              }
+              onClear={() => {
+                setD((p) => ({ ...p, reviewAt: "" }))
+
+                setShowReminderPicker(false)
+              }}
+            />
+
+            {/* Gợi ý chọn nhanh */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+              <span className="text-xs text-text-secondary font-medium mr-1">
+                Gợi ý nhanh:
+              </span>
+              {[1, 2, 3, 5, 7].map((num) => {
+                const targetDate = addDays(today(), num)
+
+                const isSelected = d.reviewAt === targetDate
+
+                return (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() =>
+                      setD((p) => ({
+                        ...p,
+
+                        reviewAt: isSelected ? "" : targetDate,
+                      }))
+                    }
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-[#0b57d0] text-white shadow-xs"
+                        : "bg-surface-secondary text-text-secondary hover:text-text-primary hover:bg-surface-tertiary border border-border-primary/50"
+                    }`}
+                  >
+                    +{num} ngày
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {expPast && (
           <p className="text-xs text-status-soon font-medium">
             HSD đã qua so với hôm nay. Bạn vẫn có thể lưu — món này sẽ được xếp
