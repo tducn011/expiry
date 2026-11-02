@@ -57,7 +57,7 @@ async function passwordKey(password, salt) {
 }
 
 export function validatePassword(password) {
-  if (typeof password !== 'string' || [...password].length < 15 || [...password].length > 128) {
+  if (typeof password !== 'string' || [...password].length < 8 || [...password].length > 128) {
     throw new DomainError(422, 'VALIDATION_ERROR');
   }
   return password;

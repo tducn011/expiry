@@ -51,8 +51,8 @@ export function AuthForm({
 
     if (!/^\S+@\S+\.\S+$/.test(email)) e.email = "Email không hợp lệ."
 
-    if (pw.length < 15)
-      e.pw = "Mật khẩu cần ít nhất 15 ký tự theo chuẩn bảo mật."
+    if (pw.length < 8)
+      e.pw = "Mật khẩu cần ít nhất 8 ký tự."
 
     setErr(e)
 
@@ -183,7 +183,7 @@ export function AuthForm({
                 <InputField
                   label="Mật khẩu"
                   type="password"
-                  placeholder="Ít nhất 15 ký tự"
+                  placeholder="Ít nhất 8 ký tự"
                   value={pw}
                   onChange={setPw}
                   autoComplete={
