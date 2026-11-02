@@ -6,7 +6,7 @@ import InputField from "../components/ui/InputField"
 
 import Modal from "../components/ui/Modal"
 
-import { Barcode, Search, Sparkles } from "../components/ui/Icon"
+import { Barcode, Lightbulb, Search, Sparkles } from "../components/ui/Icon"
 
 import { lookupBarcode, validateBarcode } from "../lib/barcode"
 
@@ -259,11 +259,14 @@ export function ManualBarcodeModal({
           </div>
         )}
 
-        <div className="text-[11px] text-text-tertiary leading-relaxed bg-bg-secondary p-3 rounded-corner-md">
-          💡 <strong>Mẹo:</strong> Nếu chữ số bị rách mất một phần, bạn không
-          cần đoán số còn thiếu — hãy bấm nút{" "}
-          <em>&quot;Bỏ qua mã & nhập tên&quot;</em> để tiếp tục thêm món ăn bình
-          thường.
+        <div className="flex items-start gap-2 text-[11px] text-text-tertiary leading-relaxed bg-bg-secondary p-3 rounded-corner-md">
+          <Lightbulb size={14} className="shrink-0 mt-0.5 text-amber-500" />
+          <div>
+            <strong>Mẹo:</strong> Nếu chữ số bị rách mất một phần, bạn không cần
+            đoán số còn thiếu — hãy bấm nút{" "}
+            <em>&quot;Bỏ qua mã & nhập tên&quot;</em> để tiếp tục thêm món ăn
+            bình thường.
+          </div>
         </div>
       </div>
     </Modal>

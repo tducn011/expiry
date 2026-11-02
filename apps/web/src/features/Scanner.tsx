@@ -1165,8 +1165,9 @@ export function Scanner({
                         Mã: {step1Data.draft.barcode}
                       </p>
                     )}
-                    <p className="mt-2 text-amber-300 font-medium leading-relaxed">
-                      👉 Lật đáy lon hoặc nắp hộp để quét ngày HSD
+                    <p className="mt-2 text-amber-300 font-medium leading-relaxed flex items-center gap-1.5">
+                      <ChevronRight size={14} className="shrink-0" /> Lật đáy
+                      lon hoặc nắp hộp để quét ngày HSD
                     </p>
                   </div>
                 ) : (
@@ -1179,8 +1180,9 @@ export function Scanner({
                         NSX: {step1Data.draft.mfgDate}
                       </p>
                     )}
-                    <p className="mt-2 text-amber-300 font-medium leading-relaxed">
-                      👉 Hướng vào Mã vạch / Mặt trước để lấy tên sản phẩm
+                    <p className="mt-2 text-amber-300 font-medium leading-relaxed flex items-center gap-1.5">
+                      <ChevronRight size={14} className="shrink-0" /> Hướng vào
+                      Mã vạch / Mặt trước để lấy tên sản phẩm
                     </p>
                   </div>
                 )}
@@ -1201,9 +1203,10 @@ export function Scanner({
                   Hạn sử dụng trên lon/hộp thường in riêng ở{" "}
                   <strong>đáy lon</strong> hoặc <strong>nắp hộp</strong>.
                 </p>
-                <p className="text-xs text-amber-300 font-medium">
-                  👉 Bấm &quot;Chụp thêm góc HSD&quot; bên dưới để quét tiếp đáy
-                  lon mà không mất ảnh này!
+                <p className="text-xs text-amber-300 font-medium flex items-center gap-1.5">
+                  <ChevronRight size={14} className="shrink-0" /> Bấm &quot;Chụp
+                  thêm góc HSD&quot; bên dưới để quét tiếp đáy lon mà không mất
+                  ảnh này!
                 </p>
               </>
             )}
@@ -1265,8 +1268,8 @@ export function Scanner({
                 onClick={() => cameraInputRef.current?.click()}
               >
                 {step1Data.detectedType === "product_only"
-                  ? "📸 Chụp ngày HSD (Đáy lon)"
-                  : "📸 Chụp mã vạch / Mặt trước"}
+                  ? "Chụp ngày HSD (Đáy lon)"
+                  : "Chụp mã vạch / Mặt trước"}
               </Button>
             )}
 
@@ -1331,21 +1334,21 @@ export function Scanner({
                   iconStart={<Camera size={18} />}
                   onClick={() => cameraInputRef.current?.click()}
                 >
-                  📸 Chụp từ máy ảnh
+                  Chụp từ máy ảnh
                 </Button>
                 <Button
                   variant="neutral"
                   iconStart={<ImageUp size={18} />}
                   onClick={() => libraryInputRef.current?.click()}
                 >
-                  🖼️ Thư viện ảnh
+                  Thư viện ảnh
                 </Button>
                 <Button
                   variant="neutral"
                   iconStart={<Barcode size={18} />}
                   onClick={() => setShowManualBarcode(true)}
                 >
-                  ⌨️ Nhập số vạch
+                  Nhập số vạch
                 </Button>
               </>
             )}
@@ -1391,7 +1394,7 @@ export function Scanner({
                   }
                 }}
               >
-                📸 Chụp thêm góc HSD (Đáy lon / Nắp hộp)
+                Chụp thêm góc HSD (Đáy lon / Nắp hộp)
               </Button>
             )}
             <div className="flex gap-2">
@@ -1510,7 +1513,9 @@ export function Scanner({
           iconStart={<Keyboard size={18} />}
           onClick={leave(() => {
             const currentDraft = step1Data?.draft || detectedDraft
+
             const currentImg = step1Data?.image || image
+
             onManual(currentDraft, currentImg)
           })}
         >
