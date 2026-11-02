@@ -696,4 +696,14 @@ describe("Manual Capture Form & Outcome Boundary (CAP-01)", () => {
 
     expect(dto.date_label_type).toBe("unspecified")
   })
+
+  it("provides HSD status filter options with the 3 sub-options (soon, expired, unknown)", async () => {
+    const { defaultHsdOptions } = await import("../src/components/ui/FilterChips")
+    expect(defaultHsdOptions.map((o) => o.label)).toEqual([
+      "Sắp HSD",
+      "Quá HSD",
+      "Chưa rõ HSD",
+    ])
+    expect(defaultHsdOptions.some((o) => o.label === "Tất cả")).toBe(false)
+  })
 })
