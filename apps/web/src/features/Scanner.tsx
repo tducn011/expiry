@@ -967,9 +967,9 @@ export function Scanner({
     (state === "step2_ready" && Boolean(streamRef.current))
 
   return (
-    <div className="flex min-h-[85vh] flex-col rounded-corner-lg bg-surface-darkest text-white shadow-xl overflow-hidden">
+    <div className="flex h-full min-h-dvh md:min-h-[85vh] w-full flex-col rounded-none md:rounded-corner-lg bg-surface-darkest text-white shadow-none md:shadow-xl overflow-y-auto md:overflow-hidden">
       {/* Header */}
-      <header className="flex items-center gap-3 px-6 pt-5 pb-3">
+      <header className="flex items-center gap-3 px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 sm:pb-3 shrink-0">
         <IconButton
           variant="neutral"
           aria-label="Quay lại"
@@ -996,7 +996,7 @@ export function Scanner({
       </header>
 
       {/* 2-Step Sequential Scan Stepper Progress */}
-      <div className="flex items-center justify-between px-6 py-2.5 border-y border-white/10 bg-white/5 text-xs">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-2 border-y border-white/10 bg-white/5 text-xs shrink-0">
         <div
           className={`flex items-center gap-1.5 ${
             step1Data
@@ -1038,7 +1038,7 @@ export function Scanner({
       </div>
 
       {/* Viewfinder Preview */}
-      <div className="relative mx-6 my-4 flex min-h-80 flex-1 items-center justify-center overflow-hidden rounded-corner-lg bg-surface-dark">
+      <div className="relative mx-3 sm:mx-6 my-2 sm:my-3 flex min-h-48 sm:min-h-80 flex-1 items-center justify-center overflow-hidden rounded-corner-md sm:rounded-corner-lg bg-surface-dark">
         <video
           ref={videoRef}
           playsInline
@@ -1246,13 +1246,14 @@ export function Scanner({
       </div>
 
       {/* Mobile-Friendly Control Panel */}
-      <div className="flex flex-col items-center gap-3 px-6 py-2">
+      <div className="flex flex-col items-center gap-2.5 px-4 sm:px-6 pt-1 pb-2 shrink-0 w-full max-w-sm mx-auto">
         {/* STEP 2 ACTIONS */}
         {step === 2 && step1Data && state !== "processing" && (
-          <div className="flex flex-col gap-2 w-full max-w-sm">
+          <div className="flex flex-col gap-2 w-full">
             {live ? (
               <Button
                 variant="primary"
+                block
                 iconStart={<Camera size={20} />}
                 onClick={() => capture()}
                 disabled={state === "capturing"}
@@ -1264,6 +1265,7 @@ export function Scanner({
             ) : (
               <Button
                 variant="primary"
+                block
                 iconStart={<Camera size={20} />}
                 onClick={() => cameraInputRef.current?.click()}
               >
@@ -1273,10 +1275,11 @@ export function Scanner({
               </Button>
             )}
 
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 w-full">
               <Button
                 variant="neutral"
-                className="flex-1 text-xs"
+                block
+                className="text-xs"
                 iconStart={<ScanText size={16} />}
                 onClick={skipStep2}
               >
@@ -1284,7 +1287,8 @@ export function Scanner({
               </Button>
               <Button
                 variant="neutral"
-                className="flex-1 text-xs"
+                block
+                className="text-xs"
                 iconStart={<RefreshCw size={16} />}
                 onClick={resetToStep1}
               >
@@ -1296,11 +1300,12 @@ export function Scanner({
 
         {/* STEP 1 ACTIONS */}
         {step === 1 && state !== "processing" && (
-          <div className="flex flex-wrap items-center justify-center gap-2 w-full max-w-sm">
+          <div className="flex flex-col gap-2 w-full">
             {live ? (
               <>
                 <Button
                   variant="primary"
+                  block
                   iconStart={<Camera size={18} />}
                   onClick={() => capture()}
                   disabled={state === "capturing"}
@@ -1309,6 +1314,7 @@ export function Scanner({
                 </Button>
                 <Button
                   variant="neutral"
+                  block
                   onClick={() => {
                     stop()
 
@@ -1323,28 +1329,34 @@ export function Scanner({
                 {(state === "idle" || state === "denied") && (
                   <Button
                     variant="primary"
+                    block
                     iconStart={<Camera size={18} />}
                     onClick={start}
                   >
                     Bật camera trực tiếp
                   </Button>
                 )}
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  <Button
+                    variant="neutral"
+                    block
+                    iconStart={<Camera size={18} />}
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    Chụp từ máy ảnh
+                  </Button>
+                  <Button
+                    variant="neutral"
+                    block
+                    iconStart={<ImageUp size={18} />}
+                    onClick={() => libraryInputRef.current?.click()}
+                  >
+                    Thư viện ảnh
+                  </Button>
+                </div>
                 <Button
                   variant="neutral"
-                  iconStart={<Camera size={18} />}
-                  onClick={() => cameraInputRef.current?.click()}
-                >
-                  Chụp từ máy ảnh
-                </Button>
-                <Button
-                  variant="neutral"
-                  iconStart={<ImageUp size={18} />}
-                  onClick={() => libraryInputRef.current?.click()}
-                >
-                  Thư viện ảnh
-                </Button>
-                <Button
-                  variant="neutral"
+                  block
                   iconStart={<Barcode size={18} />}
                   onClick={() => setShowManualBarcode(true)}
                 >
@@ -1357,10 +1369,11 @@ export function Scanner({
 
         {/* Unrecognized Actions */}
         {state === "unrecognized" && (
-          <div className="flex flex-col gap-2.5 w-full max-w-sm">
+          <div className="flex flex-col gap-2.5 w-full">
             {image && (
               <Button
                 variant="primary"
+                block
                 iconStart={<Camera size={20} />}
                 onClick={() => {
                   setStep1Data({
@@ -1397,10 +1410,11 @@ export function Scanner({
                 Chụp thêm góc HSD (Đáy lon / Nắp hộp)
               </Button>
             )}
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 w-full">
               <Button
                 variant="neutral"
-                className="flex-1 text-xs"
+                block
+                className="text-xs"
                 iconStart={<ScanText size={16} />}
                 onClick={() =>
                   onReview(
@@ -1414,7 +1428,8 @@ export function Scanner({
               </Button>
               <Button
                 variant="neutral"
-                className="flex-1 text-xs"
+                block
+                className="text-xs"
                 iconStart={<RefreshCw size={16} />}
                 onClick={resetToStep1}
               >
@@ -1506,7 +1521,7 @@ export function Scanner({
       )}
 
       {/* Manual Input Fallback */}
-      <div className="px-6 pt-2 pb-5">
+      <div className="px-4 sm:px-6 pt-1 pb-[max(1rem,env(safe-area-inset-bottom))] shrink-0 w-full max-w-sm mx-auto">
         <Button
           variant="neutral"
           block

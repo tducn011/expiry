@@ -58,6 +58,10 @@ export * from "./SidebarNavigation"
 
 export { default as SidebarNavigation } from "./SidebarNavigation"
 
+export * from "./Notice"
+
+export { default as Notice } from "./Notice"
+
 export * from "./Icon"
 
-export { default as Icon } from "./Icon"
+export { default as Icon, ClockELogo } from "./Icon"

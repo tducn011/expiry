@@ -56,8 +56,6 @@ import Attention from "./features/Attention"
 
 import StorageView from "./features/StorageView"
 
-import AddEntry from "./features/AddEntry"
-
 import Scanner from "./features/Scanner"
 
 import FoodForm from "./features/FoodForm"
@@ -107,7 +105,12 @@ export type Route = { name: "inventory" } | {
 } | { name: "notifications" } | { name: "settings" }
 
 export function routeFromUrl(
-  search = typeof window !== "undefined" ? window.location.search : "",
+  search = typeof window !== "undefined"
+    ? window.location.search ||
+      (window.location.pathname.startsWith("/view=")
+        ? `?${window.location.pathname.slice(1)}`
+        : "")
+    : "",
 ): Route[] {
   const q = new URLSearchParams(search)
 
@@ -135,9 +138,7 @@ export function routeFromUrl(
 
   if (v === "settings") return [{ name: "settings" }]
 
-  if (v === "add") return [{ name: "add" }]
-
-  if (v === "scan") return [{ name: "scan" }]
+  if (v === "add" || v === "scan") return [{ name: "scan" }]
 
   if (v === "notifications") return [{ name: "notifications" }]
 
@@ -671,7 +672,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       badge: attnCount,
     },
 
-    { r: "add", label: "Thêm", icon: <Plus size={22} /> },
+    { r: "scan", label: "Thêm", icon: <Plus size={22} /> },
 
     { r: "insight", label: "Insight", icon: <BarChart3 size={22} /> },
 
@@ -679,12 +680,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   ]
 
   const isAddFlow =
-    route.name === "add" ||
     route.name === "scan" ||
+    route.name === "add" ||
     (route.name === "form" && route.mode !== "edit")
 
   const rootName = isAddFlow
-    ? "add"
+    ? "scan"
     : route.name === "detail"
       ? stack[0]?.name || "inventory"
       : route.name
@@ -938,7 +939,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         <Inventory
           state={state}
           onOpenDetail={(id) => go({ name: "detail", id })}
-          onAdd={() => go({ name: "add" })}
+          onAdd={() => go({ name: "scan" })}
           onNavigateAttention={() => go({ name: "notifications" })}
           onOpenNotifications={() => go({ name: "notifications" })}
           unreadNotificationsCount={unreadCount}
@@ -1085,41 +1086,13 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             } catch {}
           }}
           onOpenDetail={(id) => go({ name: "detail", id })}
-          onAdd={() => go({ name: "add" })}
+          onAdd={() => go({ name: "scan" })}
         />
       )
 
       break
 
     case "add":
-      screenContent = (
-        <AddEntry
-          onScan={() => go({ name: "scan" })}
-          onManual={() =>
-            go({ name: "form", mode: "manual", draft: emptyDraft() })
-          }
-          onBarcodeSelect={(barcodeDraft) =>
-            go({
-              name: "form",
-
-              mode: "manual",
-
-              draft: {
-                ...emptyDraft(),
-
-                name: barcodeDraft.name,
-
-                barcode: barcodeDraft.barcode,
-              },
-            })
-          }
-          existingFoods={state.foods}
-          onBack={back}
-        />
-      )
-
-      break
-
     case "scan":
       screenContent = (
         <Scanner
@@ -1259,10 +1232,14 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       break
   }
 
-  const isFullBleed = route.name === "scan"
+  const isFullBleed = route.name === "scan" || route.name === "add"
 
   return (
-    <div className="flex h-dvh w-full overflow-hidden bg-brand-tertiary text-text-primary antialiased">
+    <div
+      className={`flex h-dvh w-full overflow-hidden ${
+        isFullBleed ? "bg-surface-darkest" : "bg-brand-tertiary"
+      } text-text-primary antialiased`}
+    >
       {/* Desktop Sidebar Navigation */}
       <div className="hidden h-full md:block shrink-0">
         <SidebarNavigation
@@ -1323,7 +1300,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         <div
           className={`mx-auto w-full transition-all ${
             isFullBleed
-              ? "md:max-w-4xl md:p-6"
+              ? "h-full min-h-full md:max-w-4xl md:p-6 md:flex md:items-center md:justify-center"
               : route.name === "form"
                 ? "max-w-5xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-8 md:px-8 md:pt-6 md:pb-12"
                 : "max-w-7xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"

@@ -694,3 +694,46 @@ export default function Icon({
     </svg>
   )
 }
+
+export function ClockELogo({
+  size = 40,
+  color = "#015D67",
+  className = "",
+  ...props
+}: {
+  size?: number | string
+  color?: string
+  className?: string
+} & SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 200 200"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <path
+        d="M153 144C138 164 116 171 94 166C62 160 44 135 44 108C44 77 67 52 99 50C129 47 150 65 156 88C159 97 157 102 152 103H79"
+        stroke={color}
+        strokeWidth="19"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M132 50C133 33 143 25 159 21C157 37 148 46 132 50Z"
+        fill={color}
+      />
+      <path
+        d="M99 103L87 81"
+        stroke={color}
+        strokeWidth="10"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
