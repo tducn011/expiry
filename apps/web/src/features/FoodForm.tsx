@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { api } from "../api/client"
 
@@ -40,6 +40,8 @@ import SectionTitle from "../components/ui/SectionTitle"
 import SelectField from "../components/ui/SelectField"
 
 import GoogleReminderPicker, { formatGoogleDate } from "./GoogleReminderPicker"
+
+import { prepareScanImage } from "./image-optimization"
 
 export interface Draft {
   id?: string
@@ -115,7 +117,7 @@ export const draftFrom = (f: Food, keepQty = true): Draft => ({
   reviewAt: f.reviewAt ?? "",
 })
 
-export type Errors = Partial<Record<"name" | "quantity" | "unit" | "mfgDate" | "opened_on" | "expDate" | "save", string>>
+export type Errors = Partial<Record<"name" | "quantity" | "unit" | "location" | "note" | "mfgDate" | "opened_on" | "expDate" | "save", string>>
 
 const validDate = (v: string) =>
   !v ||
@@ -125,6 +127,14 @@ export function validate(d: Draft): Errors {
   const e: Errors = {}
 
   if (!d.name.trim()) e.name = "Vui lòng nhập tên thực phẩm."
+  else if ([...d.name.trim()].length > 200)
+    e.name = "Tên thực phẩm tối đa 200 ký tự."
+
+  if ([...d.location.trim()].length > 100)
+    e.location = "Vị trí tối đa 100 ký tự."
+
+  if ([...(d.note?.trim() ?? "")].length > 1000)
+    e.note = "Ghi chú tối đa 1000 ký tự."
 
   const q = d.quantity.trim().replace(",", ".")
 
@@ -239,6 +249,15 @@ export function FoodForm({
 
   const scanHsdInputRef = useRef<HTMLInputElement>(null)
 
+  const scanGeneration = useRef(0)
+
+  useEffect(
+    () => () => {
+      scanGeneration.current++
+    },
+    [],
+  )
+
   const handleScanHsdPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
 
@@ -246,18 +265,18 @@ export function FoodForm({
 
     e.target.value = ""
 
+    const generation = ++scanGeneration.current
+
     setScanningHsd(true)
 
     try {
-      const dataUrl = await new Promise<string>((resolve) => {
-        const r = new FileReader()
+      const prepared = await prepareScanImage(file)
 
-        r.onload = () => resolve(String(r.result))
+      if (generation !== scanGeneration.current) return
 
-        r.readAsDataURL(file)
-      })
+      const result = await api.scan(prepared.file)
 
-      const result = await api.scan(file)
+      if (generation !== scanGeneration.current) return
 
       const cand = result.candidates
 
@@ -284,12 +303,14 @@ export function FoodForm({
         setErrors((p) => ({ ...p, mfgDate: undefined }))
       }
 
-      setCapturedImages((prev) => [...prev, dataUrl])
+      setCapturedImages((prev) => [...prev, prepared.image])
 
       setSelectedImgIdx(capturedImages.length)
 
       playBeep()
     } catch {
+      if (generation !== scanGeneration.current) return
+
       setErrors((p) => ({
         ...p,
 
@@ -297,7 +318,7 @@ export function FoodForm({
           "Chưa đọc được ngày từ ảnh này, vui lòng nhập tay hoặc chụp lại gần hơn.",
       }))
     } finally {
-      setScanningHsd(false)
+      if (generation === scanGeneration.current) setScanningHsd(false)
     }
   }
 
@@ -517,7 +538,10 @@ export function FoodForm({
               ]}
               value={d.location}
               onChange={set("location")}
+              aria-invalid={!!errors.location}
+              aria-describedby="e-location"
             />
+            <FieldError id="e-location" msg={errors.location} />
           </div>
         </div>
       </Card>
@@ -728,7 +752,10 @@ export function FoodForm({
             onChange={set("note")}
             maxLength={1000}
             description="Tùy chọn, tối đa 1000 ký tự"
+            aria-invalid={!!errors.note}
+            aria-describedby="e-note"
           />
+          <FieldError id="e-note" msg={errors.note} />
         </div>
 
         {expPast && (
@@ -770,7 +797,7 @@ export function FoodForm({
                 if (name) {
                   onAddLocation(name)
 
-                  setD((p) => ({ ...p, location: name }))
+                  set("location")(name)
 
                   setNewLocName("")
 
@@ -797,7 +824,7 @@ export function FoodForm({
               if (name) {
                 onAddLocation(name)
 
-                setD((p) => ({ ...p, location: name }))
+                set("location")(name)
 
                 setNewLocName("")
 

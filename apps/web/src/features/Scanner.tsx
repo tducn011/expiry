@@ -6,6 +6,8 @@ import type { Category, Food } from "../store/appStore"
 
 import type { Draft } from "./FoodForm"
 
+import { prepareScanImage } from "./image-optimization"
+
 import {
   decodeBarcodeFromImage,
   lookupBarcode,
@@ -101,6 +103,10 @@ export function Scanner({
 
   const [showManualBarcode, setShowManualBarcode] = useState(false)
 
+  const [fileError, setFileError] = useState("")
+
+  const scanGeneration = useRef(0)
+
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const streamRef = useRef<MediaStream | null>(null)
@@ -123,6 +129,8 @@ export function Scanner({
 
   useEffect(() => {
     return () => {
+      scanGeneration.current++
+
       stop()
 
       window.clearTimeout(timer.current)
@@ -243,6 +251,9 @@ export function Scanner({
   }, [state, step, step1Data])
 
   async function start() {
+    scanGeneration.current++
+    setFileError("")
+
     if (!navigator.mediaDevices?.getUserMedia) return setState("unavailable")
 
     setImage(undefined)
@@ -277,6 +288,9 @@ export function Scanner({
   }
 
   const resetToStep1 = () => {
+    scanGeneration.current++
+    setFileError("")
+
     isLiveScanningRef.current = false
 
     setStep(1)
@@ -299,6 +313,8 @@ export function Scanner({
   }
 
   const skipStep2 = () => {
+    scanGeneration.current++
+
     stop()
 
     if (step1Data) {
@@ -312,7 +328,11 @@ export function Scanner({
     file?: File | Blob,
 
     preDetectedBarcode?: string,
+
+    generation = ++scanGeneration.current,
   ) {
+    if (generation !== scanGeneration.current) return
+
     setImage(img)
 
     setState("processing")
@@ -348,6 +368,8 @@ export function Scanner({
       } catch {}
     }
 
+    if (generation !== scanGeneration.current) return
+
     if (detectedBarcode) {
       // Check if barcode is GS1 encoding expiry/manufactured date directly
 
@@ -371,6 +393,8 @@ export function Scanner({
         uploadFile = new File([blob], "capture.jpg", { type: "image/jpeg" })
       }
 
+      if (generation !== scanGeneration.current) return
+
       // Parallelize product metadata lookup & backend OCR scanning for maximum speed
 
       const lookupPromise: Promise<ProductLookupResult | null> = detectedBarcode
@@ -390,6 +414,8 @@ export function Scanner({
 
         scanPromise,
       ])
+
+      if (generation !== scanGeneration.current) return
 
       if (lookupRes?.found && lookupRes.product?.name) {
         barcodeProductName = lookupRes.product.name
@@ -424,6 +450,8 @@ export function Scanner({
           }
         }
       }
+
+      if (generation !== scanGeneration.current) return
 
       const expDate = cand.expiry_date?.value || barcodeExpDate || ""
 
@@ -612,6 +640,8 @@ export function Scanner({
         onReview([step1Data.image, img], mergedDraft)
       }
     } catch {
+      if (generation !== scanGeneration.current) return
+
       if (step === 1 && (barcodeProductName || detectedBarcode)) {
         playBeep()
 
@@ -673,6 +703,8 @@ export function Scanner({
 
     if (!v || !v.videoWidth) return
 
+    const generation = ++scanGeneration.current
+
     setState("capturing")
 
     // Optimize frame resolution: max 1200px dimension preserves full OCR precision while reducing upload payload
@@ -701,14 +733,16 @@ export function Scanner({
 
     c.toBlob(
       (blob) => {
+        if (generation !== scanGeneration.current) return
+
         if (blob) {
           const f = new File([blob], `scan-step${step}.jpg`, {
             type: "image/jpeg",
           })
 
-          recognize(dataUrl, f, preDetectedBarcode)
+          recognize(dataUrl, f, preDetectedBarcode, generation)
         } else {
-          recognize(dataUrl, undefined, preDetectedBarcode)
+          recognize(dataUrl, undefined, preDetectedBarcode, generation)
         }
       },
 
@@ -719,19 +753,36 @@ export function Scanner({
   }
 
   async function onSingleFile(file: File) {
-    const dataUrl = await new Promise<string>((resolve) => {
-      const r = new FileReader()
+    const generation = ++scanGeneration.current
+    stop()
+    setState("processing")
+    setFileError("")
+    setImage(undefined)
+    setImages([])
 
-      r.onload = () => resolve(String(r.result))
-
-      r.readAsDataURL(file)
-    })
-
-    recognize(dataUrl, file)
+    try {
+      const prepared = await prepareScanImage(file)
+      if (generation !== scanGeneration.current) return
+      await recognize(prepared.image, prepared.file, undefined, generation)
+    } catch (error) {
+      if (generation !== scanGeneration.current) return
+      setFileError(
+        error instanceof Error
+          ? error.message
+          : "Không xử lý được ảnh. Hãy thử chọn ảnh khác.",
+      )
+      setState("unrecognized")
+    }
   }
 
   async function recognizeBatch(files: File[]) {
     if (!files || files.length === 0) return
+
+    const generation = ++scanGeneration.current
+
+    setFileError("")
+    setImage(undefined)
+    setImages([])
 
     setState("processing")
 
@@ -752,17 +803,27 @@ export function Scanner({
     const loadedImages: string[] = []
 
     for (let i = 0; i < files.length; i++) {
+      if (generation !== scanGeneration.current) return
+
       setBatchProgress({ current: i + 1, total: files.length })
 
-      const file = files[i]
+      let prepared: Awaited<ReturnType<typeof prepareScanImage>>
+      try {
+        prepared = await prepareScanImage(files[i])
+      } catch (error) {
+        if (generation !== scanGeneration.current) return
+        setBatchProgress(null)
+        setFileError(
+          error instanceof Error
+            ? error.message
+            : "Không xử lý được ảnh. Hãy thử chọn ảnh khác.",
+        )
+        setState("unrecognized")
+        return
+      }
 
-      const dataUrl = await new Promise<string>((resolve) => {
-        const r = new FileReader()
-
-        r.onload = () => resolve(String(r.result))
-
-        r.readAsDataURL(file)
-      })
+      if (generation !== scanGeneration.current) return
+      const { file, image: dataUrl } = prepared
 
       loadedImages.push(dataUrl)
 
@@ -819,6 +880,8 @@ export function Scanner({
           scanPromise,
         ])
 
+        if (generation !== scanGeneration.current) return
+
         if (lookupRes?.found && lookupRes.product?.name) {
           barcodeProductName = lookupRes.product.name
         }
@@ -869,6 +932,8 @@ export function Scanner({
       } catch (err) {
         console.warn(`Scan error on image ${i + 1}:`, err)
       }
+
+      if (generation !== scanGeneration.current) return
 
       if (!finalBarcode && detectedBarcode) finalBarcode = detectedBarcode
 
@@ -956,6 +1021,8 @@ export function Scanner({
   }
 
   const leave = (fn: () => void) => () => {
+    scanGeneration.current++
+
     stop()
 
     fn()
@@ -1247,6 +1314,12 @@ export function Scanner({
 
       {/* Mobile-Friendly Control Panel */}
       <div className="flex flex-col items-center gap-2.5 px-4 sm:px-6 pt-1 pb-2 shrink-0 w-full max-w-sm mx-auto">
+        {fileError && (
+          <p role="alert" className="text-sm text-center">
+            {fileError}
+          </p>
+        )}
+
         {/* STEP 2 ACTIONS */}
         {step === 2 && step1Data && state !== "processing" && (
           <div className="flex flex-col gap-2 w-full">

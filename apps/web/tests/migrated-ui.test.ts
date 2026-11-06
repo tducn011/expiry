@@ -416,6 +416,33 @@ describe("Food Form Validation", () => {
 
     expect(Object.keys(errors)).toHaveLength(0)
   })
+
+  it.each([
+    ["name", 200, "Tên thực phẩm tối đa 200 ký tự."],
+    ["location", 100, "Vị trí tối đa 100 ký tự."],
+    ["note", 1000, "Ghi chú tối đa 1000 ký tự."],
+  ] as const)(
+    "enforces the API length limit for %s",
+    (field, limit, message) => {
+      const draft = { ...emptyDraft(), name: "Sữa" }
+
+      expect(validate({ ...draft, [field]: "a".repeat(limit) })).toEqual({})
+      expect(validate({ ...draft, [field]: "a".repeat(limit + 1) })).toEqual({
+        [field]: message,
+      })
+    },
+  )
+
+  it("counts Unicode characters and trims values the same way as the save adapter", () => {
+    expect(
+      validate({
+        ...emptyDraft(),
+        name: `  ${"🥛".repeat(200)}  `,
+        location: `  ${"🧊".repeat(100)}  `,
+        note: `  ${"📝".repeat(1000)}  `,
+      }),
+    ).toEqual({})
+  })
 })
 
 describe("Status Badge Computations", () => {
