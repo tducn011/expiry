@@ -357,6 +357,10 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
         barcode: item.barcode || undefined,
 
+        reviewAt: item.review_at || undefined,
+
+        note: item.note || undefined,
+
         createdAt: item.created_at,
 
         version: item.version,
@@ -733,6 +737,10 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
             manufactured_on: d.mfgDate || null,
 
+            review_at: d.reviewAt || null,
+
+            note: d.note !== undefined ? d.note.trim() || null : undefined,
+
             category: d.category || null,
 
             barcode: d.barcode || null,
@@ -767,6 +775,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               barcode: d.barcode || undefined,
 
               reviewAt: d.reviewAt || undefined,
+
+              note: d.note?.trim() || undefined,
 
               finishedAt:
                 updated.remaining_quantity === 0
@@ -829,7 +839,9 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
               manufactured_on: d.mfgDate || null,
 
-              note: null,
+              review_at: d.reviewAt || null,
+
+              note: d.note?.trim() || null,
 
               category: d.category || null,
 
@@ -868,6 +880,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               barcode: d.barcode || undefined,
 
               reviewAt: d.reviewAt || undefined,
+
+              note: d.note?.trim() || undefined,
 
               finishedAt: undefined,
 
@@ -915,6 +929,10 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         location: d.location || undefined,
 
         barcode: d.barcode || undefined,
+
+        reviewAt: d.reviewAt || undefined,
+
+        note: d.note?.trim() || undefined,
 
         finishedAt: undefined,
       },

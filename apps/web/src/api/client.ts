@@ -165,6 +165,8 @@ export type EntryDraftDTO = {
 
   manufactured_on?: string | null
 
+  review_at?: string | null
+
   note: string | null
 
   barcode?: string | null
@@ -398,6 +400,9 @@ export function fromEntry(dto: EntryDTO): FoodEntry {
 
     manufactured_on:
       (dto as Record<string, unknown>).manufactured_on as string | null ?? null,
+
+    review_at:
+      (dto as Record<string, unknown>).review_at as string | null ?? null,
 
     note: dto.note,
 

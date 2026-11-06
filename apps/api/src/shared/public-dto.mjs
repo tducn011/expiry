@@ -33,6 +33,7 @@ export function entryDTO(entry, projection) {
     date_label_type: entry.date_label_type,
     opened_on: entry.opened_on,
     manufactured_on: entry.manufactured_on ?? null,
+    review_at: entry.review_at ?? null,
     note: entry.note,
     barcode: entry.barcode ?? null,
     barcode_format: entry.barcode_format ?? null,

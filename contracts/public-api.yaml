@@ -1487,6 +1487,26 @@ components:
           - string
           - 'null'
           format: date
+        manufactured_on:
+          type:
+          - string
+          - 'null'
+          format: date
+        review_at:
+          type:
+          - string
+          - 'null'
+          format: date
+        barcode:
+          type:
+          - string
+          - 'null'
+          maxLength: 64
+        barcode_format:
+          type:
+          - string
+          - 'null'
+          maxLength: 20
         note:
           type:
           - string
@@ -1550,6 +1570,26 @@ components:
           - string
           - 'null'
           format: date
+        manufactured_on:
+          type:
+          - string
+          - 'null'
+          format: date
+        review_at:
+          type:
+          - string
+          - 'null'
+          format: date
+        barcode:
+          type:
+          - string
+          - 'null'
+          maxLength: 64
+        barcode_format:
+          type:
+          - string
+          - 'null'
+          maxLength: 20
         note:
           type:
           - string
@@ -1641,6 +1681,26 @@ components:
           - string
           - 'null'
           format: date
+        manufactured_on:
+          type:
+          - string
+          - 'null'
+          format: date
+        review_at:
+          type:
+          - string
+          - 'null'
+          format: date
+        barcode:
+          type:
+          - string
+          - 'null'
+          maxLength: 64
+        barcode_format:
+          type:
+          - string
+          - 'null'
+          maxLength: 20
         note:
           type:
           - string

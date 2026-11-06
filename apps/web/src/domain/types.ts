@@ -41,6 +41,8 @@ export type FoodEntry = {
 
   manufactured_on?: string | null
 
+  review_at?: string | null
+
   note: string | null
 
   barcode?: string | null

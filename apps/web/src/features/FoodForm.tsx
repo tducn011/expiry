@@ -23,6 +23,7 @@ import FieldError from "../components/ui/FieldError"
 import {
   Barcode,
   Camera,
+  Lock,
   Plus,
   ScanText,
   X,
@@ -61,6 +62,8 @@ export interface Draft {
 
   barcode?: string
 
+  note?: string
+
   reviewAt?: string
 }
 
@@ -80,6 +83,8 @@ export const emptyDraft = (): Draft => ({
   expDate: "",
 
   location: "",
+
+  note: "",
 
   reviewAt: "",
 })
@@ -104,6 +109,8 @@ export const draftFrom = (f: Food, keepQty = true): Draft => ({
   location: f.location ?? "",
 
   barcode: f.barcode ?? undefined,
+
+  note: f.note ?? "",
 
   reviewAt: f.reviewAt ?? "",
 })
@@ -202,6 +209,20 @@ export function FoodForm({
     () => !!initial.reviewAt,
   )
 
+  // Track which fields originated from a scan (strictly read-only, editing is locked)
+  const [scannedFields, setScannedFields] =
+    useState<Set<"name" | "expDate" | "mfgDate">>(() => {
+      if (mode !== "ocr") return new Set()
+      const s = new Set<"name" | "expDate" | "mfgDate">()
+      if (initial.name) s.add("name")
+      if (initial.expDate) s.add("expDate")
+      if (initial.mfgDate) s.add("mfgDate")
+      return s
+    })
+
+  const isScanned = (field: "name" | "expDate" | "mfgDate") =>
+    scannedFields.has(field)
+
   const [capturedImages, setCapturedImages] = useState<string[]>(() =>
     Array.isArray(capturedImage)
       ? capturedImage
@@ -247,9 +268,18 @@ export function FoodForm({
       if (exp) {
         setD((p) => ({ ...p, expDate: exp, mfgDate: mfg || p.mfgDate }))
 
+        setScannedFields((prev) => {
+          const next = new Set(prev)
+          next.add("expDate")
+          if (mfg) next.add("mfgDate")
+          return next
+        })
+
         setErrors((p) => ({ ...p, expDate: undefined, mfgDate: undefined }))
       } else if (mfg) {
         setD((p) => ({ ...p, mfgDate: mfg }))
+
+        setScannedFields((prev) => new Set(prev).add("mfgDate"))
 
         setErrors((p) => ({ ...p, mfgDate: undefined }))
       }
@@ -284,6 +314,10 @@ export function FoodForm({
   const dirty = JSON.stringify(d) !== JSON.stringify(initial)
 
   const set = (k: keyof Draft) => (v: string) => {
+    // Strictly prevent changes to machine-scanned fields
+    if ((k === "name" || k === "expDate" || k === "mfgDate") && isScanned(k))
+      return
+
     setD((p) => ({ ...p, [k]: v }))
 
     setErrors((p) => ({ ...p, [k]: undefined, save: undefined }))
@@ -386,15 +420,34 @@ export function FoodForm({
 
       <Card className="flex flex-col gap-4">
         <div>
-          <InputField
-            label="Tên thực phẩm *"
-            placeholder="Ví dụ: Sữa tươi, Trứng gà, Rau cải..."
-            value={d.name}
-            onChange={set("name")}
-            aria-invalid={!!errors.name}
-            aria-describedby="e-name"
-            autoFocus
-          />
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <InputField
+                label="Tên thực phẩm *"
+                placeholder="Ví dụ: Sữa tươi, Trứng gà, Rau cải..."
+                value={d.name}
+                onChange={set("name")}
+                aria-invalid={!!errors.name}
+                aria-describedby="e-name"
+                autoFocus={!isScanned("name")}
+                readOnly={isScanned("name")}
+                className={
+                  isScanned("name")
+                    ? "opacity-75 bg-bg-subtle cursor-not-allowed select-none"
+                    : ""
+                }
+              />
+            </div>
+            {isScanned("name") && (
+              <span
+                title="Tên thực phẩm trích xuất tự động từ nhãn/mã vạch (chỉ đọc)"
+                className="mt-5 shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+              >
+                <Lock size={13} aria-hidden="true" />
+                <span>Chỉ đọc</span>
+              </span>
+            )}
+          </div>
           {d.barcode && (
             <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-1">
               <Barcode size={14} className="text-brand-primary shrink-0" />
@@ -495,13 +548,32 @@ export function FoodForm({
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <InputField
-              label="Ngày sản xuất (NSX)"
-              type="date"
-              value={d.mfgDate}
-              onChange={set("mfgDate")}
-              aria-describedby="e-mfg"
-            />
+            <div className="flex items-start gap-2">
+              <div className="flex-1">
+                <InputField
+                  label="Ngày sản xuất (NSX)"
+                  type="date"
+                  value={d.mfgDate}
+                  onChange={set("mfgDate")}
+                  aria-describedby="e-mfg"
+                  readOnly={isScanned("mfgDate")}
+                  className={
+                    isScanned("mfgDate")
+                      ? "opacity-75 bg-bg-subtle cursor-not-allowed select-none"
+                      : ""
+                  }
+                />
+              </div>
+              {isScanned("mfgDate") && (
+                <span
+                  title="NSX trích xuất tự động từ nhãn (chỉ đọc)"
+                  className="mt-5 shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+                >
+                  <Lock size={13} aria-hidden="true" />
+                  <span>Chỉ đọc</span>
+                </span>
+              )}
+            </div>
             <FieldError id="e-mfg" msg={errors.mfgDate} />
             {/* Icon tùy chỉnh nhắc nhở ngay dưới NSX */}
             <div className="mt-1.5 flex items-center">
@@ -545,13 +617,32 @@ export function FoodForm({
             <FieldError id="e-opened" msg={errors.opened_on} />
           </div>
           <div>
-            <InputField
-              label="Hạn sử dụng (HSD)"
-              type="date"
-              value={d.expDate}
-              onChange={set("expDate")}
-              aria-describedby="e-exp"
-            />
+            <div className="flex items-start gap-2">
+              <div className="flex-1">
+                <InputField
+                  label="Hạn sử dụng (HSD)"
+                  type="date"
+                  value={d.expDate}
+                  onChange={set("expDate")}
+                  aria-describedby="e-exp"
+                  readOnly={isScanned("expDate")}
+                  className={
+                    isScanned("expDate")
+                      ? "opacity-75 bg-bg-subtle cursor-not-allowed select-none"
+                      : ""
+                  }
+                />
+              </div>
+              {isScanned("expDate") && (
+                <span
+                  title="HSD trích xuất tự động từ nhãn (chỉ đọc)"
+                  className="mt-5 shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+                >
+                  <Lock size={13} aria-hidden="true" />
+                  <span>Chỉ đọc</span>
+                </span>
+              )}
+            </div>
             <FieldError id="e-exp" msg={errors.expDate} />
           </div>
         </div>
@@ -626,6 +717,19 @@ export function FoodForm({
             </div>
           </div>
         )}
+
+        {/* Ghi chú thêm */}
+        <div>
+          <InputField
+            label="Ghi chú thêm"
+            type="text"
+            placeholder="Ví dụ: Để ở ngăn đông, nắp đã mở..."
+            value={d.note || ""}
+            onChange={set("note")}
+            maxLength={1000}
+            description="Tùy chọn, tối đa 1000 ký tự"
+          />
+        </div>
 
         {expPast && (
           <p className="text-xs text-status-soon font-medium">
