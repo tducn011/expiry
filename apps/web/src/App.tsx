@@ -178,10 +178,15 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const [isCheckingSession, setIsCheckingSession] = useState(!demoMode)
 
   // authGenRef guards Effect 1 (session verification) only.
+
   // hydrationGenRef guards Effect 2 (inventory hydration) only.
+
   // Keeping them separate prevents Effect 2 from invalidating Effect 1's
+
   // generation check and blocking setIsCheckingSession(false).
+
   const authGenRef = useRef(0)
+
   const hydrationGenRef = useRef(0)
 
   const refreshInventoryRef = useRef<(() => Promise<void>) | null>(null)
@@ -1314,72 +1319,74 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       </div>
 
       {/* Main Content Area */}
-      <main
-        className={`mx-auto w-full min-w-0 flex-1 overflow-y-auto transition-all ${
-          isFullBleed
-            ? "md:max-w-4xl md:p-6"
-            : route.name === "form"
-              ? "max-w-5xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-8 md:px-8 md:pt-6 md:pb-12"
-              : "max-w-7xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
-        }`}
-      >
-        {problem === "write" && !isFullBleed && (
-          <div
-            role="alert"
-            className="mb-4 flex items-center gap-2 rounded-corner-md bg-status-expired-bg border border-status-expired/30 px-4 py-2.5 text-xs md:text-sm text-status-expired"
-          >
-            <CircleAlert size={16} aria-hidden="true" className="shrink-0" />
-            <span>
-              Không lưu được vào thiết bị. Thay đổi gần nhất có thể bị mất khi
-              đóng ứng dụng.
-            </span>
-          </div>
-        )}
-
-        {syncError && !isFullBleed && (
-          <div
-            className="mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/30 px-3.5 py-2 text-xs text-amber-800 dark:text-amber-200 shadow-xs"
-            role="alert"
-          >
-            <div className="flex min-w-0 items-center gap-2">
-              <CircleAlert
-                size={16}
-                className="shrink-0 text-amber-600 dark:text-amber-400"
-              />
-              <span className="font-medium">{syncError}</span>
-            </div>
-            <button
-              type="button"
-              className="shrink-0 font-semibold underline hover:text-amber-900 dark:hover:text-amber-100 cursor-pointer"
-              onClick={() => window.location.reload()}
+      <main className="h-full w-full min-w-0 flex-1 overflow-y-auto">
+        <div
+          className={`mx-auto w-full transition-all ${
+            isFullBleed
+              ? "md:max-w-4xl md:p-6"
+              : route.name === "form"
+                ? "max-w-5xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-8 md:px-8 md:pt-6 md:pb-12"
+                : "max-w-7xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
+          }`}
+        >
+          {problem === "write" && !isFullBleed && (
+            <div
+              role="alert"
+              className="mb-4 flex items-center gap-2 rounded-corner-md bg-status-expired-bg border border-status-expired/30 px-4 py-2.5 text-xs md:text-sm text-status-expired"
             >
-              Thử lại
-            </button>
-          </div>
-        )}
-
-        {state.mode === "demo" && !isFullBleed && (
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-border-primary/60 bg-surface-bg px-3.5 py-1.5 text-xs shadow-xs">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-brand-accent text-brand-primary">
-                <Leaf size={14} aria-hidden="true" />
-              </span>
-              <span className="truncate font-medium text-text-secondary">
-                Dữ liệu mẫu (chế độ xem thử)
+              <CircleAlert size={16} aria-hidden="true" className="shrink-0" />
+              <span>
+                Không lưu được vào thiết bị. Thay đổi gần nhất có thể bị mất khi
+                đóng ứng dụng.
               </span>
             </div>
-            <Button
-              size="small"
-              variant="subtle"
-              className="shrink-0 font-semibold text-brand-primary"
-              onClick={() => setPendingAuth({ name: "inventory" })}
-            >
-              Đăng nhập
-            </Button>
-          </div>
-        )}
+          )}
 
-        {screenContent}
+          {syncError && !isFullBleed && (
+            <div
+              className="mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/30 px-3.5 py-2 text-xs text-amber-800 dark:text-amber-200 shadow-xs"
+              role="alert"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <CircleAlert
+                  size={16}
+                  className="shrink-0 text-amber-600 dark:text-amber-400"
+                />
+                <span className="font-medium">{syncError}</span>
+              </div>
+              <button
+                type="button"
+                className="shrink-0 font-semibold underline hover:text-amber-900 dark:hover:text-amber-100 cursor-pointer"
+                onClick={() => window.location.reload()}
+              >
+                Thử lại
+              </button>
+            </div>
+          )}
+
+          {state.mode === "demo" && !isFullBleed && (
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-border-primary/60 bg-surface-bg px-3.5 py-1.5 text-xs shadow-xs">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-brand-accent text-brand-primary">
+                  <Leaf size={14} aria-hidden="true" />
+                </span>
+                <span className="truncate font-medium text-text-secondary">
+                  Dữ liệu mẫu (chế độ xem thử)
+                </span>
+              </div>
+              <Button
+                size="small"
+                variant="subtle"
+                className="shrink-0 font-semibold text-brand-primary"
+                onClick={() => setPendingAuth({ name: "inventory" })}
+              >
+                Đăng nhập
+              </Button>
+            </div>
+          )}
+
+          {screenContent}
+        </div>
       </main>
 
       {/* Mobile Bottom Navigation Bar */}
