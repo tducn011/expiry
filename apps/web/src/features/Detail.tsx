@@ -450,6 +450,16 @@ export function Detail({
                 </div>
               ))}
             </dl>
+            {f.note && (
+              <div className="pt-3 border-t border-border-primary/40">
+                <span className="text-xs text-text-secondary font-medium">
+                  Ghi chú:
+                </span>
+                <p className="text-sm text-text-primary mt-1 p-2.5 rounded-lg bg-surface-secondary border border-border-primary/50 whitespace-pre-wrap">
+                  {f.note}
+                </p>
+              </div>
+            )}
           </Card>
         </div>
 

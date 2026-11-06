@@ -527,6 +527,20 @@ export const TrendingUp = createIcon(
   </>,
 )
 
+export const Lock = createIcon(
+  <>
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </>,
+)
+
+export const LockOpen = createIcon(
+  <>
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+  </>,
+)
+
 // Legacy Icon component for backwards compatibility with existing codebase
 
 const iconRegistry: Record<string, ReactNode> = {

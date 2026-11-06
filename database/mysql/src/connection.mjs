@@ -102,6 +102,11 @@ export async function migrate(database) {
     { version: 3, file: 'migrations/003_session_expiry_boundary.sql' },
     { version: 4, file: 'migrations/004_add_barcode.sql' },
     { version: 5, file: 'migrations/005_add_category.sql' },
+    { version: 6, file: 'migrations/006_add_manufactured_on.sql' },
+    { version: 7, file: 'migrations/007_workspaces_and_members.sql' },
+    { version: 8, file: 'migrations/008_workspace_invites.sql' },
+    { version: 9, file: 'migrations/009_product_batches.sql' },
+    { version: 10, file: 'migrations/010_add_review_at.sql' },
   ];
   await rootSql('CREATE TABLE IF NOT EXISTS schema_migrations (version INT PRIMARY KEY, sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, applied_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)) ENGINE=InnoDB;', database);
   
