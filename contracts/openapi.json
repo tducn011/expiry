@@ -2818,6 +2818,13 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "manufactured_on": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
           }
         },
         "required": [
@@ -2839,7 +2846,8 @@
           "deleted_at",
           "created_at",
           "updated_at",
-          "category"
+          "category",
+          "manufactured_on"
         ],
         "additionalProperties": false
       },
@@ -3217,7 +3225,7 @@
           },
           "password": {
             "type": "string",
-            "minLength": 15,
+            "minLength": 8,
             "maxLength": 128,
             "writeOnly": true
           }
@@ -3238,7 +3246,7 @@
           },
           "password": {
             "type": "string",
-            "minLength": 15,
+            "minLength": 8,
             "maxLength": 128,
             "writeOnly": true
           },

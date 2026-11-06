@@ -91,14 +91,27 @@ async function runBehavioralAndContractSuite() {
     console.log(`  ✅ [${stage}] ${detail}`);
   }
 
-  // Stage 1: Root Healthcheck
+  // Stage 1: Root Healthcheck, Liveness & Readiness Probes (Issue #206)
   {
     const res = await fetch(`${API_BASE}/health`);
     assert.equal(res.status, 200);
     const body = await res.json();
     assert.equal(body.status, 'ok');
     assert.equal(body.service, 'expiry-api');
-    record('STAGE 1: ROOT HEALTH', 'API trả về HTTP 200 OK với version 1.0.0');
+
+    const resLive = await fetch(`${API_BASE}/health/live`);
+    assert.equal(resLive.status, 200);
+    const bodyLive = await resLive.json();
+    assert.equal(bodyLive.status, 'ok');
+    assert.equal(typeof bodyLive.uptime, 'number');
+
+    const resReady = await fetch(`${API_BASE}/health/ready`);
+    assert.equal(resReady.status, 200);
+    const bodyReady = await resReady.json();
+    assert.equal(bodyReady.status, 'ready');
+    assert.equal(bodyReady.database, 'connected');
+
+    record('STAGE 1: ROOT HEALTH & PROBES', 'API trả về HTTP 200 OK cho /health, /health/live và /health/ready');
   }
 
   // Stage 2: Security Gate (Unauthenticated Request Rejection)

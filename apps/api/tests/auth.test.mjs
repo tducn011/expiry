@@ -4,7 +4,7 @@ import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { createAuthBoundary, createAuthRateLimiter } from '../src/modules/auth/auth.routes.mjs';
 import { AuthRepository } from '../src/modules/auth/auth.repository.mjs';
-import { passwordVerifier, verifyPassword, tokenHash } from '../src/modules/auth/auth.crypto.mjs';
+import { passwordVerifier, verifyPassword, validatePassword, tokenHash } from '../src/modules/auth/auth.crypto.mjs';
 import { DomainError } from '../src/shared/domain.mjs';
 import { errorHandler } from '../src/shared/middleware.mjs';
 
@@ -74,6 +74,8 @@ async function register(h) {
 }
 
 test('password verification uses independently salted strong verifiers, without truncating Unicode', async () => {
+  assert.throws(() => validatePassword('1234567'), (err) => err instanceof DomainError && err.status === 422);
+  assert.equal(validatePassword('12345678'), '12345678');
   const first = await passwordVerifier(password);
   const second = await passwordVerifier(password);
   assert.match(first, /^scrypt\$131072\$8\$1\$[0-9a-f]{32}\$[0-9a-f]{128}$/);

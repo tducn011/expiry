@@ -1,24 +1,48 @@
+import { useState } from "react"
+
 import Button from "../components/ui/Button"
 
 import Card from "../components/ui/Card"
 
-import { Camera, Keyboard, ScanText, Sparkles } from "../components/ui/Icon"
+import {
+  Barcode,
+  Camera,
+  Keyboard,
+  ScanText,
+  Sparkles,
+} from "../components/ui/Icon"
 
 import PageHeader from "../components/ui/PageHeader"
+
+import ManualBarcodeModal, { type BarcodeDraft } from "./ManualBarcodeModal"
+
+import type { Food } from "../store/appStore"
+
+export interface AddEntryProps {
+  onScan: () => void
+
+  onManual: () => void
+
+  onBarcodeSelect?: (draft: BarcodeDraft) => void
+
+  existingFoods?: Food[]
+
+  onBack?: () => void
+}
 
 export function AddEntry({
   onScan,
 
   onManual,
 
+  onBarcodeSelect,
+
+  existingFoods,
+
   onBack,
-}: {
-  onScan: () => void
+}: AddEntryProps) {
+  const [showBarcodeModal, setShowBarcodeModal] = useState(false)
 
-  onManual: () => void
-
-  onBack?: () => void
-}) {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <PageHeader
@@ -27,7 +51,7 @@ export function AddEntry({
         onBack={onBack}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <Card
           onClick={onScan}
           className="flex flex-col justify-between gap-6 cursor-pointer border-brand-primary/30 transition-all hover:border-brand-primary hover:shadow-md hover:-translate-y-0.5"
@@ -38,11 +62,10 @@ export function AddEntry({
             </div>
             <div>
               <h2 className="text-base font-semibold text-text-primary">
-                Quét nhãn thực phẩm
+                Quét thông minh
               </h2>
               <p className="mt-1 text-xs text-text-secondary leading-relaxed">
-                Chụp ảnh bao bì để đối chiếu thông tin ngày sản xuất và hạn sử
-                dụng một cách trực quan.
+                Quét mã vạch và nhận diện HSD tự động bằng AI qua camera 2 bước.
               </p>
             </div>
           </div>
@@ -51,7 +74,33 @@ export function AddEntry({
             iconStart={<ScanText size={18} />}
             onClick={onScan}
           >
-            Bắt đầu quét
+            Quét bằng camera
+          </Button>
+        </Card>
+
+        <Card
+          onClick={() => setShowBarcodeModal(true)}
+          className="flex flex-col justify-between gap-6 cursor-pointer border-border-primary transition-all hover:border-brand-primary hover:shadow-md hover:-translate-y-0.5"
+        >
+          <div className="flex flex-col gap-3">
+            <div className="flex size-12 items-center justify-center rounded-corner-md bg-amber-500/10 text-amber-600 dark:text-amber-400 shadow-xs">
+              <Barcode size={24} aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-text-primary">
+                Nhập mã vạch số
+              </h2>
+              <p className="mt-1 text-xs text-text-secondary leading-relaxed">
+                Nhập chuỗi số GTIN/EAN khi bao bì rách, mờ hoặc mất nét vạch.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="secondary"
+            iconStart={<Barcode size={18} />}
+            onClick={() => setShowBarcodeModal(true)}
+          >
+            Nhập số vạch
           </Button>
         </Card>
 
@@ -68,8 +117,8 @@ export function AddEntry({
                 Nhập bằng tay
               </h2>
               <p className="mt-1 text-xs text-text-secondary leading-relaxed">
-                Tự điền tên, số lượng, nơi lưu trữ và hạn dùng theo ý bạn một
-                cách nhanh chóng.
+                Tự điền tên, số lượng, nơi lưu trữ và hạn dùng một cách chủ
+                động.
               </p>
             </div>
           </div>
@@ -96,6 +145,28 @@ export function AddEntry({
         HSD — ứng dụng sẽ hiển thị &quot;Chưa rõ HSD&quot; và bạn có thể hẹn
         lịch kiểm tra lại sau.
       </div>
+
+      {showBarcodeModal && (
+        <ManualBarcodeModal
+          isOpen={showBarcodeModal}
+          onClose={() => setShowBarcodeModal(false)}
+          existingFoods={existingFoods}
+          onSelect={(draft) => {
+            setShowBarcodeModal(false)
+
+            if (onBarcodeSelect) {
+              onBarcodeSelect(draft)
+            } else {
+              onManual()
+            }
+          }}
+          onSkip={() => {
+            setShowBarcodeModal(false)
+
+            onManual()
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -39,6 +39,8 @@ export type FoodEntry = {
 
   opened_on: string | null
 
+  manufactured_on?: string | null
+
   note: string | null
 
   barcode?: string | null

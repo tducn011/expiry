@@ -4,14 +4,17 @@ import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser"
 
 import Button from "./Button"
 
-import { Camera, ImageUp, Sparkles } from "./Icon"
+import { Camera, ImageUp, Keyboard, Loader2, Sparkles } from "./Icon"
 
 import Modal from "./Modal"
+
+import { api } from "../../api/client"
 
 import {
   playBeep,
   createConfiguredReader,
   decodeBarcodeFromImage,
+  extractBarcodeFromText,
   type BarcodeResult,
 } from "../../lib/barcode"
 
@@ -272,9 +275,40 @@ export default function BarcodeScannerModal({
         img.onerror = rej
       })
 
-      // Run advanced multi-pass barcode decoding (Native BarcodeDetector + 7-pass Canvas ZXing)
+      // Run advanced multi-pass barcode decoding (Native BarcodeDetector + 11-pass Canvas ZXing)
 
-      const result = await decodeBarcodeFromImage(img)
+      let result = await decodeBarcodeFromImage(img)
+
+      if (!result) {
+        // AI / OCR Vision Fallback: When 1D stripe scanning fails due to cylindrical can curvature,
+
+        // perspective distortion, or glare, extract the barcode digits directly from the image!
+
+        try {
+          const scanRes = await api.scan(file)
+
+          const extractedCode =
+            scanRes.candidates.barcode ||
+            extractBarcodeFromText(scanRes.raw_text)?.code
+
+          if (extractedCode) {
+            result = {
+              text: extractedCode,
+
+              format:
+                extractedCode.length === 8
+                  ? "EAN_8"
+                  : extractedCode.length === 12
+                    ? "UPC_A"
+                    : "EAN_13",
+
+              timestamp: Date.now(),
+            }
+          }
+        } catch {
+          // Vision fallback failed or no barcode detected
+        }
+      }
 
       if (result && result.text) {
         playBeep()
@@ -631,8 +665,21 @@ export default function BarcodeScannerModal({
                   fontWeight: 500,
                 }}
               >
-                ⏳ Đang phân tích mã vạch (thử góc xoay 90°/270° & tăng độ tương
-                phản)...
+                <span
+                  style={{
+                    display: "inline-flex",
+
+                    alignItems: "center",
+
+                    gap: "6px",
+                  }}
+                >
+                  <Loader2 size={15} className="animate-spin" />
+                  <span>
+                    Đang phân tích mã vạch (thử góc xoay 90°/270° & tăng độ
+                    tương phản)...
+                  </span>
+                </span>
               </p>
             )}
 
@@ -681,7 +728,18 @@ export default function BarcodeScannerModal({
               color: "var(--text-color, #374151)",
             }}
           >
-            ⌨️ Hoặc nhập dãy số mã vạch thủ công:
+            <span
+              style={{
+                display: "inline-flex",
+
+                alignItems: "center",
+
+                gap: "6px",
+              }}
+            >
+              <Keyboard size={16} />
+              <span>Hoặc nhập dãy số mã vạch thủ công:</span>
+            </span>
           </div>
           <form
             onSubmit={handleManualSubmit}

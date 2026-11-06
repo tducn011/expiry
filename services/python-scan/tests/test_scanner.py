@@ -55,6 +55,8 @@ class TestScannerLogic(unittest.TestCase):
             ("HSD 15 Thg10 2026", "2026-10-15", "use_by"),
             ("BBE 20 Tháng 5 2025", "2025-05-20", "best_before"),
             ("EXP 01 Thg1 2027", "2027-01-01", "use_by"),
+            ("NSX: Tháng 1/2026", "2026-01-01", "manufactured"),
+            ("HSD: 12/2027", "2027-12-01", "use_by"),
         )
 
         for text, expected_date, expected_label in cases:
@@ -63,6 +65,13 @@ class TestScannerLogic(unittest.TestCase):
                 self.assertEqual(len(parsed), 1)
                 self.assertEqual(parsed[0]["parsed_date"], expected_date)
                 self.assertEqual(parsed[0]["date_label_type"], expected_label)
+
+    def test_relative_shelf_life_calculation(self):
+        text = "NSX: Tháng 1/2026\nHSD: 3 năm kể từ ngày sản xuất"
+        candidates, warnings = normalized_candidates(text)
+        self.assertEqual(candidates["manufactured_date"]["value"], "2026-01-01")
+        self.assertEqual(candidates["expiry_date"]["value"], "2029-01-01")
+        self.assertEqual(candidates["expiry_date"]["date_certainty"], "inferred")
 
     def test_ambiguous_expiry_is_not_selected_automatically(self):
         candidates, warnings = normalized_candidates("EXP 05/06/2026")
@@ -101,6 +110,13 @@ class TestScannerLogic(unittest.TestCase):
         self.assertEqual(candidates["manufactured_date"]["value"], "2026-03-01")
         self.assertEqual(candidates["expiry_date"]["value"], "2026-12-31")
         self.assertEqual(candidates["expiry_date"]["date_label_type"], "use_by")
+
+    def test_dot_matrix_can_bottom_dates(self):
+        text = "A tec  _ wo nea\n7 =  . . |\n# A 4 we o a\n. JNSK3071026 Gop\ndHSD2071027 967... |"
+        candidates, warnings = normalized_candidates(text)
+        self.assertEqual(candidates["manufactured_date"]["value"], "2026-10-07")
+        self.assertEqual(candidates["expiry_date"]["value"], "2027-10-07")
+        self.assertEqual(candidates["expiry_date"]["date_label_type"], "use_by")
         self.assertTrue(candidates["expiry_date"]["requires_confirmation"])
         self.assertEqual(warnings, [])
 
@@ -127,6 +143,13 @@ class TestScannerLogic(unittest.TestCase):
         self.assertEqual(candidates["expiry_date"]["date_label_type"], "unknown")
         self.assertTrue(candidates["expiry_date"]["requires_confirmation"])
         self.assertTrue(any("UNLABELLED_DATE" in warning for warning in warnings))
+
+    def test_labeled_condensed_ddmmyy_dates(self):
+        text = "LÔ SX: 5425\nNSX: 270725\nHD: 270728"
+        candidates, _ = normalized_candidates(text)
+        self.assertEqual(candidates["manufactured_date"]["value"], "2025-07-27")
+        self.assertEqual(candidates["expiry_date"]["value"], "2028-07-27")
+        self.assertEqual(candidates["expiry_date"]["date_label_type"], "use_by")
 
     def test_preprocess_empty_and_invalid_images_raise_scan_error(self):
         for payload in (b"", b"not an image"):
@@ -191,6 +214,22 @@ class TestScanRouteEngineSelection(unittest.TestCase):
         self.assertEqual(result.candidates.food_name, "Organic Milk")
         self.assertTrue(any("VISION_FALLBACK_APPLIED" in w for w in result.warnings))
 
+    def test_falls_back_to_adaptive_can_bottom_ocr(self):
+        with patch("app.routes.scan.extract_datereg_text", return_value=""), patch(
+            "app.routes.scan.extract_ocr_text", return_value=""
+        ), patch(
+            "app.routes.scan.extract_adaptive_can_text",
+            return_value=". JNSK3071026 Gop\ndHSD2071027 967... |"
+        ), patch(
+            "app.routes.scan.extract_vision_llm_candidates",
+            side_effect=AssertionError("Vision LLM should not be called when adaptive pass succeeds")
+        ):
+            result = self._scan()
+
+        self.assertEqual(result.candidates.manufactured_date.value, "2026-10-07")
+        self.assertEqual(result.candidates.expiry_date.value, "2027-10-07")
+        self.assertEqual(result.candidates.expiry_date.date_label_type, "use_by")
+
     def test_falls_back_to_vision_llm_when_ocr_date_is_ambiguous(self):
         vision_candidates = {
             "food_name": "Greek Yogurt",
@@ -214,6 +253,32 @@ class TestScanRouteEngineSelection(unittest.TestCase):
         self.assertEqual(result.candidates.expiry_date.value, "2026-06-05")
         self.assertEqual(result.candidates.food_name, "Greek Yogurt")
         self.assertTrue(any("VISION_FALLBACK_APPLIED" in w for w in result.warnings))
+
+    def test_extracts_barcode_and_food_name_from_packaging_label(self):
+        vision_candidates = {
+            "food_name": "PEPSI COLA",
+            "barcode": "8934588012112",
+            "expiry_date": {
+                "value": None,
+                "date_certainty": None,
+                "date_label_type": "unknown",
+                "source_text": "",
+                "alternatives": [],
+                "ambiguous": False,
+                "requires_confirmation": True
+            },
+            "manufactured_date": {"value": None, "source_text": ""}
+        }
+        with patch("app.routes.scan.extract_datereg_text", return_value=""), patch(
+            "app.routes.scan.extract_ocr_text", return_value="PEPSI COLA 8 934588 012112"
+        ), patch(
+            "app.routes.scan.extract_vision_llm_candidates",
+            return_value=(vision_candidates, "PEPSI COLA 8 934588 012112", "Gemini Vision (gemini-3.5-flash-lite)")
+        ):
+            result = self._scan()
+
+        self.assertEqual(result.candidates.food_name, "PEPSI COLA")
+        self.assertEqual(result.candidates.barcode, "8934588012112")
 
 
 class TestMultipartScanCompatibility(unittest.TestCase):

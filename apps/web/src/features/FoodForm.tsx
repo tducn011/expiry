@@ -1,8 +1,18 @@
 import { useRef, useState } from "react"
 
+import { api } from "../api/client"
+
+import { playBeep } from "../lib/barcode"
+
 import type { Category, Food, Unit } from "../store/appStore"
 
-import { CATEGORIES, today, UNITS } from "../store/appStore"
+import {
+  CATEGORIES,
+  today,
+  UNITS,
+  addDays,
+  formatDate,
+} from "../store/appStore"
 
 import Button from "../components/ui/Button"
 
@@ -10,7 +20,15 @@ import Card from "../components/ui/Card"
 
 import FieldError from "../components/ui/FieldError"
 
-import { Plus, ScanText, X } from "../components/ui/Icon"
+import {
+  Barcode,
+  Camera,
+  Plus,
+  ScanText,
+  X,
+  Bell,
+  CalendarClock,
+} from "../components/ui/Icon"
 
 import InputField from "../components/ui/InputField"
 
@@ -19,6 +37,8 @@ import Modal from "../components/ui/Modal"
 import SectionTitle from "../components/ui/SectionTitle"
 
 import SelectField from "../components/ui/SelectField"
+
+import GoogleReminderPicker, { formatGoogleDate } from "./GoogleReminderPicker"
 
 export interface Draft {
   id?: string
@@ -33,9 +53,15 @@ export interface Draft {
 
   mfgDate: string
 
+  opened_on?: string
+
   expDate: string
 
   location: string
+
+  barcode?: string
+
+  reviewAt?: string
 }
 
 export const emptyDraft = (): Draft => ({
@@ -49,9 +75,13 @@ export const emptyDraft = (): Draft => ({
 
   mfgDate: "",
 
+  opened_on: "",
+
   expDate: "",
 
   location: "",
+
+  reviewAt: "",
 })
 
 export const draftFrom = (f: Food, keepQty = true): Draft => ({
@@ -67,12 +97,18 @@ export const draftFrom = (f: Food, keepQty = true): Draft => ({
 
   mfgDate: f.mfgDate ?? "",
 
+  opened_on: f.opened_on ?? "",
+
   expDate: f.expDate ?? "",
 
   location: f.location ?? "",
+
+  barcode: f.barcode ?? undefined,
+
+  reviewAt: f.reviewAt ?? "",
 })
 
-export type Errors = Partial<Record<"name" | "quantity" | "unit" | "mfgDate" | "expDate" | "save", string>>
+export type Errors = Partial<Record<"name" | "quantity" | "unit" | "mfgDate" | "opened_on" | "expDate" | "save", string>>
 
 const validDate = (v: string) =>
   !v ||
@@ -94,6 +130,8 @@ export function validate(d: Draft): Errors {
 
   if (!validDate(d.mfgDate)) e.mfgDate = "Ngày không hợp lệ."
 
+  if (!validDate(d.opened_on ?? "")) e.opened_on = "Ngày không hợp lệ."
+
   if (!validDate(d.expDate)) e.expDate = "Ngày không hợp lệ."
 
   if (
@@ -104,6 +142,15 @@ export function validate(d: Draft): Errors {
     d.expDate < d.mfgDate
   )
     e.expDate = "Hạn sử dụng không thể trước ngày sản xuất."
+
+  if (
+    !e.opened_on &&
+    !e.expDate &&
+    d.opened_on &&
+    d.expDate &&
+    d.expDate < d.opened_on
+  )
+    e.expDate = "Hạn sử dụng không thể trước ngày mở bao bì."
 
   return e
 }
@@ -139,7 +186,7 @@ export function FoodForm({
 
   initial: Draft
 
-  capturedImage?: string
+  capturedImage?: string | string[]
 
   locations: string[]
 
@@ -150,6 +197,79 @@ export function FoodForm({
   onCancel: (dirty: boolean) => void
 }) {
   const [d, setD] = useState<Draft>(initial)
+
+  const [showReminderPicker, setShowReminderPicker] = useState<boolean>(
+    () => !!initial.reviewAt,
+  )
+
+  const [capturedImages, setCapturedImages] = useState<string[]>(() =>
+    Array.isArray(capturedImage)
+      ? capturedImage
+      : capturedImage
+        ? [capturedImage]
+        : [],
+  )
+
+  const [selectedImgIdx, setSelectedImgIdx] = useState(0)
+
+  const currentImg = capturedImages[selectedImgIdx] || capturedImages[0]
+
+  const [scanningHsd, setScanningHsd] = useState(false)
+
+  const scanHsdInputRef = useRef<HTMLInputElement>(null)
+
+  const handleScanHsdPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+
+    if (!file) return
+
+    e.target.value = ""
+
+    setScanningHsd(true)
+
+    try {
+      const dataUrl = await new Promise<string>((resolve) => {
+        const r = new FileReader()
+
+        r.onload = () => resolve(String(r.result))
+
+        r.readAsDataURL(file)
+      })
+
+      const result = await api.scan(file)
+
+      const cand = result.candidates
+
+      const exp = cand.expiry_date?.value || ""
+
+      const mfg = cand.manufactured_date?.value || ""
+
+      if (exp) {
+        setD((p) => ({ ...p, expDate: exp, mfgDate: mfg || p.mfgDate }))
+
+        setErrors((p) => ({ ...p, expDate: undefined, mfgDate: undefined }))
+      } else if (mfg) {
+        setD((p) => ({ ...p, mfgDate: mfg }))
+
+        setErrors((p) => ({ ...p, mfgDate: undefined }))
+      }
+
+      setCapturedImages((prev) => [...prev, dataUrl])
+
+      setSelectedImgIdx(capturedImages.length)
+
+      playBeep()
+    } catch {
+      setErrors((p) => ({
+        ...p,
+
+        expDate:
+          "Chưa đọc được ngày từ ảnh này, vui lòng nhập tay hoặc chụp lại gần hơn.",
+      }))
+    } finally {
+      setScanningHsd(false)
+    }
+  }
 
   const [errors, setErrors] = useState<Errors>({})
 
@@ -215,12 +335,31 @@ export function FoodForm({
 
       {mode === "ocr" && (
         <Card className="flex items-start gap-4 border-brand-primary/30 bg-brand-tertiary/60">
-          {capturedImage ? (
-            <img
-              src={capturedImage}
-              alt="Ảnh nhãn đã chụp"
-              className="size-20 shrink-0 rounded-corner-md object-cover border border-border-primary/50 shadow-xs"
-            />
+          {currentImg ? (
+            <div className="flex flex-col gap-1.5 shrink-0 items-center">
+              <img
+                src={currentImg}
+                alt="Ảnh nhãn đã chụp"
+                className="size-20 shrink-0 rounded-corner-md object-cover border border-border-primary/50 shadow-xs"
+              />
+              {capturedImages.length > 1 && (
+                <div className="flex items-center gap-1 justify-center pt-0.5">
+                  {capturedImages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedImgIdx(idx)}
+                      className={`h-1.5 rounded-full transition-all ${
+                        idx === selectedImgIdx
+                          ? "bg-brand-primary w-3.5"
+                          : "bg-border-secondary hover:bg-text-secondary w-1.5"
+                      }`}
+                      aria-label={`Xem ảnh ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="flex size-12 shrink-0 items-center justify-center rounded-corner-md bg-brand-primary text-white">
               <ScanText size={24} aria-hidden="true" />
@@ -231,9 +370,9 @@ export function FoodForm({
               Đối chiếu với ảnh nhãn
             </p>
             <p className="text-text-secondary leading-relaxed">
-              Chưa nhận dạng được chữ tự động. Hãy nhìn ảnh và đối chiếu để nhập
-              NSX, HSD. Chưa có gì được lưu cho tới khi bạn bấm &quot;Lưu thực
-              phẩm&quot;.
+              {d.expDate || d.name
+                ? "Đã tự động điền thông tin trích xuất từ nhãn. Vui lòng đối chiếu với ảnh bên cạnh trước khi lưu."
+                : "Chưa nhận dạng được ngày tự động trên góc chụp này (thường do chữ in kim ma trận điểm hoặc góc chụp). Hãy nhìn ảnh bên cạnh để đối chiếu nhập NSX, HSD."}
             </p>
           </div>
         </Card>
@@ -256,6 +395,17 @@ export function FoodForm({
             aria-describedby="e-name"
             autoFocus
           />
+          {d.barcode && (
+            <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-1">
+              <Barcode size={14} className="text-brand-primary shrink-0" />
+              <span>
+                Mã vạch:{" "}
+                <strong className="font-mono text-text-primary">
+                  {d.barcode}
+                </strong>
+              </span>
+            </div>
+          )}
           <FieldError id="e-name" msg={errors.name} />
         </div>
 
@@ -320,8 +470,30 @@ export function FoodForm({
       </Card>
 
       <Card className="flex flex-col gap-4">
-        <SectionTitle>Ngày trên bao bì</SectionTitle>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <SectionTitle>Ngày trên bao bì</SectionTitle>
+          <Button
+            type="button"
+            size="sm"
+            variant="neutral"
+            iconStart={<Camera size={16} />}
+            loading={scanningHsd}
+            onClick={() => scanHsdInputRef.current?.click()}
+          >
+            {scanningHsd ? "Đang đọc HSD..." : "Quét HSD (Đáy lon / Nắp)"}
+          </Button>
+          <input
+            ref={scanHsdInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={handleScanHsdPhoto}
+          />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <InputField
               label="Ngày sản xuất (NSX)"
@@ -331,6 +503,46 @@ export function FoodForm({
               aria-describedby="e-mfg"
             />
             <FieldError id="e-mfg" msg={errors.mfgDate} />
+            {/* Icon tùy chỉnh nhắc nhở ngay dưới NSX */}
+            <div className="mt-1.5 flex items-center">
+              <button
+                type="button"
+                onClick={() => setShowReminderPicker((v) => !v)}
+                className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md transition-all cursor-pointer ${
+                  d.reviewAt
+                    ? "bg-[#0b57d0]/10 text-[#0b57d0] dark:text-blue-400 border border-[#0b57d0]/30 hover:bg-[#0b57d0]/20 font-semibold"
+                    : showReminderPicker
+                      ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/40 shadow-xs"
+                      : "text-text-secondary hover:text-brand-primary hover:bg-surface-secondary border border-transparent hover:border-border-primary/40"
+                }`}
+                title="Tùy chỉnh nhắc nhở"
+                aria-expanded={showReminderPicker}
+              >
+                <Bell
+                  size={14}
+                  className={
+                    d.reviewAt
+                      ? "text-[#0b57d0] dark:text-blue-400"
+                      : "text-text-secondary"
+                  }
+                />
+                <span>
+                  {d.reviewAt
+                    ? `Nhắc lại: ${formatGoogleDate(d.reviewAt)}`
+                    : "Tùy chỉnh nhắc nhở"}
+                </span>
+              </button>
+            </div>
+          </div>
+          <div>
+            <InputField
+              label="Ngày mở bao bì"
+              type="date"
+              value={d.opened_on || ""}
+              onChange={set("opened_on")}
+              aria-describedby="e-opened"
+            />
+            <FieldError id="e-opened" msg={errors.opened_on} />
           </div>
           <div>
             <InputField
@@ -339,15 +551,82 @@ export function FoodForm({
               value={d.expDate}
               onChange={set("expDate")}
               aria-describedby="e-exp"
-              description={
-                d.expDate
-                  ? undefined
-                  : 'Bỏ trống nếu chưa rõ — sẽ hiển thị "Chưa rõ HSD".'
-              }
             />
             <FieldError id="e-exp" msg={errors.expDate} />
           </div>
         </div>
+
+        {/* Khung Tùy chỉnh nhắc nhở (Google Calendar style) chỉ hiện ra khi ấn vào icon */}
+        {showReminderPicker && (
+          <div className="mt-2 pt-4 border-t border-border-primary/60 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Bell size={16} className="text-[#0b57d0] dark:text-blue-400" />
+                <span className="text-sm font-semibold text-text-primary">
+                  Tùy chỉnh nhắc nhở
+                </span>
+                {d.reviewAt && (
+                  <span className="text-xs font-medium text-[#0b57d0] dark:text-blue-400 bg-[#0b57d0]/10 px-2 py-0.5 rounded-full">
+                    Đã bật lịch nhắc
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReminderPicker(false)}
+                className="text-xs text-text-secondary hover:text-text-primary underline cursor-pointer"
+              >
+                Thu gọn
+              </button>
+            </div>
+
+            <GoogleReminderPicker
+              value={d.reviewAt}
+              onChange={(date: string) =>
+                setD((p) => ({ ...p, reviewAt: date }))
+              }
+              onClear={() => {
+                setD((p) => ({ ...p, reviewAt: "" }))
+
+                setShowReminderPicker(false)
+              }}
+            />
+
+            {/* Gợi ý chọn nhanh */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+              <span className="text-xs text-text-secondary font-medium mr-1">
+                Gợi ý nhanh:
+              </span>
+              {[1, 2, 3, 5, 7].map((num) => {
+                const targetDate = addDays(today(), num)
+
+                const isSelected = d.reviewAt === targetDate
+
+                return (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() =>
+                      setD((p) => ({
+                        ...p,
+
+                        reviewAt: isSelected ? "" : targetDate,
+                      }))
+                    }
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-[#0b57d0] text-white shadow-xs"
+                        : "bg-surface-secondary text-text-secondary hover:text-text-primary hover:bg-surface-tertiary border border-border-primary/50"
+                    }`}
+                  >
+                    +{num} ngày
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {expPast && (
           <p className="text-xs text-status-soon font-medium">
             HSD đã qua so với hôm nay. Bạn vẫn có thể lưu — món này sẽ được xếp

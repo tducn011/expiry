@@ -51,7 +51,7 @@ export function getGs1Info(barcode: string): Gs1Info | null {
     return {
       country: "USA / Canada",
 
-      flag: "🇺🇸",
+      flag: "",
 
       preferredDateFormat: "MM/DD/YYYY",
     }
@@ -64,7 +64,7 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "Việt Nam",
 
-        flag: "🇻🇳",
+        flag: "",
 
         preferredDateFormat: "DD/MM/YYYY",
       }
@@ -76,7 +76,7 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "USA / Canada",
 
-        flag: "🇺🇸",
+        flag: "",
 
         preferredDateFormat: "MM/DD/YYYY",
       }
@@ -86,7 +86,7 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "Nhật Bản",
 
-        flag: "🇯🇵",
+        flag: "",
 
         preferredDateFormat: "YYYY/MM/DD",
       }
@@ -96,7 +96,7 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "Hàn Quốc",
 
-        flag: "🇰🇷",
+        flag: "",
 
         preferredDateFormat: "YYYY/MM/DD",
       }
@@ -106,25 +106,25 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "Vương quốc Anh",
 
-        flag: "🇬🇧",
+        flag: "",
 
         preferredDateFormat: "DD/MM/YYYY",
       }
     }
 
     if (num >= 300 && num <= 379) {
-      return { country: "Pháp", flag: "🇫🇷", preferredDateFormat: "DD/MM/YYYY" }
+      return { country: "Pháp", flag: "", preferredDateFormat: "DD/MM/YYYY" }
     }
 
     if (num >= 400 && num <= 440) {
-      return { country: "Đức", flag: "🇩🇪", preferredDateFormat: "DD/MM/YYYY" }
+      return { country: "Đức", flag: "", preferredDateFormat: "DD/MM/YYYY" }
     }
 
     if (num === 885) {
       return {
         country: "Thái Lan",
 
-        flag: "🇹🇭",
+        flag: "",
 
         preferredDateFormat: "DD/MM/YYYY",
       }
@@ -134,25 +134,111 @@ export function getGs1Info(barcode: string): Gs1Info | null {
       return {
         country: "Singapore",
 
-        flag: "🇸🇬",
+        flag: "",
 
         preferredDateFormat: "DD/MM/YYYY",
       }
     }
 
     if (num >= 930 && num <= 939) {
-      return { country: "Úc", flag: "🇦🇺", preferredDateFormat: "DD/MM/YYYY" }
+      return { country: "Úc", flag: "", preferredDateFormat: "DD/MM/YYYY" }
     }
 
     if (num >= 690 && num <= 699) {
       return {
         country: "Trung Quốc",
 
-        flag: "🇨🇳",
+        flag: "",
 
         preferredDateFormat: "DD/MM/YYYY",
       }
     }
+  }
+
+  return null
+}
+
+export type Gs1ParsedData = {
+  gtin?: string
+
+  expiryDate?: string
+
+  manufacturedDate?: string
+
+  batchLot?: string
+}
+
+/** Parses GS1 Application Identifiers from barcodes (e.g. GS1-128 or GS1 DataMatrix) */
+
+export function parseGs1Barcode(rawText: string): Gs1ParsedData | null {
+  if (!rawText) return null
+
+  const clean = rawText.trim()
+
+  let expiryDate: string | undefined
+
+  let manufacturedDate: string | undefined
+
+  let gtin: string | undefined
+
+  let batchLot: string | undefined
+
+  // Match AI (17) YYMMDD (Expiration Date)
+
+  const ai17Match =
+    clean.match(/\(17\)(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/) ||
+    clean.match(/(?:^01\d{14}|\b)17(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/)
+
+  if (ai17Match) {
+    const [, yy, mm, dd] = ai17Match
+
+    const year = 2000 + parseInt(yy, 10)
+
+    let day = parseInt(dd, 10)
+
+    if (day === 0) {
+      const lastDay = new Date(year, parseInt(mm, 10), 0).getDate()
+
+      day = lastDay
+    }
+
+    expiryDate = `${year}-${mm}-${String(day).padStart(2, "0")}`
+  }
+
+  // Match AI (11) YYMMDD (Production Date)
+
+  const ai11Match =
+    clean.match(/\(11\)(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/) ||
+    clean.match(/(?:^01\d{14}|\b)11(\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01]|00)/)
+
+  if (ai11Match) {
+    const [, yy, mm, dd] = ai11Match
+
+    const year = 2000 + parseInt(yy, 10)
+
+    const day = parseInt(dd, 10) || 1
+
+    manufacturedDate = `${year}-${mm}-${String(day).padStart(2, "0")}`
+  }
+
+  // Match AI (01) GTIN-14
+
+  const ai01Match = clean.match(/(?:\(01\)|(?<=\b)01)(\d{14})/)
+
+  if (ai01Match) {
+    gtin = ai01Match[1]
+  }
+
+  // Match AI (10) Batch/Lot
+
+  const ai10Match = clean.match(/(?:\(10\)|(?<=\b)10)([A-Za-z0-9\-]+)/)
+
+  if (ai10Match) {
+    batchLot = ai10Match[1]
+  }
+
+  if (expiryDate || manufacturedDate || gtin || batchLot) {
+    return { gtin, expiryDate, manufacturedDate, batchLot }
   }
 
   return null
@@ -219,6 +305,390 @@ function inferUnit(categories: string, productName: string): Unit {
   return "piece"
 }
 
+export const VIETNAMESE_RETAIL_CATALOG: Record<string, ProductInfo> = {
+  // Suntory PepsiCo Vietnam (Aquafina, Pepsi, 7Up, Mirinda, Sting, Tea+)
+
+  "8934588063145": {
+    name: "Nước tinh khiết Aquafina 355ml",
+
+    brand: "Suntory PepsiCo",
+
+    category: "beverage",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8934588063114": {
+    name: "Nước tinh khiết Aquafina 500ml",
+
+    brand: "Suntory PepsiCo",
+
+    category: "beverage",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8934588063121": {
+    name: "Nước tinh khiết Aquafina 1.5L",
+
+    brand: "Suntory PepsiCo",
+
+    category: "beverage",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8934588063053": {
+    name: "Nước tinh khiết Aquafina 5L",
+
+    brand: "Suntory PepsiCo",
+
+    category: "beverage",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8934588012112": {
+    name: "Nước ngọt Pepsi có ga lon 320ml",
+
+    brand: "Pepsi",
+
+    category: "beverage",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  "8934588012228": {
+    name: "Nước ngọt Pepsi có ga chai 390ml",
+
+    brand: "Pepsi",
+
+    category: "beverage",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  "8934588022111": {
+    name: "Nước ngọt 7Up lon 320ml",
+
+    brand: "7Up",
+
+    category: "beverage",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  "8934588042119": {
+    name: "Nước ngọt Mirinda vị cam lon 320ml",
+
+    brand: "Mirinda",
+
+    category: "beverage",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  "8934588072116": {
+    name: "Nước tăng lực Sting dâu lon 320ml",
+
+    brand: "Sting",
+
+    category: "beverage",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  "8934588072222": {
+    name: "Nước tăng lực Sting dâu chai 330ml",
+
+    brand: "Sting",
+
+    category: "beverage",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  "8934588082115": {
+    name: "Trà Ô Long Tea+ Plus 455ml",
+
+    brand: "Tea+ Plus",
+
+    category: "beverage",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  // Acecook Vietnam (Hảo Hảo, Nhớ Mãi Mãi, Đệ Nhất)
+
+  "8934560110023": {
+    name: "Mì Hảo Hảo tôm chua cay 75g",
+
+    brand: "Acecook",
+
+    category: "dry_pantry",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8934560110016": {
+    name: "Mì Hảo Hảo sa tế hành 75g",
+
+    brand: "Acecook",
+
+    category: "dry_pantry",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8934560150029": {
+    name: "Hủ tiếu Nam Vang Nhớ Mãi Mãi 69g",
+
+    brand: "Acecook",
+
+    category: "dry_pantry",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8934560120022": {
+    name: "Phở Đệ Nhất vị bò 65g",
+
+    brand: "Acecook",
+
+    category: "dry_pantry",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  // Vinamilk & TH True Milk
+
+  "8934673123457": {
+    name: "Sữa tươi tiệt trùng Vinamilk có đường 180ml",
+
+    brand: "Vinamilk",
+
+    category: "dairy_eggs",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  "8934673123464": {
+    name: "Sữa tươi tiệt trùng Vinamilk ít đường 180ml",
+
+    brand: "Vinamilk",
+
+    category: "dairy_eggs",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  "8934673551106": {
+    name: "Sữa đặc có đường Ông Thọ xanh lon 380g",
+
+    brand: "Vinamilk",
+
+    category: "dairy_eggs",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8934673552202": {
+    name: "Sữa đặc Ngôi Sao Phương Nam xanh lon 380g",
+
+    brand: "Vinamilk",
+
+    category: "dairy_eggs",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8935001701124": {
+    name: "Sữa tươi tiệt trùng TH True Milk ít đường 180ml",
+
+    brand: "TH True Milk",
+
+    category: "dairy_eggs",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  "8935001701117": {
+    name: "Sữa tươi tiệt trùng TH True Milk có đường 180ml",
+
+    brand: "TH True Milk",
+
+    category: "dairy_eggs",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  "8935001701131": {
+    name: "Sữa tươi tiệt trùng TH True Milk nguyên chất 180ml",
+
+    brand: "TH True Milk",
+
+    category: "dairy_eggs",
+
+    suggested_storage_location: "Ngăn mát",
+
+    suggested_unit: "piece",
+  },
+
+  // Gia vị & nhu yếu phẩm
+
+  "8934822001111": {
+    name: "Nước mắm Nam Ngư Đệ Nhị 900ml",
+
+    brand: "Masan Nam Ngư",
+
+    category: "dry_pantry",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8934822002224": {
+    name: "Nước mắm Chinsu hương cá hồi 500ml",
+
+    brand: "Chinsu",
+
+    category: "dry_pantry",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8934822003337": {
+    name: "Tương ớt Chinsu chai 250g",
+
+    brand: "Chinsu",
+
+    category: "dry_pantry",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+
+  "8935049500543": {
+    name: "Dầu ăn thực vật Tường An Cooking Oil 1L",
+
+    brand: "Tường An",
+
+    category: "dry_pantry",
+
+    suggested_storage_location: "Tủ bếp",
+
+    suggested_unit: "piece",
+  },
+}
+
+const barcodeMemoryCache = new Map<string, {
+  result: ProductLookupResult
+
+  timestamp: number
+}>()
+
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000
+
+export function getCachedProduct(barcode: string): ProductLookupResult | null {
+  const clean = barcode.trim()
+
+  if (!clean) return null
+
+  const mem = barcodeMemoryCache.get(clean)
+
+  if (mem && Date.now() - mem.timestamp < CACHE_TTL_MS) {
+    return mem.result
+  }
+
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      const stored = window.localStorage.getItem(`expiry_bc_${clean}`)
+
+      if (stored) {
+        const parsed = JSON.parse(stored) as {
+          result: ProductLookupResult
+
+          timestamp: number
+        }
+
+        if (parsed?.result && Date.now() - parsed.timestamp < CACHE_TTL_MS) {
+          barcodeMemoryCache.set(clean, parsed)
+
+          return parsed.result
+        }
+      }
+    } catch {}
+  }
+
+  return null
+}
+
+export function setCachedProduct(
+  barcode: string,
+
+  result: ProductLookupResult,
+): void {
+  const clean = barcode.trim()
+
+  if (!clean) return
+
+  const item = { result, timestamp: Date.now() }
+
+  barcodeMemoryCache.set(clean, item)
+
+  if (typeof window !== "undefined" && window.localStorage && result.found) {
+    try {
+      window.localStorage.setItem(`expiry_bc_${clean}`, JSON.stringify(item))
+    } catch {}
+  }
+}
+
 export async function lookupBarcode(
   code: string,
 
@@ -234,11 +704,14 @@ export async function lookupBarcode(
 
   if (existingEntries && existingEntries.length > 0) {
     const matched = existingEntries.find(
-      (e) => e.barcode === trimmed && !e.deleted_at,
+      (e) =>
+        e.barcode === trimmed &&
+        !e.deleted_at &&
+        !(e as { deletedAt?: string }).deletedAt,
     )
 
     if (matched) {
-      return {
+      const res: ProductLookupResult = {
         found: true,
 
         barcode: trimmed,
@@ -246,93 +719,162 @@ export async function lookupBarcode(
         product: {
           name: matched.name,
 
-          suggested_storage_location: matched.storage_location ?? "Tủ bếp",
+          suggested_storage_location:
+            matched.storage_location ??
+            (matched as { location?: string }).location ??
+            "Tủ bếp",
 
           suggested_unit: matched.unit,
         },
 
         source: "inventory",
       }
+
+      setCachedProduct(trimmed, res)
+
+      return res
     }
   }
 
-  // 2. Layer 2: Open Food Facts API
+  // 1.5. Layer 1.5: Persistent & in-memory cache (0ms instant return)
+
+  const cached = getCachedProduct(trimmed)
+
+  if (cached && cached.found) {
+    return cached
+  }
+
+  // 1.6. Layer 1.6: Built-in Vietnam retail catalog (instant 0ms lookup for common FMCG items)
+
+  if (VIETNAMESE_RETAIL_CATALOG[trimmed]) {
+    const p = VIETNAMESE_RETAIL_CATALOG[trimmed]
+
+    const res: ProductLookupResult = {
+      found: true,
+
+      barcode: trimmed,
+
+      product: p,
+
+      source: "inventory",
+    }
+
+    setCachedProduct(trimmed, res)
+
+    return res
+  }
+
+  // 2. Layer 2: Open Food Facts API (with v0 and v2 fallback, 1800ms timeout)
 
   try {
     const controller = new AbortController()
 
-    const timer = setTimeout(() => controller.abort(), 4000)
+    const timer = setTimeout(() => controller.abort(), 1800)
 
-    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(
+    let data: any = null
+
+    // Try v0 API first (more reliable in Vietnam / fewer 502 Bad Gateways than v2)
+
+    const v0Url = `https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(
       trimmed,
-    )}.json?fields=product_name,product_name_vi,product_name_en,brands,categories,image_url`
+    )}.json`
 
-    const res = await fetch(url, {
-      signal: controller.signal,
+    try {
+      const res0 = await fetch(v0Url, {
+        signal: controller.signal,
 
-      headers: {
-        Accept: "application/json",
-      },
-    })
+        headers: { Accept: "application/json" },
+      })
+
+      if (res0.ok) {
+        data = await res0.json()
+      }
+    } catch {}
+
+    if (!data || data.status !== 1 || !data.product) {
+      const v2Url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(
+        trimmed,
+      )}.json?fields=product_name,product_name_vi,product_name_en,generic_name,brands,categories,image_url`
+
+      try {
+        const res2 = await fetch(v2Url, {
+          signal: controller.signal,
+
+          headers: { Accept: "application/json" },
+        })
+
+        if (res2.ok) {
+          data = await res2.json()
+        }
+      } catch {}
+    }
 
     clearTimeout(timer)
 
-    if (res.ok) {
-      const data = await res.json()
+    if (data && data.status === 1 && data.product) {
+      const p = data.product
 
-      if (data.status === 1 && data.product) {
-        const p = data.product
+      const name =
+        p.product_name_vi ||
+        p.product_name ||
+        p.product_name_en ||
+        p.generic_name ||
+        ""
 
-        const name =
-          p.product_name_vi || p.product_name || p.product_name_en || ""
+      if (name.trim()) {
+        const brand = p.brands ? String(p.brands).split(",")[0].trim() : null
 
-        if (name.trim()) {
-          const brand = p.brands ? String(p.brands).split(",")[0].trim() : null
+        const fullName =
+          brand && !name.toLowerCase().includes(brand.toLowerCase())
+            ? `${name} (${brand})`
+            : name
 
-          const fullName =
-            brand && !name.toLowerCase().includes(brand.toLowerCase())
-              ? `${name} (${brand})`
-              : name
+        const categories = p.categories ? String(p.categories) : ""
 
-          const categories = p.categories ? String(p.categories) : ""
+        const foundResult: ProductLookupResult = {
+          found: true,
 
-          return {
-            found: true,
+          barcode: trimmed,
 
-            barcode: trimmed,
+          product: {
+            name: fullName,
 
-            product: {
-              name: fullName,
+            brand,
 
-              brand,
+            category: categories.split(",")[0]?.trim() || null,
 
-              category: categories.split(",")[0]?.trim() || null,
+            image_url: p.image_url || null,
 
-              image_url: p.image_url || null,
+            suggested_storage_location: inferStorage(categories),
 
-              suggested_storage_location: inferStorage(categories),
+            suggested_unit: inferUnit(categories, name),
+          },
 
-              suggested_unit: inferUnit(categories, name),
-            },
-
-            source: "open_food_facts",
-          }
+          source: "open_food_facts",
         }
+
+        setCachedProduct(trimmed, foundResult)
+
+        return foundResult
       }
     }
   } catch {
     // Network / timeout / CORS fallback - graceful degradation
   }
 
-  // 3. Layer 3: Not found -> user manual entry
+  // 3. Layer 3: Not found -> user manual entry or AI fallback
 
-  return {
+  const notFoundResult: ProductLookupResult = {
     found: false,
 
     barcode: trimmed,
 
     source: "none",
   }
+
+  setCachedProduct(trimmed, notFoundResult)
+
+  return notFoundResult
 }
 
 /** Web Audio synthesized beep for scanning feedback without external audio files */
@@ -400,6 +942,158 @@ export function createConfiguredReader(): BrowserMultiFormatReader {
   ])
 
   return new BrowserMultiFormatReader(hints)
+}
+
+export function isValidEan13(code: string): boolean {
+  const clean = code.replace(/\D/g, "")
+
+  if (clean.length !== 13) return false
+
+  const digits = clean.split("").map(Number)
+
+  let sum = 0
+
+  for (let i = 0; i < 12; i++) {
+    sum += i % 2 === 0 ? digits[i] : digits[i] * 3
+  }
+
+  const checkDigit = (10 - (sum % 10)) % 10
+
+  return checkDigit === digits[12]
+}
+
+export function isValidUpcA(code: string): boolean {
+  const clean = code.replace(/\D/g, "")
+
+  if (clean.length !== 12) return false
+
+  const digits = clean.split("").map(Number)
+
+  let sum = 0
+
+  for (let i = 0; i < 11; i++) {
+    sum += i % 2 === 0 ? digits[i] * 3 : digits[i]
+  }
+
+  const checkDigit = (10 - (sum % 10)) % 10
+
+  return checkDigit === digits[11]
+}
+
+export function isValidEan8(code: string): boolean {
+  const clean = code.replace(/\D/g, "")
+
+  if (clean.length !== 8) return false
+
+  const digits = clean.split("").map(Number)
+
+  let sum = 0
+
+  for (let i = 0; i < 7; i++) {
+    sum += i % 2 === 0 ? digits[i] * 3 : digits[i]
+  }
+
+  const checkDigit = (10 - (sum % 10)) % 10
+
+  return checkDigit === digits[7]
+}
+
+export function validateBarcode(
+  code: string,
+): {
+  valid: boolean
+
+  format?: "EAN_13" | "EAN_8" | "UPC_A" | "CUSTOM"
+
+  error?: string
+} {
+  const clean = code.trim().replace(/\D/g, "")
+
+  if (!clean) {
+    return { valid: false, error: "Vui lòng nhập mã số vạch (GTIN/EAN)." }
+  }
+
+  if (clean.length === 13) {
+    if (!isValidEan13(clean)) {
+      return {
+        valid: false,
+
+        error:
+          "Chữ số kiểm tra (check digit) của mã EAN-13 không hợp lệ. Vui lòng kiểm tra lại số in dưới mã vạch.",
+      }
+    }
+
+    return { valid: true, format: "EAN_13" }
+  }
+
+  if (clean.length === 12) {
+    if (!isValidUpcA(clean)) {
+      return {
+        valid: false,
+
+        error:
+          "Chữ số kiểm tra (check digit) của mã UPC-A không hợp lệ. Vui lòng kiểm tra lại số in dưới mã vạch.",
+      }
+    }
+
+    return { valid: true, format: "UPC_A" }
+  }
+
+  if (clean.length === 8) {
+    if (!isValidEan8(clean)) {
+      return {
+        valid: false,
+
+        error:
+          "Chữ số kiểm tra (check digit) của mã EAN-8 không hợp lệ. Vui lòng kiểm tra lại số in dưới mã vạch.",
+      }
+    }
+
+    return { valid: true, format: "EAN_8" }
+  }
+
+  if (clean.length >= 4 && clean.length <= 64) {
+    return { valid: true, format: "CUSTOM" }
+  }
+
+  return {
+    valid: false,
+
+    error:
+      "Độ dài mã số không hợp lệ (chuẩn EAN-13 có 13 chữ số, EAN-8 có 8 chữ số, UPC có 12 chữ số).",
+  }
+}
+
+export function extractBarcodeFromText(
+  text: string,
+): {
+  code: string
+
+  format: string
+} | null {
+  if (!text) return null
+
+  const matches = text.match(/(?:\d[\s\-._]*){8,16}/g)
+
+  if (!matches) return null
+
+  for (const match of matches) {
+    const clean = match.replace(/\D/g, "")
+
+    if (clean.length === 13 && isValidEan13(clean)) {
+      return { code: clean, format: "EAN_13" }
+    }
+
+    if (clean.length === 12 && isValidUpcA(clean)) {
+      return { code: clean, format: "UPC_A" }
+    }
+
+    if (clean.length === 8 && isValidEan8(clean)) {
+      return { code: clean, format: "EAN_8" }
+    }
+  }
+
+  return null
 }
 
 let sharedReaderInstance: BrowserMultiFormatReader | null = null
@@ -485,9 +1179,9 @@ export async function decodeBarcodeFromImage(
 
   if (!origW || !origH) return null
 
-  // Target max dimension around 1200px for optimal barcode line resolution
+  // Target max dimension around 960px for optimal barcode decode speed and line resolution
 
-  const maxDim = 1200
+  const maxDim = 960
 
   const scale = Math.min(1, maxDim / Math.max(origW, origH))
 
@@ -615,7 +1309,65 @@ export async function decodeBarcodeFromImage(
 
   if (p5) return p5
 
-  // Pass 6: Contrast stretching / Grayscale on scaled normal image
+  // Pass 6: Bottom crop (where barcodes on cans and bottles are located, bottom 45%)
+
+  const botW = targetW
+
+  const botH = Math.round(targetH * 0.45)
+
+  const botY = Math.round(targetH * 0.55)
+
+  canvas.width = botW
+
+  canvas.height = botH
+
+  ctx.drawImage(image, 0, botY, botW, botH, 0, 0, botW, botH)
+
+  const pBot = tryDecode(canvas)
+
+  if (pBot) return pBot
+
+  // Pass 7: Bottom crop rotated 90°
+
+  canvas.width = botH
+
+  canvas.height = botW
+
+  ctx.save()
+
+  ctx.translate(botH, 0)
+
+  ctx.rotate(Math.PI / 2)
+
+  ctx.drawImage(image, 0, botY, botW, botH, 0, 0, botW, botH)
+
+  ctx.restore()
+
+  const pBot90 = tryDecode(canvas)
+
+  if (pBot90) return pBot90
+
+  // Pass 8: Bottom crop rotated 270°
+
+  canvas.width = botH
+
+  canvas.height = botW
+
+  ctx.save()
+
+  ctx.translate(0, botW)
+
+  ctx.rotate(-Math.PI / 2)
+
+  ctx.drawImage(image, 0, botY, botW, botH, 0, 0, botW, botH)
+
+  ctx.restore()
+
+  const pBot270 = tryDecode(canvas)
+
+  if (pBot270) return pBot270
+
+  // Pass 9: Contrast stretching / Grayscale on scaled normal image
 
   canvas.width = targetW
 

@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from "react"
+import { useCallback, useEffect, useReducer, useState } from "react"
 
 import { api } from "../api/client"
 
@@ -81,9 +81,13 @@ export interface Food {
 
   mfgDate?: string // NSX, ISO yyyy-mm-dd
 
+  opened_on?: string // Ngày mở bao bì, ISO yyyy-mm-dd
+
   expDate?: string // HSD; unknown stays undefined
 
   location?: string
+
+  barcode?: string
 
   createdAt: string
 
@@ -133,6 +137,8 @@ export interface State {
 
   userName?: string
 
+  userId?: string
+
   onboarded: boolean
 
   foods: Food[]
@@ -148,6 +154,8 @@ export interface State {
   settings: Settings
 }
 
+export const DEFAULT_LOCATIONS: string[] = ["Ngăn mát", "Ngăn đông", "Tủ bếp"]
+
 const initial: State = {
   mode: "none",
 
@@ -157,7 +165,7 @@ const initial: State = {
 
   history: [],
 
-  locations: ["Ngăn mát", "Ngăn đông", "Tủ bếp"],
+  locations: [...DEFAULT_LOCATIONS],
 
   readNotifs: [],
 
@@ -172,6 +180,8 @@ export type Action = {
   mode: "demo" | "account"
 
   name?: string
+
+  userId?: string
 } | { type: "logout" } | { type: "onboarded" } | {
   type: "save"
 
@@ -207,7 +217,23 @@ export type Action = {
 
   id: string
 } | {
+  type: "hydrateInventory"
+
+  foods: Food[]
+
+  locations?: string[]
+} | {
   type: "addLocation"
+
+  name: string
+} | {
+  type: "renameLocation"
+
+  oldName: string
+
+  newName: string
+} | {
+  type: "removeLocation"
 
   name: string
 } | {
@@ -286,21 +312,40 @@ function ev(
   }
 }
 
-function reducer(s: State, a: Action): State {
+export function reducer(s: State, a: Action): State {
   switch (a.type) {
     case "replace":
       return a.state
 
-    case "login":
-      return a.mode === "demo"
-        ? loadDemo()
-        : {
-            ...(readAccount() ?? { ...initial, onboarded: s.onboarded }),
+    case "login": {
+      if (a.mode === "demo") return loadDemo()
 
-            mode: "account",
+      const userNotifs = loadUserNotifs(a.userId)
 
-            userName: a.name,
-          }
+      const userLocations = loadUserLocations(a.userId)
+
+      return {
+        ...initial,
+
+        onboarded: s.onboarded,
+
+        mode: "account",
+
+        userName: a.name,
+
+        userId: a.userId,
+
+        foods: [],
+
+        history: [],
+
+        locations: userLocations,
+
+        readNotifs: userNotifs.readNotifs,
+
+        snoozed: userNotifs.snoozed,
+      }
+    }
 
     case "logout":
       return loadDemo()
@@ -455,10 +500,68 @@ function reducer(s: State, a: Action): State {
     case "purge":
       return { ...s, foods: s.foods.filter((x) => x.id !== a.id) }
 
+    case "hydrateInventory": {
+      const mergedLocations = Array.from(
+        new Set([...s.locations, ...(a.locations || [])]),
+      )
+
+      return {
+        ...s,
+
+        foods: a.foods,
+
+        locations: mergedLocations,
+      }
+    }
+
     case "addLocation":
       return s.locations.includes(a.name)
         ? s
         : { ...s, locations: [...s.locations, a.name] }
+
+    case "renameLocation": {
+      const oldName = a.oldName.trim()
+
+      const newName = a.newName.trim()
+
+      if (!oldName || !newName || oldName === newName) return s
+
+      const updatedLocations = Array.from(
+        new Set(s.locations.map((loc) => (loc === oldName ? newName : loc))),
+      )
+
+      const updatedFoods = s.foods.map((f) =>
+        f.location === oldName ? { ...f, location: newName } : f,
+      )
+
+      return {
+        ...s,
+
+        locations: updatedLocations,
+
+        foods: updatedFoods,
+      }
+    }
+
+    case "removeLocation": {
+      const target = a.name.trim()
+
+      if (!target) return s
+
+      const updatedLocations = s.locations.filter((loc) => loc !== target)
+
+      const updatedFoods = s.foods.map((f) =>
+        f.location === target ? { ...f, location: undefined } : f,
+      )
+
+      return {
+        ...s,
+
+        locations: updatedLocations,
+
+        foods: updatedFoods,
+      }
+    }
 
     case "readNotif":
       return s.readNotifs.includes(a.id)
@@ -940,35 +1043,174 @@ interface StoredResult {
 
 function readStored(): StoredResult {
   try {
-    const s = parseState(localStorage.getItem(KEY))
+    // Preserve legacy unsynced cache to a quarantine backup key instead of destroying user data
 
-    if (!s || s.mode !== "account") return { state: loadDemo(), problem: null }
+    const legacy = localStorage.getItem(KEY)
 
-    const cutoff = Date.now() - TRASH_DAYS * 864e5
+    if (legacy && legacy !== "null") {
+      try {
+        localStorage.setItem("expiry-legacy-backup-v1", legacy)
+      } catch {
+        /* ignore */
+      }
 
-    return {
-      state: {
-        ...s,
-
-        foods: s.foods.filter(
-          (f) => !f.deletedAt || new Date(f.deletedAt).getTime() > cutoff,
-        ),
-      },
-
-      problem: null,
+      try {
+        localStorage.removeItem(KEY)
+      } catch {
+        /* ignore */
+      }
     }
+
+    // Always start with demo state; account mode inventory is server-authoritative and only hydrated after verified session
+
+    return { state: loadDemo(), problem: null }
   } catch {
     return { state: initial, problem: "read" }
   }
 }
 
-function signOutStorage() {
+export const NOTIF_PREFIX = "expiry_notifs_"
+
+export function getNotifKey(userId?: string): string {
+  return `${NOTIF_PREFIX}${userId || "guest"}`
+}
+
+export interface UserNotifData {
+  snoozed: Record<string, string>
+
+  readNotifs: string[]
+}
+
+export function loadUserNotifs(userId?: string): UserNotifData {
   try {
-    api.logout().catch(() => {})
+    const raw = localStorage.getItem(getNotifKey(userId))
 
-    const s = parseState(localStorage.getItem(KEY))
+    if (!raw) return { snoozed: {}, readNotifs: [] }
 
-    if (s) localStorage.setItem(KEY, JSON.stringify({ ...s, mode: "none" }))
+    const parsed = JSON.parse(raw)
+
+    return {
+      snoozed:
+        typeof parsed.snoozed === "object" && parsed.snoozed !== null
+          ? parsed.snoozed
+          : {},
+
+      readNotifs: Array.isArray(parsed.readNotifs) ? parsed.readNotifs : [],
+    }
+  } catch {
+    return { snoozed: {}, readNotifs: [] }
+  }
+}
+
+export function saveUserNotifs(
+  userId: string | undefined,
+
+  data: UserNotifData,
+) {
+  try {
+    localStorage.setItem(getNotifKey(userId), JSON.stringify(data))
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearUserNotifs(userId?: string) {
+  try {
+    if (userId) {
+      localStorage.removeItem(getNotifKey(userId))
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+export function getUserLocationsKey(userId?: string): string {
+  return `expiry_user_locations_${userId || "guest"}`
+}
+
+export function loadUserLocations(userId?: string): string[] {
+  try {
+    const raw = localStorage.getItem(getUserLocationsKey(userId))
+
+    if (!raw) return [...DEFAULT_LOCATIONS]
+
+    const parsed = JSON.parse(raw)
+
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return Array.from(new Set([...DEFAULT_LOCATIONS, ...parsed]))
+    }
+
+    return [...DEFAULT_LOCATIONS]
+  } catch {
+    return [...DEFAULT_LOCATIONS]
+  }
+}
+
+export function saveUserLocations(
+  userId: string | undefined,
+
+  locations: string[],
+): void {
+  try {
+    if (userId) {
+      localStorage.setItem(
+        getUserLocationsKey(userId),
+
+        JSON.stringify(locations),
+      )
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearUserLocations(userId?: string): void {
+  try {
+    if (userId) {
+      localStorage.removeItem(getUserLocationsKey(userId))
+
+      localStorage.removeItem(`expiry_user_preferences_${userId}`)
+
+      localStorage.removeItem(`expiry_storage_preferences_${userId}`)
+    }
+
+    localStorage.removeItem("expiry_user_preferences")
+
+    localStorage.removeItem("expiry_storage_preferences")
+  } catch {
+    /* ignore */
+  }
+}
+
+function signOutStorage(userId?: string) {
+  try {
+    api.logout().catch(() => {
+      // Flag pending server logout if network was offline so cookie is revoked on reconnect
+
+      try {
+        localStorage.setItem("expiry_pending_server_logout", "true")
+      } catch {
+        /* ignore */
+      }
+    })
+
+    if (userId) {
+      clearUserNotifs(userId)
+
+      clearUserLocations(userId)
+    }
+
+    const legacy = localStorage.getItem(KEY)
+
+    if (legacy && legacy !== "null") {
+      try {
+        localStorage.setItem("expiry-legacy-backup-v1", legacy)
+      } catch {
+        /* ignore */
+      }
+    }
+
+    localStorage.removeItem(KEY)
   } catch {
     /* nothing */
   }
@@ -979,11 +1221,15 @@ export function useAppStore() {
 
   const [state, rawDispatch] = useReducer(reducer, first.state)
 
-  const dispatch = (a: Action) => {
-    if (a.type === "logout") signOutStorage()
+  const dispatch = useCallback(
+    (a: Action) => {
+      if (a.type === "logout") signOutStorage(state.userId)
 
-    rawDispatch(a)
-  }
+      rawDispatch(a)
+    },
+
+    [rawDispatch, state.userId],
+  )
 
   const [problem, setProblem] = useState<StorageProblem>(first.problem)
 
@@ -991,11 +1237,19 @@ export function useAppStore() {
     if (problem === "read" || state.mode === "none") return
 
     try {
-      localStorage.setItem(
-        state.mode === "demo" ? DEMO_KEY : KEY,
+      // ONLY persist demo mode data. Account mode is server-authoritative and never written to un-scoped key.
 
-        JSON.stringify(state),
-      )
+      if (state.mode === "demo") {
+        localStorage.setItem(DEMO_KEY, JSON.stringify(state))
+      } else if (state.mode === "account" && state.userId) {
+        saveUserNotifs(state.userId, {
+          snoozed: state.snoozed,
+
+          readNotifs: state.readNotifs,
+        })
+
+        saveUserLocations(state.userId, state.locations)
+      }
 
       if (problem === "write") setProblem(null)
     } catch {
@@ -1003,17 +1257,19 @@ export function useAppStore() {
     }
   }, [state, problem])
 
-  const retry = () => {
+  const retry = useCallback(() => {
     const r = readStored()
 
     if (r.problem === null) rawDispatch({ type: "replace", state: r.state })
 
     setProblem(r.problem)
-  }
+  }, [rawDispatch])
 
-  const reset = () => {
+  const reset = useCallback(() => {
     try {
       localStorage.removeItem(KEY)
+
+      localStorage.removeItem(DEMO_KEY)
     } catch {
       /* ignore */
     }
@@ -1021,7 +1277,7 @@ export function useAppStore() {
     rawDispatch({ type: "replace", state: loadDemo() })
 
     setProblem(null)
-  }
+  }, [rawDispatch])
 
   return { state, dispatch, problem, retry, reset }
 }
@@ -1086,12 +1342,20 @@ export function attention(s: State) {
     .sort((a, b) => (daysLeft(a) ?? 9999) - (daysLeft(b) ?? 9999))
 }
 
+export type NotificationRule = "soon" | "due_today" | "expired" | "review"
+
 export interface Notif {
   id: string
 
   food: Food
 
   status: Status
+
+  rule: NotificationRule
+
+  title: string
+
+  message: string
 }
 
 export function notifications(s: State): Notif[] {
@@ -1099,21 +1363,92 @@ export function notifications(s: State): Notif[] {
 
   const t = today()
 
-  return attention(s)
+  const seenIds = new Set<string>()
 
-    .map((f) => {
-      const status = statusOf(f, s.settings.remindDays)
+  const notifs: Notif[] = []
 
-      return {
-        id: `${f.id}:${f.expDate ?? "review"}:${status}`,
+  for (const f of attention(s)) {
+    const d = daysLeft(f)
 
-        food: f,
+    let rule: NotificationRule
 
-        status,
+    let status: Status = "unknown"
+
+    let title = ""
+
+    let message = ""
+
+    if (f.expDate) {
+      if (d !== null && d < 0) {
+        rule = "expired"
+
+        status = "expired"
+
+        title = "Đã quá hạn"
+
+        message = `${f.name} đã quá hạn ${Math.abs(d)} ngày`
+      } else if (d === 0) {
+        rule = "due_today"
+
+        status = "soon"
+
+        title = "Hết hạn hôm nay"
+
+        message = `${f.name} hết hạn sử dụng hôm nay`
+      } else if (d !== null && d <= s.settings.remindDays) {
+        rule = "soon"
+
+        status = "soon"
+
+        title = "Sắp hết hạn"
+
+        message = `${f.name} còn ${d} ngày là hết hạn`
+      } else {
+        continue
       }
-    })
+    } else {
+      rule = "review"
 
-    .filter((n) => !(s.snoozed[n.id] && s.snoozed[n.id] > t))
+      status = "unknown"
+
+      title = "Cần kiểm tra lại"
+
+      message = `${f.name} chưa rõ hạn sử dụng, đã đến lịch kiểm tra`
+    }
+
+    const id = `${f.id}:${f.expDate ?? f.reviewAt ?? "review"}:${rule}`
+
+    const legacyId = `${f.id}:${f.expDate ?? "review"}:${status}`
+
+    if (seenIds.has(id)) continue
+
+    seenIds.add(id)
+
+    const isSnoozed =
+      (s.snoozed[id] && s.snoozed[id] > t) ||
+      (s.snoozed[legacyId] && s.snoozed[legacyId] > t) ||
+      (s.snoozed[f.id] && s.snoozed[f.id] > t)
+
+    if (isSnoozed) {
+      continue
+    }
+
+    notifs.push({
+      id,
+
+      food: f,
+
+      status,
+
+      rule,
+
+      title,
+
+      message,
+    })
+  }
+
+  return notifs
 }
 
 export function formatDate(d?: string) {
