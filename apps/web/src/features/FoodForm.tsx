@@ -684,6 +684,23 @@ export function FoodForm({
           placeholder="Ví dụ: Tủ lạnh mini, Kệ gia vị..."
           value={newLocName}
           onChange={setNewLocName}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault()
+
+              const name = newLocName.trim()
+
+              if (name) {
+                onAddLocation(name)
+
+                setD((p) => ({ ...p, location: name }))
+
+                setNewLocName("")
+
+                setNewLocModal(false)
+              }
+            }
+          }}
           autoFocus
         />
       </Modal>

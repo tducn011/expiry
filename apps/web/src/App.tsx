@@ -1257,9 +1257,9 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const isFullBleed = route.name === "scan"
 
   return (
-    <div className="flex min-h-dvh bg-brand-tertiary text-text-primary antialiased">
+    <div className="flex h-dvh w-full overflow-hidden bg-brand-tertiary text-text-primary antialiased">
       {/* Desktop Sidebar Navigation */}
-      <div className="sticky top-0 hidden h-dvh md:block shrink-0">
+      <div className="hidden h-full md:block shrink-0">
         <SidebarNavigation
           isExpanded={isSidebarExpanded}
           onToggleExpanded={toggleSidebar}
@@ -1315,7 +1315,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
       {/* Main Content Area */}
       <main
-        className={`mx-auto w-full min-w-0 flex-1 transition-all ${
+        className={`mx-auto w-full min-w-0 flex-1 overflow-y-auto transition-all ${
           isFullBleed
             ? "md:max-w-4xl md:p-6"
             : route.name === "form"

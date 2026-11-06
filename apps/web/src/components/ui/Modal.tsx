@@ -84,6 +84,12 @@ export function Modal({
       : null,
   )
 
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
+  const dismissibleRef = useRef(dismissible)
+  dismissibleRef.current = dismissible
+
   useEffect(() => {
     if (!active) return
 
@@ -94,10 +100,10 @@ export function Modal({
     const releaseScrollLock = acquireModalScrollLock()
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && dismissible) {
+      if (e.key === "Escape" && dismissibleRef.current) {
         e.stopPropagation()
 
-        onClose()
+        onCloseRef.current()
       }
     }
 
@@ -107,10 +113,21 @@ export function Modal({
       releaseScrollLock()
 
       window.removeEventListener("keydown", onKeyDown)
-
-      opener?.focus?.()
     }
-  }, [active, dismissible, onClose, opener])
+  }, [active])
+
+  // Return focus to opener ONLY when Modal unmounts
+  useEffect(() => {
+    return () => {
+      if (
+        opener &&
+        typeof document !== "undefined" &&
+        document.contains(opener)
+      ) {
+        opener.focus?.()
+      }
+    }
+  }, [opener])
 
   const maxWClass =
     size === "small" || size === "compact"
