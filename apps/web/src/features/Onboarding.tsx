@@ -4,7 +4,7 @@ import Button from "../components/ui/Button"
 
 import Card from "../components/ui/Card"
 
-import { CircleAlert, Minus, ScanText } from "../components/ui/Icon"
+import { CircleAlert, Minus, ScanText } from "lucide-react"
 
 export function Onboarding({ onDone }: { onDone: () => void }) {
   const steps = [

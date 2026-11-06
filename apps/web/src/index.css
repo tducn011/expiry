@@ -590,23 +590,6 @@
   outline-offset: 2px;
 }
 
-/* Spinner indicator */
-.button-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  animation: button-spin .7s linear infinite;
-  flex: none;
-}
-
-@keyframes button-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .text-link,
 .back-link {
   min-height: 32px;

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import type { Dispatch } from "../store/appStore"
 import { api, ApiError, errorMessage } from "../api/client"
-import { ClockELogo } from "../components/ui/Icon"
+import { Timer } from "lucide-react"
 import Notice from "../components/ui/Notice"
 
 export type AuthMode = "login" | "register" | "welcome"
@@ -170,7 +170,7 @@ export function AuthForm({
       <div className="hidden lg:flex flex-col w-[480px] xl:w-[560px] 2xl:w-[620px] shrink-0 bg-[#06464b] text-white pt-[62px] px-10 xl:px-[64px] pb-[42px] select-none">
         {/* Brand header (y=62) */}
         <div className="flex items-center gap-3">
-          <ClockELogo size={40} color="#ffffff" className="shrink-0" />
+          <Timer size={40} color="#ffffff" className="shrink-0" />
           <span className="font-bold text-[21px] text-white tracking-tight">
             Expiry
           </span>
@@ -226,7 +226,7 @@ export function AuthForm({
         <div className="w-full max-w-[358px] sm:max-w-[390px] lg:max-w-[440px] flex flex-col">
           {/* Brand header (y=102 on Web Desktop) */}
           <div className="flex items-center gap-3">
-            <ClockELogo
+            <Timer
               size={36}
               color="#015D67"
               className="lg:w-[40px] lg:h-[40px] shrink-0"

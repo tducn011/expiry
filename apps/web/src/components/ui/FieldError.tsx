@@ -1,4 +1,4 @@
-import { CircleAlert } from "./Icon"
+import { CircleAlert } from "lucide-react"
 
 export interface FieldErrorProps {
   id?: string

@@ -1,4 +1,4 @@
-import { CircleCheck, CircleAlert, X } from "./Icon"
+import { CircleCheck, CircleAlert, X } from "lucide-react"
 
 export interface ToastProps {
   message: string

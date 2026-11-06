@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { CircleAlert, CircleCheck, Clock, HelpCircle } from "./Icon"
+import { CircleAlert, CircleCheck, Clock, HelpCircle } from "lucide-react"
 
 export type FoodStatus = "ok" | "soon" | "expired" | "unknown"
 

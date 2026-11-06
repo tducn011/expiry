@@ -14,12 +14,7 @@ import Button from "../components/ui/Button"
 
 import EmptyState from "../components/ui/EmptyState"
 
-import {
-  ChevronDown,
-  ChevronRight,
-  CircleCheck,
-  Plus,
-} from "../components/ui/Icon"
+import { ChevronDown, ChevronRight, CircleCheck, Plus } from "lucide-react"
 
 import PageHeader from "../components/ui/PageHeader"
 

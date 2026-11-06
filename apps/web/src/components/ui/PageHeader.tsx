@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { ArrowLeft } from "./Icon"
+import { ArrowLeft } from "lucide-react"
 
 import IconButton from "./IconButton"
 

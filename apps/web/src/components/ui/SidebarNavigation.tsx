@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { ChevronsLeft, ChevronsRight, Leaf } from "./Icon"
+import { ChevronsLeft, ChevronsRight, Leaf } from "lucide-react"
 
 export function SidebarButton({
   icon,

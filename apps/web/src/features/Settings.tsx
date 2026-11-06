@@ -14,7 +14,7 @@ import {
   PackageOpen,
   RotateCcw,
   Trash2,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 import Modal from "../components/ui/Modal"
 

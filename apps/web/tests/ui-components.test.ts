@@ -580,7 +580,7 @@ describe("Barcode GS1 & Lookup Service", () => {
   it("configures ZXing multi-format reader with TRY_HARDER hints", async () => {
     const { createConfiguredReader } = await import("../src/lib/barcode")
 
-    const reader = createConfiguredReader()
+    const reader = await createConfiguredReader()
 
     expect(reader).toBeDefined()
   })

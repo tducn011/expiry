@@ -62,6 +62,4 @@ export * from "./Notice"
 
 export { default as Notice } from "./Notice"
 
-export * from "./Icon"
-
-export { default as Icon, ClockELogo } from "./Icon"
+export { default as Icon } from "./Icon"

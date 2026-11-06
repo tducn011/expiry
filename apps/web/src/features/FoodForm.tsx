@@ -29,7 +29,7 @@ import {
   X,
   Bell,
   CalendarClock,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 import InputField from "../components/ui/InputField"
 

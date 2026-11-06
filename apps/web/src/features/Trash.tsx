@@ -12,7 +12,7 @@ import Card from "../components/ui/Card"
 
 import EmptyState from "../components/ui/EmptyState"
 
-import { Trash2, Undo2 } from "../components/ui/Icon"
+import { Trash2, Undo2 } from "lucide-react"
 
 import Modal from "../components/ui/Modal"
 

@@ -8,7 +8,7 @@ import Card from "../components/ui/Card"
 
 import EmptyState from "../components/ui/EmptyState"
 
-import { BellOff } from "../components/ui/Icon"
+import { BellOff } from "lucide-react"
 
 import PageHeader from "../components/ui/PageHeader"
 

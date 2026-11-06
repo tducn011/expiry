@@ -32,7 +32,7 @@ import {
   Pencil,
   SearchX,
   Trash2,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 import InputField from "../components/ui/InputField"
 

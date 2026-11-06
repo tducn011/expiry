@@ -31,7 +31,7 @@ import {
   Croissant,
   Wheat,
   Package,
-} from "../src/components/ui/Icon"
+} from "lucide-react"
 
 import {
   computeStatusOf,

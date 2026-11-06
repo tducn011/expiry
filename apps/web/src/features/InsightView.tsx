@@ -42,7 +42,15 @@ import {
   Milk,
   Beef,
   CupSoda,
-} from "../components/ui/Icon"
+  FileText as FileTextIcon,
+  LayoutGrid as LayoutGridIcon,
+  LeafyGreen,
+  ShoppingCart as ShoppingCartIcon,
+  Tag as TagIcon,
+  TriangleAlert as AlertTriangleIcon,
+  ArrowRight,
+  Info,
+} from "lucide-react"
 import PageHeader from "../components/ui/PageHeader"
 
 export type TimeRange = "7d" | "30d" | "all"
@@ -219,128 +227,6 @@ function formatActivityTime(isoString: string): string {
     return isoString
   }
 }
-
-const ShoppingCartIcon = ({
-  size = 16,
-  className = "",
-}: {
-  size?: number
-  className?: string
-}) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="8" cy="21" r="1" />
-    <circle cx="19" cy="21" r="1" />
-    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-  </svg>
-)
-
-const FileTextIcon = ({
-  size = 16,
-  className = "",
-}: {
-  size?: number
-  className?: string
-}) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-    <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-    <path d="M10 9H8" />
-    <path d="M16 13H8" />
-    <path d="M16 17H8" />
-  </svg>
-)
-
-const AlertTriangleIcon = ({
-  size = 20,
-  className = "",
-}: {
-  size?: number
-  className?: string
-}) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-    <line x1="12" y1="9" x2="12" y2="13" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
-  </svg>
-)
-
-const LayoutGridIcon = ({
-  size = 14,
-  className = "",
-}: {
-  size?: number
-  className?: string
-}) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <rect width="7" height="7" x="3" y="3" rx="1" />
-    <rect width="7" height="7" x="14" y="3" rx="1" />
-    <rect width="7" height="7" x="14" y="14" rx="1" />
-    <rect width="7" height="7" x="3" y="14" rx="1" />
-  </svg>
-)
-
-const TagIcon = ({
-  size = 14,
-  className = "",
-}: {
-  size?: number
-  className?: string
-}) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
-    <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
-  </svg>
-)
 
 export default function InsightView({
   state,
@@ -622,11 +508,11 @@ export default function InsightView({
   // Category list sorted with active categories first
   const displayCategories = useMemo(() => {
     return [
-      { key: "fresh_produce", label: "Rau củ quả", icon: "🥬" },
-      { key: "dairy_eggs", label: "Trứng & Sữa", icon: "🥛" },
-      { key: "meat_seafood", label: "Thịt & Cá", icon: "🥩" },
-      { key: "dry_pantry", label: "Bánh & Ngũ cốc", icon: "🥐" },
-      { key: "other", label: "Khác", icon: "⊞" },
+      { key: "fresh_produce", label: "Rau củ quả", icon: LeafyGreen },
+      { key: "dairy_eggs", label: "Trứng & Sữa", icon: Milk },
+      { key: "meat_seafood", label: "Thịt & Cá", icon: Beef },
+      { key: "dry_pantry", label: "Bánh & Ngũ cốc", icon: Croissant },
+      { key: "other", label: "Khác", icon: LayoutGridIcon },
     ].map((c) => {
       const data = stats.catStats[c.key] || { consume: 0, discard: 0 }
       const total = data.consume + data.discard
@@ -987,9 +873,9 @@ export default function InsightView({
               <button
                 type="button"
                 onClick={() => handleTabSelect("history")}
-                className="shrink-0 rounded-corner-md bg-brand-primary px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary/90 transition-all cursor-pointer text-center"
+                className="inline-flex items-center justify-center gap-1.5 shrink-0 rounded-corner-md bg-brand-primary px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary/90 transition-all cursor-pointer text-center"
               >
-                Xem danh sách →
+                Xem danh sách <ArrowRight size={14} aria-hidden="true" />
               </button>
             </div>
           </Card>
@@ -1006,7 +892,12 @@ export default function InsightView({
                   </h3>
                 </div>
                 <span className="text-[10px] text-text-secondary">
-                  So sánh theo tuần trong {rangeLabel.toLowerCase()} ⓘ
+                  So sánh theo tuần trong {rangeLabel.toLowerCase()}{" "}
+                  <Info
+                    size={12}
+                    aria-hidden="true"
+                    className="inline-block align-middle"
+                  />
                 </span>
               </div>
 
@@ -1150,7 +1041,11 @@ export default function InsightView({
                     <div key={c.key} className="flex flex-col gap-1 text-xs">
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1.5 font-medium text-text-primary">
-                          <span>{c.icon}</span>
+                          <c.icon
+                            size={16}
+                            aria-hidden="true"
+                            className="shrink-0 text-brand-primary"
+                          />
                           <span>{c.label}</span>
                         </span>
                         <span className="text-[11px] text-text-secondary font-semibold">

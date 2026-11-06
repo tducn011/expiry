@@ -21,7 +21,7 @@ import Button from "../components/ui/Button"
 
 import ManualBarcodeModal from "./ManualBarcodeModal"
 
-import { Barcode } from "../components/ui/Icon"
+import { Barcode } from "lucide-react"
 
 import {
   ArrowLeft,
@@ -36,7 +36,7 @@ import {
   ScanText,
   ShieldAlert,
   Sparkles,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 import IconButton from "../components/ui/IconButton"
 

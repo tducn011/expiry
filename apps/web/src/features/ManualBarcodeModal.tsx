@@ -6,7 +6,7 @@ import InputField from "../components/ui/InputField"
 
 import Modal from "../components/ui/Modal"
 
-import { Barcode, Lightbulb, Search, Sparkles } from "../components/ui/Icon"
+import { Barcode, Lightbulb, Search, Sparkles } from "lucide-react"
 
 import { lookupBarcode, validateBarcode } from "../lib/barcode"
 

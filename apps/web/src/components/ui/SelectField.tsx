@@ -1,6 +1,6 @@
 import { type ChangeEvent, type SelectHTMLAttributes, useId } from "react"
 
-import { ChevronDown } from "./Icon"
+import { ChevronDown } from "lucide-react"
 
 export interface SelectOption {
   value: string
