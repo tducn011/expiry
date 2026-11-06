@@ -107,7 +107,7 @@ export async function fetchLiveMovements(
           name: item.name,
           quantity: item.remaining_quantity,
           unit: (item.unit === "piece" ? "cái" : item.unit) as any,
-          category: (item.category as Category) || "other",
+          category: item.category as Category || "other",
           location: item.storage_location || undefined,
           expDate: item.expiry_date || undefined,
           createdAt: item.created_at,
@@ -120,7 +120,7 @@ export async function fetchLiveMovements(
           name: item.name,
           quantity: item.remaining_quantity,
           unit: (item.unit === "piece" ? "cái" : item.unit) as any,
-          category: (item.category as Category) || "other",
+          category: item.category as Category || "other",
           location: item.storage_location || undefined,
           expDate: item.expiry_date || undefined,
           createdAt: item.created_at,
@@ -220,17 +220,48 @@ function formatActivityTime(isoString: string): string {
   }
 }
 
-
-const ShoppingCartIcon = ({ size = 16, className = '' }: { size?: number; className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+const ShoppingCartIcon = ({
+  size = 16,
+  className = "",
+}: {
+  size?: number
+  className?: string
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
     <circle cx="8" cy="21" r="1" />
     <circle cx="19" cy="21" r="1" />
     <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
   </svg>
 )
 
-const FileTextIcon = ({ size = 16, className = '' }: { size?: number; className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+const FileTextIcon = ({
+  size = 16,
+  className = "",
+}: {
+  size?: number
+  className?: string
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
     <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
     <path d="M14 2v4a2 2 0 0 0 2 2h4" />
     <path d="M10 9H8" />
@@ -239,17 +270,48 @@ const FileTextIcon = ({ size = 16, className = '' }: { size?: number; className?
   </svg>
 )
 
-
-const AlertTriangleIcon = ({ size = 20, className = '' }: { size?: number; className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+const AlertTriangleIcon = ({
+  size = 20,
+  className = "",
+}: {
+  size?: number
+  className?: string
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
     <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
     <line x1="12" y1="9" x2="12" y2="13" />
     <line x1="12" y1="17" x2="12.01" y2="17" />
   </svg>
 )
 
-const LayoutGridIcon = ({ size = 14, className = '' }: { size?: number; className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+const LayoutGridIcon = ({
+  size = 14,
+  className = "",
+}: {
+  size?: number
+  className?: string
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
     <rect width="7" height="7" x="3" y="3" rx="1" />
     <rect width="7" height="7" x="14" y="3" rx="1" />
     <rect width="7" height="7" x="14" y="14" rx="1" />
@@ -257,8 +319,24 @@ const LayoutGridIcon = ({ size = 14, className = '' }: { size?: number; classNam
   </svg>
 )
 
-const TagIcon = ({ size = 14, className = '' }: { size?: number; className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+const TagIcon = ({
+  size = 14,
+  className = "",
+}: {
+  size?: number
+  className?: string
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
     <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
     <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
   </svg>
@@ -372,7 +450,10 @@ export default function InsightView({
     () => activeFoods.filter((f) => Boolean(f.location)),
     [activeFoods],
   )
-  const locationRate = totalActive > 0 ? Math.round((withLocationFoods.length / totalActive) * 100) : 100
+  const locationRate =
+    totalActive > 0
+      ? Math.round((withLocationFoods.length / totalActive) * 100)
+      : 100
 
   // Calculate consumption and waste metrics
   const stats = useMemo(() => {
@@ -413,7 +494,7 @@ export default function InsightView({
     for (const [c, s] of Object.entries(catStats)) {
       if (s.discard > worstWasteCount) {
         worstWasteCount = s.discard
-        worstCat = c as Category
+        worstCat = (c as Category)
       }
     }
 
@@ -475,8 +556,13 @@ export default function InsightView({
       const y = 10 + (1 - w.rate / 100) * 80
       return { x, y, ...w }
     })
-    const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ")
-    const areaPath = points.length > 0 ? `${linePath} L ${points[points.length - 1].x} 90 L ${points[0].x} 90 Z` : ""
+    const linePath = points
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+      .join(" ")
+    const areaPath =
+      points.length > 0
+        ? `${linePath} L ${points[points.length - 1].x} 90 L ${points[0].x} 90 Z`
+        : ""
     return { points, linePath, areaPath }
   }, [trendWeeks])
 
@@ -496,7 +582,8 @@ export default function InsightView({
     locMap["Khác"] = 0
 
     for (const f of activeFoods) {
-      const locKey = f.location && state.locations.includes(f.location) ? f.location : "Khác"
+      const locKey =
+        f.location && state.locations.includes(f.location) ? f.location : "Khác"
       locMap[locKey] = (locMap[locKey] || 0) + 1
     }
 
@@ -508,7 +595,8 @@ export default function InsightView({
       .map(([label, count]) => {
         const color = palette[colorIdx % palette.length]
         colorIdx++
-        const percent = totalActive > 0 ? Math.round((count / totalActive) * 100) : 0
+        const percent =
+          totalActive > 0 ? Math.round((count / totalActive) * 100) : 0
         return { label, count, percent, color }
       })
 
@@ -522,13 +610,14 @@ export default function InsightView({
     for (const s of storageStats) {
       if (s.percent > 0) {
         const nextAngle = currentAngle + (s.percent / 100) * 360
-        stops.push(`${s.color} ${Math.round(currentAngle)}deg ${Math.round(nextAngle)}deg`)
+        stops.push(
+          `${s.color} ${Math.round(currentAngle)}deg ${Math.round(nextAngle)}deg`,
+        )
         currentAngle = nextAngle
       }
     }
     return stops.length > 0 ? `conic-gradient(${stops.join(", ")})` : "#e5e7eb"
   }, [totalActive, storageStats])
-
 
   // Category list sorted with active categories first
   const displayCategories = useMemo(() => {
@@ -552,13 +641,24 @@ export default function InsightView({
     })
   }, [stats.catStats])
 
-  const rangeLabel = range === "7d" ? "7 ngày gần nhất" : range === "30d" ? "30 ngày gần nhất" : "Toàn bộ"
+  const rangeLabel =
+    range === "7d"
+      ? "7 ngày gần nhất"
+      : range === "30d"
+        ? "30 ngày gần nhất"
+        : "Toàn bộ"
 
   const displayActivities = useMemo(() => {
     return filteredEvents.slice(0, 3).map((ev) => ({
       id: ev.id,
       foodId: ev.foodId,
-      title: `${ev.kind === "consume" ? "Dùng hết" : ev.kind === "discard" ? "Vứt bỏ" : "Điều chỉnh"}: ${ev.foodName}`,
+      title: `${
+        ev.kind === "consume"
+          ? "Dùng hết"
+          : ev.kind === "discard"
+            ? "Vứt bỏ"
+            : "Điều chỉnh"
+      }: ${ev.foodName}`,
       kind: ev.kind,
       timeStr: formatActivityTime(ev.at),
     }))
@@ -579,7 +679,10 @@ export default function InsightView({
         id: "sug-soon",
         icon: "cart",
         title: `Ưu tiên sử dụng ${soonFoods.length} món sắp hết hạn`,
-        reason: `Căn cứ: Giảm nguy cơ lãng phí (${soonFoods.slice(0, 2).map((f) => f.name).join(", ")}).`,
+        reason: `Căn cứ: Giảm nguy cơ lãng phí (${soonFoods
+          .slice(0, 2)
+          .map((f) => f.name)
+          .join(", ")}).`,
       })
     } else {
       list.push({
@@ -625,7 +728,13 @@ export default function InsightView({
     }
 
     return list
-  }, [soonFoods, stats.worstCat, stats.worstWasteCount, rangeLabel, unknownExpFoods.length])
+  }, [
+    soonFoods,
+    stats.worstCat,
+    stats.worstWasteCount,
+    rangeLabel,
+    unknownExpFoods.length,
+  ])
 
   return (
     <div className="flex flex-col gap-5 w-full max-w-5xl mx-auto pb-12">
@@ -634,7 +743,9 @@ export default function InsightView({
         <div>
           <div className="flex items-center gap-2">
             <BarChart3 size={24} className="text-brand-primary" />
-            <h1 className="text-2xl font-extrabold text-text-primary tracking-tight">Insight</h1>
+            <h1 className="text-2xl font-extrabold text-text-primary tracking-tight">
+              Insight
+            </h1>
           </div>
           <p className="text-xs text-text-secondary mt-0.5">
             Tổng quan kho thực phẩm, hiệu quả sử dụng và gợi ý tối ưu
@@ -663,55 +774,60 @@ export default function InsightView({
 
           {/* Time Range Selector */}
           <button
+            type="button"
+            onClick={() => loadMovements()}
+            disabled={loadingLive}
+            title="Đồng bộ lại từ cơ sở dữ liệu"
+            className="inline-flex items-center gap-1.5 rounded-corner-md border border-border-primary/80 bg-surface-bg px-2.5 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw
+              size={13}
+              className={`text-text-secondary ${
+                loadingLive ? "animate-spin" : ""
+              }`}
+            />
+            <span>{loadingLive ? "Đang tải..." : "Làm mới"}</span>
+          </button>
+
+          <div className="relative">
+            <button
               type="button"
-              onClick={() => loadMovements()}
-              disabled={loadingLive}
-              title="Đồng bộ lại từ cơ sở dữ liệu"
-              className="inline-flex items-center gap-1.5 rounded-corner-md border border-border-primary/80 bg-surface-bg px-2.5 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer disabled:opacity-50"
+              onClick={() => setRangeDropdownOpen((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-corner-md border border-border-primary/80 bg-surface-bg px-3 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer"
             >
-              <RefreshCw size={13} className={`text-text-secondary ${loadingLive ? "animate-spin" : ""}`} />
-              <span>{loadingLive ? "Đang tải..." : "Làm mới"}</span>
+              <CalendarClock size={15} className="text-text-secondary" />
+              <span>{rangeLabel}</span>
+              <ChevronDown size={14} className="text-text-secondary" />
             </button>
 
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setRangeDropdownOpen((v) => !v)}
-                className="inline-flex items-center gap-2 rounded-corner-md border border-border-primary/80 bg-surface-bg px-3 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer"
-              >
-                <CalendarClock size={15} className="text-text-secondary" />
-                <span>{rangeLabel}</span>
-                <ChevronDown size={14} className="text-text-secondary" />
-              </button>
-
-              {rangeDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1 z-30 min-w-36 overflow-hidden rounded-corner-md border border-border-primary bg-surface-bg p-1 shadow-lg">
-                  {[
-                    ["7d", "7 ngày gần nhất"],
-                    ["30d", "30 ngày gần nhất"],
-                    ["all", "Toàn bộ thời gian"],
-                  ].map(([val, label]) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => {
-                        setRange(val as TimeRange)
-                        setRangeDropdownOpen(false)
-                      }}
-                      className={`flex w-full items-center px-3 py-1.5 text-xs rounded-corner-sm text-left transition-colors cursor-pointer ${
-                        range === val
-                          ? "bg-brand-primary/10 text-brand-primary font-bold"
-                          : "text-text-primary hover:bg-surface-hover"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {rangeDropdownOpen && (
+              <div className="absolute right-0 top-full mt-1 z-30 min-w-36 overflow-hidden rounded-corner-md border border-border-primary bg-surface-bg p-1 shadow-lg">
+                {[
+                  ["7d", "7 ngày gần nhất"],
+                  ["30d", "30 ngày gần nhất"],
+                  ["all", "Toàn bộ thời gian"],
+                ].map(([val, label]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => {
+                      setRange(val as TimeRange)
+                      setRangeDropdownOpen(false)
+                    }}
+                    className={`flex w-full items-center px-3 py-1.5 text-xs rounded-corner-sm text-left transition-colors cursor-pointer ${
+                      range === val
+                        ? "bg-brand-primary/10 text-brand-primary font-bold"
+                        : "text-text-primary hover:bg-surface-hover"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
       {/* Navigation Tabs */}
       <div className="flex items-center gap-1.5 p-1 rounded-corner-lg bg-surface-subtle border border-border-primary/40 w-fit">
@@ -763,7 +879,9 @@ export default function InsightView({
                   <AlertTriangleIcon size={20} />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-text-primary leading-tight">Việc cần chú ý</h2>
+                  <h2 className="text-base font-bold text-text-primary leading-tight">
+                    Việc cần chú ý
+                  </h2>
                   <p className="text-xs text-text-secondary mt-0.5">
                     Các vấn đề cần xử lý để giảm lãng phí.
                   </p>
@@ -774,7 +892,11 @@ export default function InsightView({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 flex-1 max-w-2xl">
                 {/* 1. Quá hạn */}
                 <div
-                  onClick={() => onOpenDetail && expiredFoods[0] && onOpenDetail(expiredFoods[0].id)}
+                  onClick={() =>
+                    onOpenDetail &&
+                    expiredFoods[0] &&
+                    onOpenDetail(expiredFoods[0].id)
+                  }
                   className="flex items-center justify-between p-3 rounded-corner-md bg-status-expired-bg/40 border border-status-expired/20 hover:bg-status-expired-bg/60 transition-all cursor-pointer group"
                 >
                   <div className="flex items-center gap-2.5">
@@ -793,12 +915,19 @@ export default function InsightView({
                       </span>
                     </div>
                   </div>
-                  <ChevronRight size={14} className="text-status-expired/60 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight
+                    size={14}
+                    className="text-status-expired/60 group-hover:translate-x-0.5 transition-transform"
+                  />
                 </div>
 
                 {/* 2. Sắp hết hạn */}
                 <div
-                  onClick={() => onOpenDetail && soonFoods[0] && onOpenDetail(soonFoods[0].id)}
+                  onClick={() =>
+                    onOpenDetail &&
+                    soonFoods[0] &&
+                    onOpenDetail(soonFoods[0].id)
+                  }
                   className="flex items-center justify-between p-3 rounded-corner-md bg-status-soon-bg/40 border border-status-soon/20 hover:bg-status-soon-bg/60 transition-all cursor-pointer group"
                 >
                   <div className="flex items-center gap-2.5">
@@ -817,12 +946,19 @@ export default function InsightView({
                       </span>
                     </div>
                   </div>
-                  <ChevronRight size={14} className="text-status-soon/60 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight
+                    size={14}
+                    className="text-status-soon/60 group-hover:translate-x-0.5 transition-transform"
+                  />
                 </div>
 
                 {/* 3. Thiếu HSD */}
                 <div
-                  onClick={() => onOpenDetail && unknownExpFoods[0] && onOpenDetail(unknownExpFoods[0].id)}
+                  onClick={() =>
+                    onOpenDetail &&
+                    unknownExpFoods[0] &&
+                    onOpenDetail(unknownExpFoods[0].id)
+                  }
                   className="flex items-center justify-between p-3 rounded-corner-md bg-surface-subtle border border-border-primary hover:bg-surface-hover transition-all cursor-pointer group"
                 >
                   <div className="flex items-center gap-2.5">
@@ -841,7 +977,10 @@ export default function InsightView({
                       </span>
                     </div>
                   </div>
-                  <ChevronRight size={14} className="text-text-secondary group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight
+                    size={14}
+                    className="text-text-secondary group-hover:translate-x-0.5 transition-transform"
+                  />
                 </div>
               </div>
 
@@ -880,9 +1019,23 @@ export default function InsightView({
                     preserveAspectRatio="none"
                   >
                     <defs>
-                      <linearGradient id="trendAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#0f5959" stopOpacity="0.25" />
-                        <stop offset="100%" stopColor="#0f5959" stopOpacity="0.02" />
+                      <linearGradient
+                        id="trendAreaGrad"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor="#0f5959"
+                          stopOpacity="0.25"
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="#0f5959"
+                          stopOpacity="0.02"
+                        />
                       </linearGradient>
                     </defs>
 
@@ -936,9 +1089,19 @@ export default function InsightView({
                         cx={p.x}
                         cy={p.y}
                         r={i === svgTrendData.points.length - 1 ? 4.5 : 3.5}
-                        fill={i === svgTrendData.points.length - 1 ? "#0f5959" : "#ffffff"}
-                        stroke={i === svgTrendData.points.length - 1 ? "#ffffff" : "#0f5959"}
-                        strokeWidth={i === svgTrendData.points.length - 1 ? 1.5 : 2}
+                        fill={
+                          i === svgTrendData.points.length - 1
+                            ? "#0f5959"
+                            : "#ffffff"
+                        }
+                        stroke={
+                          i === svgTrendData.points.length - 1
+                            ? "#ffffff"
+                            : "#0f5959"
+                        }
+                        strokeWidth={
+                          i === svgTrendData.points.length - 1 ? 1.5 : 2
+                        }
                       />
                     ))}
                   </svg>
@@ -991,7 +1154,9 @@ export default function InsightView({
                           <span>{c.label}</span>
                         </span>
                         <span className="text-[11px] text-text-secondary font-semibold">
-                          {c.total === 0 ? "Chưa có dữ liệu" : `${c.rate}% (${c.consume}/${c.total})`}
+                          {c.total === 0
+                            ? "Chưa có dữ liệu"
+                            : `${c.rate}% (${c.consume}/${c.total})`}
                         </span>
                       </div>
 
@@ -1036,7 +1201,9 @@ export default function InsightView({
                     Dữ liệu hiện tại
                   </span>
                 </div>
-                <p className="text-[10px] text-text-secondary mb-3">Tính đến hôm nay.</p>
+                <p className="text-[10px] text-text-secondary mb-3">
+                  Tính đến hôm nay.
+                </p>
 
                 <div className="flex items-center justify-around gap-2 pt-2">
                   {/* Storage Donut Chart */}
@@ -1091,7 +1258,11 @@ export default function InsightView({
                 <div className="flex flex-col gap-2.5">
                   {/* 1. Món chưa có HSD */}
                   <div
-                    onClick={() => onOpenDetail && unknownExpFoods[0] && onOpenDetail(unknownExpFoods[0].id)}
+                    onClick={() =>
+                      onOpenDetail &&
+                      unknownExpFoods[0] &&
+                      onOpenDetail(unknownExpFoods[0].id)
+                    }
                     className="flex items-center justify-between p-3 rounded-corner-md bg-surface-subtle border border-border-primary/60 hover:bg-surface-hover transition-colors cursor-pointer group"
                   >
                     <div className="flex items-center gap-2.5">
@@ -1107,7 +1278,10 @@ export default function InsightView({
                         </span>
                       </div>
                     </div>
-                    <ChevronRight size={14} className="text-text-secondary group-hover:translate-x-0.5 transition-transform" />
+                    <ChevronRight
+                      size={14}
+                      className="text-text-secondary group-hover:translate-x-0.5 transition-transform"
+                    />
                   </div>
 
                   {/* 2. Tỷ lệ có nơi bảo quản */}
@@ -1149,25 +1323,40 @@ export default function InsightView({
                 <div className="flex flex-col divide-y divide-border-primary/40">
                   {displayActivities.length === 0 ? (
                     <div className="py-6 text-center text-xs text-text-secondary">
-                      Chưa có thao tác dùng hoặc bỏ thực phẩm trong {rangeLabel.toLowerCase()}.
+                      Chưa có thao tác dùng hoặc bỏ thực phẩm trong{" "}
+                      {rangeLabel.toLowerCase()}.
                     </div>
                   ) : (
                     displayActivities.map((ev) => {
                       const isConsume = ev.kind === "consume"
                       const isDiscard = ev.kind === "discard"
                       return (
-                        <div key={ev.id} className="py-2.5 flex items-center justify-between text-xs">
+                        <div
+                          key={ev.id}
+                          className="py-2.5 flex items-center justify-between text-xs"
+                        >
                           <div className="flex items-center gap-2 min-w-0">
                             {isConsume ? (
-                              <CircleCheck size={14} className="text-status-ok shrink-0" />
+                              <CircleCheck
+                                size={14}
+                                className="text-status-ok shrink-0"
+                              />
                             ) : isDiscard ? (
-                              <Trash2 size={14} className="text-danger shrink-0" />
+                              <Trash2
+                                size={14}
+                                className="text-danger shrink-0"
+                              />
                             ) : (
-                              <RefreshCw size={14} className="text-text-secondary shrink-0" />
+                              <RefreshCw
+                                size={14}
+                                className="text-text-secondary shrink-0"
+                              />
                             )}
                             <span
                               className="font-semibold text-text-primary truncate cursor-pointer hover:underline"
-                              onClick={() => ev.foodId && onOpenDetail?.(ev.foodId)}
+                              onClick={() =>
+                                ev.foodId && onOpenDetail?.(ev.foodId)
+                              }
                             >
                               {ev.title}
                             </span>
@@ -1188,12 +1377,17 @@ export default function InsightView({
               <div>
                 <div className="flex items-center gap-1.5 mb-3">
                   <Sparkles size={16} className="text-brand-primary" />
-                  <h3 className="text-sm font-bold text-text-primary">Gợi ý có căn cứ</h3>
+                  <h3 className="text-sm font-bold text-text-primary">
+                    Gợi ý có căn cứ
+                  </h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {dynamicSuggestions.map((sug) => (
-                    <div key={sug.id} className="p-3 rounded-corner-md bg-brand-primary/5 border border-brand-primary/20 flex flex-col justify-between">
+                    <div
+                      key={sug.id}
+                      className="p-3 rounded-corner-md bg-brand-primary/5 border border-brand-primary/20 flex flex-col justify-between"
+                    >
                       <div>
                         <div className="size-7 rounded-corner-sm bg-brand-primary/10 text-brand-primary flex items-center justify-center mb-2">
                           {sug.icon === "cart" ? (
@@ -1229,7 +1423,8 @@ export default function InsightView({
                 Chi tiết hiệu suất theo nhóm thực phẩm
               </h3>
               <p className="text-xs text-text-secondary mt-0.5">
-                Đánh giá tỷ lệ tiêu thụ thành công so với lượng thực phẩm bị lãng phí của từng danh mục
+                Đánh giá tỷ lệ tiêu thụ thành công so với lượng thực phẩm bị
+                lãng phí của từng danh mục
               </p>
             </div>
             <span className="text-xs font-semibold text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-full">
@@ -1241,14 +1436,22 @@ export default function InsightView({
             {CATEGORIES.map((c) => {
               const data = stats.catStats[c.value] || { consume: 0, discard: 0 }
               const total = data.consume + data.discard
-              const rate = total > 0 ? Math.round((data.consume / total) * 100) : null
+              const rate =
+                total > 0 ? Math.round((data.consume / total) * 100) : null
 
               return (
-                <div key={c.value} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div
+                  key={c.value}
+                  className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
                   <div className="min-w-44">
-                    <span className="font-bold text-sm text-text-primary block">{c.label}</span>
+                    <span className="font-bold text-sm text-text-primary block">
+                      {c.label}
+                    </span>
                     <span className="text-xs text-text-secondary">
-                      {total === 0 ? "Chưa có phát sinh trong kỳ" : `${data.consume} dùng hết · ${data.discard} vứt bỏ`}
+                      {total === 0
+                        ? "Chưa có phát sinh trong kỳ"
+                        : `${data.consume} dùng hết · ${data.discard} vứt bỏ`}
                     </span>
                   </div>
 
@@ -1298,7 +1501,8 @@ export default function InsightView({
                 Nhật ký thao tác chi tiết
               </h3>
               <p className="text-xs text-text-secondary mt-0.5">
-                Toàn bộ lịch sử thêm, dùng hết, vứt bỏ và điều chỉnh số lượng thực phẩm ({filteredEvents.length} bản ghi)
+                Toàn bộ lịch sử thêm, dùng hết, vứt bỏ và điều chỉnh số lượng
+                thực phẩm ({filteredEvents.length} bản ghi)
               </p>
             </div>
             <span className="text-xs font-semibold text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-full">
