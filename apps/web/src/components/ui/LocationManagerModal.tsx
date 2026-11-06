@@ -16,7 +16,7 @@ import {
   Plus,
   Trash2,
   X,
-} from "./Icon"
+} from "lucide-react"
 
 import InputField from "./InputField"
 

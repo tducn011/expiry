@@ -1,8 +1,6 @@
 import type { FoodEntry, Unit } from "../domain/types"
 
-import { BrowserMultiFormatReader } from "@zxing/browser"
-
-import { DecodeHintType, BarcodeFormat } from "@zxing/library"
+import type { BrowserMultiFormatReader } from "@zxing/browser"
 
 export type BarcodeResult = {
   text: string
@@ -916,7 +914,10 @@ export function playBeep() {
 
 /** Pre-configured ZXing reader with TRY_HARDER and retail barcode formats */
 
-export function createConfiguredReader(): BrowserMultiFormatReader {
+export async function createConfiguredReader(): Promise<BrowserMultiFormatReader> {
+  const [{ BrowserMultiFormatReader }, { DecodeHintType, BarcodeFormat }] =
+    await Promise.all([import("@zxing/browser"), import("@zxing/library")])
+
   const hints = new Map()
 
   hints.set(DecodeHintType.TRY_HARDER, true)
@@ -1096,11 +1097,14 @@ export function extractBarcodeFromText(
   return null
 }
 
-let sharedReaderInstance: BrowserMultiFormatReader | null = null
+let sharedReaderInstance: Promise<BrowserMultiFormatReader> | null = null
 
-function getSharedReader(): BrowserMultiFormatReader {
+function getSharedReader(): Promise<BrowserMultiFormatReader> {
   if (!sharedReaderInstance) {
-    sharedReaderInstance = createConfiguredReader()
+    sharedReaderInstance = createConfiguredReader().catch((error) => {
+      sharedReaderInstance = null
+      throw error
+    })
   }
 
   return sharedReaderInstance
@@ -1195,7 +1199,7 @@ export async function decodeBarcodeFromImage(
 
   if (!ctx) return null
 
-  const reader = getSharedReader()
+  const reader = await getSharedReader()
 
   const tryDecode = (c: HTMLCanvasElement): BarcodeResult | null => {
     try {

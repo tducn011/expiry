@@ -21,7 +21,7 @@ import {
   SearchX,
   Snowflake,
   X,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 import InputField from "../components/ui/InputField"
 

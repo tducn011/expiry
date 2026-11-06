@@ -23,6 +23,7 @@ import {
 } from "../components/ui/FilterChips"
 
 import {
+  ArrowRight,
   Bell,
   CircleAlert,
   Clock,
@@ -31,7 +32,7 @@ import {
   Search,
   SearchX,
   X,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 import IconButton from "../components/ui/IconButton"
 
@@ -111,7 +112,12 @@ function AttentionSummary({
           <span>Cần chú ý ({total} món)</span>
         </div>
         <span className="text-xs font-semibold text-brand-primary hover:underline">
-          Xem tất cả →
+          Xem tất cả{" "}
+          <ArrowRight
+            size={14}
+            aria-hidden="true"
+            className="inline-block align-middle"
+          />
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">

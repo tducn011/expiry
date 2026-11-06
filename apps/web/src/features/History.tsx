@@ -8,11 +8,7 @@ import Button from "../components/ui/Button"
 
 import EmptyState from "../components/ui/EmptyState"
 
-import {
-  ChevronRight,
-  History as HistoryIcon,
-  RotateCcw,
-} from "../components/ui/Icon"
+import { ChevronRight, History as HistoryIcon, RotateCcw } from "lucide-react"
 
 import Modal from "../components/ui/Modal"
 

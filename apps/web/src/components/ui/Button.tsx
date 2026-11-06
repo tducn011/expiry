@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react"
 
 import Icon from "./Icon"
+import { LoaderCircle } from "lucide-react"
 
 export type ButtonVariant = "primary" | "neutral" | "subtle" | "danger" | "cta" | "outline" | "ghost" | "secondary"
 
@@ -122,8 +123,9 @@ export default function Button({
       {...props}
     >
       {loading ? (
-        <span
-          className="inline-block size-4 border-2 border-current border-r-transparent rounded-full animate-spin"
+        <LoaderCircle
+          size={16}
+          className="shrink-0 animate-spin"
           aria-hidden="true"
         />
       ) : iconStart ? (

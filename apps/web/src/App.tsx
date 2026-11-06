@@ -33,7 +33,7 @@ import {
   LogOut,
   Plus,
   Settings as SettingsIcon,
-} from "./components/ui/Icon"
+} from "lucide-react"
 
 import Button from "./components/ui/Button"
 

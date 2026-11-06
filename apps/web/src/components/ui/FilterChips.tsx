@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 
-import { ChevronDown } from "./Icon"
+import { Check, ChevronDown, X } from "lucide-react"
 
 export type StatusFilter = "all" | "soon" | "expired" | "unknown"
 
@@ -160,18 +160,11 @@ export function FilterDropdown<T extends string = string>({
                   <span>{c.label}</span>
                 </div>
                 {isSelected && (
-                  <svg
+                  <Check
                     className="size-3.5 text-brand-primary shrink-0"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    strokeWidth={2.5}
                     aria-hidden="true"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  />
                 )}
               </button>
             )
@@ -188,7 +181,8 @@ export function FilterDropdown<T extends string = string>({
                 }}
                 className="flex w-full items-center gap-2 rounded-corner-sm px-3 py-1.5 text-xs text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer text-left"
               >
-                <span>✕ Bỏ lọc {label}</span>
+                <X size={14} aria-hidden="true" className="shrink-0" />
+                <span>Bỏ lọc {label}</span>
               </button>
             </div>
           )}

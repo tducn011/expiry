@@ -15,7 +15,7 @@ import {
   Milk,
   Package,
   Wheat,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 export interface FoodKindPattern {
   re: RegExp

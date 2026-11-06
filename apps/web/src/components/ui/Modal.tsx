@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 
 import Button from "./Button"
 
-import { X } from "./Icon"
+import { X } from "lucide-react"
 
 let foregroundModalCount = 0
 

@@ -1,11 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 
-import {
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-} from "../components/ui/Icon"
+import { Clock, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
 
 import { addDays, today } from "../store/appStore"
 

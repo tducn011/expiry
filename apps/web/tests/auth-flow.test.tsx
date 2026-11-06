@@ -1,24 +1,13 @@
 import { describe, it, expect, vi } from "vitest"
 import { renderToString } from "react-dom/server"
-import { ClockELogo } from "../src/components/ui/Icon"
 import Notice from "../src/components/ui/Notice"
 import { AuthForm } from "../src/features/AuthForm"
 
 describe("Auth Flow & Design Verification (Figma AUTH · WEB & AUTH · APP)", () => {
-  it("renders the official Clock-e Forest logo with three core elements", () => {
-    const html = renderToString(<ClockELogo size={40} color="#015D67" />)
-
-    // Contains SVG viewBox 0 0 200 200
-    expect(html).toContain('viewBox="0 0 200 200"')
-    // Contains letter 'e' path
-    expect(html).toContain("M153 144C138 164 116 171 94 166")
-    // Contains leaf path with fill
-    expect(html).toContain("M132 50C133 33 143 25 159 21")
-    // Contains clock hour hand pointing to 11 o'clock
-    expect(html).toContain("M99 103L87 81")
-    // Color stroke and fill are #015D67
-    expect(html).toContain('stroke="#015D67"')
-    expect(html).toContain('fill="#015D67"')
+  it("uses Lucide Timer for both responsive brand headers", () => {
+    const html = renderToString(<AuthForm dispatch={vi.fn()} onCancel={vi.fn()} />)
+    expect(html.match(/lucide-timer/g)).toHaveLength(2)
+    expect(html).not.toContain('viewBox="0 0 200 200"')
   })
 
   it("renders Notice component for failure states according to Figma specs", () => {
