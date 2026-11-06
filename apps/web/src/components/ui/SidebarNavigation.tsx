@@ -100,7 +100,7 @@ export function SidebarNavigation({
   return (
     <aside
       aria-label="Điều hướng chính"
-      className={`flex flex-col justify-between h-dvh shrink-0 py-5 border-r border-border-primary/60 bg-surface-bg shadow-xs transition-all duration-200 ease-in-out ${
+      className={`flex flex-col justify-between h-full overflow-y-auto shrink-0 py-5 border-r border-border-primary/60 bg-surface-bg shadow-xs transition-all duration-200 ease-in-out ${
         isExpanded ? "w-60 px-3 items-stretch" : "w-[72px] px-2 items-center"
       }`}
     >
