@@ -1161,10 +1161,15 @@ paths:
                     additionalProperties: false
                     required:
                     - food_name
+                    - barcode
                     - expiry_date
                     - manufactured_date
                     properties:
                       food_name:
+                        type:
+                        - string
+                        - 'null'
+                      barcode:
                         type:
                         - string
                         - 'null'
@@ -1676,6 +1681,21 @@ components:
         updated_at:
           type: string
           format: date-time
+        manufactured_on:
+          type:
+          - string
+          - 'null'
+          format: date
+        barcode:
+          type:
+          - string
+          - 'null'
+          maxLength: 64
+        barcode_format:
+          type:
+          - string
+          - 'null'
+          maxLength: 20
       required:
       - name
       - storage_location
@@ -1694,6 +1714,9 @@ components:
       - deleted_at
       - created_at
       - updated_at
+      - manufactured_on
+      - barcode
+      - barcode_format
       additionalProperties: false
     MovementCommand:
       type: object

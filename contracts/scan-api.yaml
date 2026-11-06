@@ -198,12 +198,19 @@ components:
           - 'null'
           example: null
           default: null
+        barcode:
+          type:
+          - string
+          - 'null'
+          example: null
+          default: null
         expiry_date:
           $ref: '#/components/schemas/ExpiryCandidate'
         manufactured_date:
           $ref: '#/components/schemas/ManufacturedCandidate'
       required:
       - food_name
+      - barcode
       - expiry_date
       - manufactured_date
       additionalProperties: false
