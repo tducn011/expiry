@@ -177,7 +177,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const [isCheckingSession, setIsCheckingSession] = useState(!demoMode)
 
-  const sessionGenRef = useRef(0)
+  // authGenRef guards Effect 1 (session verification) only.
+  // hydrationGenRef guards Effect 2 (inventory hydration) only.
+  // Keeping them separate prevents Effect 2 from invalidating Effect 1's
+  // generation check and blocking setIsCheckingSession(false).
+  const authGenRef = useRef(0)
+  const hydrationGenRef = useRef(0)
 
   const refreshInventoryRef = useRef<(() => Promise<void>) | null>(null)
 
@@ -192,7 +197,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     let isMounted = true
 
-    const gen = ++sessionGenRef.current
+    const gen = ++authGenRef.current
 
     setIsCheckingSession(true)
 
@@ -223,7 +228,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       .session()
 
       .then((s) => {
-        if (!isMounted || sessionGenRef.current !== gen) return
+        if (!isMounted || authGenRef.current !== gen) return
 
         setSyncError(null)
 
@@ -245,7 +250,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       })
 
       .catch((err) => {
-        if (!isMounted || sessionGenRef.current !== gen) return
+        if (!isMounted || authGenRef.current !== gen) return
 
         if (err instanceof ApiError && err.status === 401) {
           if (state.mode === "account") {
@@ -259,7 +264,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       })
 
       .finally(() => {
-        if (isMounted && sessionGenRef.current === gen) {
+        if (isMounted && authGenRef.current === gen) {
           setIsCheckingSession(false)
         }
       })
@@ -267,7 +272,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     return () => {
       isMounted = false
 
-      sessionGenRef.current++
+      authGenRef.current++
     }
   }, [demoMode, dispatch])
 
@@ -278,7 +283,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     let isMounted = true
 
-    const gen = ++sessionGenRef.current
+    const gen = ++hydrationGenRef.current
 
     const activeUserId = state.userId
 
@@ -296,7 +301,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
         if (
           !isMounted ||
-          sessionGenRef.current !== gen ||
+          hydrationGenRef.current !== gen ||
           state.userId !== activeUserId
         )
           return
@@ -316,7 +321,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
       if (
         !isMounted ||
-        sessionGenRef.current !== gen ||
+        hydrationGenRef.current !== gen ||
         state.userId !== activeUserId
       )
         return
@@ -377,7 +382,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     hydrateInventory().catch(() => {
       if (
         isMounted &&
-        sessionGenRef.current === gen &&
+        hydrationGenRef.current === gen &&
         state.userId === activeUserId
       ) {
         setSyncError("Không thể tải đầy đủ danh mục thực phẩm từ máy chủ.")
@@ -391,7 +396,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       .then((prefs) => {
         if (
           !isMounted ||
-          sessionGenRef.current !== gen ||
+          hydrationGenRef.current !== gen ||
           state.userId !== activeUserId
         )
           return
@@ -414,7 +419,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     return () => {
       isMounted = false
 
-      sessionGenRef.current++
+      hydrationGenRef.current++
     }
   }, [demoMode, dispatch, state.userId, state.mode])
 
