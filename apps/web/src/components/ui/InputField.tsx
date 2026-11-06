@@ -11,6 +11,8 @@ export interface InputFieldProps
 
   description?: string
 
+  error?: boolean | string
+
   prefix?: ReactNode
 
   suffix?: ReactNode
@@ -24,6 +26,8 @@ export function InputField({
   label,
 
   description,
+
+  error,
 
   prefix,
 
@@ -47,6 +51,8 @@ export function InputField({
 
   const id = explicitId || generatedId
 
+  const isError = Boolean(error)
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!onChange) return
 
@@ -63,7 +69,11 @@ export function InputField({
         </label>
       )}
       <div
-        className={`relative flex items-center min-h-11 w-full rounded-corner-md border border-border-primary bg-surface-bg px-3 py-2 shadow-xs transition-colors focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 ${
+        className={`relative flex items-center min-h-11 w-full rounded-corner-md bg-surface-bg px-3 py-2 shadow-xs transition-colors ${
+          isError
+            ? "border-[1.5px] border-[#b42318] focus-within:border-[#b42318] focus-within:ring-2 focus-within:ring-[#b42318]/20"
+            : "border border-border-primary focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20"
+        } ${
           disabled ? "opacity-60 bg-bg-subtle cursor-not-allowed" : ""
         } ${className}`}
       >
