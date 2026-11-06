@@ -120,6 +120,12 @@ test('detail/list/trash project exact Entry and EntryList contracts, including o
   assert.equal(detail.attention.as_of_date, '2026-10-11');
   assert.equal(detail.created_at, '2026-10-10T11:00:00.123456Z');
   assert.ok(!Object.hasOwn(detail, 'user_id'));
+  assert.equal(detail.barcode, null);
+  assert.equal(detail.barcode_format, null);
+  const withBarcodeEntry = entryDTO({ ...row, barcode: '8936039681526', barcode_format: 'EAN_13' }, publicAttention(row, preferences, instant));
+  assert.equal(withBarcodeEntry.barcode, '8936039681526');
+  assert.equal(withBarcodeEntry.barcode_format, 'EAN_13');
+  validate(withBarcodeEntry, 'Entry');
   const list = await (await request('/food-entries?page=2&limit=5')).json();
   validate(list, 'EntryList'); assert.deepEqual(list.pagination, { page: 2, limit: 5, total: 1 });
   assert.equal(list.as_of_date, '2026-10-11');
@@ -195,6 +201,15 @@ test('public scan adapter output conforms to its explicit nested review contract
   conforms(result, schema, 'scan');
   assert.equal(result.requires_confirmation, true);
   assert.equal(result.candidates.expiry_date.requires_confirmation, true);
+  assert.equal(result.candidates.barcode, null);
+  const withBarcode = publicScanResult({ raw_text: 'NSX: 10/10/2026 HSD: 25/12/2026', candidates: {
+    food_name: 'Sữa chua',
+    barcode: '8936039681526',
+    expiry_date: { value: '2026-12-25', date_certainty: 'exact', date_label_type: 'expiry', source_text: '25/12/2026', alternatives: [], ambiguous: false },
+    manufactured_date: { value: '2026-10-10', source_text: '10/10/2026' }
+  }, warnings: [], errors: [] });
+  assert.equal(withBarcode.candidates.barcode, '8936039681526');
+  conforms(withBarcode, schema, 'scan');
   assert.throws(() => conforms({ ...result, requires_confirmation: false }, schema, 'scan'));
 });
 

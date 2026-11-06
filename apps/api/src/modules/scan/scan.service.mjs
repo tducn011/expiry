@@ -13,7 +13,7 @@ export function publicScanResult(result) {
       typeof candidate.source_text !== 'string' || typeof candidate.ambiguous !== 'boolean' ||
       !Array.isArray(candidate.alternatives) || !candidate.alternatives.every(calendarDate) ||
       !stringArray(result.warnings) || !stringArray(result.errors) ||
-      result.candidates.food_name !== null && typeof result.candidates.food_name !== 'string') {
+      result.candidates.food_name !== null && typeof result.candidates.food_name !== 'string' || result.candidates.barcode !== undefined && result.candidates.barcode !== null && typeof result.candidates.barcode !== 'string') {
     throw new DomainError(502, 'INVALID_SCAN_RESPONSE');
   }
   const manufactured = result.candidates.manufactured_date;
@@ -22,6 +22,7 @@ export function publicScanResult(result) {
     raw_text: result.raw_text,
     candidates: {
       food_name: result.candidates.food_name,
+      barcode: result.candidates.barcode ?? null,
       expiry_date: {
         value: candidate.ambiguous || candidate.date_label_type === 'manufactured' ? null : candidate.value,
         date_certainty: candidate.date_certainty,

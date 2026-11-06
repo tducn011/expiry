@@ -1128,6 +1128,16 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "No quantity change; changed=false, movement=null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationResult"
+                }
+              }
+            }
+          },
           "201": {
             "description": "Success",
             "headers": {
@@ -1138,16 +1148,6 @@
                 "description": "True on original result replay."
               }
             },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MutationResult"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "No quantity change; changed=false, movement=null",
             "content": {
               "application/json": {
                 "schema": {
@@ -1885,7 +1885,8 @@
                       "required": [
                         "food_name",
                         "expiry_date",
-                        "manufactured_date"
+                        "manufactured_date",
+                        "barcode"
                       ],
                       "properties": {
                         "food_name": {
@@ -1973,6 +1974,12 @@
                               "type": "string"
                             }
                           }
+                        },
+                        "barcode": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
                         }
                       }
                     },
@@ -2007,36 +2014,6 @@
               }
             }
           },
-          "413": {
-            "description": "Image exceeds maximum 5MB size limit",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Unsupported media format",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "504": {
-            "description": "Scan service timeout (>3s)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Authentication, CSRF, image/OCR or service failure",
             "content": {
@@ -2057,6 +2034,26 @@
               }
             }
           },
+          "413": {
+            "description": "Image exceeds maximum 5MB size limit",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media format",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Authentication, CSRF, image/OCR or service failure",
             "content": {
@@ -2069,6 +2066,16 @@
           },
           "503": {
             "description": "Authentication, CSRF, image/OCR or service failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Scan service timeout (>3s)",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2529,6 +2536,39 @@
               "g",
               "ml"
             ]
+          },
+          "barcode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64
+          },
+          "barcode_format": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "EAN_13",
+              "EAN_8",
+              "CODE_128",
+              "CODE_39",
+              "ITF",
+              "QR_CODE",
+              "DATA_MATRIX",
+              "PDF_417",
+              "AZTEC",
+              "other",
+              null
+            ]
+          },
+          "manufactured_on": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
           }
         },
         "required": [
@@ -2614,6 +2654,39 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 2147483647
+          },
+          "barcode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64
+          },
+          "barcode_format": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "EAN_13",
+              "EAN_8",
+              "CODE_128",
+              "CODE_39",
+              "ITF",
+              "QR_CODE",
+              "DATA_MATRIX",
+              "PDF_417",
+              "AZTEC",
+              "other",
+              null
+            ]
+          },
+          "manufactured_on": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
           }
         },
         "required": [
@@ -2825,6 +2898,32 @@
               "null"
             ],
             "format": "date"
+          },
+          "barcode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64
+          },
+          "barcode_format": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "EAN_13",
+              "EAN_8",
+              "CODE_128",
+              "CODE_39",
+              "ITF",
+              "QR_CODE",
+              "DATA_MATRIX",
+              "PDF_417",
+              "AZTEC",
+              "other",
+              null
+            ]
           }
         },
         "required": [
@@ -2847,7 +2946,9 @@
           "created_at",
           "updated_at",
           "category",
-          "manufactured_on"
+          "manufactured_on",
+          "barcode",
+          "barcode_format"
         ],
         "additionalProperties": false
       },
