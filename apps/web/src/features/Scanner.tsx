@@ -111,8 +111,6 @@ export function Scanner({
 
   const streamRef = useRef<MediaStream | null>(null)
 
-  const cameraInputRef = useRef<HTMLInputElement>(null)
-
   const libraryInputRef = useRef<HTMLInputElement>(null)
 
   const timer = useRef<number | undefined>(undefined)
@@ -1034,53 +1032,42 @@ export function Scanner({
     (state === "step2_ready" && Boolean(streamRef.current))
 
   return (
-    <div className="flex h-full min-h-dvh md:min-h-[85vh] w-full flex-col rounded-none md:rounded-corner-lg bg-surface-darkest text-white shadow-none md:shadow-xl overflow-y-auto md:overflow-hidden">
+    <div className="flex h-full min-h-dvh md:min-h-[85vh] w-full flex-col rounded-none md:rounded-corner-lg bg-surface-darkest text-on-brand shadow-none md:shadow-xl overflow-y-auto md:overflow-hidden">
       {/* Header */}
       <header className="flex items-center gap-3 px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 sm:pb-3 shrink-0">
         <IconButton
-          variant="neutral"
+          variant="subtle"
           aria-label="Quay lại"
           icon={<ArrowLeft size={22} />}
           onClick={leave(onBack)}
+          className="text-on-brand hover:bg-surface-dark active:bg-surface-dark/80"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold truncate">
-              Quét nhãn thực phẩm
-            </h1>
-            <span className="rounded-full bg-brand-primary/25 border border-brand-primary/40 px-2.5 py-0.5 text-xs font-semibold text-brand-secondary">
-              {step === 1 ? "Bước 1/2" : "Bước 2/2"}
-            </span>
-          </div>
-          <p className="text-xs text-text-tertiary truncate">
-            {step === 1
-              ? "Bước 1: Hướng vào Mã vạch hoặc Mặt trước sản phẩm"
-              : step1Data?.detectedType === "product_only"
-                ? "Bước 2: Hướng vào Đáy lon, Nắp hộp hoặc Cổ chai để quét HSD"
-                : "Bước 2: Hướng vào Mã vạch hoặc Mặt trước để nhận diện tên"}
-          </p>
+          <h1 className="text-lg font-semibold truncate text-on-brand">
+            Quét nhãn thực phẩm
+          </h1>
         </div>
       </header>
 
       {/* 2-Step Sequential Scan Stepper Progress */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-2 border-y border-white/10 bg-white/5 text-xs shrink-0">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-2 border-y border-border-primary/15 bg-surface-dark/50 text-xs shrink-0">
         <div
           className={`flex items-center gap-1.5 ${
             step1Data
-              ? "text-status-good font-medium"
+              ? "text-status-ok font-medium"
               : step === 1
                 ? "text-brand-secondary font-semibold"
                 : "text-text-tertiary"
           }`}
         >
           {step1Data ? (
-            <CircleCheck size={15} className="text-status-good shrink-0" />
+            <CircleCheck size={15} className="text-status-ok shrink-0" />
           ) : (
-            <span className="size-2 rounded-full bg-brand-secondary shrink-0" />
+            <span className="size-2 rounded-corner-full bg-brand-secondary shrink-0" />
           )}
           <span className="truncate">1. Mã vạch / Tên</span>
           {step1Data?.draft?.name && (
-            <span className="max-w-[110px] truncate text-status-good/90 font-normal">
+            <span className="max-w-[110px] truncate text-status-ok/90 font-normal">
               ({step1Data.draft.name})
             </span>
           )}
@@ -1096,8 +1083,10 @@ export function Scanner({
           }`}
         >
           <span
-            className={`size-2 rounded-full shrink-0 ${
-              step === 2 ? "bg-brand-secondary animate-pulse" : "bg-white/20"
+            className={`size-2 rounded-corner-full shrink-0 ${
+              step === 2
+                ? "bg-brand-secondary animate-pulse"
+                : "bg-text-tertiary/40"
             }`}
           />
           <span className="truncate">2. Hạn sử dụng</span>
@@ -1135,12 +1124,12 @@ export function Scanner({
             />
           ))}
           {live && (
-            <span className="absolute inset-x-4 top-1/2 h-0.5 animate-pulse bg-brand-secondary shadow-sm" />
+            <span className="absolute inset-x-4 top-1/2 h-0.5 animate-pulse bg-brand-secondary shadow-xs" />
           )}
         </div>
 
         {live && state === "ready" && (
-          <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-xs px-3 py-1 text-[11px] font-medium text-brand-secondary shadow-sm">
+          <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-corner-full bg-surface-darkest/75 backdrop-blur-sm px-3 py-1 text-[11px] font-medium text-brand-secondary shadow-xs">
             <Sparkles
               size={12}
               className="animate-pulse text-brand-secondary"
@@ -1159,7 +1148,7 @@ export function Scanner({
           state === "denied" ||
           state === "unavailable") && (
           <div
-            className="relative z-10 flex max-w-sm flex-col items-center gap-3 rounded-corner-lg p-5 text-center bg-black/60 backdrop-blur-xs shadow-lg mx-4 transition-all duration-300"
+            className="relative z-10 flex max-w-sm flex-col items-center gap-3 rounded-corner-lg p-5 text-center bg-surface-darkest/85 backdrop-blur-sm shadow-modal mx-4 transition-all duration-300"
             aria-live="polite"
             onClick={() => {
               if (state === "step2_ready") setShowStep2Notice(false)
@@ -1174,7 +1163,7 @@ export function Scanner({
                 />
                 <p className="text-sm font-medium">Camera chưa bật</p>
                 <p className="text-xs text-text-tertiary">
-                  Bấm bật camera hoặc dùng nút chụp ảnh điện thoại bên dưới.
+                  Bấm bật camera hoặc dùng nút thư viện ảnh bên dưới.
                 </p>
               </>
             )}
@@ -1213,7 +1202,7 @@ export function Scanner({
 
             {state === "step2_ready" && step1Data && (
               <div className="flex flex-col items-center gap-2 text-center">
-                <div className="flex items-center gap-1.5 text-status-good font-semibold text-sm">
+                <div className="flex items-center gap-1.5 text-status-ok font-semibold text-sm">
                   <CircleCheck size={18} />
                   <span>
                     {step1Data.detectedType === "product_only"
@@ -1232,7 +1221,7 @@ export function Scanner({
                         Mã: {step1Data.draft.barcode}
                       </p>
                     )}
-                    <p className="mt-2 text-amber-300 font-medium leading-relaxed flex items-center gap-1.5">
+                    <p className="mt-2 text-brand-accent font-medium leading-relaxed flex items-center gap-1.5">
                       <ChevronRight size={14} className="shrink-0" /> Lật đáy
                       lon hoặc nắp hộp để quét ngày HSD
                     </p>
@@ -1247,7 +1236,7 @@ export function Scanner({
                         NSX: {step1Data.draft.mfgDate}
                       </p>
                     )}
-                    <p className="mt-2 text-amber-300 font-medium leading-relaxed flex items-center gap-1.5">
+                    <p className="mt-2 text-brand-accent font-medium leading-relaxed flex items-center gap-1.5">
                       <ChevronRight size={14} className="shrink-0" /> Hướng vào
                       Mã vạch / Mặt trước để lấy tên sản phẩm
                     </p>
@@ -1270,10 +1259,9 @@ export function Scanner({
                   Hạn sử dụng trên lon/hộp thường in riêng ở{" "}
                   <strong>đáy lon</strong> hoặc <strong>nắp hộp</strong>.
                 </p>
-                <p className="text-xs text-amber-300 font-medium flex items-center gap-1.5">
-                  <ChevronRight size={14} className="shrink-0" /> Bấm &quot;Chụp
-                  thêm góc HSD&quot; bên dưới để quét tiếp đáy lon mà không mất
-                  ảnh này!
+                <p className="text-xs text-brand-accent font-medium flex items-center gap-1.5">
+                  <ChevronRight size={14} className="shrink-0" /> Bấm &quot;Thư
+                  viện ảnh&quot; bên dưới để chọn ảnh mà không mất ảnh này!
                 </p>
               </>
             )}
@@ -1287,8 +1275,8 @@ export function Scanner({
                 />
                 <p className="text-sm font-medium">Chưa có quyền dùng camera</p>
                 <p className="text-xs text-text-tertiary">
-                  Cho phép camera trong cài đặt trình duyệt, hoặc dùng nút chụp
-                  ảnh bên dưới.
+                  Cho phép camera trong cài đặt trình duyệt, hoặc dùng nút thư
+                  viện ảnh bên dưới.
                 </p>
               </>
             )}
@@ -1304,7 +1292,7 @@ export function Scanner({
                   Camera trực tiếp chưa khả dụng
                 </p>
                 <p className="text-xs text-text-tertiary">
-                  Hãy dùng nút &quot;Chụp từ máy ảnh điện thoại&quot; bên dưới.
+                  Hãy dùng nút &quot;Thư viện ảnh&quot; bên dưới.
                 </p>
               </>
             )}
@@ -1339,12 +1327,12 @@ export function Scanner({
               <Button
                 variant="primary"
                 block
-                iconStart={<Camera size={20} />}
-                onClick={() => cameraInputRef.current?.click()}
+                iconStart={<ImageUp size={20} />}
+                onClick={() => libraryInputRef.current?.click()}
               >
                 {step1Data.detectedType === "product_only"
-                  ? "Chụp ngày HSD (Đáy lon)"
-                  : "Chụp mã vạch / Mặt trước"}
+                  ? "Chọn ảnh HSD (Đáy lon)"
+                  : "Chọn ảnh mã vạch / Mặt trước"}
               </Button>
             )}
 
@@ -1409,24 +1397,14 @@ export function Scanner({
                     Bật camera trực tiếp
                   </Button>
                 )}
-                <div className="grid grid-cols-2 gap-2 w-full">
-                  <Button
-                    variant="neutral"
-                    block
-                    iconStart={<Camera size={18} />}
-                    onClick={() => cameraInputRef.current?.click()}
-                  >
-                    Chụp từ máy ảnh
-                  </Button>
-                  <Button
-                    variant="neutral"
-                    block
-                    iconStart={<ImageUp size={18} />}
-                    onClick={() => libraryInputRef.current?.click()}
-                  >
-                    Thư viện ảnh
-                  </Button>
-                </div>
+                <Button
+                  variant="neutral"
+                  block
+                  iconStart={<ImageUp size={18} />}
+                  onClick={() => libraryInputRef.current?.click()}
+                >
+                  Thư viện ảnh
+                </Button>
                 <Button
                   variant="neutral"
                   block
@@ -1447,7 +1425,7 @@ export function Scanner({
               <Button
                 variant="primary"
                 block
-                iconStart={<Camera size={20} />}
+                iconStart={<ImageUp size={20} />}
                 onClick={() => {
                   setStep1Data({
                     draft: detectedDraft || {
@@ -1476,7 +1454,7 @@ export function Scanner({
                   setState("step2_ready")
 
                   if (!live) {
-                    cameraInputRef.current?.click()
+                    libraryInputRef.current?.click()
                   }
                 }}
               >
@@ -1512,25 +1490,7 @@ export function Scanner({
           </div>
         )}
 
-        {/* Native Mobile Camera File Input (triggers device camera app directly) */}
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="sr-only"
-          tabIndex={-1}
-          aria-hidden="true"
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-
-            if (f) onSingleFile(f)
-
-            e.target.value = ""
-          }}
-        />
-
-        {/* Gallery / Multi-photo file input */}
+        {/* Gallery / File input (triggers device picker / library) */}
         <input
           ref={libraryInputRef}
           type="file"

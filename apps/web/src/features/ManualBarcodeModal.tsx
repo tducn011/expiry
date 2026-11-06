@@ -260,7 +260,7 @@ export function ManualBarcodeModal({
         )}
 
         <div className="flex items-start gap-2 text-[11px] text-text-tertiary leading-relaxed bg-bg-secondary p-3 rounded-corner-md">
-          <Lightbulb size={14} className="shrink-0 mt-0.5 text-amber-500" />
+          <Lightbulb size={14} className="shrink-0 mt-0.5 text-brand-primary" />
           <div>
             <strong>Mẹo:</strong> Nếu chữ số bị rách mất một phần, bạn không cần
             đoán số còn thiếu — hãy bấm nút{" "}
