@@ -183,7 +183,7 @@ export function Settings({
         title="Cài đặt"
         subtitle={
           state.mode === "demo"
-            ? "Bạn đang trải nghiệm dữ liệu mẫu"
+            ? undefined
             : `Tài khoản: ${state.userName || "Người dùng"}`
         }
       />
@@ -191,11 +191,9 @@ export function Settings({
       <SettingsGroup
         title="Nhắc nhở hạn sử dụng"
         footer={
-          perm === "denied"
-            ? undefined
-            : perm === "unsupported"
-              ? "Trình duyệt này không hỗ trợ Web Notification API. Bạn vẫn nhận được thông báo bên trong ứng dụng."
-              : "Thông báo trên trình duyệt chỉ hoạt động khi bạn đang mở tab hoặc trình duyệt đang chạy. Để nhận thông báo trên điện thoại khi đóng ứng dụng, vui lòng sử dụng Webhook tích hợp (Telegram/Discord)."
+          perm === "unsupported"
+            ? "Trình duyệt này không hỗ trợ Web Notification API. Bạn vẫn nhận được thông báo bên trong ứng dụng."
+            : undefined
         }
       >
         <SettingsRow
@@ -315,10 +313,7 @@ export function Settings({
       </SettingsGroup>
 
       {state.mode === "demo" ? (
-        <SettingsGroup
-          title="Dữ liệu mẫu"
-          footer="Dữ liệu mẫu được lưu trong không gian riêng biệt, không ảnh hưởng đến dữ liệu tài khoản thật của bạn."
-        >
+        <SettingsGroup title="Dữ liệu mẫu">
           <SettingsRow
             icon={<RotateCcw size={20} />}
             label="Nạp lại bộ dữ liệu mẫu"
