@@ -535,8 +535,31 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         return next
       }
 
+      if (s.length === 1 && s[0].name !== "inventory") {
+        const fallback: Route[] = [{ name: "inventory" }]
+
+        if (typeof window !== "undefined") {
+          window.history.pushState(
+            { stack: fallback },
+            "",
+            urlFromRoute(fallback[0]),
+          )
+        }
+
+        return fallback
+      }
+
       return s
     })
+  }
+
+  const handleNav = (targetName: Route["name"]) => {
+    if (targetName === "scan") {
+      if (route.name === "scan") return
+      go({ name: "scan" })
+    } else {
+      tab({ name: targetName } as Route)
+    }
   }
 
   const notify = (
@@ -787,7 +810,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
           notify("Đã lưu thay đổi")
 
-          setStack([{ name: "inventory" }])
+          tab({ name: "inventory" })
 
           return
         } catch (err: unknown) {
@@ -893,7 +916,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
           )
 
-          setStack([{ name: "inventory" }])
+          tab({ name: "inventory" })
 
           return
         } catch {
@@ -944,7 +967,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
     )
 
-    setStack([{ name: "inventory" }])
+    tab({ name: "inventory" })
   }
 
   let screenContent: ReactNode
@@ -1113,37 +1136,59 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       screenContent = (
         <Scanner
           onBack={back}
-          onManual={(draft, image) =>
-            setStack((s) => [
-              ...s.slice(0, -1),
-
-              {
-                name: "form",
-
-                mode: draft && (draft.name || draft.barcode) ? "ocr" : "manual",
-
-                draft: draft || emptyDraft(),
-
-                image,
-              },
-            ])
-          }
+          onManual={(draft, image) => {
+            const nextRoute: Route = {
+              name: "form",
+              mode: draft && (draft.name || draft.barcode) ? "ocr" : "manual",
+              draft: draft || emptyDraft(),
+              image,
+            }
+            setStack((s) => {
+              const base =
+                s.length > 0 && s[s.length - 1].name === "scan"
+                  ? s.slice(0, -1)
+                  : s
+              const next = [
+                ...(base.length > 0 ? base : [{ name: "inventory" }]),
+                nextRoute,
+              ]
+              if (typeof window !== "undefined") {
+                window.history.pushState(
+                  { stack: next },
+                  "",
+                  urlFromRoute(nextRoute),
+                )
+              }
+              return next
+            })
+          }}
           existingFoods={state.foods}
-          onReview={(image, draft) =>
-            setStack((s) => [
-              ...s.slice(0, -1),
-
-              {
-                name: "form",
-
-                mode: "ocr",
-
-                draft: draft || emptyDraft(),
-
-                image,
-              },
-            ])
-          }
+          onReview={(image, draft) => {
+            const nextRoute: Route = {
+              name: "form",
+              mode: "ocr",
+              draft: draft || emptyDraft(),
+              image,
+            }
+            setStack((s) => {
+              const base =
+                s.length > 0 && s[s.length - 1].name === "scan"
+                  ? s.slice(0, -1)
+                  : s
+              const next = [
+                ...(base.length > 0 ? base : [{ name: "inventory" }]),
+                nextRoute,
+              ]
+              if (typeof window !== "undefined") {
+                window.history.pushState(
+                  { stack: next },
+                  "",
+                  urlFromRoute(nextRoute),
+                )
+              }
+              return next
+            })
+          }}
         />
       )
 
@@ -1293,7 +1338,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               isExpanded={isSidebarExpanded}
               active={rootName === n.r}
               badge={n.badge}
-              onClick={() => tab({ name: n.r } as Route)}
+              onClick={() => handleNav(n.r)}
             />
           ))}
           <SidebarButton
@@ -1402,7 +1447,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                   type="button"
                   aria-label={n.badge ? `${n.label}, ${n.badge} mục` : n.label}
                   aria-current={activeTab ? "page" : undefined}
-                  onClick={() => tab({ name: n.r } as Route)}
+                  onClick={() => handleNav(n.r)}
                   className="relative flex min-h-14 w-full flex-col items-center justify-center px-0.5 py-1 text-center transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary cursor-pointer"
                 >
                   <span

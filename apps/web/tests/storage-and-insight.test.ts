@@ -429,4 +429,30 @@ describe("Storage & Insight Feature Integration", () => {
     expect(html).toContain("Còn 10 ngày")
     expect(html).toContain("bg-amber-500/10")
   })
+
+  it("handles OCR scan navigation routes and maintains URL synchronization", async () => {
+    const { routeFromUrl, urlFromRoute } = await import("../src/App")
+
+    // 1. Deep linking to scan view returns scan route
+    const scanRoutes = routeFromUrl("?view=scan")
+    expect(scanRoutes).toEqual([{ name: "scan" }])
+
+    // 2. URL roundtrip for scan route
+    expect(urlFromRoute({ name: "scan" })).toBe("?view=scan")
+
+    // 3. Form mode OCR route maintains valid view parameter
+    expect(
+      urlFromRoute({
+        name: "form",
+        mode: "ocr",
+        draft: {
+          name: "Sữa",
+          quantity: "1",
+          unit: "hộp",
+          category: "dairy_eggs",
+          location: "Ngăn mát",
+        },
+      }),
+    ).toBe("?view=form")
+  })
 })
