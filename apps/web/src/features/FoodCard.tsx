@@ -77,7 +77,8 @@ export const categoryTones: Record<Category, string> = {
     "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20",
   beverage:
     "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20",
-  other: "bg-surface-subtle text-text-secondary border border-border-primary/50",
+  other:
+    "bg-surface-subtle text-text-secondary border border-border-primary/50",
 }
 
 export interface FoodCardProps {
