@@ -623,97 +623,89 @@ export default function InsightView({
   ])
 
   return (
-    <div className="flex flex-col gap-5 w-full max-w-5xl mx-auto pb-12">
+    <div className="flex flex-col gap-6 w-full">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
+      <PageHeader
+        title="Insight"
+        subtitle="Tổng quan kho thực phẩm, hiệu quả sử dụng và gợi ý tối ưu"
+        actions={
           <div className="flex items-center gap-2">
-            <BarChart3 size={24} className="text-brand-primary" />
-            <h1 className="text-2xl font-extrabold text-text-primary tracking-tight">
-              Insight
-            </h1>
-          </div>
-          <p className="text-xs text-text-secondary mt-0.5">
-            Tổng quan kho thực phẩm, hiệu quả sử dụng và gợi ý tối ưu
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Hidden/Subtle test ID badges to maintain contract compatibility */}
-          {isLive && (
+            {/* Hidden/Subtle test ID badges to maintain contract compatibility */}
+            {isLive && (
+              <span
+                data-testid="live-insight-badge"
+                className="hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+              >
+                <span className="size-2 rounded-full bg-brand-primary animate-pulse" />
+                {loadingLive ? "Đang đồng bộ..." : "Dữ liệu thực tế"}
+              </span>
+            )}
             <span
-              data-testid="live-insight-badge"
-              className="hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+              data-testid="insight-scope-badge"
+              className="hidden items-center text-xs font-medium text-text-secondary bg-surface-bg px-2 py-0.5 rounded-corner-sm border border-border-primary"
             >
-              <span className="size-2 rounded-full bg-brand-primary animate-pulse" />
-              {loadingLive ? "Đang đồng bộ..." : "Dữ liệu thực tế"}
+              {state.foods.length > 50
+                ? `Phạm vi: Giới hạn 50/${state.foods.length} thực phẩm gần nhất · As-of ${today()}`
+                : `Phạm vi: Toàn bộ ${state.foods.length} thực phẩm · As-of ${today()}`}
             </span>
-          )}
-          <span
-            data-testid="insight-scope-badge"
-            className="hidden items-center text-xs font-medium text-text-secondary bg-surface-bg px-2 py-0.5 rounded-corner-sm border border-border-primary"
-          >
-            {state.foods.length > 50
-              ? `Phạm vi: Giới hạn 50/${state.foods.length} thực phẩm gần nhất · As-of ${today()}`
-              : `Phạm vi: Toàn bộ ${state.foods.length} thực phẩm · As-of ${today()}`}
-          </span>
 
-          {/* Time Range Selector */}
-          <button
-            type="button"
-            onClick={() => loadMovements()}
-            disabled={loadingLive}
-            title="Đồng bộ lại từ cơ sở dữ liệu"
-            className="inline-flex items-center gap-1.5 rounded-corner-md border border-border-primary/80 bg-surface-bg px-2.5 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw
-              size={13}
-              className={`text-text-secondary ${
-                loadingLive ? "animate-spin" : ""
-              }`}
-            />
-            <span>{loadingLive ? "Đang tải..." : "Làm mới"}</span>
-          </button>
-
-          <div className="relative">
+            {/* Time Range Selector */}
             <button
               type="button"
-              onClick={() => setRangeDropdownOpen((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-corner-md border border-border-primary/80 bg-surface-bg px-3 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer"
+              onClick={() => loadMovements()}
+              disabled={loadingLive}
+              title="Đồng bộ lại từ cơ sở dữ liệu"
+              className="inline-flex items-center gap-1.5 rounded-corner-md border border-border-primary/80 bg-surface-bg px-2.5 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer disabled:opacity-50"
             >
-              <CalendarClock size={15} className="text-text-secondary" />
-              <span>{rangeLabel}</span>
-              <ChevronDown size={14} className="text-text-secondary" />
+              <RefreshCw
+                size={13}
+                className={`text-text-secondary ${
+                  loadingLive ? "animate-spin" : ""
+                }`}
+              />
+              <span>{loadingLive ? "Đang tải..." : "Làm mới"}</span>
             </button>
 
-            {rangeDropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 z-30 min-w-36 overflow-hidden rounded-corner-md border border-border-primary bg-surface-bg p-1 shadow-lg">
-                {[
-                  ["7d", "7 ngày gần nhất"],
-                  ["30d", "30 ngày gần nhất"],
-                  ["all", "Toàn bộ thời gian"],
-                ].map(([val, label]) => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => {
-                      setRange(val as TimeRange)
-                      setRangeDropdownOpen(false)
-                    }}
-                    className={`flex w-full items-center px-3 py-1.5 text-xs rounded-corner-sm text-left transition-colors cursor-pointer ${
-                      range === val
-                        ? "bg-brand-primary/10 text-brand-primary font-bold"
-                        : "text-text-primary hover:bg-surface-hover"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setRangeDropdownOpen((v) => !v)}
+                className="inline-flex items-center gap-2 rounded-corner-md border border-border-primary/80 bg-surface-bg px-3 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer"
+              >
+                <CalendarClock size={15} className="text-text-secondary" />
+                <span>{rangeLabel}</span>
+                <ChevronDown size={14} className="text-text-secondary" />
+              </button>
+
+              {rangeDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1 z-30 min-w-36 overflow-hidden rounded-corner-md border border-border-primary bg-surface-bg p-1 shadow-lg">
+                  {[
+                    ["7d", "7 ngày gần nhất"],
+                    ["30d", "30 ngày gần nhất"],
+                    ["all", "Toàn bộ thời gian"],
+                  ].map(([val, label]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => {
+                        setRange(val as TimeRange)
+                        setRangeDropdownOpen(false)
+                      }}
+                      className={`flex w-full items-center px-3 py-1.5 text-xs rounded-corner-sm text-left transition-colors cursor-pointer ${
+                        range === val
+                          ? "bg-brand-primary/10 text-brand-primary font-bold"
+                          : "text-text-primary hover:bg-surface-hover"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Navigation Tabs */}
       <div className="flex items-center gap-1.5 p-1 rounded-corner-lg bg-surface-subtle border border-border-primary/40 w-fit">

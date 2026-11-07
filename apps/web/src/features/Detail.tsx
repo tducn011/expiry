@@ -325,7 +325,7 @@ export function Detail({
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto">
+    <div className="flex flex-col gap-6 w-full">
       <PageHeader
         title={f.name}
         onBack={onBack}

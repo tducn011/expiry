@@ -672,8 +672,6 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       label: "Lưu trữ",
 
       icon: <Archive size={22} />,
-
-      badge: attnCount,
     },
 
     { r: "scan", label: "Thêm", icon: <Plus size={22} /> },
@@ -1320,8 +1318,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             isFullBleed
               ? "h-full min-h-full md:max-w-4xl md:p-6 md:flex md:items-center md:justify-center"
               : route.name === "form"
-                ? "max-w-5xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-8 md:px-8 md:pt-6 md:pb-12"
-                : "max-w-7xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
+                ? "max-w-2xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-8 md:px-6 md:pt-6 md:pb-12"
+                : route.name === "settings" || route.name === "notifications"
+                  ? "max-w-2xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-12"
+                  : route.name === "detail" || route.name === "history"
+                    ? "max-w-3xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-12"
+                    : "max-w-6xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
           }`}
         >
           {problem === "write" && !isFullBleed && (
@@ -1375,7 +1377,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 className="shrink-0 font-semibold text-brand-primary"
                 onClick={() => setPendingAuth({ name: "inventory" })}
               >
-                Đăng nhập
+                Đăng nhập để đồng bộ
               </Button>
             </div>
           )}

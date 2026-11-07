@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { renderToString } from "react-dom/server"
 
 import {
   CATEGORIES,
@@ -8,6 +9,7 @@ import {
   statusOf,
   type Category,
 } from "../src/store/appStore"
+import { FoodCard, categoryTones } from "../src/features/FoodCard"
 
 describe("Storage & Insight Feature Integration", () => {
   it("defines 7 business categories with valid Vietnamese labels", () => {
@@ -388,5 +390,43 @@ describe("Storage & Insight Feature Integration", () => {
     mockStorage.removeItem(testKey)
 
     expect(mockStorage.getItem(testKey)).toBeNull()
+  })
+
+  it("applies semantic color tones and uniform HSD formatting across food categories", () => {
+    // 1. Verify all categories have defined tones
+    const categories: Category[] = [
+      "fresh_produce",
+      "meat_seafood",
+      "dairy_eggs",
+      "prepared_food",
+      "dry_pantry",
+      "beverage",
+      "other",
+    ]
+    for (const cat of categories) {
+      expect(categoryTones[cat]).toBeDefined()
+      expect(categoryTones[cat].length).toBeGreaterThan(0)
+    }
+
+    // 2. Render FoodCard with a future expiration date and verify uniform day count & category badge
+    const html = renderToString(
+      FoodCard({
+        food: {
+          id: "test-food-1",
+          name: "Sữa tươi hữu cơ",
+          quantity: 2,
+          unit: "hộp",
+          category: "dairy_eggs",
+          location: "Ngăn mát",
+          days: 10,
+          expDate: "2026-11-17",
+        },
+        onOpen: () => {},
+      }),
+    )
+
+    expect(html).toContain("Trứng &amp; Sữa")
+    expect(html).toContain("Còn 10 ngày")
+    expect(html).toContain("bg-amber-500/10")
   })
 })
