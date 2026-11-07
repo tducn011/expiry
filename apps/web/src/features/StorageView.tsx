@@ -487,6 +487,7 @@ export default function StorageView({
           {/* Card: Tất cả */}
           <button
             type="button"
+            aria-pressed={selectedLocation === "all"}
             onClick={() => handleLocationChange("all")}
             className={`flex flex-col justify-between p-3.5 rounded-corner-md border text-left transition-all cursor-pointer ${
               selectedLocation === "all"
@@ -499,11 +500,6 @@ export default function StorageView({
                 <Boxes size={18} />
               </div>
               <div className="flex items-center gap-1">
-                {selectedLocation === "all" && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary text-white">
-                    Đang chọn
-                  </span>
-                )}
                 {totalAttentionCount > 0 && (
                   <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-danger text-white">
                     {totalAttentionCount} cần ăn
@@ -550,6 +546,7 @@ export default function StorageView({
               <button
                 key={loc}
                 type="button"
+                aria-pressed={isSelected}
                 onClick={() => handleLocationChange(loc)}
                 className={`flex flex-col justify-between p-3.5 rounded-corner-md border text-left transition-all cursor-pointer ${
                   isSelected
@@ -564,11 +561,6 @@ export default function StorageView({
                     <LocIcon size={18} />
                   </div>
                   <div className="flex items-center gap-1">
-                    {isSelected && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary text-white">
-                        Đang chọn
-                      </span>
-                    )}
                     {stats.attention > 0 && (
                       <span
                         className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
