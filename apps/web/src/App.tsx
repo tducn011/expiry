@@ -1148,8 +1148,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 s.length > 0 && s[s.length - 1].name === "scan"
                   ? s.slice(0, -1)
                   : s
-              const next = [
-                ...(base.length > 0 ? base : [{ name: "inventory" }]),
+              const next: Route[] = [
+                ...(base.length > 0 ? base : [{ name: "inventory" as const }]),
                 nextRoute,
               ]
               if (typeof window !== "undefined") {
@@ -1175,8 +1175,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 s.length > 0 && s[s.length - 1].name === "scan"
                   ? s.slice(0, -1)
                   : s
-              const next = [
-                ...(base.length > 0 ? base : [{ name: "inventory" }]),
+              const next: Route[] = [
+                ...(base.length > 0 ? base : [{ name: "inventory" as const }]),
                 nextRoute,
               ]
               if (typeof window !== "undefined") {
