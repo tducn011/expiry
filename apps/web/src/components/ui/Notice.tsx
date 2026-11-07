@@ -24,7 +24,7 @@ export function Notice({
 
   const toneStyles = {
     Error: "bg-[var(--danger-bg,#fef0ee)] text-[color:var(--danger,#b42318)]",
-    Warning: "bg-[var(--warn-bg,#fff7df)] text-[color:var(--warn,#9a6700)]",
+    Warning: "bg-[var(--warn-bg,#fffbeb)] text-[color:var(--warn,#b45309)] border border-amber-200/60",
     Info: "bg-[#e8f5f4] text-[#015d67]",
     Success: "bg-[#ebf8f1] text-[#18794e]",
   }[tone]

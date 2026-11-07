@@ -389,7 +389,7 @@ export function FoodForm({
       </div>
 
       {mode === "ocr" && (
-        <Card className="flex items-start gap-4 border-brand-primary/30 bg-brand-tertiary/60">
+        <Card className="flex items-start gap-4 border border-brand-primary/30 bg-surface-bg shadow-xs">
           {currentImg ? (
             <div className="flex flex-col gap-1.5 shrink-0 items-center">
               <img
@@ -441,7 +441,7 @@ export function FoodForm({
 
       <Card className="flex flex-col gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-end gap-2">
             <div className="flex-1">
               <InputField
                 label="Tên thực phẩm *"
@@ -454,7 +454,7 @@ export function FoodForm({
                 readOnly={isScanned("name")}
                 className={
                   isScanned("name")
-                    ? "opacity-75 bg-bg-subtle cursor-not-allowed select-none"
+                    ? "bg-surface-hover/80 text-text-primary font-medium border-border-primary/80 cursor-default select-text"
                     : ""
                 }
               />
@@ -462,7 +462,7 @@ export function FoodForm({
             {isScanned("name") && (
               <span
                 title="Tên thực phẩm trích xuất tự động từ nhãn/mã vạch (chỉ đọc)"
-                className="mt-5 shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+                className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
               >
                 <Lock size={13} aria-hidden="true" />
                 <span>Chỉ đọc</span>
@@ -572,7 +572,7 @@ export function FoodForm({
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <div className="flex items-start gap-2">
+            <div className="flex items-end gap-2">
               <div className="flex-1">
                 <InputField
                   label="Ngày sản xuất (NSX)"
@@ -583,7 +583,7 @@ export function FoodForm({
                   readOnly={isScanned("mfgDate")}
                   className={
                     isScanned("mfgDate")
-                      ? "opacity-75 bg-bg-subtle cursor-not-allowed select-none"
+                      ? "bg-surface-hover/80 text-text-primary font-medium border-border-primary/80 cursor-default select-text"
                       : ""
                   }
                 />
@@ -591,7 +591,7 @@ export function FoodForm({
               {isScanned("mfgDate") && (
                 <span
                   title="NSX trích xuất tự động từ nhãn (chỉ đọc)"
-                  className="mt-5 shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+                  className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
                 >
                   <Lock size={13} aria-hidden="true" />
                   <span>Chỉ đọc</span>
@@ -641,7 +641,7 @@ export function FoodForm({
             <FieldError id="e-opened" msg={errors.opened_on} />
           </div>
           <div>
-            <div className="flex items-start gap-2">
+            <div className="flex items-end gap-2">
               <div className="flex-1">
                 <InputField
                   label="Hạn sử dụng (HSD)"
@@ -652,7 +652,7 @@ export function FoodForm({
                   readOnly={isScanned("expDate")}
                   className={
                     isScanned("expDate")
-                      ? "opacity-75 bg-bg-subtle cursor-not-allowed select-none"
+                      ? "bg-surface-hover/80 text-text-primary font-medium border-border-primary/80 cursor-default select-text"
                       : ""
                   }
                 />
@@ -660,7 +660,7 @@ export function FoodForm({
               {isScanned("expDate") && (
                 <span
                   title="HSD trích xuất tự động từ nhãn (chỉ đọc)"
-                  className="mt-5 shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+                  className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
                 >
                   <Lock size={13} aria-hidden="true" />
                   <span>Chỉ đọc</span>
