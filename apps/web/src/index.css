@@ -45,8 +45,8 @@
   --on-brand: #ffffff;
   --status-ok: #047857;
   --status-ok-bg: #ecfdf5;
-  --status-soon: #9a3412;
-  --status-soon-bg: #fffbeb;
+  --status-soon: #c2410c;
+  --status-soon-bg: #fff7ed;
   --status-expired: #b91c1c;
   --status-expired-bg: #fef2f2;
 
@@ -63,9 +63,9 @@
   --danger: #b42318;
   --danger-bg: #fef0ee;
   --danger-sub: #fef0ee;
-  --warn: #9a6700;
-  --warn-bg: #fff7df;
-  --warn-sub: #fff7df;
+  --warn: #b45309;
+  --warn-bg: #fffbeb;
+  --warn-sub: #fffbeb;
   --ok: #18794e;
   --ok-bg: #ebf8f1;
   --neutral: #586572;
