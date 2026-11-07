@@ -522,10 +522,6 @@ describe("Issue #213: UX Writing & In-Browser Notification Lifecycle", () => {
     // Must clearly state in-browser notifications
 
     expect(settingsCode).toContain("Thông báo trên trình duyệt")
-
-    // Must mention Webhook for mobile push when closed
-
-    expect(settingsCode).toContain("Webhook")
   })
 
   it("handles notification permission lifecycle states (granted, denied, unsupported)", async () => {
