@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { renderToString } from "react-dom/server"
 import Notice from "../src/components/ui/Notice"
 import { AuthForm } from "../src/features/AuthForm"
+import { SidebarNavigation } from "../src/components/ui/SidebarNavigation"
 
 describe("Auth Flow & Design Verification (Figma AUTH · WEB & AUTH · APP)", () => {
   it("uses Lucide Timer for both responsive brand headers", () => {
@@ -10,7 +11,7 @@ describe("Auth Flow & Design Verification (Figma AUTH · WEB & AUTH · APP)", ()
     expect(html).not.toContain('viewBox="0 0 200 200"')
   })
 
-  it("renders Notice component for failure states according to Figma specs", () => {
+  it("renders Notice component for failure states according to Figma specs with alert icon", () => {
     const html = renderToString(
       <Notice
         tone="Error"
@@ -24,6 +25,7 @@ describe("Auth Flow & Design Verification (Figma AUTH · WEB & AUTH · APP)", ()
       "Email hoặc mật khẩu chưa đúng. Kiểm tra lại thông tin.",
     )
     expect(html).toContain('role="alert"')
+    expect(html).toContain("lucide-circle-alert")
   })
 
   it("renders AuthForm in Login view with both Web Brand story and Form components", () => {
@@ -81,5 +83,15 @@ describe("Auth Flow & Design Verification (Figma AUTH · WEB & AUTH · APP)", ()
     expect(html).toContain("Tạo tài khoản")
     expect(html).toContain("Đã có tài khoản?")
     expect(html).toContain("Tiếp tục với chế độ xem thử")
+  })
+
+  it("unifies brand logo icon using Lucide Timer in SidebarNavigation", () => {
+    const html = renderToString(
+      <SidebarNavigation>
+        <div>nav items</div>
+      </SidebarNavigation>,
+    )
+    expect(html).toContain("lucide-timer")
+    expect(html).not.toContain("lucide-leaf")
   })
 })

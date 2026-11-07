@@ -385,7 +385,7 @@ export default function StorageView({
   ]
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto pb-12">
+    <div className="flex flex-col gap-6 w-full">
       <PageHeader
         title="Nơi lưu trữ"
         subtitle="Tìm duyệt nhanh theo không gian bảo quản & nhóm thực phẩm"
@@ -401,12 +401,12 @@ export default function StorageView({
               </span>
             )}
             <Button
-              variant="primary"
+              variant="secondary"
               size="small"
-              iconStart={<Plus size={16} />}
-              onClick={() => setNewLocModal(true)}
+              iconStart={<Boxes size={16} />}
+              onClick={() => setManageLocModal(true)}
             >
-              Thêm vị trí
+              Quản lý vị trí
             </Button>
           </div>
         }
@@ -435,10 +435,12 @@ export default function StorageView({
 
         <button
           type="button"
+          role="switch"
+          aria-checked={onlyAttention}
           onClick={() => setOnlyAttention((v) => !v)}
           className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-corner-md text-xs font-semibold border transition-all cursor-pointer shrink-0 ${
             onlyAttention
-              ? "bg-danger-subtle border-danger text-danger shadow-xs"
+              ? "bg-danger-subtle border-danger text-danger shadow-xs ring-1 ring-danger/30"
               : "bg-surface-bg border-border-primary text-text-secondary hover:bg-surface-hover hover:text-text-primary"
           }`}
         >
@@ -447,6 +449,9 @@ export default function StorageView({
             className={onlyAttention ? "text-danger" : "text-text-secondary"}
           />
           <span>Chỉ hiện cần chú ý</span>
+          {onlyAttention && (
+            <span className="size-1.5 rounded-full bg-danger animate-pulse" />
+          )}
           {totalAttentionCount > 0 && (
             <span
               className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -463,23 +468,19 @@ export default function StorageView({
 
       {/* Storage Hub Bento Grid */}
       <div>
-        <div className="flex items-center justify-between mb-2.5">
-          <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
-            <Boxes size={18} className="text-brand-primary" />
-            <span>Khu vực bảo quản</span>
-          </h2>
-          <div className="flex items-center gap-2">
-            <Button
-              size="small"
-              variant="neutral"
-              onClick={() => setManageLocModal(true)}
-            >
-              Quản lý vị trí
-            </Button>
-            <span className="text-xs text-text-secondary">
-              {state.locations.length} vị trí
-            </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2.5">
+          <div>
+            <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
+              <Boxes size={18} className="text-brand-primary" />
+              <span>Khu vực bảo quản</span>
+            </h2>
+            <p className="text-xs text-text-secondary mt-0.5">
+              Bấm chọn kho để lọc danh sách thực phẩm bên dưới
+            </p>
           </div>
+          <span className="text-xs text-text-secondary">
+            {state.locations.length} vị trí
+          </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -497,11 +498,18 @@ export default function StorageView({
               <div className="w-8 h-8 rounded-corner-md flex items-center justify-center bg-brand-primary/10 text-brand-primary">
                 <Boxes size={18} />
               </div>
-              {totalAttentionCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-danger text-white">
-                  {totalAttentionCount} cần ăn
-                </span>
-              )}
+              <div className="flex items-center gap-1">
+                {selectedLocation === "all" && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary text-white">
+                    Đang chọn
+                  </span>
+                )}
+                {totalAttentionCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-danger text-white">
+                    {totalAttentionCount} cần ăn
+                  </span>
+                )}
+              </div>
             </div>
             <div>
               <p className="text-xs font-bold text-text-primary truncate">
@@ -555,17 +563,24 @@ export default function StorageView({
                   >
                     <LocIcon size={18} />
                   </div>
-                  {stats.attention > 0 && (
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        stats.expired > 0
-                          ? "bg-danger text-white"
-                          : "bg-warning text-black"
-                      }`}
-                    >
-                      {stats.attention} chú ý
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {isSelected && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary text-white">
+                        Đang chọn
+                      </span>
+                    )}
+                    {stats.attention > 0 && (
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          stats.expired > 0
+                            ? "bg-danger text-white"
+                            : "bg-warning text-black"
+                        }`}
+                      >
+                        {stats.attention} chú ý
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <p className="text-xs font-bold text-text-primary truncate">

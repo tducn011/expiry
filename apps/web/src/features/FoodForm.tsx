@@ -373,7 +373,7 @@ export function FoodForm({
   const expPast = d.expDate && !errors.expDate && d.expDate < today()
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto pt-2">
+    <div className="flex flex-col gap-6 w-full">
       <div className="flex items-center justify-between">
         <h1 className="text-xl md:text-2xl font-bold text-text-primary tracking-tight">
           {titles[mode]}

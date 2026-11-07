@@ -31,6 +31,7 @@ import {
   Plus,
   Search,
   SearchX,
+  Timer,
   X,
 } from "lucide-react"
 
@@ -252,12 +253,12 @@ export function Inventory({
   }
 
   return (
-    <div className="flex flex-col gap-5 w-full">
+    <div className="flex flex-col gap-6 w-full">
       {/* Mobile App Header */}
       <div className="flex items-center justify-between gap-3 pt-0 pb-1 md:hidden">
         <div className="flex items-center gap-2">
-          <div className="flex size-9 items-center justify-center rounded-corner-md bg-brand-primary text-white shadow-xs font-bold text-sm">
-            Ex
+          <div className="flex size-9 items-center justify-center rounded-corner-md bg-brand-primary text-white shadow-xs">
+            <Timer size={20} aria-hidden />
           </div>
           <span className="text-lg font-bold text-brand-primary">Expiry</span>
         </div>

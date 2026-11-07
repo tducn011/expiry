@@ -1301,7 +1301,13 @@ export function Scanner({
       </div>
 
       {/* Mobile-Friendly Control Panel */}
-      <div className="flex flex-col items-center gap-2.5 px-4 sm:px-6 pt-1 pb-2 shrink-0 w-full max-w-sm mx-auto">
+      <div
+        className={`flex flex-col items-center gap-2.5 px-4 sm:px-6 pt-1 ${
+          step === 1 && !live
+            ? "pb-[max(1rem,env(safe-area-inset-bottom))]"
+            : "pb-2"
+        } shrink-0 w-full max-w-lg mx-auto`}
+      >
         {fileError && (
           <p role="alert" className="text-sm text-center">
             {fileError}
@@ -1361,9 +1367,9 @@ export function Scanner({
 
         {/* STEP 1 ACTIONS */}
         {step === 1 && state !== "processing" && (
-          <div className="flex flex-col gap-2 w-full">
+          <div className="w-full">
             {live ? (
-              <>
+              <div className="flex flex-col gap-2 w-full">
                 <Button
                   variant="primary"
                   block
@@ -1384,22 +1390,23 @@ export function Scanner({
                 >
                   Tắt camera
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
-                {(state === "idle" || state === "denied") && (
-                  <Button
-                    variant="primary"
-                    block
-                    iconStart={<Camera size={18} />}
-                    onClick={start}
-                  >
-                    Bật camera trực tiếp
-                  </Button>
-                )}
+              <div className="grid grid-cols-2 gap-2 w-full">
+                <Button
+                  variant="primary"
+                  block
+                  className="px-2.5 sm:px-4 text-xs sm:text-sm"
+                  iconStart={<Camera size={18} />}
+                  onClick={start}
+                  disabled={state === "unavailable" || state === "requesting"}
+                >
+                  Bật camera trực tiếp
+                </Button>
                 <Button
                   variant="neutral"
                   block
+                  className="px-2.5 sm:px-4 text-xs sm:text-sm"
                   iconStart={<ImageUp size={18} />}
                   onClick={() => libraryInputRef.current?.click()}
                 >
@@ -1408,12 +1415,26 @@ export function Scanner({
                 <Button
                   variant="neutral"
                   block
+                  className="px-2.5 sm:px-4 text-xs sm:text-sm"
                   iconStart={<Barcode size={18} />}
                   onClick={() => setShowManualBarcode(true)}
                 >
                   Nhập số vạch
                 </Button>
-              </>
+                <Button
+                  variant="neutral"
+                  block
+                  className="px-2.5 sm:px-4 text-xs sm:text-sm"
+                  iconStart={<Keyboard size={18} />}
+                  onClick={leave(() => {
+                    const currentDraft = step1Data?.draft || detectedDraft
+                    const currentImg = step1Data?.image || image
+                    onManual(currentDraft, currentImg)
+                  })}
+                >
+                  Nhập bằng tay
+                </Button>
+              </div>
             )}
           </div>
         )}
@@ -1553,23 +1574,25 @@ export function Scanner({
         />
       )}
 
-      {/* Manual Input Fallback */}
-      <div className="px-4 sm:px-6 pt-1 pb-[max(1rem,env(safe-area-inset-bottom))] shrink-0 w-full max-w-sm mx-auto">
-        <Button
-          variant="neutral"
-          block
-          iconStart={<Keyboard size={18} />}
-          onClick={leave(() => {
-            const currentDraft = step1Data?.draft || detectedDraft
+      {/* Manual Input Fallback (for Step 2 or when live camera is running) */}
+      {(step !== 1 || live) && (
+        <div className="px-4 sm:px-6 pt-1 pb-[max(1rem,env(safe-area-inset-bottom))] shrink-0 w-full max-w-lg mx-auto">
+          <Button
+            variant="neutral"
+            block
+            iconStart={<Keyboard size={18} />}
+            onClick={leave(() => {
+              const currentDraft = step1Data?.draft || detectedDraft
 
-            const currentImg = step1Data?.image || image
+              const currentImg = step1Data?.image || image
 
-            onManual(currentDraft, currentImg)
-          })}
-        >
-          Nhập bằng tay
-        </Button>
-      </div>
+              onManual(currentDraft, currentImg)
+            })}
+          >
+            Nhập bằng tay
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

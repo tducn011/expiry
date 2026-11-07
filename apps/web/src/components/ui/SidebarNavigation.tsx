@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { ChevronsLeft, ChevronsRight, Leaf } from "lucide-react"
+import { ChevronsLeft, ChevronsRight, Timer } from "lucide-react"
 
 export function SidebarButton({
   icon,
@@ -115,7 +115,7 @@ export function SidebarNavigation({
         >
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-corner-md bg-brand-primary text-white shadow-xs">
-              <Leaf size={22} aria-hidden />
+              <Timer size={22} aria-hidden />
             </div>
             {isExpanded && (
               <div className="min-w-0 flex flex-col">

@@ -38,7 +38,7 @@ export function Notifications({
   const list = notifications(state)
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto">
+    <div className="flex flex-col gap-6 w-full">
       <PageHeader
         title="Thông báo"
         subtitle="Nhắc nhở chủ động trong ứng dụng"

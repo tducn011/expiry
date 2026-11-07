@@ -19,6 +19,7 @@ import {
   ScanBarcode,
   Search,
   Settings,
+  Timer,
   Trash2,
   X,
   type LucideIcon,
@@ -50,6 +51,7 @@ const icons = {
   check: Check,
   alert: CircleAlert,
   help: CircleHelp,
+  timer: Timer,
 } satisfies Record<string, LucideIcon>
 
 export default function Icon({

@@ -1,6 +1,12 @@
-import type { Food } from "../store/appStore"
+import type { Category, Food } from "../store/appStore"
 
-import { daysLeft, formatDate, statusOf } from "../store/appStore"
+import {
+  CATEGORY_LABELS,
+  daysLeft,
+  formatDate,
+  inferCategory,
+  statusOf,
+} from "../store/appStore"
 
 import {
   Apple,
@@ -58,6 +64,22 @@ const rowTone: Record<string, string> = {
   unknown: "text-text-secondary",
 }
 
+export const categoryTones: Record<Category, string> = {
+  fresh_produce:
+    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+  meat_seafood:
+    "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
+  dairy_eggs:
+    "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+  prepared_food:
+    "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20",
+  dry_pantry:
+    "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20",
+  beverage:
+    "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20",
+  other: "bg-surface-subtle text-text-secondary border border-border-primary/50",
+}
+
 export interface FoodCardProps {
   food: Food
 
@@ -83,6 +105,8 @@ export function FoodCard({
 
   const d = daysLeft(food)
 
+  const category: Category = food.category || inferCategory(food.name)
+
   let statusLabel: string
 
   if (st === "expired") {
@@ -90,7 +114,7 @@ export function FoodCard({
   } else if (st === "soon") {
     statusLabel = d === 0 ? "Hết hạn hôm nay" : `Còn ${d} ngày`
   } else if (st === "ok") {
-    statusLabel = "Còn hạn"
+    statusLabel = d !== null ? `Còn ${d} ngày` : "Còn hạn"
   } else {
     statusLabel = "Chưa rõ HSD"
   }
@@ -107,7 +131,7 @@ export function FoodCard({
     >
       <div
         aria-hidden="true"
-        className="flex size-11 shrink-0 items-center justify-center rounded-corner-md bg-brand-tertiary text-brand-primary transition-transform group-hover:scale-105 shadow-xs"
+        className={`flex size-11 shrink-0 items-center justify-center rounded-corner-md transition-transform group-hover:scale-105 shadow-xs ${categoryTones[category]}`}
       >
         <IconComponent size={22} />
       </div>
@@ -118,6 +142,10 @@ export function FoodCard({
         <p className="truncate text-xs text-text-secondary">
           {food.quantity} {food.unit}
           {food.location ? ` · ${food.location}` : ""}
+          <span className="text-text-tertiary"> · </span>
+          <span className="text-text-tertiary">
+            {CATEGORY_LABELS[category] || "Khác"}
+          </span>
         </p>
         <div className="flex flex-wrap items-center gap-x-2 text-xs">
           <span className={`whitespace-nowrap ${rowTone[st]}`}>

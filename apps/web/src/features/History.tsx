@@ -121,7 +121,7 @@ export function History({
     : undefined
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full">
       <PageHeader
         title="Lịch sử"
         subtitle="Các lần dùng, bỏ và điều chỉnh số lượng thực phẩm"

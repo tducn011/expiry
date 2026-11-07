@@ -213,7 +213,7 @@ export function Attention({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <PageHeader title="Cần chú ý" subtitle={subtitle} />
         {sections.length > 1 && (

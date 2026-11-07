@@ -109,7 +109,7 @@ export function Trash({
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto">
+    <div className="flex flex-col gap-6 w-full">
       <PageHeader
         title="Thùng rác"
         onBack={onBack}

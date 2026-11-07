@@ -64,7 +64,7 @@ export default function Shell({
           aria-label="Expiry — Kho thực phẩm"
         >
           <span className="brand-icon">
-            <Icon name="box" />
+            <Icon name="timer" />
           </span>
           <span>
             <span className="brand-name">Expiry</span>
@@ -118,7 +118,7 @@ export default function Shell({
           aria-label="Expiry — Kho thực phẩm"
         >
           <span className="brand-icon">
-            <Icon name="box" />
+            <Icon name="timer" />
           </span>
           <span className="brand-name">Expiry</span>
         </button>
