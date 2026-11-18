@@ -167,7 +167,6 @@ export function ManualBarcodeModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Nhập mã số vạch thủ công"
-      description="Nhập chuỗi số GTIN/EAN in dưới vạch sản phẩm (ví dụ EAN-13 có 13 chữ số) khi bao bì bị mờ hoặc rách."
       size="compact"
       footer={
         <div className="flex flex-col-reverse sm:flex-row w-full justify-between gap-2">
@@ -230,7 +229,6 @@ export function ManualBarcodeModal({
                   handleLookup(code)
                 }
               }}
-              description="Các số từ 0-9 in rõ bên dưới các vạch đen trắng."
             />
           </div>
           <Button

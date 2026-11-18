@@ -1,8 +1,8 @@
 import { useState } from "react"
 import type { Dispatch } from "../store/appStore"
 import { api, ApiError, errorMessage } from "../api/client"
-import { Timer } from "lucide-react"
 import Notice from "../components/ui/Notice"
+import { BrandLockup } from "../components/ui/BrandLockup"
 
 export type AuthMode = "login" | "register" | "welcome"
 
@@ -169,32 +169,28 @@ export function AuthForm({
          ========================================================================= */}
       <div className="hidden lg:flex flex-col w-[480px] xl:w-[560px] 2xl:w-[620px] shrink-0 bg-warm-ink-900 text-white pt-[62px] px-10 xl:px-[64px] pb-[42px] select-none">
         {/* Brand header (y=62) */}
-        <div className="flex items-center gap-3">
-          <Timer size={40} color="var(--neutral-white)" className="shrink-0" />
-          <span className="font-bold text-[21px] text-white tracking-tight">
-            Expiry
-          </span>
-        </div>
+        <BrandLockup
+          className="self-start"
+          markSize={40}
+          wordmarkSize={24}
+          inverse
+        />
 
         {/* Spacing 95px -> Heading (y=233) */}
         <div className="mt-[95px]">
-          <h2 className="font-bold text-[32px] xl:text-[36px] text-white leading-[1.3] text-left">
+          <h2 className="font-semibold text-[32px] xl:text-[36px] text-white leading-[1.3] text-left">
             Biết mình có gì.
             <br />
             Dùng thực phẩm đúng lúc.
           </h2>
-          <p className="mt-4 text-neutral-100 text-[16px] xl:text-[17px] leading-relaxed text-left max-w-[488px]">
-            Theo dõi thực phẩm, ngày sử dụng và nơi bảo quản trong cùng một ứng
-            dụng.
-          </p>
         </div>
 
         {/* Spacing 38px -> Minh họa danh sách thực phẩm (Figma node 1477:18, y=479) */}
-        <div className="mt-[38px] bg-surface-subtle rounded-[20px] p-6 w-full max-w-[492px] shadow-sm">
+        <div className="mt-[38px] bg-surface-subtle rounded-[20px] p-6 w-full max-w-[492px] border border-border-primary/40 shadow-xs">
           <p className="font-semibold text-[16px] text-text-heading">
             Kho thực phẩm của bạn
           </p>
-          <div className="my-3.5 h-px bg-border-subtle" />
+          <div className="my-3.5 h-px bg-border-primary/40" />
           <div className="flex flex-col gap-3 text-[13px] font-medium text-text-primary">
             <div className="flex items-center justify-between">
               <span>Rau xanh</span>
@@ -216,11 +212,6 @@ export function AuthForm({
             </div>
           </div>
         </div>
-
-        {/* Spacing 32px -> Brand story footer (y=743) */}
-        <p className="mt-[32px] text-[13px] text-sage-100">
-          Quản lý thực phẩm dễ dàng mỗi ngày.
-        </p>
       </div>
 
       {/* =========================================================================
@@ -231,29 +222,15 @@ export function AuthForm({
       <div className="flex-1 min-h-screen flex flex-col items-center pt-11 lg:pt-[102px] pb-12 px-4 sm:px-6 lg:px-12 xl:px-16 bg-white overflow-y-auto">
         <div className="w-full max-w-[358px] sm:max-w-[390px] lg:max-w-[440px] flex flex-col">
           {/* Brand header (y=102 on Web Desktop) */}
-          <div className="flex items-center gap-3">
-            <Timer
-              size={36}
-              color="var(--brand-primary)"
-              className="lg:w-[40px] lg:h-[40px] shrink-0"
-            />
-            <span className="font-bold text-[21px] text-brand-strong tracking-tight">
-              Expiry
-            </span>
-          </div>
+          <BrandLockup className="self-start" markSize={40} wordmarkSize={24} />
 
-          {/* Heading and Subtitle (y=228 on Web Desktop, aligns with left heading y=233) */}
+          {/* Heading (y=228 on Web Desktop, aligns with left heading y=233) */}
           <div className="mt-10 lg:mt-[86px]">
-            <h1 className="font-bold text-[24px] lg:text-[30px] text-text-heading leading-tight text-left">
+            <h1 className="font-semibold text-[24px] lg:text-[30px] text-text-heading leading-tight text-left tracking-normal">
               {view === "login"
                 ? "Chào mừng bạn trở lại"
                 : "Tạo tài khoản Expiry"}
             </h1>
-            <p className="mt-2 text-[14px] lg:text-[16px] text-text-secondary text-left leading-normal">
-              {view === "login"
-                ? "Đăng nhập để tiếp tục quản lý thực phẩm của bạn."
-                : "Bắt đầu theo dõi thực phẩm và hạn sử dụng dễ dàng hơn."}
-            </p>
           </div>
 
           {/* Failure Alert Notice according to Figma specifications */}
@@ -323,7 +300,7 @@ export function AuthForm({
                   className={`h-[48px] w-full rounded-[10px] lg:rounded-[12px] bg-white px-3.5 text-[16px] text-text-primary placeholder:text-text-tertiary outline-none transition-colors border ${
                     fieldErrors.name
                       ? "border-[1.5px] border-danger focus:ring-2 focus:ring-danger/20"
-                      : "border-border-control focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+                      : "border-border-primary/80 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
                   }`}
                 />
                 {fieldErrors.name && (
@@ -356,7 +333,7 @@ export function AuthForm({
                 className={`h-[48px] w-full rounded-[10px] lg:rounded-[12px] bg-white px-3.5 text-[16px] text-text-primary placeholder:text-text-tertiary outline-none transition-colors border ${
                   fieldErrors.email
                     ? "border-[1.5px] border-danger focus:ring-2 focus:ring-danger/20"
-                    : "border-border-control focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+                    : "border-border-primary/80 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
                 }`}
               />
               {fieldErrors.email && (
@@ -391,7 +368,7 @@ export function AuthForm({
                 className={`h-[48px] w-full rounded-[10px] lg:rounded-[12px] bg-white px-3.5 text-[16px] text-text-primary placeholder:text-text-tertiary outline-none transition-colors border ${
                   fieldErrors.pw
                     ? "border-[1.5px] border-danger focus:ring-2 focus:ring-danger/20"
-                    : "border-border-control focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+                    : "border-border-primary/80 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
                 }`}
               />
               {fieldErrors.pw && (
@@ -402,18 +379,13 @@ export function AuthForm({
                   {fieldErrors.pw}
                 </p>
               )}
-              {view === "register" && !fieldErrors.pw && (
-                <p className="text-[11px] text-text-secondary text-left">
-                  Dùng ít nhất 8 ký tự để bảo vệ tài khoản.
-                </p>
-              )}
             </div>
 
             {/* Primary Action Button */}
             <button
               type="submit"
               disabled={loading}
-              className={`mt-3 h-[48px] min-h-[48px] w-full rounded-[12px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-on-brand font-semibold text-[14px] lg:text-[15px] flex items-center justify-center transition-all shadow-sm ${
+              className={`mt-3 h-[48px] min-h-[48px] w-full rounded-[12px] bg-brand-primary hover:bg-brand-hover active:bg-brand-muted text-on-brand font-semibold text-[14px] lg:text-[15px] flex items-center justify-center transition-all shadow-xs ${
                 loading
                   ? "opacity-55 cursor-not-allowed"
                   : !isFormValid && Object.keys(fieldErrors).length > 0
@@ -430,7 +402,7 @@ export function AuthForm({
           </form>
 
           {/* Divider */}
-          <div className="my-5 h-px bg-border-subtle w-full" />
+          <div className="my-5 h-px bg-border-primary/40 w-full" />
 
           {/* Secondary Action 1: Switch between Login & Register */}
           <button

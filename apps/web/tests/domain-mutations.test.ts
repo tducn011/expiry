@@ -624,4 +624,135 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
 
     expect(afterDepleted).toBe(0)
   })
+
+  it("maps category and review_at in draftDTO and fromEntry", async () => {
+    const { fromEntry, api } = await import("../src/api/client")
+    const { mockApi } = await import("../src/mockApi")
+
+    const draft = draftDTO({
+      name: "Trứng gà ta",
+      category: "dairy_eggs",
+      expiry_date: "2026-11-20",
+      expiry_date_certainty: "exact",
+      expiry_date_source: "printed_label",
+      expiry_date_label_type: "use_by",
+      opened_on: null,
+      note: "Hộp 10 quả",
+      review_at: "2026-11-18",
+    })
+    expect(draft.category).toBe("dairy_eggs")
+    expect(draft.review_at).toBe("2026-11-18")
+
+    const food = fromEntry({
+      ...entryResponse,
+      category: "dairy_eggs",
+      review_at: "2026-11-18",
+    } as any)
+    expect(food.category).toBe("dairy_eggs")
+    expect(food.review_at).toBe("2026-11-18")
+
+    // Test getAttentionSummary calculation
+    const summary = api.getAttentionSummary([
+      { ...food, attention: "past", remaining_quantity: 1, deleted_at: null },
+      { ...food, id: "2", attention: "today", remaining_quantity: 1, deleted_at: null },
+      { ...food, id: "3", attention: "soon", remaining_quantity: 1, deleted_at: null },
+      { ...food, id: "4", attention: "later", remaining_quantity: 1, review_at: "2026-10-01", deleted_at: null },
+      { ...food, id: "5", attention: "later", remaining_quantity: 1, review_at: null, deleted_at: null },
+    ], "2026-10-10")
+    expect(summary.expired).toBe(1)
+    expect(summary.soon).toBe(2)
+    expect(summary.reviewDue).toBe(1)
+    expect(summary.total).toBe(4)
+
+    // Test mockApi attention summary and filters
+    const mockSummary = mockApi.getAttentionSummary()
+    expect(mockSummary.total).toBeGreaterThan(0)
+    expect(mockSummary.expired).toBeGreaterThanOrEqual(0)
+    expect(mockSummary.soon).toBeGreaterThanOrEqual(0)
+
+    const filtered = mockApi.listEntries({ category: "dairy_eggs" })
+    expect(Array.isArray(filtered)).toBe(true)
+    for (const item of filtered) {
+      expect(item.category).toBe("dairy_eggs")
+    }
+  })
+
+  it("manages shopping list items in mockApi and shoppingStorage", async () => {
+    const { mockApi } = await import("../src/mockApi")
+    const {
+      getShoppingItems,
+      addShoppingItem,
+      toggleShoppingItem,
+      updateShoppingItem,
+      deleteShoppingItem,
+      clearCheckedShoppingItems,
+      suggestItemsFromInventory,
+    } = await import("../src/api/shoppingStorage")
+
+    // 1. mockApi shopping methods
+    const initialShopping = mockApi.listShoppingItems()
+    expect(initialShopping.length).toBeGreaterThan(0)
+
+    const added = mockApi.addShoppingItem({
+      name: "Táo Envy",
+      quantity: 5,
+      unit: "quả",
+      category: "fresh_produce",
+      checked: false,
+      addedFromInventory: false,
+      note: "Mua táo tươi",
+    })
+    expect(added.name).toBe("Táo Envy")
+    expect(added.id).toBeDefined()
+    expect(mockApi.listShoppingItems().some((i) => i.id === added.id)).toBe(true)
+
+    const toggled = mockApi.toggleShoppingItem(added.id)
+    expect(toggled.checked).toBe(true)
+
+    const updated = mockApi.updateShoppingItem(added.id, { quantity: 10 })
+    expect(updated.quantity).toBe(10)
+
+    mockApi.clearCheckedShoppingItems()
+    expect(mockApi.listShoppingItems().some((i) => i.id === added.id)).toBe(false)
+
+    // 2. shoppingStorage helpers
+    const testUserId = "test_user_shopping"
+    const items = getShoppingItems(testUserId)
+    expect(Array.isArray(items)).toBe(true)
+
+    const clientAdded = addShoppingItem(
+      {
+        name: "Bánh mì sandwich",
+        quantity: 1,
+        unit: "gói",
+        category: "dry_pantry",
+        checked: false,
+      },
+      testUserId,
+    )
+    expect(clientAdded.name).toBe("Bánh mì sandwich")
+    expect(clientAdded.category).toBe("dry_pantry")
+
+    const toggledList = toggleShoppingItem(clientAdded.id, testUserId)
+    expect(toggledList.find((i) => i.id === clientAdded.id)?.checked).toBe(true)
+
+    const updatedList = updateShoppingItem(
+      clientAdded.id,
+      { note: "Bánh mì đen" },
+      testUserId,
+    )
+    expect(updatedList.find((i) => i.id === clientAdded.id)?.note).toBe("Bánh mì đen")
+
+    const suggestions = suggestItemsFromInventory([
+      { name: "Cá hồi", remaining_quantity: 0, unit: "g" },
+      { name: "Sữa tươi", remaining_quantity: 2, unit: "hộp" },
+    ])
+    expect(suggestions.length).toBe(1)
+    expect(suggestions[0].name).toBe("Cá hồi")
+    expect(suggestions[0].addedFromInventory).toBe(true)
+
+    deleteShoppingItem(clientAdded.id, testUserId)
+    const afterDelete = getShoppingItems(testUserId)
+    expect(afterDelete.some((i) => i.id === clientAdded.id)).toBe(false)
+  })
 })

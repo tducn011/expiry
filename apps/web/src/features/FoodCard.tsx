@@ -55,13 +55,13 @@ export const getFoodIcon = (name: string) =>
   foodKinds.find((k) => k.re.test(name))?.icon ?? Package
 
 const rowTone: Record<string, string> = {
-  expired: "text-status-expired font-medium",
+  expired: "text-status-expired font-semibold",
 
-  soon: "text-status-soon font-medium",
+  soon: "text-status-soon font-semibold",
 
-  ok: "text-text-secondary",
+  ok: "text-status-ok font-semibold",
 
-  unknown: "text-text-secondary",
+  unknown: "text-text-tertiary",
 }
 
 export const categoryTones: Record<Category, string> = {
@@ -89,6 +89,8 @@ export interface FoodCardProps {
   onOpen: () => void
 
   className?: string
+
+  variant?: "card" | "grouped"
 }
 
 export function FoodCard({
@@ -99,6 +101,8 @@ export function FoodCard({
   onOpen,
 
   className = "",
+
+  variant = "card",
 }: FoodCardProps) {
   const st = statusOf(food, remindDays)
 
@@ -120,6 +124,62 @@ export function FoodCard({
     statusLabel = "Chưa rõ HSD"
   }
 
+  // Grouped row layout matching Figma node 312:50 (413:77)
+  if (variant === "grouped") {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onOpen}
+        onKeyDown={(e) =>
+          (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())
+        }
+        className={`group flex min-h-[88px] cursor-pointer items-center gap-3 px-3 py-3 transition-colors hover:bg-surface-hover active:bg-bg-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary ${className}`}
+      >
+        <div
+          aria-hidden="true"
+          className="flex size-11 shrink-0 items-center justify-center rounded-[12px] border border-border-primary bg-surface-subtle text-text-primary transition-transform group-hover:scale-105"
+        >
+          <IconComponent size={20} strokeWidth={2} />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+          <p className="truncate text-[18px] leading-[26px] font-semibold text-text-heading">
+            {food.name}
+          </p>
+          <p className="truncate text-[14px] leading-[22px] text-text-secondary">
+            {food.quantity} {food.unit}
+            {food.location ? ` · ${food.location}` : ""}
+            <span className="text-text-tertiary"> · </span>
+            <span className="text-text-tertiary">
+              {CATEGORY_LABELS[category] || "Khác"}
+            </span>
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5 text-[13px] leading-[18px]">
+            <span className={`whitespace-nowrap ${rowTone[st]}`}>
+              {statusLabel}
+            </span>
+            {food.expDate && (
+              <>
+                <span className="text-text-tertiary text-[12px]">·</span>
+                <span className="whitespace-nowrap text-text-secondary">
+                  HSD {formatDate(food.expDate)}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center text-text-tertiary pl-1">
+          <ChevronRight
+            size={16}
+            strokeWidth={2}
+            aria-hidden="true"
+            className="transition-transform group-hover:translate-x-0.5"
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       role="button"
@@ -137,7 +197,7 @@ export function FoodCard({
         <IconComponent size={22} />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="truncate text-sm md:text-base font-semibold text-text-primary">
+        <p className="truncate text-sm md:text-base font-semibold text-text-heading">
           {food.name}
         </p>
         <p className="truncate text-xs text-text-secondary">

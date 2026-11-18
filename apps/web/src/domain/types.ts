@@ -131,3 +131,16 @@ export type Session = {
 
   expires_at: string
 }
+
+export interface ShoppingItem {
+  id: string
+  name: string
+  quantity: number
+  unit: Unit | string
+  category?: string | null
+  checked: boolean
+  addedFromInventory?: boolean
+  createdAt: string
+  note?: string | null
+  inventoryAddedAt?: string
+}

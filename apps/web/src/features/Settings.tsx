@@ -1,86 +1,68 @@
-import { useState, type ReactNode } from "react"
-
-import type { Dispatch, State } from "../store/appStore"
-
-import Button from "../components/ui/Button"
-
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import {
+  Archive,
+  ArrowLeft,
+  Bell,
   BellOff,
   CalendarClock,
   ChevronRight,
   CircleCheck,
+  Database,
+  LogIn,
   LogOut,
   MapPin,
-  PackageOpen,
   RotateCcw,
   Trash2,
+  UserRound,
 } from "lucide-react"
-
-import Modal from "../components/ui/Modal"
-
+import type { SettingsSection } from "../App"
+import type {
+  Dispatch,
+  Settings as AppSettings,
+  State,
+} from "../store/appStore"
+import Button from "../components/ui/Button"
 import LocationManagerModal from "../components/ui/LocationManagerModal"
-
+import Modal from "../components/ui/Modal"
 import PageHeader from "../components/ui/PageHeader"
-
 import SwitchField from "../components/ui/SwitchField"
 
-function SettingsGroup({
-  title,
+type SettingsSaveResult = {
+  settings: AppSettings
+  savedToAccount: boolean
+}
 
-  children,
+type SettingsSectionItem = {
+  key: SettingsSection
+  icon: ReactNode
+}
 
-  footer,
-}: {
-  title: string
-
-  children: ReactNode
-
-  footer?: ReactNode
-}) {
-  return (
-    <section className="flex flex-col gap-2">
-      <div
-        role="heading"
-        aria-level={2}
-        className="px-2 text-xs font-semibold uppercase tracking-wider text-text-secondary"
-      >
-        {title}
-      </div>
-      <div className="flex flex-col divide-y divide-border-primary/40 overflow-hidden rounded-corner-lg border border-border-primary/50 bg-surface-bg shadow-xs">
-        {children}
-      </div>
-      {footer && <p className="px-2 text-xs text-text-secondary">{footer}</p>}
-    </section>
-  )
+const sectionLabels: Record<SettingsSection, string> = {
+  account: "Tài khoản",
+  notifications: "Thông báo & cảnh báo",
+  inventory: "Kho thực phẩm",
+  data: "Dữ liệu",
 }
 
 function SettingsRow({
   icon,
-
   label,
-
   value,
-
   onClick,
-
-  disabled,
+  disabled = false,
 }: {
   icon: ReactNode
-
   label: string
-
   value?: string
-
-  onClick?: () => void
-
+  onClick: () => void
   disabled?: boolean
 }) {
   return (
     <button
       type="button"
-      disabled={disabled || !onClick}
       onClick={onClick}
-      className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition-colors enabled:hover:bg-surface-hover enabled:active:bg-bg-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary cursor-pointer disabled:cursor-default"
+      disabled={disabled}
+      className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
     >
       <span aria-hidden="true" className="shrink-0 text-brand-strong">
         {icon}
@@ -88,295 +70,488 @@ function SettingsRow({
       <span className="min-w-0 flex-1 text-sm font-medium text-text-primary">
         {label}
       </span>
-      {value && <span className="text-xs text-text-secondary">{value}</span>}
-      {onClick && (
-        <ChevronRight
-          size={18}
-          aria-hidden="true"
-          className="shrink-0 text-text-tertiary"
-        />
+      {value && (
+        <span className="shrink-0 text-xs font-medium text-text-secondary">
+          {value}
+        </span>
       )}
+      <ChevronRight
+        size={17}
+        aria-hidden="true"
+        className="shrink-0 text-text-tertiary"
+      />
     </button>
   )
 }
 
 export function Settings({
   state,
-
   dispatch,
-
+  section,
+  onNavigateSection,
+  onBack,
+  onDirtyChange,
+  onSavingChange,
+  onSave,
   onNavigateTrash,
-
   onLogin,
-
   notify,
 }: {
   state: State
-
   dispatch: Dispatch
-
+  section?: SettingsSection
+  onNavigateSection: (section: SettingsSection) => void
+  onBack: () => void
+  onDirtyChange: (dirty: boolean) => void
+  onSavingChange: (saving: boolean) => void
+  onSave: (draft: AppSettings) => Promise<SettingsSaveResult>
   onNavigateTrash: () => void
-
   onLogin?: () => void
-
-  notify: (m: string, v?: "success" | "danger" | "warning") => void
+  notify: (message: string, variant?: "success" | "danger" | "warning") => void
 }) {
-  const [s, setS] = useState(state.settings)
-
+  const activeSection = section ?? "notifications"
+  const [draft, setDraft] = useState(state.settings)
+  const savedRef = useRef(state.settings)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [pickDays, setPickDays] = useState(false)
-
   const [showLocations, setShowLocations] = useState(false)
-
-  const pushSupported =
-    typeof window !== "undefined" && "Notification" in window
-
-  const [perm, setPerm] = useState(
-    pushSupported ? Notification.permission : "unsupported",
+  const [pendingLeave, setPendingLeave] =
+    useState<SettingsSection | "back" | null>(null)
+  const [pendingReset, setPendingReset] = useState<"full" | "empty" | null>(
+    null,
   )
+  const notificationSupported =
+    typeof window !== "undefined" && "Notification" in window
+  const [permission, setPermission] =
+    useState<NotificationPermission | "unsupported">(
+      notificationSupported ? Notification.permission : "unsupported",
+    )
+
+  useEffect(() => {
+    const previous = savedRef.current
+    savedRef.current = state.settings
+    setDraft((current) => ({
+      ...state.settings,
+      remindDays:
+        current.remindDays === previous.remindDays
+          ? state.settings.remindDays
+          : current.remindDays,
+      inApp:
+        current.inApp === previous.inApp ? state.settings.inApp : current.inApp,
+      push: false,
+    }))
+  }, [state.settings])
 
   const dirty =
-    s.remindDays !== state.settings.remindDays ||
-    s.inApp !== state.settings.inApp ||
-    s.push !== state.settings.push
+    draft.remindDays !== state.settings.remindDays ||
+    draft.inApp !== state.settings.inApp
+  useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange])
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange])
+  useEffect(() => onSavingChange(saving), [saving, onSavingChange])
+  useEffect(() => () => onSavingChange(false), [onSavingChange])
 
-  async function togglePush(on: boolean) {
-    if (!on) return setS({ ...s, push: false })
+  const sections: SettingsSectionItem[] = [
+    { key: "account", icon: <UserRound size={19} /> },
+    { key: "notifications", icon: <Bell size={19} /> },
+    { key: "inventory", icon: <Archive size={19} /> },
+    { key: "data", icon: <Database size={19} /> },
+  ]
 
-    if (!pushSupported) return setPerm("unsupported")
-
-    if (perm === "denied") {
-      setS({ ...s, push: false })
-
+  function selectSection(next: SettingsSection) {
+    if (saving || section === next) return
+    if (dirty) {
+      setPendingLeave(next)
       return
     }
+    onNavigateSection(next)
+  }
 
+  function backToSections() {
+    if (saving) return
+    if (dirty) {
+      setPendingLeave("back")
+      return
+    }
+    onBack()
+  }
+
+  function discardAndLeave() {
+    const destination = pendingLeave
+    setDraft(state.settings)
+    onDirtyChange(false)
+    setPendingLeave(null)
+    if (destination === "back") onBack()
+    else if (destination) onNavigateSection(destination)
+  }
+
+  async function save() {
+    if (!dirty || saving) return
+    onSavingChange(true)
+    setSaving(true)
+    setSaveError(null)
     try {
-      const p = await Notification.requestPermission()
-
-      setPerm(p)
-
-      setS({ ...s, push: p === "granted" })
-    } catch {
-      setS({ ...s, push: false })
+      const inAppChanged = draft.inApp !== state.settings.inApp
+      const result = await onSave({ ...draft, push: false })
+      savedRef.current = result.settings
+      setDraft(result.settings)
+      notify(
+        result.savedToAccount
+          ? inAppChanged
+            ? "Đã lưu ngưỡng cho tài khoản và thông báo trên thiết bị"
+            : "Đã lưu ngưỡng cảnh báo vào tài khoản"
+          : "Đã lưu cài đặt trên thiết bị",
+      )
+    } catch (error) {
+      const message =
+        error instanceof Error &&
+        error.message === "Tài khoản đã thay đổi. Hãy mở lại Cài đặt."
+          ? error.message
+          : "Không thể lưu cài đặt. Vui lòng thử lại."
+      setSaveError(message)
+      notify("Không thể lưu cài đặt", "danger")
+    } finally {
+      onSavingChange(false)
+      setSaving(false)
     }
   }
 
-  function sendTestNotification() {
+  async function sendTestNotification() {
+    if (!notificationSupported || permission === "denied") return
     try {
-      if (pushSupported && Notification.permission === "granted") {
-        new Notification("Expiry - Nhắc nhở mẫu", {
-          body: "Đây là thông báo thử nghiệm trên trình duyệt khi mở ứng dụng.",
-
-          icon: "/favicon.ico",
-        })
-
-        notify("Đã gửi thông báo thử nghiệm trên trình duyệt")
+      const nextPermission =
+        permission === "default"
+          ? await Notification.requestPermission()
+          : permission
+      setPermission(nextPermission)
+      if (nextPermission === "granted") {
+        new Notification("Expiry · Thông báo thử", { icon: "/favicon.svg" })
+        notify("Đã gửi thông báo thử")
       }
     } catch {
-      notify("Không thể gửi thông báo trên trình duyệt", "warning")
+      notify("Không thể gửi thông báo thử", "warning")
     }
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full">
-      <PageHeader
-        title="Cài đặt"
-        subtitle={
-          state.mode === "demo"
-            ? undefined
-            : `Tài khoản: ${state.userName || "Người dùng"}`
-        }
-      />
-
-      <SettingsGroup
-        title="Nhắc nhở hạn sử dụng"
-        footer={
-          perm === "unsupported"
-            ? "Trình duyệt này không hỗ trợ Web Notification API. Bạn vẫn nhận được thông báo bên trong ứng dụng."
-            : undefined
-        }
-      >
-        <SettingsRow
-          icon={<CalendarClock size={20} />}
-          label="Nhắc trước ngày hết hạn"
-          value={`${s.remindDays} ngày`}
-          onClick={() => setPickDays(true)}
-        />
-        <div className="min-h-14 px-4 py-3">
-          <SwitchField
-            label="Thông báo trong ứng dụng"
-            description="Hiển thị huy hiệu và danh sách thông báo bên trong Expiry"
-            selected={s.inApp}
-            onChange={(v) => setS({ ...s, inApp: v })}
-          />
-        </div>
-        <div className="min-h-14 px-4 py-3">
-          <SwitchField
-            label="Thông báo trên trình duyệt"
-            description={
-              perm === "unsupported"
-                ? "Trình duyệt hiện tại không hỗ trợ Web Notification API"
-                : "Gửi thông báo trên trình duyệt khi ứng dụng đang mở"
-            }
-            selected={s.push}
-            disabled={perm === "denied" || perm === "unsupported"}
-            onChange={togglePush}
-          />
-        </div>
-        {perm === "granted" && s.push && (
-          <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-border-primary/40 bg-surface-subtle/40">
-            <span className="text-xs text-text-secondary">
-              Kiểm tra quyền thông báo trên trình duyệt:
-            </span>
-            <Button
-              size="small"
-              variant="neutral"
-              onClick={sendTestNotification}
-            >
-              Gửi thông báo thử
-            </Button>
-          </div>
-        )}
-        {perm === "denied" && (
-          <div
-            role="alert"
-            className="flex items-start gap-3 bg-status-expired-bg px-4 py-3 text-xs text-status-expired border-t border-status-expired/20"
-          >
-            <BellOff size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
-            <div>
-              <p className="font-semibold">
-                Thông báo trên trình duyệt đang bị chặn.
-              </p>
-              <p>
-                Trình duyệt đã từ chối quyền gửi thông báo. Để bật lại, hãy mở
-                cài đặt trang web này trong trình duyệt của bạn (Site Settings /
-                Page info) và chọn Cho phép thông báo.
-              </p>
-            </div>
-          </div>
-        )}
-        {perm === "unsupported" && (
-          <div
-            role="status"
-            className="flex items-start gap-3 bg-bg-subtle px-4 py-3 text-xs text-text-secondary border-t border-border-primary/40"
-          >
-            <BellOff size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
-            <p>
-              Trình duyệt hiện tại không hỗ trợ Web Notification API. Bạn vẫn
-              nhận được lời nhắc bên trong ứng dụng.
-            </p>
-          </div>
-        )}
-      </SettingsGroup>
-
-      {dirty && (
-        <div
-          role="status"
-          className="flex flex-wrap items-center gap-3 rounded-corner-lg bg-brand-tertiary px-4 py-3 border border-brand-primary/30 shadow-xs"
+    <div
+      className={`flex w-full flex-col gap-5 ${
+        dirty && section ? "pb-20 md:pb-0" : ""
+      }`}
+    >
+      <div className={section ? "hidden md:block" : "block"}>
+        <PageHeader title="Cài đặt" />
+      </div>
+      <div className="grid min-w-0 gap-6 md:grid-cols-[240px_minmax(0,640px)] md:justify-center">
+        <nav
+          aria-label="Danh mục cài đặt"
+          className={`${section ? "hidden md:block" : "block"} min-w-0`}
         >
-          <p className="min-w-0 flex-1 text-xs md:text-sm font-medium text-text-primary">
-            Bạn có thay đổi cài đặt chưa lưu.
-          </p>
-          <Button
-            size="small"
-            variant="neutral"
-            onClick={() => setS(state.settings)}
-          >
-            Hủy
-          </Button>
-          <Button
-            size="small"
-            variant="primary"
-            onClick={() => {
-              dispatch({ type: "settings", settings: s })
+          <div className="overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs">
+            {sections.map(({ key, icon }) => (
+              <button
+                key={key}
+                type="button"
+                aria-current={activeSection === key ? "page" : undefined}
+                onClick={() => selectSection(key)}
+                className={`flex min-h-14 w-full items-center gap-3 border-b border-border-subtle px-4 text-left text-sm font-medium last:border-b-0 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary ${
+                  activeSection === key
+                    ? "md:bg-brand-secondary md:text-brand-strong"
+                    : "text-text-primary hover:bg-surface-hover"
+                }`}
+              >
+                <span aria-hidden="true" className="shrink-0 text-brand-strong">
+                  {icon}
+                </span>
+                <span className="min-w-0 flex-1">{sectionLabels[key]}</span>
+                <ChevronRight
+                  size={17}
+                  aria-hidden="true"
+                  className="text-text-tertiary md:hidden"
+                />
+              </button>
+            ))}
+          </div>
+        </nav>
 
-              notify("Đã lưu cài đặt nhắc nhở")
-            }}
-          >
-            Lưu thay đổi
-          </Button>
-        </div>
-      )}
+        <section
+          className={`${section ? "block" : "hidden md:block"} min-w-0`}
+          aria-label={sectionLabels[activeSection]}
+        >
+          <div className="mb-4 flex items-center gap-2 md:hidden">
+            <button
+              type="button"
+              onClick={backToSections}
+              aria-label="Quay lại Cài đặt"
+              className="flex size-11 items-center justify-center rounded-corner-md text-brand-strong hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
+            >
+              <ArrowLeft size={21} aria-hidden="true" />
+            </button>
+            <h1 className="text-xl font-semibold text-text-heading">
+              {sectionLabels[activeSection]}
+            </h1>
+          </div>
+          <h2 className="mb-4 hidden text-lg font-semibold text-text-heading md:block">
+            {sectionLabels[activeSection]}
+          </h2>
 
-      <SettingsGroup title="Quản lý dữ liệu">
-        <SettingsRow
-          icon={<Trash2 size={20} />}
-          label="Thùng rác"
-          onClick={onNavigateTrash}
-        />
-        <SettingsRow
-          icon={<MapPin size={20} />}
-          label="Nơi bảo quản"
-          value={`${state.locations.length} vị trí`}
-          onClick={() => setShowLocations(true)}
-        />
-      </SettingsGroup>
+          {activeSection === "notifications" && (
+            <div className="flex flex-col gap-4">
+              <div className="divide-y divide-border-subtle overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs">
+                <SwitchField
+                  icon={<Bell size={19} />}
+                  label="Thông báo trong ứng dụng"
+                  description="Trên thiết bị này"
+                  selected={draft.inApp}
+                  onChange={(value) => {
+                    setSaveError(null)
+                    setDraft((current) => ({ ...current, inApp: value }))
+                  }}
+                  disabled={saving}
+                />
+                <SettingsRow
+                  icon={<CalendarClock size={19} />}
+                  label="Bắt đầu cảnh báo trước hạn"
+                  value={`${draft.remindDays} ngày`}
+                  onClick={() => setPickDays(true)}
+                  disabled={saving}
+                />
+              </div>
 
-      {state.mode === "demo" ? (
-        <SettingsGroup title="Dữ liệu mẫu">
-          <SettingsRow
-            icon={<RotateCcw size={20} />}
-            label="Nạp lại bộ dữ liệu mẫu"
-            onClick={() => {
-              dispatch({ type: "demoReset", scenario: "full" })
+              <div className="rounded-corner-lg border border-border-primary bg-surface-bg p-4 shadow-xs">
+                <h3 className="mb-3 text-sm font-semibold text-text-heading">
+                  Kiểm tra thông báo trình duyệt
+                </h3>
+                <Button
+                  variant="secondary"
+                  onClick={sendTestNotification}
+                  disabled={
+                    saving ||
+                    permission === "unsupported" ||
+                    permission === "denied"
+                  }
+                  className="min-h-11"
+                >
+                  Gửi thông báo thử
+                </Button>
+                {permission === "denied" && (
+                  <p
+                    role="alert"
+                    className="mt-3 flex items-start gap-2 text-sm text-status-expired"
+                  >
+                    <BellOff
+                      size={17}
+                      aria-hidden="true"
+                      className="mt-0.5 shrink-0"
+                    />
+                    Trình duyệt đã chặn thông báo. Hãy mở quyền thông báo của
+                    trang để thử lại.
+                  </p>
+                )}
+                {permission === "unsupported" && (
+                  <p role="status" className="mt-3 text-sm text-text-secondary">
+                    Trình duyệt này không hỗ trợ thông báo.
+                  </p>
+                )}
+              </div>
 
-              notify("Đã nạp lại dữ liệu mẫu đầy đủ")
-            }}
-          />
-          <SettingsRow
-            icon={<PackageOpen size={20} />}
-            label="Chuyển sang kho trống"
-            onClick={() => {
-              dispatch({ type: "demoReset", scenario: "empty" })
+              {saveError && (
+                <p
+                  role="alert"
+                  className="rounded-corner-md border border-status-expired/30 bg-status-expired-bg p-3 text-sm text-status-expired"
+                >
+                  {saveError}
+                </p>
+              )}
+              {dirty && (
+                <div className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 flex gap-3 border-t border-border-primary bg-surface-bg p-3 shadow-lg md:static md:justify-end md:rounded-corner-lg md:border md:shadow-xs">
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setDraft(state.settings)
+                      setSaveError(null)
+                    }}
+                    disabled={saving}
+                    className="min-h-12 flex-[3] md:flex-none"
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={save}
+                    loading={saving}
+                    className="min-h-12 flex-[7] md:flex-none"
+                  >
+                    {saving ? "Đang lưu..." : "Lưu thay đổi"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
 
-              notify("Đã chuyển sang trạng thái kho trống")
-            }}
-          />
-        </SettingsGroup>
-      ) : (
-        <SettingsGroup title="Tài khoản">
-          <SettingsRow
-            icon={<LogOut size={20} />}
-            label="Đăng xuất"
-            onClick={() => dispatch({ type: "logout" })}
-          />
-        </SettingsGroup>
-      )}
+          {activeSection === "inventory" && (
+            <div className="divide-y divide-border-subtle overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs">
+              <SettingsRow
+                icon={<MapPin size={19} />}
+                label="Nơi bảo quản"
+                value={`${state.locations.length} vị trí`}
+                onClick={() => setShowLocations(true)}
+              />
+            </div>
+          )}
 
-      {/* Pick Remind Days Modal */}
+          {activeSection === "account" && (
+            <div className="rounded-corner-lg border border-border-primary bg-surface-bg p-4 shadow-xs">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="flex size-10 items-center justify-center rounded-corner-full bg-brand-secondary text-brand-strong">
+                  <UserRound size={20} aria-hidden="true" />
+                </span>
+                <span className="text-sm font-semibold text-text-primary">
+                  {state.mode === "account"
+                    ? state.userName || "Tài khoản Expiry"
+                    : "Chế độ xem thử"}
+                </span>
+              </div>
+              {state.mode === "account" ? (
+                <Button
+                  variant="secondary"
+                  iconStart={<LogOut size={17} />}
+                  onClick={() => dispatch({ type: "logout" })}
+                >
+                  Đăng xuất
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  iconStart={<LogIn size={17} />}
+                  onClick={onLogin}
+                >
+                  Đăng nhập
+                </Button>
+              )}
+            </div>
+          )}
+
+          {activeSection === "data" && (
+            <div className="flex flex-col gap-6">
+              <div className="overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs">
+                <SettingsRow
+                  icon={<Trash2 size={19} />}
+                  label="Thùng rác"
+                  onClick={onNavigateTrash}
+                />
+              </div>
+              {state.mode === "demo" && (
+                <div className="rounded-corner-lg border border-status-expired/30 bg-surface-bg p-4 shadow-xs">
+                  <h3 className="mb-3 text-sm font-semibold text-status-expired">
+                    Dữ liệu mẫu trên thiết bị
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      variant="secondary"
+                      iconStart={<RotateCcw size={17} />}
+                      onClick={() => setPendingReset("full")}
+                    >
+                      Nạp lại dữ liệu mẫu
+                    </Button>
+                    <Button
+                      variant="danger"
+                      iconStart={<Archive size={17} />}
+                      onClick={() => setPendingReset("empty")}
+                    >
+                      Chuyển sang kho trống
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      </div>
+
       <Modal
         isOpen={pickDays}
         onClose={() => setPickDays(false)}
-        title="Nhắc trước HSD"
+        title="Bắt đầu cảnh báo trước hạn"
         size="small"
       >
-        <div className="flex flex-col divide-y divide-border-primary/40">
-          {[1, 2, 3, 5, 7].map((num) => (
-            <button
-              key={num}
-              type="button"
-              aria-pressed={s.remindDays === num}
-              onClick={() => {
-                setS({ ...s, remindDays: num })
-
-                setPickDays(false)
-              }}
-              className="flex min-h-12 items-center justify-between px-3 text-sm font-medium hover:bg-surface-hover transition-colors cursor-pointer"
-            >
-              <span>{num} ngày</span>
-              {s.remindDays === num && (
-                <CircleCheck
-                  size={18}
-                  aria-hidden="true"
-                  className="text-brand-strong"
-                />
-              )}
-            </button>
-          ))}
+        <div className="divide-y divide-border-subtle">
+          {[...new Set([1, 3, 7, draft.remindDays])]
+            .sort((a, b) => a - b)
+            .map((days) => (
+              <button
+                key={days}
+                type="button"
+                aria-pressed={draft.remindDays === days}
+                onClick={() => {
+                  setSaveError(null)
+                  setDraft((current) => ({ ...current, remindDays: days }))
+                  setPickDays(false)
+                }}
+                className="flex min-h-12 w-full items-center justify-between px-3 text-sm font-medium text-text-primary hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
+              >
+                {days} ngày {days === 3 ? "(mặc định)" : ""}
+                {draft.remindDays === days && (
+                  <CircleCheck
+                    size={18}
+                    aria-hidden="true"
+                    className="text-brand-strong"
+                  />
+                )}
+              </button>
+            ))}
         </div>
       </Modal>
-
-      {/* Location Manager Modal */}
+      <Modal
+        isOpen={pendingLeave !== null}
+        onClose={() => setPendingLeave(null)}
+        title="Bỏ thay đổi chưa lưu?"
+        size="small"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setPendingLeave(null)}>
+              Ở lại
+            </Button>
+            <Button variant="danger" onClick={discardAndLeave}>
+              Rời đi không lưu
+            </Button>
+          </>
+        }
+      />
+      <Modal
+        isOpen={pendingReset !== null}
+        onClose={() => setPendingReset(null)}
+        title={
+          pendingReset === "empty"
+            ? "Chuyển sang kho trống?"
+            : "Nạp lại dữ liệu mẫu?"
+        }
+        description="Dữ liệu mẫu trên thiết bị sẽ bị thay thế."
+        size="small"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setPendingReset(null)}>
+              Hủy
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (pendingReset) {
+                  dispatch({ type: "demoReset", scenario: pendingReset })
+                  notify(
+                    pendingReset === "empty"
+                      ? "Đã chuyển sang kho trống"
+                      : "Đã nạp lại dữ liệu mẫu",
+                  )
+                }
+                setPendingReset(null)
+              }}
+            >
+              Xác nhận
+            </Button>
+          </>
+        }
+      />
       <LocationManagerModal
         isOpen={showLocations}
         onClose={() => setShowLocations(false)}

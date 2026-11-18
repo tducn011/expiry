@@ -375,7 +375,7 @@ export function FoodForm({
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-bold text-text-heading tracking-tight">
+        <h1 className="text-xl md:text-2xl font-semibold text-text-heading tracking-normal">
           {titles[mode]}
         </h1>
         <button
@@ -431,12 +431,6 @@ export function FoodForm({
             </p>
           </div>
         </Card>
-      )}
-
-      {mode === "readd" && (
-        <p className="text-xs md:text-sm text-text-secondary">
-          Hãy xác nhận lại số lượng và hạn sử dụng của lần mua mới này.
-        </p>
       )}
 
       <Card className="flex flex-col gap-4">
@@ -606,10 +600,10 @@ export function FoodForm({
                 onClick={() => setShowReminderPicker((v) => !v)}
                 className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md transition-all cursor-pointer ${
                   d.reviewAt
-                    ? "bg-sage-100 text-sage-800 border border-sage-300 hover:bg-sage-200 font-semibold"
+                    ? "bg-brand-primary/10 text-brand-strong border border-brand-primary/30 hover:bg-brand-primary/20 font-semibold"
                     : showReminderPicker
                       ? "bg-brand-primary/10 text-brand-strong border border-brand-primary/40 shadow-xs"
-                      : "text-text-secondary hover:text-brand-strong hover:bg-surface-subtle border border-transparent hover:border-border-primary/40"
+                      : "text-text-secondary hover:text-brand-strong hover:bg-surface-secondary border border-transparent hover:border-border-primary/40"
                 }`}
                 title="Tùy chỉnh nhắc nhở"
                 aria-expanded={showReminderPicker}
@@ -617,7 +611,7 @@ export function FoodForm({
                 <Bell
                   size={14}
                   className={
-                    d.reviewAt ? "text-sage-700" : "text-text-secondary"
+                    d.reviewAt ? "text-brand-strong" : "text-text-secondary"
                   }
                 />
                 <span>
@@ -674,12 +668,12 @@ export function FoodForm({
           <div className="mt-2 pt-4 border-t border-border-primary/60 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
-                <Bell size={16} className="text-sage-700" />
-                <span className="text-sm font-semibold text-text-primary">
+                <Bell size={16} className="text-brand-strong" />
+                <span className="text-sm font-semibold text-text-heading">
                   Tùy chỉnh nhắc nhở
                 </span>
                 {d.reviewAt && (
-                  <span className="text-xs font-medium text-sage-800 bg-sage-100 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium text-brand-strong bg-brand-primary/10 px-2 py-0.5 rounded-full border border-brand-primary/30">
                     Đã bật lịch nhắc
                   </span>
                 )}
@@ -729,7 +723,7 @@ export function FoodForm({
                     className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
                       isSelected
                         ? "bg-brand-primary text-on-brand shadow-xs"
-                        : "bg-surface-subtle text-text-secondary hover:text-text-primary hover:bg-surface-hover border border-border-primary/50"
+                        : "bg-surface-secondary text-text-secondary hover:text-text-primary hover:bg-surface-tertiary border border-border-primary/50"
                     }`}
                   >
                     +{num} ngày
@@ -749,7 +743,6 @@ export function FoodForm({
             value={d.note || ""}
             onChange={set("note")}
             maxLength={1000}
-            description="Tùy chọn, tối đa 1000 ký tự"
             aria-invalid={!!errors.note}
             aria-describedby="e-note"
           />

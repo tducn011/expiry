@@ -27,7 +27,11 @@ export function IconButton({
   ...props
 }: IconButtonProps) {
   const sizeClass =
-    size === "small" ? "size-8" : size === "lg" ? "size-12" : "size-10"
+    size === "small"
+      ? "size-11 md:size-8"
+      : size === "lg"
+        ? "size-12"
+        : "size-11 md:size-10"
 
   const variantClass =
     variant === "primary"

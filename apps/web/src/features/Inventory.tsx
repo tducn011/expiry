@@ -23,23 +23,18 @@ import {
 } from "../components/ui/FilterChips"
 
 import {
-  ArrowRight,
   Bell,
-  CircleAlert,
-  Clock,
+  ChevronRight,
+  Info,
   PackageOpen,
   Plus,
   Search,
   SearchX,
-  Timer,
+  Settings as SettingsIcon,
   X,
 } from "lucide-react"
 
 import IconButton from "../components/ui/IconButton"
-
-import InputField from "../components/ui/InputField"
-
-import PageHeader from "../components/ui/PageHeader"
 
 import StatusBadge from "../components/ui/StatusBadge"
 
@@ -65,6 +60,10 @@ export const defaultFilters: InventoryFilters = {
   attentionFilter: "all",
 }
 
+const inventoryHsdOptions = defaultHsdOptions.filter(
+  (option) => option.v !== "expired",
+)
+
 export interface InventoryProps {
   state: State
 
@@ -72,9 +71,11 @@ export interface InventoryProps {
 
   onAdd: () => void
 
-  onNavigateAttention?: () => void
+  onNavigateAttention: () => void
 
   onOpenNotifications?: () => void
+
+  onOpenAccount?: () => void
 
   unreadNotificationsCount?: number
 }
@@ -101,46 +102,55 @@ function AttentionSummary({
   if (total === 0) return null
 
   return (
-    <Card
+    <div
       role="region"
       aria-label="Tóm tắt món cần chú ý"
-      onClick={onOpen}
-      className="flex cursor-pointer flex-col gap-2 border-brand-primary/20 bg-brand-tertiary/70 transition-all hover:bg-brand-tertiary shadow-xs"
+      className="w-full rounded-[20px] border border-border-primary bg-surface-bg p-4 flex flex-col gap-3 shadow-none transition-all"
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-brand-strong font-semibold text-sm">
-          <CircleAlert size={18} aria-hidden="true" />
+        <div className="flex items-center gap-2 text-brand-primary font-semibold text-[16px] leading-[24px]">
+          <Info size={20} aria-hidden="true" className="shrink-0" />
           <span>Cần chú ý ({total} món)</span>
         </div>
-        <span className="text-xs font-semibold text-brand-strong hover:underline">
-          Xem tất cả{" "}
-          <ArrowRight
-            size={14}
-            aria-hidden="true"
-            className="inline-block align-middle"
-          />
-        </span>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="inline-flex min-h-11 items-center gap-1 text-[14px] leading-[20px] font-medium text-brand-strong hover:underline cursor-pointer"
+        >
+          <span>Mở nhắc nhở</span>
+          <ChevronRight size={16} aria-hidden="true" />
+        </button>
       </div>
-      <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-        {expired > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-corner-full bg-status-expired-bg px-2.5 py-0.5 font-semibold text-status-expired border border-status-expired/20">
-            <CircleAlert size={12} aria-hidden="true" />
-            {expired} quá hạn
-          </span>
-        )}
+      <div className="flex flex-wrap items-center gap-2">
         {soon > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-corner-full bg-status-soon-bg px-2.5 py-0.5 font-semibold text-status-soon border border-status-soon/20">
-            <Clock size={12} aria-hidden="true" />
+          <span className="inline-flex items-center gap-1.5 h-6 rounded-[12px] border border-border-primary bg-status-soon-bg pl-2 pr-2.5 text-[13px] leading-[20px] font-medium text-status-soon">
+            <span
+              className="size-2 rounded-full bg-status-soon shrink-0"
+              aria-hidden="true"
+            />
             {soon} sắp hết hạn
           </span>
         )}
+        {expired > 0 && (
+          <span className="inline-flex items-center gap-1.5 h-6 rounded-[12px] border border-border-primary bg-status-expired-bg pl-2 pr-2.5 text-[13px] leading-[20px] font-medium text-status-expired">
+            <span
+              className="size-2 rounded-full bg-status-expired shrink-0"
+              aria-hidden="true"
+            />
+            {expired} quá hạn
+          </span>
+        )}
         {reviewDue > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-corner-full bg-surface-bg px-2.5 py-0.5 font-semibold text-brand-strong border border-brand-primary/20">
+          <span className="inline-flex items-center gap-1.5 h-6 rounded-[12px] border border-border-primary bg-surface-soft pl-2 pr-2.5 text-[13px] leading-[20px] font-medium text-sage-800">
+            <span
+              className="size-2 rounded-full bg-sage-700 shrink-0"
+              aria-hidden="true"
+            />
             {reviewDue} đến hẹn kiểm tra
           </span>
         )}
       </div>
-    </Card>
+    </div>
   )
 }
 
@@ -154,6 +164,8 @@ export function Inventory({
   onNavigateAttention,
 
   onOpenNotifications,
+
+  onOpenAccount,
 
   unreadNotificationsCount = 0,
 }: InventoryProps) {
@@ -190,15 +202,27 @@ export function Inventory({
 
   const remind = state.settings.remindDays
 
-  const items = active(state)
+  const activeItems = active(state)
+
+  const items = activeItems.filter((f) => statusOf(f, remind) !== "expired")
 
   const t = today()
 
-  const expired = items.filter((f) => statusOf(f, remind) === "expired").length
+  const todayLabel = new Intl.DateTimeFormat("vi-VN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(new Date(`${t}T12:00:00+07:00`))
 
-  const soon = items.filter((f) => statusOf(f, remind) === "soon").length
+  const expired = activeItems.filter(
+    (f) => statusOf(f, remind) === "expired",
+  ).length
 
-  const reviewDue = items.filter(
+  const soon = activeItems.filter((f) => statusOf(f, remind) === "soon").length
+
+  const reviewDue = activeItems.filter(
     (f) =>
       statusOf(f, remind) !== "expired" &&
       statusOf(f, remind) !== "soon" &&
@@ -231,7 +255,17 @@ export function Inventory({
         return f.location === selectedLocation
       })
 
-      .sort((a, b) => (a.expDate ?? "9999").localeCompare(b.expDate ?? "9999"))
+      .sort((a, b) => {
+        const priority = (food: Food) => {
+          const status = statusOf(food, remind)
+          return status === "soon" ? 0 : status === "ok" ? 1 : 2
+        }
+
+        return (
+          priority(a) - priority(b) ||
+          (a.expDate ?? "9999").localeCompare(b.expDate ?? "9999")
+        )
+      })
   }, [
     items,
     q,
@@ -254,65 +288,72 @@ export function Inventory({
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      {/* Mobile App Header */}
-      <div className="flex items-center justify-between gap-3 pt-0 pb-1 md:hidden">
-        <div className="flex items-center gap-2">
-          <div className="flex size-9 items-center justify-center rounded-corner-md bg-brand-primary text-on-brand shadow-xs">
-            <Timer size={20} aria-hidden />
-          </div>
-          <span className="text-lg font-bold text-brand-primary">Expiry</span>
+      {/* Page Header matching Figma node 312:50 (414:110) */}
+      <div className="flex items-start justify-between gap-3 min-h-11 w-full">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="text-[24px] leading-8 font-semibold text-text-heading tracking-normal">
+            Hôm nay
+          </h1>
+          <time
+            dateTime={t}
+            className="text-[13px] leading-[18px] font-normal text-text-secondary"
+          >
+            {todayLabel}
+          </time>
         </div>
-        {onOpenNotifications && (
-          <div className="relative">
-            <IconButton
-              variant="subtle"
-              aria-label={
-                unreadNotificationsCount
-                  ? `Thông báo, ${unreadNotificationsCount} chưa đọc`
-                  : "Thông báo"
-              }
-              icon={<Bell size={22} />}
-              onClick={onOpenNotifications}
-            />
-            {unreadNotificationsCount > 0 && (
-              <span
-                aria-hidden="true"
-                className="absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white shadow-xs"
-              >
-                {unreadNotificationsCount}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      <PageHeader
-        title="Thực phẩm"
-        subtitle={
-          items.length
-            ? `${items.length} món đang lưu trữ`
-            : "Những thực phẩm bạn đang lưu trữ"
-        }
-        actions={
-          items.length > 0 ? (
-            <div className="hidden md:block">
+        <div className="flex items-center gap-2">
+          {activeItems.length > 0 && (
+            <div className="hidden md:block mr-1">
               <Button
                 variant="primary"
-                iconStart={<Plus size={18} />}
+                size="small"
+                iconStart={<Plus size={16} />}
                 onClick={onAdd}
               >
                 Thêm thực phẩm
               </Button>
             </div>
-          ) : undefined
-        }
-      />
+          )}
+          {onOpenNotifications && (
+            <div className="relative">
+              <button
+                type="button"
+                aria-label={
+                  unreadNotificationsCount
+                    ? `Thông báo, ${unreadNotificationsCount} chưa đọc`
+                    : "Thông báo"
+                }
+                onClick={onOpenNotifications}
+                className="flex size-11 items-center justify-center rounded-[16px] text-text-primary hover:bg-surface-subtle transition-colors cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+              >
+                <Bell size={20} strokeWidth={2} />
+              </button>
+              {unreadNotificationsCount > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-1 right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white shadow-xs"
+                >
+                  {unreadNotificationsCount}
+                </span>
+              )}
+            </div>
+          )}
+          <button
+            type="button"
+            aria-label="Cài đặt"
+            title="Cài đặt"
+            onClick={onOpenAccount}
+            className="flex size-11 items-center justify-center rounded-full bg-surface-soft border border-border-subtle text-text-primary hover:bg-surface-soft/80 transition-colors cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+          >
+            <SettingsIcon size={20} strokeWidth={2} />
+          </button>
+        </div>
+      </div>
 
-      {items.length === 0 ? (
+      {activeItems.length === 0 ? (
         <EmptyState
           icon={<PackageOpen size={32} />}
           title="Chưa có thực phẩm nào"
-          text="Thêm thực phẩm đầu tiên để bắt đầu theo dõi hạn sử dụng và chống lãng phí."
           action={
             <Button
               variant="primary"
@@ -329,36 +370,41 @@ export function Inventory({
             expired={expired}
             soon={soon}
             reviewDue={reviewDue}
-            onOpen={onNavigateAttention ?? onOpenNotifications ?? (() => {})}
+            onOpen={onNavigateAttention}
           />
 
+          {/* Section 2: Search and Filters (414:127) */}
           <div className="flex flex-col gap-3">
-            <InputField
-              aria-label="Tìm thực phẩm"
-              type="search"
-              value={q}
-              onChange={setQ}
-              placeholder="Tìm thực phẩm theo tên..."
-              prefix={<Search size={18} aria-hidden="true" />}
-              suffix={
-                q ? (
-                  <IconButton
-                    size="small"
-                    variant="subtle"
-                    aria-label="Xóa tìm kiếm"
-                    icon={<X size={16} />}
-                    onClick={() => setQ("")}
-                  />
-                ) : undefined
-              }
-            />
+            <div className="relative flex items-center w-full">
+              <div className="pointer-events-none absolute left-3 flex items-center text-text-tertiary">
+                <Search size={20} strokeWidth={2} aria-hidden="true" />
+              </div>
+              <input
+                type="search"
+                aria-label="Tìm thực phẩm theo tên"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Tìm thực phẩm theo tên..."
+                className="h-12 w-full rounded-[12px] border border-border-control bg-surface-bg pl-10 pr-10 text-[14px] leading-[22px] text-text-primary placeholder:text-text-placeholder outline-none transition-all focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+              />
+              {q && (
+                <button
+                  type="button"
+                  aria-label="Xóa tìm kiếm"
+                  onClick={() => setQ("")}
+                  className="absolute right-3 flex size-6 items-center justify-center rounded-full text-text-tertiary hover:text-text-primary cursor-pointer"
+                >
+                  <X size={16} strokeWidth={2} />
+                </button>
+              )}
+            </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <FilterDropdown<StatusFilter>
                 label="HSD"
                 value={filterHsd}
                 onChange={setFilterHsd}
-                options={defaultHsdOptions}
+                options={inventoryHsdOptions}
               />
               <FilterDropdown
                 label="Danh mục"
@@ -375,6 +421,7 @@ export function Inventory({
             </div>
           </div>
 
+          {/* Section 3: Inventory List (414:149) */}
           <section
             aria-labelledby="inv-heading"
             className="flex flex-col gap-3"
@@ -382,7 +429,7 @@ export function Inventory({
             <div className="flex min-h-8 items-center justify-between gap-4">
               <h2
                 id="inv-heading"
-                className="text-sm font-semibold text-text-heading uppercase tracking-wide"
+                className="text-[22px] leading-[30px] font-semibold text-text-heading tracking-normal"
               >
                 Danh sách ({list.length})
               </h2>
@@ -399,22 +446,32 @@ export function Inventory({
             {list.length === 0 ? (
               <EmptyState
                 icon={<SearchX size={32} />}
-                title="Không tìm thấy thực phẩm"
-                text="Thử từ khóa hoặc bộ lọc khác để tìm kiếm."
+                title={
+                  items.length === 0 && expired > 0
+                    ? "Không có món còn hạn"
+                    : "Không tìm thấy thực phẩm"
+                }
                 action={
-                  <Button variant="neutral" onClick={clear}>
-                    Xóa bộ lọc
-                  </Button>
+                  items.length === 0 && expired > 0 && onNavigateAttention ? (
+                    <Button variant="neutral" onClick={onNavigateAttention}>
+                      Mở nhắc nhở
+                    </Button>
+                  ) : (
+                    <Button variant="neutral" onClick={clear}>
+                      Xóa bộ lọc
+                    </Button>
+                  )
                 }
               />
             ) : (
-              <div>
-                {/* Mobile & Tablet: Card list */}
-                <div className="flex flex-col divide-y divide-border-primary/40 overflow-hidden rounded-corner-lg border border-border-primary/50 bg-surface-bg shadow-xs lg:hidden">
+              <div id="inventory-list">
+                {/* Grouped Rows Card Container matching node 312:50 (414:156) */}
+                <div className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-[16px] border border-border-primary bg-surface-bg shadow-none lg:hidden">
                   {list.map((f) => (
                     <FoodCard
                       key={f.id}
                       food={f}
+                      variant="grouped"
                       remindDays={remind}
                       onOpen={() => onOpenDetail(f.id)}
                     />
@@ -422,7 +479,7 @@ export function Inventory({
                 </div>
 
                 {/* Desktop: Data Table */}
-                <div className="hidden lg:block overflow-x-auto rounded-corner-lg border border-border-primary/50 bg-surface-bg shadow-xs">
+                <div className="hidden lg:block overflow-x-auto rounded-[16px] border border-border-primary bg-surface-bg shadow-none">
                   <table className="w-full border-separate border-spacing-0 text-left text-sm">
                     <thead className="bg-bg-subtle/80 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                       <tr>
@@ -443,7 +500,7 @@ export function Inventory({
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border-primary/40">
+                    <tbody className="divide-y divide-border-subtle">
                       {list.map((f) => {
                         const IconComp = getFoodIcon(f.name)
 
@@ -457,9 +514,9 @@ export function Inventory({
                               <div className="flex items-center gap-3">
                                 <span
                                   aria-hidden="true"
-                                  className="flex size-8 shrink-0 items-center justify-center rounded-corner-md bg-brand-tertiary text-brand-strong"
+                                  className="flex size-9 shrink-0 items-center justify-center rounded-[12px] border border-border-primary bg-surface-subtle text-text-primary"
                                 >
-                                  <IconComp size={18} />
+                                  <IconComp size={18} strokeWidth={2} />
                                 </span>
                                 <span className="font-semibold text-text-primary hover:text-brand-strong transition-colors">
                                   {f.name}

@@ -155,6 +155,24 @@ test('detail/list/trash project exact Entry and EntryList contracts, including o
   validate(filteredCategory, 'EntryList');
   assert.equal(calls.at(-1)[1].category, 'dairy_eggs');
 
+  const vietnameseCategory = await (await request('/food-entries?category=' + encodeURIComponent('Trứng & Sữa'))).json();
+  validate(vietnameseCategory, 'EntryList');
+  assert.equal(calls.at(-1)[1].category, 'dairy_eggs');
+
+  const aliasAttention = await (await request('/food-entries?attention=expired')).json();
+  validate(aliasAttention, 'EntryList');
+  assert.equal(calls.at(-1)[1].attention, 'past_date');
+
+  const soonAttention = await (await request('/food-entries?attention=expiring_soon')).json();
+  validate(soonAttention, 'EntryList');
+  assert.equal(calls.at(-1)[1].attention, 'soon');
+
+  const allFiltersIgnored = await (await request('/food-entries?category=all&location=all&attention=all')).json();
+  validate(allFiltersIgnored, 'EntryList');
+  assert.equal(calls.at(-1)[1].category, undefined);
+  assert.equal(calls.at(-1)[1].location, undefined);
+  assert.equal(calls.at(-1)[1].attention, undefined);
+
   const invalidCategoryRes = await request('/food-entries?category=invalid_category');
   assert.equal(invalidCategoryRes.status, 422);
 });

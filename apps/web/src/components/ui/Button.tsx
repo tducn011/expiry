@@ -57,9 +57,10 @@ const variantStyles: Record<ButtonVariant, string> = {
 }
 
 const sizeStyles: Record<string, string> = {
-  small: "min-h-8 px-3 py-1 text-xs gap-1.5 rounded-corner-md font-medium",
+  small:
+    "min-h-11 md:min-h-8 px-3 py-1 text-xs gap-1.5 rounded-corner-md font-medium",
 
-  sm: "min-h-8 px-3 py-1 text-xs gap-1.5 rounded-corner-md font-medium",
+  sm: "min-h-11 md:min-h-8 px-3 py-1 text-xs gap-1.5 rounded-corner-md font-medium",
 
   md: "min-h-11 px-4 py-2 text-sm gap-2 rounded-corner-md font-semibold",
 

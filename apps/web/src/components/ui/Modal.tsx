@@ -159,7 +159,7 @@ export function Modal({
             )}
             <h2
               id="modal-title"
-              className="text-base sm:text-lg font-semibold text-text-heading break-words text-balance"
+              className="text-base sm:text-lg font-semibold text-text-heading tracking-normal break-words text-balance"
             >
               {title}
             </h2>
@@ -174,7 +174,7 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="Đóng"
-              className="p-1.5 rounded-corner-md text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
+              className="p-3 -m-1.5 md:p-1.5 md:m-0 rounded-corner-md text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
             >
               <X size={20} aria-hidden />
             </button>

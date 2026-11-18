@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import {
   api,
@@ -8,14 +8,14 @@ import {
   type MutationResult,
 } from "../api/client"
 
-import type { Dispatch, Food, State } from "../store/appStore"
+import type { Dispatch, Food, HistoryEvent, State } from "../store/appStore"
+import type { QuantityMovement } from "../domain/types"
 
 import {
   addDays,
   CATEGORY_LABELS,
   daysLeft,
   formatDate,
-  statusOf,
   today,
 } from "../store/appStore"
 
@@ -26,13 +26,20 @@ import Card from "../components/ui/Card"
 import EmptyState from "../components/ui/EmptyState"
 
 import {
+  Boxes,
+  CalendarDays,
   CalendarClock,
-  CircleAlert,
-  Clock,
+  Check,
+  FileText,
+  History,
   Pencil,
+  Scale,
   SearchX,
+  StickyNote,
   Trash2,
 } from "lucide-react"
+
+import { getFoodIcon } from "./FoodCard"
 
 import InputField from "../components/ui/InputField"
 
@@ -47,6 +54,12 @@ import StatusBadge from "../components/ui/StatusBadge"
 export type DetailAction = "consume" | "discard" | "recount" | "history" | "edit" | "date" | "delete"
 
 type QtyKind = "consume" | "discard" | "adjust"
+
+type HistoryQueryState = {
+  foodId: string
+  items: QuantityMovement[]
+  status: "loading" | "error" | "ready"
+}
 
 interface QtyCopyConfig {
   t: string
@@ -68,6 +81,91 @@ const qtyCopy: Record<QtyKind, QtyCopyConfig> = {
 
     verb: "Đã chỉnh về",
   },
+}
+
+const historyTitles: Record<HistoryEvent["kind"], string> = {
+  add: "Đã thêm vào kho",
+  edit: "Đã cập nhật thông tin",
+  consume: "Đã dùng",
+  discard: "Đã bỏ",
+  adjust: "Đã điều chỉnh số lượng",
+  trash: "Đã chuyển vào Thùng rác",
+  restore: "Đã khôi phục",
+  review: "Đã hẹn kiểm tra",
+}
+
+function formatTimestamp(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(date)
+}
+
+function formatLocalDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "—"
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(date)
+}
+
+function movementToHistoryEvent(
+  movement: QuantityMovement,
+  food: Food,
+): HistoryEvent {
+  const kind: HistoryEvent["kind"] =
+    movement.kind === "consume"
+      ? "consume"
+      : movement.kind === "discard"
+        ? "discard"
+        : movement.kind === "recount"
+          ? "adjust"
+          : "add"
+
+  return {
+    id: movement.id,
+    foodId: food.id,
+    foodName: food.name,
+    kind,
+    at: movement.recorded_at,
+    amount: Math.abs(movement.quantity_before - movement.quantity_after),
+    from: movement.quantity_before,
+    to: movement.quantity_after,
+    unit: food.unit,
+    category: food.category,
+  }
+}
+
+function historyDescription(event: HistoryEvent, food: Food) {
+  const unit = event.unit || food.unit
+
+  if (event.kind === "consume" || event.kind === "discard") {
+    return `${event.amount ?? "—"} ${unit}`
+  }
+
+  if (event.kind === "adjust") {
+    return `Từ ${event.from ?? "—"} đến ${event.to ?? "—"} ${unit}`
+  }
+
+  if (event.kind === "add") {
+    return `Số lượng ban đầu: ${event.to ?? event.amount ?? food.quantity} ${unit}`
+  }
+
+  if (event.kind === "trash") return "Bản ghi được chuyển vào Thùng rác"
+  if (event.kind === "restore") return "Bản ghi được khôi phục vào kho"
+  if (event.kind === "edit") return "Thông tin sản phẩm được cập nhật"
+  return ""
 }
 
 export function Detail({
@@ -97,6 +195,10 @@ export function Detail({
 }) {
   const f = state.foods.find((x) => x.id === id)
 
+  const FoodIcon = f ? getFoodIcon(f.name) : SearchX
+
+  const foodExists = Boolean(f && !f.deletedAt)
+
   const [qty, setQty] = useState<QtyKind | null>(null)
 
   const [val, setVal] = useState("")
@@ -113,12 +215,39 @@ export function Detail({
 
   const [loading, setLoading] = useState(false)
 
+  const [historyQuery, setHistoryQuery] = useState<HistoryQueryState | null>(
+    null,
+  )
+
+  useEffect(() => {
+    if (state.mode !== "account" || !foodExists) {
+      setHistoryQuery(null)
+      return
+    }
+
+    let cancelled = false
+    setHistoryQuery({ foodId: id, items: [], status: "loading" })
+
+    api
+      .history(id, { page: 1, limit: 4 })
+      .then((items) => {
+        if (!cancelled) setHistoryQuery({ foodId: id, items, status: "ready" })
+      })
+      .catch(() => {
+        if (!cancelled)
+          setHistoryQuery({ foodId: id, items: [], status: "error" })
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [id, state.mode, foodExists, f?.version])
+
   if (!f || f.deletedAt) {
     return (
       <EmptyState
         icon={<SearchX size={32} />}
         title="Không còn trong kho"
-        text="Bản ghi này đã được chuyển đi hoặc không tồn tại."
         action={
           <Button variant="neutral" onClick={onBack}>
             Quay lại
@@ -130,13 +259,9 @@ export function Detail({
 
   const rd = state.settings.remindDays
 
-  const st = statusOf(f, rd)
-
   const d = daysLeft(f)
 
-  const t = today()
-
-  const isReviewDue = f.reviewAt !== undefined && f.reviewAt <= t
+  const isExpired = d !== null && d < 0
 
   const n = Number(val.replace(",", "."))
 
@@ -163,6 +288,11 @@ export function Detail({
   }
 
   async function confirm() {
+    if (qty === "consume" && isExpired) {
+      setErr("Không thể ghi nhận đã dùng thực phẩm quá hạn.")
+      return
+    }
+
     if (state.mode === "account") {
       setLoading(true)
 
@@ -315,6 +445,8 @@ export function Detail({
   }
 
   const openQty = (k: QtyKind) => {
+    if (k === "consume" && isExpired) return
+
     setQty(k)
 
     setVal(k === "adjust" ? String(f.quantity) : "")
@@ -324,171 +456,327 @@ export function Detail({
     setErr("")
   }
 
+  const categoryLabel = f.category
+    ? CATEGORY_LABELS[f.category] || f.category
+    : "Chưa phân loại"
+
+  const currentHistoryQuery =
+    historyQuery?.foodId === f.id ? historyQuery : null
+  const cachedHistory = state.history.filter((event) => event.foodId === f.id)
+  const historyEvents =
+    state.mode === "account" &&
+    currentHistoryQuery?.status === "ready" &&
+    currentHistoryQuery.items.length > 0
+      ? currentHistoryQuery.items.map((movement) =>
+          movementToHistoryEvent(movement, f),
+        )
+      : cachedHistory
+  const historyWithCreation = historyEvents.some(
+    (event) => event.kind === "add",
+  )
+    ? historyEvents
+    : [
+        ...historyEvents,
+        {
+          id: `created:${f.id}`,
+          foodId: f.id,
+          foodName: f.name,
+          kind: "add" as const,
+          at: f.createdAt,
+          amount: f.quantity,
+          to: f.quantity,
+          unit: f.unit,
+          category: f.category,
+        },
+      ]
+  const recentHistory = [...historyWithCreation]
+    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+    .slice(0, 4)
+
+  const detailRows = [
+    { label: "Tên sản phẩm", value: f.name },
+    { label: "Danh mục", value: categoryLabel },
+    { label: "Số lượng", value: `${f.quantity} ${f.unit}` },
+    { label: "Ngày thêm", value: formatLocalDate(f.createdAt) },
+    ...(f.mfgDate
+      ? [{ label: "Ngày sản xuất", value: formatDate(f.mfgDate) }]
+      : []),
+    {
+      label: "Hạn sử dụng",
+      value: (
+        <div className="flex flex-wrap items-center gap-2">
+          <span>{f.expDate ? formatDate(f.expDate) : "Chưa rõ HSD"}</span>
+          {f.expDate && <StatusBadge food={f} remindDays={rd} />}
+        </div>
+      ),
+    },
+    { label: "Nơi bảo quản", value: f.location || "Chưa chọn kho" },
+    ...(f.reviewAt
+      ? [{ label: "Hẹn kiểm tra", value: formatDate(f.reviewAt) }]
+      : []),
+    ...(f.barcode ? [{ label: "Mã vạch", value: f.barcode }] : []),
+  ]
+
   return (
     <div className="flex flex-col gap-6 w-full">
       <PageHeader
         title={f.name}
         onBack={onBack}
         actions={
-          <Button
-            variant="neutral"
-            size="small"
-            iconStart={<Pencil size={16} />}
-            onClick={() => onEdit(f)}
-          >
-            Sửa
-          </Button>
+          <>
+            <Button
+              variant="neutral"
+              size="small"
+              iconStart={<Pencil size={16} />}
+              onClick={() => onEdit(f)}
+            >
+              Sửa
+            </Button>
+            <Button
+              variant="danger"
+              size="small"
+              iconStart={<Trash2 size={15} />}
+              onClick={() => setConfirmTrash(true)}
+            >
+              Xóa
+            </Button>
+          </>
         }
       />
 
-      {/* Contextual guidance banner based on HCI and food safety principles */}
-      {st === "expired" && (
-        <div
-          role="alert"
-          className="flex items-start gap-3 rounded-corner-md border border-status-expired/30 bg-status-expired-bg px-4 py-3 text-sm text-status-expired shadow-xs"
-        >
-          <CircleAlert
-            size={20}
-            aria-hidden="true"
-            className="mt-0.5 shrink-0"
-          />
-          <div className="flex-1">
-            <p className="font-semibold">Món đã quá hạn sử dụng</p>
-            <p className="mt-1 text-xs md:text-sm text-status-expired/90">
-              Đã quá HSD {d !== null ? Math.abs(d) : 1} ngày. Hãy kiểm tra cảm
-              quan thực tế: nếu còn dùng tốt hãy ưu tiên dùng ngay, hoặc chọn{" "}
-              <strong>Đã bỏ</strong> để kho luôn phản ánh đúng. Expiry không tự
-              ý xóa thực phẩm của bạn.
-            </p>
-          </div>
-        </div>
-      )}
+      <div className="grid w-full gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
+        <Card className="min-w-0">
+          <div className="grid grid-cols-[6rem_minmax(0,1fr)] gap-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5">
+            <div
+              aria-hidden="true"
+              className="flex h-28 w-24 items-center justify-center self-start rounded-corner-lg border border-border-subtle bg-brand-tertiary text-brand-strong sm:h-40 sm:w-36"
+            >
+              <FoodIcon size={44} strokeWidth={1.8} />
+            </div>
 
-      {st === "soon" && (
-        <div
-          role="status"
-          className="flex items-start gap-3 rounded-corner-md border border-status-soon/30 bg-status-soon-bg px-4 py-3 text-sm text-status-soon shadow-xs"
-        >
-          <Clock size={20} aria-hidden="true" className="mt-0.5 shrink-0" />
-          <div className="flex-1">
-            <p className="font-semibold">Món sắp hết hạn</p>
-            <p className="mt-1 text-xs md:text-sm text-status-soon/90">
-              {d === 0
-                ? "Món hết hạn hôm nay."
-                : `Còn ${d} ngày trước khi hết HSD.`}{" "}
-              Hãy ưu tiên sử dụng sớm trước khi thực phẩm hỏng.
-            </p>
-          </div>
-        </div>
-      )}
+            <div className="min-w-0 py-1">
+              <h2 className="break-words text-xl font-semibold leading-tight text-text-heading sm:text-2xl">
+                {f.name}
+              </h2>
+              <p className="mt-1 text-sm text-text-secondary">
+                {categoryLabel}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <StatusBadge food={f} remindDays={rd} />
+                {f.reviewAt && (
+                  <span className="inline-flex items-center gap-1.5 rounded-corner-full bg-bg-subtle px-2.5 py-1 text-xs font-medium text-text-secondary">
+                    <CalendarClock size={14} aria-hidden="true" />
+                    Hẹn {formatDate(f.reviewAt)}
+                  </span>
+                )}
+              </div>
+            </div>
 
-      {isReviewDue && st !== "expired" && st !== "soon" && (
-        <div
-          role="status"
-          className="flex items-start gap-3 rounded-corner-md border border-brand-primary/30 bg-brand-tertiary px-4 py-3 text-sm text-brand-strong shadow-xs"
-        >
-          <CalendarClock
-            size={20}
-            aria-hidden="true"
-            className="mt-0.5 shrink-0"
-          />
-          <div className="flex-1">
-            <p className="font-semibold">Đến ngày hẹn kiểm tra lại</p>
-            <p className="mt-1 text-xs md:text-sm text-text-secondary">
-              Đến ngày hẹn ({formatDate(f.reviewAt)}). Vui lòng kiểm tra thực tế
-              xem món còn dùng tốt không rồi ghi nhận hoặc hẹn lịch mới.
-            </p>
+            <dl className="col-span-2 grid grid-cols-1 gap-2 border-t border-border-subtle pt-4 sm:grid-cols-3">
+              <div className="min-w-0 rounded-corner-md bg-bg-faint px-3 py-2.5">
+                <dt className="flex items-center gap-1.5 text-xs text-text-secondary">
+                  <Scale
+                    size={14}
+                    aria-hidden="true"
+                    className="text-brand-strong"
+                  />
+                  Số lượng
+                </dt>
+                <dd className="mt-1 break-words text-sm font-semibold text-text-heading">
+                  {f.quantity} {f.unit}
+                </dd>
+              </div>
+              <div className="min-w-0 rounded-corner-md bg-bg-faint px-3 py-2.5">
+                <dt className="flex items-center gap-1.5 text-xs text-text-secondary">
+                  <CalendarDays
+                    size={14}
+                    aria-hidden="true"
+                    className="text-brand-strong"
+                  />
+                  Hạn sử dụng
+                </dt>
+                <dd className="mt-1 break-words text-sm font-semibold text-text-heading">
+                  {f.expDate ? formatDate(f.expDate) : "Chưa rõ HSD"}
+                  {f.expDate && (
+                    <span className="mt-0.5 block text-xs font-medium text-text-secondary">
+                      {d === null
+                        ? ""
+                        : d < 0
+                          ? `Quá hạn ${Math.abs(d)} ngày`
+                          : d === 0
+                            ? "Hết hạn hôm nay"
+                            : `Còn ${d} ngày`}
+                    </span>
+                  )}
+                </dd>
+              </div>
+              <div className="min-w-0 rounded-corner-md bg-bg-faint px-3 py-2.5">
+                <dt className="flex items-center gap-1.5 text-xs text-text-secondary">
+                  <Boxes
+                    size={14}
+                    aria-hidden="true"
+                    className="text-brand-strong"
+                  />
+                  Nơi bảo quản
+                </dt>
+                <dd className="mt-1 break-words text-sm font-semibold text-text-heading">
+                  {f.location || "Chưa chọn kho"}
+                </dd>
+              </div>
+            </dl>
           </div>
-        </div>
-      )}
+        </Card>
 
-      <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
-        <div className="flex flex-col gap-6">
-          <Card className="flex flex-col gap-4">
-            <StatusBadge food={f} remindDays={rd} />
-            {f.reviewAt && (
-              <p className="flex items-center gap-2 text-xs font-medium text-text-secondary">
-                <CalendarClock
-                  size={16}
-                  aria-hidden="true"
-                  className="text-brand-strong"
-                />{" "}
-                Hẹn kiểm tra lại: {formatDate(f.reviewAt)}
+        <Card className="min-w-0">
+          <SectionTitle className="mb-4 flex items-center gap-2">
+            <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-strong">
+              <Check size={17} aria-hidden="true" />
+            </span>
+            Thao tác nhanh
+          </SectionTitle>
+          <div className="grid grid-cols-2 gap-2.5">
+            {!isExpired && (
+              <Button
+                variant="primary"
+                className="min-h-12 w-full"
+                iconStart={<Check size={17} aria-hidden="true" />}
+                onClick={() => openQty("consume")}
+              >
+                Đã dùng
+              </Button>
+            )}
+            <Button
+              variant="danger"
+              className="min-h-12 w-full"
+              iconStart={<Trash2 size={16} aria-hidden="true" />}
+              onClick={() => openQty("discard")}
+            >
+              Đã bỏ
+            </Button>
+            <Button
+              variant="neutral"
+              size="small"
+              className="min-h-11 w-full px-2"
+              iconStart={<Scale size={15} aria-hidden="true" />}
+              onClick={() => openQty("adjust")}
+            >
+              Chỉnh số lượng
+            </Button>
+            {!isExpired && (
+              <Button
+                variant="neutral"
+                size="small"
+                className="min-h-11 w-full px-2"
+                iconStart={<CalendarClock size={15} aria-hidden="true" />}
+                onClick={() => setLater(true)}
+              >
+                Hẹn kiểm tra
+              </Button>
+            )}
+          </div>
+          <div className="mt-4 border-t border-border-subtle pt-3">
+            <Button
+              variant="subtle"
+              size="small"
+              className="w-full text-text-secondary hover:text-status-expired"
+              iconStart={<Trash2 size={14} aria-hidden="true" />}
+              onClick={() => setConfirmTrash(true)}
+            >
+              Chuyển vào Thùng rác
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="min-w-0">
+          <SectionTitle className="mb-4 flex items-center gap-2">
+            <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-strong">
+              <FileText size={17} aria-hidden="true" />
+            </span>
+            Thông tin chi tiết
+          </SectionTitle>
+          <dl className="divide-y divide-border-subtle">
+            {detailRows.map(({ label, value }) => (
+              <div
+                key={label}
+                className="grid grid-cols-[minmax(6.5rem,0.8fr)_minmax(0,1.2fr)] gap-3 py-3 text-sm sm:grid-cols-[minmax(9rem,0.8fr)_minmax(0,1.2fr)]"
+              >
+                <dt className="text-text-secondary">{label}</dt>
+                <dd className="min-w-0 break-words font-medium text-text-primary">
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Card>
+
+        <aside className="grid min-w-0 content-start gap-4">
+          <Card className="min-w-0">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <SectionTitle className="flex items-center gap-2">
+                <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-strong">
+                  <StickyNote size={17} aria-hidden="true" />
+                </span>
+                Ghi chú
+              </SectionTitle>
+              <Button
+                variant="subtle"
+                size="small"
+                iconStart={<Pencil size={14} aria-hidden="true" />}
+                onClick={() => onEdit(f)}
+              >
+                Sửa
+              </Button>
+            </div>
+            <p className="min-h-16 whitespace-pre-wrap break-words rounded-corner-md bg-bg-faint px-4 py-3 text-sm leading-relaxed text-text-secondary">
+              {f.note || "Chưa có ghi chú cho sản phẩm này."}
+            </p>
+          </Card>
+
+          <Card className="min-w-0">
+            <SectionTitle className="mb-4 flex items-center gap-2">
+              <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-strong">
+                <History size={17} aria-hidden="true" />
+              </span>
+              Lịch sử
+            </SectionTitle>
+            {currentHistoryQuery?.status === "error" && (
+              <p role="status" className="mb-3 text-xs text-text-secondary">
+                Không tải được lịch sử mới nhất. Đang hiển thị dữ liệu đã có.
               </p>
             )}
-            <dl className="grid grid-cols-2 gap-4 pt-2 border-t border-border-primary/40">
-              {[
-                ["Số lượng", `${f.quantity} ${f.unit}`],
-
-                ["Nơi bảo quản", f.location || "Chưa chọn"],
-
-                [
-                  "Danh mục",
-
-                  f.category
-                    ? CATEGORY_LABELS[f.category] || f.category
-                    : "Chưa phân loại",
-                ],
-
-                [
-                  "Ngày sản xuất",
-
-                  f.mfgDate ? formatDate(f.mfgDate) : "Chưa rõ",
-                ],
-
-                [
-                  "Hạn sử dụng",
-
-                  f.expDate ? formatDate(f.expDate) : "Chưa rõ HSD",
-                ],
-              ].map(([k, v]) => (
-                <div key={k} className="min-w-0">
-                  <dt className="text-xs text-text-secondary">{k}</dt>
-                  <dd className="text-sm font-semibold text-text-primary mt-0.5 break-words">
-                    {v}
-                  </dd>
-                </div>
+            <ol className="ml-2 border-l border-border-subtle">
+              {recentHistory.map((event, index) => (
+                <li key={event.id} className="relative pb-4 pl-5 last:pb-0">
+                  <span
+                    aria-hidden="true"
+                    className={`absolute -left-[6px] top-1.5 size-3 rounded-full border-2 border-surface-bg ${
+                      index === 0 ? "bg-brand-primary" : "bg-border-primary"
+                    }`}
+                  />
+                  <p className="text-sm font-semibold text-text-heading">
+                    {historyTitles[event.kind]}
+                  </p>
+                  {historyDescription(event, f) && (
+                    <p className="mt-0.5 text-xs text-text-secondary">
+                      {historyDescription(event, f)}
+                    </p>
+                  )}
+                  <time
+                    dateTime={event.at}
+                    className="mt-1 block text-xs text-text-tertiary"
+                  >
+                    {formatTimestamp(event.at)}
+                  </time>
+                </li>
               ))}
-            </dl>
-            {f.note && (
-              <div className="pt-3 border-t border-border-primary/40">
-                <span className="text-xs text-text-secondary font-medium">
-                  Ghi chú:
-                </span>
-                <p className="text-sm text-text-primary mt-1 p-2.5 rounded-lg bg-surface-subtle border border-border-primary/50 whitespace-pre-wrap">
-                  {f.note}
-                </p>
-              </div>
+            </ol>
+            {currentHistoryQuery?.status === "loading" && (
+              <p role="status" className="mt-3 text-xs text-text-tertiary">
+                Đang tải lịch sử…
+              </p>
             )}
           </Card>
-        </div>
-
-        <Card className="flex flex-col gap-3">
-          <SectionTitle>Thao tác nhanh</SectionTitle>
-          <Button variant="primary" onClick={() => openQty("consume")}>
-            Đã dùng
-          </Button>
-          <Button variant="neutral" onClick={() => openQty("discard")}>
-            Đã bỏ
-          </Button>
-          <Button variant="neutral" onClick={() => openQty("adjust")}>
-            Điều chỉnh số lượng
-          </Button>
-          <Button
-            variant="neutral"
-            iconStart={<CalendarClock size={18} />}
-            onClick={() => setLater(true)}
-          >
-            Hẹn kiểm tra lại
-          </Button>
-          <Button
-            variant="subtle"
-            iconStart={<Trash2 size={18} />}
-            onClick={() => setConfirmTrash(true)}
-          >
-            Chuyển vào Thùng rác
-          </Button>
-        </Card>
+        </aside>
       </div>
 
       {/* Quantity Modal */}
@@ -575,7 +863,6 @@ export function Detail({
 
                 setErr("")
               }}
-              description={`Đang ghi nhận: ${f.quantity} ${f.unit}`}
               autoFocus
             />
             {err && (
@@ -592,7 +879,7 @@ export function Detail({
               {qtyCopy[qty].verb}
               {qty !== "adjust" ? `: ${n} ${f.unit}` : ""}
             </p>
-            <p className="text-base font-bold text-text-primary">
+            <p className="text-base font-semibold text-text-heading">
               {f.quantity} {f.unit} → {to} {f.unit}
             </p>
             {to === 0 && (

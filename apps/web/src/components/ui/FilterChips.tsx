@@ -110,15 +110,16 @@ export function FilterDropdown<T extends string = string>({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`inline-flex items-center gap-1.5 min-h-8 shrink-0 rounded-corner-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
+        className={`inline-flex items-center justify-between gap-1.5 h-11 min-h-[44px] shrink-0 rounded-[16px] px-3.5 text-[14px] leading-[20px] transition-all cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
           isFiltered
-            ? "bg-brand-primary text-on-brand shadow-xs hover:bg-brand-primary/90"
-            : "bg-surface-bg border border-border-primary text-text-primary hover:bg-surface-hover hover:border-brand-primary/40"
+            ? "bg-brand-secondary border-[1.5px] border-brand-primary text-brand-strong font-semibold shadow-xs"
+            : "bg-surface-bg border-[1.5px] border-border-control text-text-primary font-medium hover:bg-surface-hover hover:border-brand-primary/60"
         }`}
       >
         <span>{isFiltered ? `${label}: ${activeOption?.label}` : label}</span>
         <ChevronDown
-          size={14}
+          size={16}
+          strokeWidth={2}
           aria-hidden="true"
           className={`transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -130,7 +131,7 @@ export function FilterDropdown<T extends string = string>({
         <div
           role="listbox"
           aria-label={ariaLabel || `Lọc theo ${label}`}
-          className="absolute left-0 top-full mt-1.5 z-40 min-w-44 max-h-64 overflow-y-auto rounded-corner-md border border-border-primary/60 bg-surface-bg p-1 shadow-lg animate-in fade-in zoom-in-95 duration-100 scrollbar-thin"
+          className="absolute left-0 top-full mt-2 z-40 min-w-48 max-h-64 overflow-y-auto rounded-[12px] border border-border-primary/60 bg-surface-bg p-1.5 shadow-lg animate-in fade-in zoom-in-95 duration-100 scrollbar-thin"
         >
           {options.map((c) => {
             const isSelected = value === c.v

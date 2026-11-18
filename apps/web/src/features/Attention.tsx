@@ -60,14 +60,15 @@ export function AttentionFoodRow({
   }
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) =>
-        (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())
+    <button
+      type="button"
+      aria-label={
+        reason === "expired"
+          ? `Xử lý ${food.name}, ${reasonText}`
+          : `Xem ${food.name}, ${reasonText}`
       }
-      className="group flex min-h-14 cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-hover active:bg-bg-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary"
+      onClick={onOpen}
+      className="group flex min-h-14 w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-hover active:bg-bg-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary"
     >
       <div
         aria-hidden="true"
@@ -77,7 +78,7 @@ export function AttentionFoodRow({
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="truncate text-sm md:text-base font-semibold text-text-primary">
+        <p className="truncate text-sm md:text-base font-semibold text-text-heading">
           {food.name}
         </p>
         <p className="truncate text-xs text-text-secondary">
@@ -100,13 +101,18 @@ export function AttentionFoodRow({
       </div>
 
       <div className="flex shrink-0 items-center text-text-tertiary">
+        {reason === "expired" && (
+          <span className="mr-2 text-xs font-semibold text-status-expired">
+            Xử lý
+          </span>
+        )}
         <ChevronRight
           size={18}
           aria-hidden="true"
           className="transition-transform group-hover:translate-x-0.5"
         />
       </div>
-    </div>
+    </button>
   )
 }
 
@@ -146,18 +152,6 @@ export function Attention({
   )
 
   const totalCount = expired.length + soon.length + reviewDue.length
-
-  const summaryParts: string[] = []
-
-  if (expired.length) summaryParts.push(`${expired.length} quá hạn`)
-
-  if (soon.length) summaryParts.push(`${soon.length} sắp hết hạn`)
-
-  if (reviewDue.length)
-    summaryParts.push(`${reviewDue.length} đến hẹn kiểm tra`)
-
-  const subtitle =
-    totalCount > 0 ? summaryParts.join(" · ") : "Chưa có món nào cần xử lý"
 
   const sections: {
     id: string
@@ -215,7 +209,7 @@ export function Attention({
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <PageHeader title="Cần chú ý" subtitle={subtitle} />
+        <PageHeader title="Nhắc nhở" />
         {sections.length > 1 && (
           <Button
             size="small"
@@ -232,7 +226,6 @@ export function Attention({
         <EmptyState
           icon={<CircleCheck size={36} className="text-status-ok" />}
           title="Không có món nào cần chú ý"
-          text="Tất cả thực phẩm trong kho của bạn đều đang còn hạn tốt hoặc chưa đến lịch hẹn kiểm tra."
           action={
             <div className="flex flex-wrap justify-center gap-3">
               <Button variant="neutral" onClick={onNavigateInventory}>
@@ -263,7 +256,7 @@ export function Attention({
                 id={`sec-${sec.id}`}
                 onClick={() => toggleCollapse(sec.id)}
                 aria-expanded={!isCollapsed}
-                className="flex items-center justify-between px-2 py-1.5 text-sm md:text-base font-semibold text-text-primary uppercase tracking-wide cursor-pointer hover:text-brand-strong transition-colors group select-none"
+                className="flex min-h-11 items-center justify-between px-2 py-1.5 text-sm md:text-base font-semibold text-text-heading tracking-normal cursor-pointer hover:text-brand-strong transition-colors group select-none"
               >
                 <span className="flex items-center gap-2">
                   <span>{sec.title}</span>

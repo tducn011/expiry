@@ -382,6 +382,9 @@ export function fromEntry(dto: EntryDTO): FoodEntry {
     storage_location:
       dto.storage_location === "unspecified" ? null : dto.storage_location,
 
+    category:
+      (dto as Record<string, unknown>).category as string | null ?? null,
+
     remaining_quantity: quantity,
 
     unit: dto.unit,
@@ -433,6 +436,8 @@ export function draftDTO(draft: EntryDraft): EntryDraftDTO {
   const dto: EntryDraftDTO = {
     name: draft.name,
 
+    category: draft.category ?? null,
+
     expiry_date: unknown ? null : draft.expiry_date,
 
     date_certainty:
@@ -460,6 +465,10 @@ export function draftDTO(draft: EntryDraft): EntryDraftDTO {
     manufactured_on:
       (draft as Record<string, unknown>).manufactured_on as string | null ??
       null,
+
+    review_at:
+      ((draft as Record<string, unknown>).review_at ||
+        (draft as Record<string, unknown>).reviewAt) as string | null ?? null,
 
     note: draft.note,
   }
@@ -1114,12 +1123,28 @@ export class ApiClient {
   }
 
   async entries(query: Record<string, string | number> = {}, trash = false) {
-    const search = new URLSearchParams(
-      Object.entries(query).map(([key, value]) => [key, String(value)]),
-    )
+    const normalized: Record<string, string> = {}
+    for (const [key, value] of Object.entries(query)) {
+      if (
+        value === undefined ||
+        value === null ||
+        value === "all" ||
+        value === ""
+      )
+        continue
+      let val = String(value)
+      if (key === "attention") {
+        if (val === "past" || val === "expired") val = "past_date"
+        else if (val === "today") val = "due_today"
+        else if (val === "expiring_soon" || val === "expiring") val = "soon"
+      }
+      normalized[key] = val
+    }
+    const search = new URLSearchParams(normalized)
+    const queryString = search.toString() ? `?${search.toString()}` : ""
 
     const page = await this.request<EntryPage<EntryDTO>>(
-      `${trash ? "/trash/food-entries" : "/food-entries"}?${search}`,
+      `${trash ? "/trash/food-entries" : "/food-entries"}${queryString}`,
     )
 
     if (
@@ -1130,6 +1155,37 @@ export class ApiClient {
       throw contractError()
 
     return { ...page, items: page.items.map(fromEntry) }
+  }
+
+  getAttentionSummary(entries: FoodEntry[], asOfDate?: string) {
+    const todayStr = asOfDate || new Date().toISOString().slice(0, 10)
+    let expired = 0
+    let soon = 0
+    let reviewDue = 0
+    for (const item of entries) {
+      if (item.deleted_at) continue
+      if (item.remaining_quantity <= 0) continue
+      if (item.attention === "past") {
+        expired++
+      } else if (item.attention === "today" || item.attention === "soon") {
+        soon++
+      }
+      if (
+        item.review_at &&
+        item.review_at <= todayStr &&
+        item.attention !== "past" &&
+        item.attention !== "today" &&
+        item.attention !== "soon"
+      ) {
+        reviewDue++
+      }
+    }
+    return {
+      expired,
+      soon,
+      reviewDue,
+      total: expired + soon + reviewDue,
+    }
   }
 
   async entry(id: string) {
@@ -1420,5 +1476,7 @@ export class ApiClient {
     return result
   }
 }
+
+export * from "./shoppingStorage"
 
 export const api = new ApiClient()
