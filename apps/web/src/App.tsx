@@ -586,7 +586,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             aria-hidden="true"
             className="text-status-expired"
           />
-          <h1 className="text-xl font-bold text-text-primary">
+          <h1 className="text-xl font-bold text-text-heading">
             Không đọc được dữ liệu
           </h1>
           <p className="text-sm text-text-secondary leading-relaxed">

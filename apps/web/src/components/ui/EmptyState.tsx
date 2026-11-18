@@ -49,7 +49,7 @@ export function EmptyState({
           {eyebrow}
         </span>
       )}
-      <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
+      <h2 className="text-lg font-semibold text-text-heading">{title}</h2>
       {description && (
         <p className="max-w-md text-sm text-text-secondary">{description}</p>
       )}

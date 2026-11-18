@@ -23,11 +23,11 @@ export function Notice({
   const content = body ?? children
 
   const toneStyles = {
-    Error: "bg-[var(--danger-bg,#fef0ee)] text-[color:var(--danger,#b42318)]",
+    Error: "bg-danger-bg text-danger",
     Warning:
-      "bg-[var(--warn-bg,#fffbeb)] text-[color:var(--warn,#b45309)] border border-amber-200/60",
-    Info: "bg-[#e8f5f4] text-[#015d67]",
-    Success: "bg-[#ebf8f1] text-[#18794e]",
+      "bg-feedback-warning-bg text-feedback-warning-text border border-feedback-warning-border/60",
+    Info: "bg-brand-secondary text-brand-primary",
+    Success: "bg-feedback-success-bg text-feedback-success",
   }[tone]
 
   const DefaultIcon = {

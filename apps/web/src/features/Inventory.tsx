@@ -382,7 +382,7 @@ export function Inventory({
             <div className="flex min-h-8 items-center justify-between gap-4">
               <h2
                 id="inv-heading"
-                className="text-sm font-semibold text-text-primary uppercase tracking-wide"
+                className="text-sm font-semibold text-text-heading uppercase tracking-wide"
               >
                 Danh sách ({list.length})
               </h2>

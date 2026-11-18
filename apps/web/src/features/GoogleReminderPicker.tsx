@@ -349,7 +349,7 @@ export function GoogleReminderPicker({
               className={`px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer text-text-primary ${
                 isCalendarOpen
                   ? "bg-brand-primary/15 text-brand-primary ring-2 ring-brand-primary"
-                  : "bg-surface-secondary hover:bg-surface-tertiary border border-border-primary/60"
+                  : "bg-surface-subtle hover:bg-surface-hover border border-border-primary/60"
               }`}
             >
               {formatGoogleDate(selectedDate)}
@@ -367,7 +367,7 @@ export function GoogleReminderPicker({
                     <button
                       type="button"
                       onClick={handlePrevMonth}
-                      className="p-1 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-secondary transition-colors cursor-pointer"
+                      className="p-1 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
                       title="Tháng trước"
                     >
                       <ChevronLeft size={16} />
@@ -375,7 +375,7 @@ export function GoogleReminderPicker({
                     <button
                       type="button"
                       onClick={handleNextMonth}
-                      className="p-1 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-secondary transition-colors cursor-pointer"
+                      className="p-1 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
                       title="Tháng sau"
                     >
                       <ChevronRight size={16} />
@@ -410,12 +410,12 @@ export function GoogleReminderPicker({
                         }
                         className={`size-8 mx-auto flex items-center justify-center rounded-full transition-all cursor-pointer ${
                           isSelected
-                            ? "bg-[#0b57d0] text-white font-bold shadow-sm"
+                            ? "bg-teal-700 text-white font-bold shadow-sm"
                             : item.isCurrent
                               ? isToday
-                                ? "border border-[#0b57d0] text-brand-primary font-semibold hover:bg-surface-secondary"
-                                : "text-text-primary hover:bg-surface-secondary font-medium"
-                              : "text-text-secondary/40 hover:bg-surface-secondary"
+                                ? "border border-teal-700 text-brand-primary font-semibold hover:bg-surface-hover"
+                                : "text-text-primary hover:bg-surface-hover font-medium"
+                              : "text-text-secondary/40 hover:bg-surface-hover"
                         }`}
                       >
                         {item.day}
@@ -477,7 +477,7 @@ export function GoogleReminderPicker({
 
                   setIsCalendarOpen(false)
                 }}
-                className="px-2.5 py-1.5 rounded-md font-medium text-text-primary bg-surface-secondary hover:bg-surface-tertiary border border-border-primary/60 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-md font-medium text-text-primary bg-surface-subtle hover:bg-surface-hover border border-border-primary/60 transition-colors cursor-pointer"
               >
                 {formatTime12(startTime)}
               </button>
@@ -495,7 +495,7 @@ export function GoogleReminderPicker({
                       className={`w-full text-left px-2 py-1.5 rounded transition-colors cursor-pointer ${
                         startTime === t
                           ? "bg-brand-primary text-white font-medium"
-                          : "hover:bg-surface-secondary text-text-primary"
+                          : "hover:bg-surface-hover text-text-primary"
                       }`}
                     >
                       {formatTime12(t)}
@@ -518,7 +518,7 @@ export function GoogleReminderPicker({
 
                   setIsCalendarOpen(false)
                 }}
-                className="px-2.5 py-1.5 rounded-md font-medium text-text-primary bg-surface-secondary hover:bg-surface-tertiary border border-border-primary/60 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-md font-medium text-text-primary bg-surface-subtle hover:bg-surface-hover border border-border-primary/60 transition-colors cursor-pointer"
               >
                 {formatTime12(endTime)}
               </button>
@@ -536,7 +536,7 @@ export function GoogleReminderPicker({
                       className={`w-full text-left px-2 py-1.5 rounded transition-colors cursor-pointer ${
                         endTime === t
                           ? "bg-brand-primary text-white font-medium"
-                          : "hover:bg-surface-secondary text-text-primary"
+                          : "hover:bg-surface-hover text-text-primary"
                       }`}
                     >
                       {formatTime12(t)}
@@ -554,7 +554,7 @@ export function GoogleReminderPicker({
             <select
               value={repeat}
               onChange={(e) => handleRepeatChange(e.target.value)}
-              className="appearance-none bg-surface-secondary hover:bg-surface-tertiary border border-border-primary/60 text-text-primary font-medium text-xs sm:text-sm rounded-md pl-3 pr-8 py-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary transition-colors"
+              className="appearance-none bg-surface-subtle hover:bg-surface-hover border border-border-primary/60 text-text-primary font-medium text-xs sm:text-sm rounded-md pl-3 pr-8 py-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary transition-colors"
             >
               <option value="none">Không lặp lại</option>
               <option value="daily">Hằng ngày</option>

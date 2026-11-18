@@ -44,7 +44,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           {s.icon}
         </div>
         <div>
-          <h1 className="text-xl font-bold text-text-primary tracking-tight">
+          <h1 className="text-xl font-bold text-text-heading tracking-tight">
             {s.t}
           </h1>
           <p className="mt-2 text-sm text-text-secondary leading-relaxed max-w-xs mx-auto">
