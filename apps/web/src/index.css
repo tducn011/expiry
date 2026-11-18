@@ -5,7 +5,7 @@
 .breadcrumb { min-width: 0; }
 .breadcrumb ol { display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .breadcrumb li { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-.breadcrumb button { display: inline-flex; align-items: center; gap: 4px; height: 32px; max-width: 192px; padding: 0; border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.breadcrumb button { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; height: auto; max-width: 192px; padding: 0; border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
 .breadcrumb button:hover { color: var(--ink); }
 .breadcrumb button:focus-visible { text-decoration: underline; }
 .breadcrumb-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -13,12 +13,17 @@
 .breadcrumb-mobile-back { display: none; }
 @media (max-width: 639px) {
   .breadcrumb li:not(:last-child), .breadcrumb-separator { display: none; }
-  .breadcrumb button { height: 40px; }
+  .breadcrumb button { min-height: 44px; }
   .breadcrumb-mobile-back { display: inline-flex; }
 }
 
 /* Expiry UI — option A: grouped attention, flat surfaces, shared controls. */
 :root {
+  --radius-scale-full: 999px;
+  --radius-surface-card-large: 20px;
+  --radius-surface-card: 18px;
+  --radius-control-button: 16px;
+  --radius-control-input: 12px;
   color-scheme: light;
   --app-font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, system-ui, sans-serif;
   --brand-primary: var(--coral-500);
@@ -170,7 +175,7 @@
   --r-md: 12px;
   --r-lg: 16px;
   --r-xl: 16px;
-  --r-card: 16px;
+  --r-card: 18px;
   --r-pill: 999px;
   /* Relative text scale also honors the browser's enlarged default font. */
   --t-xs: .75rem;
@@ -385,6 +390,8 @@
   --spacing-control: var(--control-h);
   --spacing-sidebar: var(--sidebar-w);
   --spacing-content-max: var(--content-max);
+  --radius-corner-card: 18px;
+  --radius-corner-card-lg: 20px;
 }
 
 @media (min-width: 768px) {
@@ -413,6 +420,11 @@
   html,
   body {
     min-width: 0;
+    scrollbar-gutter: stable;
+  }
+
+  main {
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -437,7 +449,9 @@
   h2,
   h3,
   h4 {
+    color: var(--text-heading);
     font-weight: 600;
+    letter-spacing: normal;
     line-height: 1.25;
     margin: 0;
     text-wrap: balance;
@@ -1426,22 +1440,6 @@
   text-align: left;
 }
 
-.brand-icon {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  flex: none;
-  background: var(--accent);
-  color: var(--neutral-white);
-  border-radius: var(--r-sm);
-}
-
-.brand-name {
-  font-size: var(--t-md);
-  font-weight: 700;
-}
-
 .sidebar-add {
   width: 100%;
   min-height: 42px;
@@ -1701,12 +1699,14 @@
 
 .page-header h1 {
   font-size: var(--t-xl);
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: var(--text-heading);
 }
 
 .page-header p {
   max-width: 680px;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--t-sm);
   line-height: 1.55;
 }
@@ -2712,7 +2712,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: var(--accent-subtle, var(--sage-100));
+  background: var(--accent-subtle, var(--sage-50));
   border: 1px solid var(--accent-border, var(--sage-200));
   color: var(--accent-text, var(--sage-800));
   border-radius: var(--r-sm, 6px);

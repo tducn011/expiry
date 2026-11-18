@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { createElement } from "react"
 import { renderToString } from "react-dom/server"
 
 import {
@@ -409,6 +410,9 @@ describe("Storage & Insight Feature Integration", () => {
     }
 
     // 2. Render FoodCard with a future expiration date and verify uniform day count & category badge
+    const d = new Date()
+    d.setDate(d.getDate() + 10)
+    const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
     const html = renderToString(
       FoodCard({
         food: {
@@ -419,7 +423,7 @@ describe("Storage & Insight Feature Integration", () => {
           category: "dairy_eggs",
           location: "Ngăn mát",
           days: 10,
-          expDate: "2026-11-17",
+          expDate: targetDate,
         },
         onOpen: () => {},
       }),
@@ -428,6 +432,79 @@ describe("Storage & Insight Feature Integration", () => {
     expect(html).toContain("Trứng &amp; Sữa")
     expect(html).toContain("Còn 10 ngày")
     expect(html).toContain("bg-amber-500/10")
+  })
+
+  it("shows a single populated trend period without adding a trend explanation", async () => {
+    const { default: InsightView } = await import("../src/features/InsightView")
+    const state = {
+      mode: "demo" as const,
+      onboarded: true,
+      foods: seedFoods(),
+      history: seedHistory(),
+      locations: ["Ngăn mát", "Ngăn đông", "Tủ bếp"],
+      readNotifs: [],
+      snoozed: {},
+      settings: { remindDays: 3, inApp: true, push: false },
+    }
+
+    const html = renderToString(
+      createElement(InsightView, { state, isLive: false }),
+    )
+
+    expect(html).toContain("Chưa ghi nhận")
+    expect(html).toContain("75% · 4 lượt")
+    expect(html).not.toContain("cần dữ liệu ở khoảng khác để thể hiện xu hướng")
+    expect(html).not.toContain("Căn cứ:")
+    expect(html).not.toContain("Bổ sung để theo dõi chính xác hơn.")
+    expect(html).not.toContain("Đã phân loại vị trí lưu trữ.")
+    expect(html).not.toContain('stroke="#0f5959" stroke-width="2.5"')
+  })
+
+  it("keeps the trend line broken when observed periods have an empty gap", async () => {
+    const { default: InsightView } = await import("../src/features/InsightView")
+    const history = seedHistory()
+    history[0].at = new Date(Date.now() - 29 * 24 * 3600_000).toISOString()
+    history[2].at = new Date(Date.now() - 24 * 3600_000).toISOString()
+    const state = {
+      mode: "demo" as const,
+      onboarded: true,
+      foods: seedFoods(),
+      history,
+      locations: ["Ngăn mát", "Ngăn đông", "Tủ bếp"],
+      readNotifs: [],
+      snoozed: {},
+      settings: { remindDays: 3, inApp: true, push: false },
+    }
+
+    const html = renderToString(
+      createElement(InsightView, { state, isLive: false }),
+    )
+
+    expect(html).toContain("Chưa ghi nhận")
+    expect(html).not.toContain("các khoảng này không liền nhau")
+    expect(html).not.toContain('stroke="#0f5959" stroke-width="2.5"')
+  })
+
+  it("shows a clear empty state instead of a blank trend grid", async () => {
+    const { default: InsightView } = await import("../src/features/InsightView")
+    const state = {
+      mode: "demo" as const,
+      onboarded: true,
+      foods: [],
+      history: [],
+      locations: ["Ngăn mát", "Ngăn đông", "Tủ bếp"],
+      readNotifs: [],
+      snoozed: {},
+      settings: { remindDays: 3, inApp: true, push: false },
+    }
+
+    const html = renderToString(
+      createElement(InsightView, { state, isLive: false }),
+    )
+
+    expect(html).toContain("Chưa có lượt dùng hoặc bỏ")
+    expect(html).not.toContain("Chưa thể tính tỷ lệ trong 30 ngày gần nhất.")
+    expect(html).not.toContain('aria-label="Biểu đồ tỷ lệ dùng hết theo các khoảng thời gian"')
   })
 
   it("handles OCR scan navigation routes and maintains URL synchronization", async () => {

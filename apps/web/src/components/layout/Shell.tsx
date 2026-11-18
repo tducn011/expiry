@@ -1,6 +1,7 @@
 import { ReactNode } from "react"
 
 import Icon from "../ui/Icon"
+import { BrandLockup } from "../ui/BrandLockup"
 
 export type View = "inventory" | "attention" | "trash" | "settings"
 
@@ -63,12 +64,7 @@ export default function Shell({
           onClick={() => setView("inventory")}
           aria-label="Expiry — Kho thực phẩm"
         >
-          <span className="brand-icon">
-            <Icon name="timer" />
-          </span>
-          <span>
-            <span className="brand-name">Expiry</span>
-          </span>
+          <BrandLockup markSize={36} wordmarkSize={24} />
         </button>
 
         <button className="sidebar-add" onClick={onAdd} type="button">
@@ -117,10 +113,7 @@ export default function Shell({
           onClick={() => setView("inventory")}
           aria-label="Expiry — Kho thực phẩm"
         >
-          <span className="brand-icon">
-            <Icon name="timer" />
-          </span>
-          <span className="brand-name">Expiry</span>
+          <BrandLockup markSize={32} wordmarkSize={24} />
         </button>
         <span
           className={`mobile-account ${onAuth ? "clickable" : ""}`}

@@ -39,15 +39,15 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center p-4">
-      <Card className="flex w-full max-w-md flex-col items-center gap-6 text-center shadow-lg border-border-primary/60 p-6 md:p-8">
+      <Card className="flex w-full max-w-md flex-col items-center gap-6 text-center border border-border-primary/60 shadow-xs p-6 md:p-8">
         <div className="flex size-20 items-center justify-center rounded-corner-full bg-sage-100 text-sage-800 shadow-xs">
           {s.icon}
         </div>
         <div>
-          <h1 className="text-xl font-bold text-text-heading tracking-tight">
+          <h1 className="text-xl font-semibold text-text-heading tracking-normal">
             {s.t}
           </h1>
-          <p className="mt-2 text-sm text-text-secondary leading-relaxed max-w-xs mx-auto">
+          <p className="mt-2 text-sm text-text-secondary font-normal leading-relaxed max-w-xs mx-auto">
             {s.d}
           </p>
         </div>

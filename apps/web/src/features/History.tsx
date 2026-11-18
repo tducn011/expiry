@@ -122,10 +122,7 @@ export function History({
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      <PageHeader
-        title="Lịch sử"
-        subtitle="Các lần dùng, bỏ và điều chỉnh số lượng thực phẩm"
-      />
+      <PageHeader title="Lịch sử" />
 
       {events.length === 0 && finished.length === 0 ? (
         <EmptyState
@@ -140,7 +137,7 @@ export function History({
               <div
                 role="heading"
                 aria-level={2}
-                className="px-2 text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary"
+                className="px-2 text-xs md:text-sm font-semibold tracking-normal text-text-secondary"
               >
                 {g.day}
               </div>
@@ -153,7 +150,7 @@ export function History({
                     className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-hover active:bg-bg-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary cursor-pointer"
                   >
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <p className="truncate text-sm md:text-base font-semibold text-text-primary">
+                      <p className="truncate text-sm md:text-base font-semibold text-text-heading">
                         {e.foodName}
                       </p>
                       <p className="flex flex-wrap items-center gap-2 text-xs">
@@ -198,7 +195,7 @@ export function History({
               <div
                 role="heading"
                 aria-level={2}
-                className="px-2 text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary"
+                className="px-2 text-xs md:text-sm font-semibold tracking-normal text-text-secondary"
               >
                 Đã hết ({finished.length})
               </div>
@@ -209,7 +206,7 @@ export function History({
                     className="flex min-h-16 items-center gap-3 px-4 py-3"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm md:text-base font-semibold text-text-primary">
+                      <p className="truncate text-sm md:text-base font-semibold text-text-heading">
                         {f.name}
                       </p>
                       <p className="text-xs text-text-secondary">

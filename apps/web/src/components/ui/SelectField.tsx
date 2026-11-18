@@ -54,7 +54,7 @@ export function SelectField({
         </label>
       )}
       <div
-        className={`relative flex items-center min-h-11 w-full rounded-corner-md border border-border-primary bg-surface-bg shadow-xs transition-colors focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 ${
+        className={`relative flex items-center min-h-11 w-full rounded-corner-md border border-border-control bg-surface-bg shadow-xs transition-colors focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 ${
           disabled ? "opacity-60 bg-bg-subtle cursor-not-allowed" : ""
         } ${className}`}
       >

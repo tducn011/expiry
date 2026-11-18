@@ -1,13 +1,22 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 
 import { api, ApiError, decimal, type EditEntryDTO } from "./api/client"
 
 import {
   attention,
   notifications,
+  saveUserInApp,
   useAppStore,
   type Category,
   type Food,
+  type Settings as AppSettings,
   type State,
   type Unit,
 } from "./store/appStore"
@@ -33,6 +42,7 @@ import {
   LogOut,
   Plus,
   Settings as SettingsIcon,
+  ShoppingBag,
 } from "lucide-react"
 
 import Button from "./components/ui/Button"
@@ -78,13 +88,25 @@ import AuthForm from "./features/AuthForm"
 
 import Onboarding from "./features/Onboarding"
 
+import ShoppingView from "./features/ShoppingView"
+import type { ShoppingItem } from "./domain/types"
+import { updateShoppingItem } from "./api/shoppingStorage"
+
+export type SettingsSection = "account" | "notifications" | "inventory" | "data"
+
 export type Route = { name: "inventory" } | {
   name: "storage"
 
   location?: string
 
   category?: string
-} | { name: "attention" } | { name: "add" } | { name: "scan" } | {
+} | {
+  name: "attention"
+} | { name: "add" } | {
+  name: "scan"
+  shoppingItemId?: string
+  shoppingDraft?: Draft
+} | {
   name: "form"
 
   mode: FormMode
@@ -92,6 +114,7 @@ export type Route = { name: "inventory" } | {
   draft: Draft
 
   image?: string | string[]
+  shoppingItemId?: string
 } | {
   name: "detail"
 
@@ -102,7 +125,10 @@ export type Route = { name: "inventory" } | {
   tab?: string
 } | { name: "history" } | {
   name: "trash"
-} | { name: "notifications" } | { name: "settings" }
+} | { name: "notifications" } | {
+  name: "settings"
+  section?: SettingsSection
+} | { name: "shopping" }
 
 export function routeFromUrl(
   search = typeof window !== "undefined"
@@ -120,7 +146,9 @@ export function routeFromUrl(
 
   if (id) return [{ name: "inventory" }, { name: "detail", id }]
 
-  if (v === "storage" || v === "attention") {
+  if (v === "attention") return [{ name: "attention" }]
+
+  if (v === "storage") {
     const loc = q.get("loc") || undefined
 
     const cat = q.get("cat") || undefined
@@ -136,7 +164,22 @@ export function routeFromUrl(
 
   if (v === "trash") return [{ name: "trash" }]
 
-  if (v === "settings") return [{ name: "settings" }]
+  if (v === "settings") {
+    const section = q.get("section")
+
+    if (
+      section === "account" ||
+      section === "notifications" ||
+      section === "inventory" ||
+      section === "data"
+    ) {
+      return [{ name: "settings" }, { name: "settings", section }]
+    }
+
+    return [{ name: "settings" }]
+  }
+
+  if (v === "shopping") return [{ name: "shopping" }]
 
   if (v === "add" || v === "scan") return [{ name: "scan" }]
 
@@ -166,6 +209,8 @@ export function urlFromRoute(r: Route): string {
     if (r.category && r.category !== "all") p.set("cat", r.category)
   } else if (r.name === "insight") {
     if (r.tab && r.tab !== "overview") p.set("tab", r.tab)
+  } else if (r.name === "settings") {
+    if (r.section) p.set("section", r.section)
   }
 
   return `?${p.toString()}`
@@ -411,15 +456,11 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         )
           return
 
-        if (prefs && prefs.attention_lead_days) {
+        if (prefs && Number.isInteger(prefs.attention_lead_days)) {
           dispatch({
-            type: "settings",
+            type: "remindDays",
 
-            settings: {
-              ...state.settings,
-
-              remindDays: prefs.attention_lead_days,
-            },
+            days: prefs.attention_lead_days,
           })
         }
       })
@@ -437,9 +478,11 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(() => {
     try {
-      return localStorage.getItem("expiry_sidebar_expanded") === "true"
+      const savedPreference = localStorage.getItem("expiry_sidebar_expanded")
+
+      return savedPreference === null || savedPreference === "true"
     } catch {
-      return false
+      return true
     }
   })
 
@@ -456,6 +499,21 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   }
 
   const [stack, setStack] = useState<Route[]>(() => routeFromUrl())
+  const stackRef = useRef(stack)
+  stackRef.current = stack
+  const settingsDirtyRef = useRef(false)
+  const settingsSavingRef = useRef(false)
+  const handleSettingsDirty = useCallback((dirty: boolean) => {
+    settingsDirtyRef.current = dirty
+  }, [])
+  const handleSettingsSaving = useCallback((saving: boolean) => {
+    settingsSavingRef.current = saving
+  }, [])
+  const allowSettingsPopRef = useRef(false)
+  const pendingSettingsLeaveRef = useRef<null | (() => void)>(null)
+  const [showSettingsLeavePrompt, setShowSettingsLeavePrompt] = useState(false)
+  const stateRef = useRef(state)
+  stateRef.current = state
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -469,6 +527,29 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     if (typeof window === "undefined") return
 
     const handlePopState = (event: PopStateEvent) => {
+      if (allowSettingsPopRef.current) {
+        allowSettingsPopRef.current = false
+      } else {
+        const current = stackRef.current[stackRef.current.length - 1]
+        if (
+          current?.name === "settings" &&
+          (settingsDirtyRef.current || settingsSavingRef.current)
+        ) {
+          window.history.pushState(
+            { stack: stackRef.current },
+            "",
+            urlFromRoute(current),
+          )
+          if (settingsSavingRef.current) return
+          pendingSettingsLeaveRef.current = () => {
+            allowSettingsPopRef.current = true
+            window.history.go(-2)
+          }
+          setShowSettingsLeavePrompt(true)
+          return
+        }
+      }
+
       if (
         event.state &&
         Array.isArray(event.state.stack) &&
@@ -485,6 +566,16 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     return () => window.removeEventListener("popstate", handlePopState)
   }, [])
 
+  useEffect(() => {
+    const guardUnload = (event: BeforeUnloadEvent) => {
+      if (!settingsDirtyRef.current) return
+      event.preventDefault()
+      event.returnValue = ""
+    }
+    window.addEventListener("beforeunload", guardUnload)
+    return () => window.removeEventListener("beforeunload", guardUnload)
+  }, [])
+
   const [toast, setToast] = useState<{
     message: string
 
@@ -495,7 +586,31 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const [pendingAuth, setPendingAuth] = useState<Route | null>(null)
 
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+
+  const mainRef = useRef<HTMLElement>(null)
+
   const route = stack[stack.length - 1] || { name: "inventory" }
+
+  const showNotifications =
+    isNotificationsOpen || route.name === "notifications"
+
+  const closeNotifications = () => {
+    setIsNotificationsOpen(false)
+    if (route.name === "notifications") {
+      if (stack.length > 1) {
+        back()
+      } else {
+        tab({ name: "inventory" })
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0
+    }
+  }, [route])
 
   const go = (r: Route) => {
     setStack((s) => {
@@ -553,13 +668,25 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     })
   }
 
-  const handleNav = (targetName: Route["name"]) => {
-    if (targetName === "scan") {
-      if (route.name === "scan") return
-      go({ name: "scan" })
-    } else {
-      tab({ name: targetName } as Route)
+  const requestSettingsLeave = (action: () => void) => {
+    if (route.name === "settings" && settingsSavingRef.current) return
+    if (route.name === "settings" && settingsDirtyRef.current) {
+      pendingSettingsLeaveRef.current = action
+      setShowSettingsLeavePrompt(true)
+      return
     }
+    action()
+  }
+
+  const handleNav = (targetName: Route["name"]) => {
+    requestSettingsLeave(() => {
+      if (targetName === "scan") {
+        if (route.name === "scan") return
+        go({ name: "scan" })
+      } else {
+        tab({ name: targetName } as Route)
+      }
+    })
   }
 
   const notify = (
@@ -572,13 +699,69 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     setTimeout(() => setToast(null), 3200)
   }
 
+  const saveSettings = async (draft: AppSettings): Promise<{
+    settings: AppSettings
+    savedToAccount: boolean
+  }> => {
+    if (state.mode !== "account" || !state.userId) {
+      const settings = { ...draft, push: false }
+      localStorage.setItem(
+        "expiry-demo-v1",
+        JSON.stringify({ ...stateRef.current, settings }),
+      )
+      dispatch({ type: "settings", settings })
+      return { settings, savedToAccount: false }
+    }
+
+    const ownerId = state.userId
+    let savedToAccount = false
+    if (draft.remindDays !== state.settings.remindDays) {
+      const current = await api.preferences()
+      if (current.attention_lead_days !== draft.remindDays) {
+        try {
+          const saved = await api.updatePreferences({
+            timezone: current.timezone,
+            attention_lead_days: draft.remindDays,
+            expected_version: current.version,
+          })
+          if (saved.attention_lead_days !== draft.remindDays) {
+            throw new Error("Máy chủ trả về ngưỡng cảnh báo không khớp.")
+          }
+        } catch (error) {
+          if (!(error instanceof ApiError) || !error.uncertain) throw error
+          const readback = await api.preferences()
+          if (readback.attention_lead_days !== draft.remindDays) throw error
+        }
+      }
+      savedToAccount = true
+    }
+
+    if (
+      stateRef.current.userId !== ownerId ||
+      stateRef.current.mode !== "account"
+    ) {
+      throw new Error("Tài khoản đã thay đổi. Hãy mở lại Cài đặt.")
+    }
+    if (draft.inApp !== stateRef.current.settings.inApp) {
+      saveUserInApp(ownerId, draft.inApp)
+    }
+    const settings = {
+      ...stateRef.current.settings,
+      remindDays: draft.remindDays,
+      inApp: draft.inApp,
+      push: false,
+    }
+    dispatch({ type: "settings", settings })
+    return { settings, savedToAccount }
+  }
+
   // Handle unreadable storage error recovery
 
   if (problem === "read") {
     return (
       <div className="flex min-h-dvh items-center justify-center p-6 bg-brand-tertiary">
         <Card
-          className="flex w-full max-w-md flex-col gap-5 shadow-lg"
+          className="flex w-full max-w-md flex-col gap-5 border border-border-primary/60 shadow-xs"
           role="alert"
         >
           <CircleAlert
@@ -586,10 +769,10 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             aria-hidden="true"
             className="text-status-expired"
           />
-          <h1 className="text-xl font-bold text-text-heading">
+          <h1 className="text-xl font-semibold text-text-heading tracking-normal">
             Không đọc được dữ liệu
           </h1>
-          <p className="text-sm text-text-secondary leading-relaxed">
+          <p className="text-sm text-text-secondary font-normal leading-relaxed">
             Dữ liệu lưu trên thiết bị của bạn bị lỗi hoặc không truy cập được.
             Dữ liệu cũ vẫn chưa bị xóa.
           </p>
@@ -687,21 +870,23 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     badge?: number
   }[] = [
-    { r: "inventory", label: "Thực phẩm", icon: <Home size={22} /> },
+    { r: "inventory", label: "Hôm nay", icon: <Home size={22} /> },
 
     {
       r: "storage",
 
-      label: "Lưu trữ",
+      label: "Kho thực phẩm",
 
       icon: <Archive size={22} />,
     },
 
-    { r: "scan", label: "Thêm", icon: <Plus size={22} /> },
+    {
+      r: "shopping",
+      label: "Danh sách mua sắm",
+      icon: <ShoppingBag size={22} />,
+    },
 
     { r: "insight", label: "Insight", icon: <BarChart3 size={22} /> },
-
-    { r: "settings", label: "Cài đặt", icon: <SettingsIcon size={22} /> },
   ]
 
   const isAddFlow =
@@ -713,7 +898,9 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     ? "scan"
     : route.name === "detail"
       ? stack[0]?.name || "inventory"
-      : route.name
+      : route.name === "attention"
+        ? "storage"
+        : route.name
 
   function toBackendUnitAndQty(quantity: number, unit: string): {
     quantity: number
@@ -731,7 +918,24 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     return { quantity, unit: "piece" }
   }
 
-  async function handleSaveDraft(d: Draft, mode: FormMode) {
+  function finishShoppingImport(shoppingItemId?: string) {
+    if (shoppingItemId) {
+      updateShoppingItem(
+        shoppingItemId,
+        { inventoryAddedAt: new Date().toISOString() },
+        state.userId,
+      )
+      tab({ name: "shopping" })
+    } else {
+      tab({ name: "inventory" })
+    }
+  }
+
+  async function handleSaveDraft(
+    d: Draft,
+    mode: FormMode,
+    shoppingItemId?: string,
+  ) {
     if (state.mode === "account") {
       const idempotencyKey = `idemp_${crypto.randomUUID()}`
 
@@ -810,7 +1014,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
           notify("Đã lưu thay đổi")
 
-          tab({ name: "inventory" })
+          finishShoppingImport(shoppingItemId)
 
           return
         } catch (err: unknown) {
@@ -916,7 +1120,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
           )
 
-          tab({ name: "inventory" })
+          finishShoppingImport(shoppingItemId)
 
           return
         } catch {
@@ -967,7 +1171,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
     )
 
-    tab({ name: "inventory" })
+    finishShoppingImport(shoppingItemId)
   }
 
   let screenContent: ReactNode
@@ -979,8 +1183,9 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           state={state}
           onOpenDetail={(id) => go({ name: "detail", id })}
           onAdd={() => go({ name: "scan" })}
-          onNavigateAttention={() => go({ name: "notifications" })}
-          onOpenNotifications={() => go({ name: "notifications" })}
+          onNavigateAttention={() => tab({ name: "attention" })}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
+          onOpenAccount={() => go({ name: "settings" })}
           unreadNotificationsCount={unreadCount}
         />
       )
@@ -988,21 +1193,14 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       break
 
     case "storage":
-
-    case "attention":
       screenContent = (
         <StorageView
           state={state}
           dispatch={dispatch}
           isLive={state.mode === "account"}
-          initialLocation={
-            route.name === "storage" ? route.location : undefined
-          }
-          initialCategory={
-            route.name === "storage"
-              ? route.category as Category | "all" | undefined
-              : undefined
-          }
+          initialLocation={route.location}
+          initialCategory={route.category as Category | "all" | undefined}
+          onNavigateAttention={() => tab({ name: "attention" })}
           onFilterChange={(loc, cat) => {
             const nextRoute: Route = {
               name: "storage",
@@ -1011,6 +1209,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
               category: cat !== "all" ? cat : undefined,
             }
+
+            setStack([nextRoute])
 
             if (typeof window !== "undefined") {
               window.history.replaceState(
@@ -1131,17 +1331,42 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
       break
 
+    case "attention":
+      screenContent = (
+        <Attention
+          state={state}
+          onOpenDetail={(id) => go({ name: "detail", id })}
+          onNavigateInventory={() => tab({ name: "storage" })}
+          onAdd={() => go({ name: "scan" })}
+        />
+      )
+
+      break
+
     case "add":
     case "scan":
       screenContent = (
         <Scanner
           onBack={back}
           onManual={(draft, image) => {
+            const shoppingDraft =
+              route.name === "scan" ? route.shoppingDraft : undefined
             const nextRoute: Route = {
               name: "form",
               mode: draft && (draft.name || draft.barcode) ? "ocr" : "manual",
-              draft: draft || emptyDraft(),
+              draft: shoppingDraft
+                ? {
+                    ...shoppingDraft,
+                    ...draft,
+                    name: draft?.name || shoppingDraft.name,
+                    quantity: shoppingDraft.quantity,
+                    unit: shoppingDraft.unit,
+                    category: draft?.category || shoppingDraft.category,
+                  }
+                : draft || emptyDraft(),
               image,
+              shoppingItemId:
+                route.name === "scan" ? route.shoppingItemId : undefined,
             }
             setStack((s) => {
               const base =
@@ -1164,11 +1389,24 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           }}
           existingFoods={state.foods}
           onReview={(image, draft) => {
+            const shoppingDraft =
+              route.name === "scan" ? route.shoppingDraft : undefined
             const nextRoute: Route = {
               name: "form",
               mode: "ocr",
-              draft: draft || emptyDraft(),
+              draft: shoppingDraft
+                ? {
+                    ...shoppingDraft,
+                    ...draft,
+                    name: draft?.name || shoppingDraft.name,
+                    quantity: shoppingDraft.quantity,
+                    unit: shoppingDraft.unit,
+                    category: draft?.category || shoppingDraft.category,
+                  }
+                : draft || emptyDraft(),
               image,
+              shoppingItemId:
+                route.name === "scan" ? route.shoppingItemId : undefined,
             }
             setStack((s) => {
               const base =
@@ -1203,7 +1441,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           capturedImage={route.image}
           locations={state.locations}
           onAddLocation={(name) => dispatch({ type: "addLocation", name })}
-          onSubmit={(d) => handleSaveDraft(d, route.mode)}
+          onSubmit={(d) => handleSaveDraft(d, route.mode, route.shoppingItemId)}
           onCancel={(dirty) => (dirty ? setDiscard(() => back) : back())}
         />
       )
@@ -1248,6 +1486,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               )
             }
           }}
+          onNavigateAttention={() => tab({ name: "attention" })}
           onOpenDetail={(id) => go({ name: "detail", id })}
         />
       )
@@ -1268,12 +1507,14 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     case "notifications":
       screenContent = (
-        <Notifications
+        <Inventory
           state={state}
-          dispatch={dispatch}
           onOpenDetail={(id) => go({ name: "detail", id })}
-          onBack={back}
-          notify={notify}
+          onAdd={() => go({ name: "scan" })}
+          onNavigateAttention={() => tab({ name: "attention" })}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
+          onOpenAccount={() => go({ name: "settings" })}
+          unreadNotificationsCount={unreadCount}
         />
       )
 
@@ -1282,10 +1523,51 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     case "settings":
       screenContent = (
         <Settings
+          key={`${route.section ?? "root"}:${state.userId ?? "demo"}`}
           state={state}
           dispatch={dispatch}
-          onNavigateTrash={() => go({ name: "trash" })}
+          section={route.section}
+          onNavigateSection={(section) => go({ name: "settings", section })}
+          onBack={back}
+          onDirtyChange={handleSettingsDirty}
+          onSavingChange={handleSettingsSaving}
+          onSave={saveSettings}
+          onNavigateTrash={() =>
+            requestSettingsLeave(() => go({ name: "trash" }))
+          }
           onLogin={() => setPendingAuth({ name: "settings" })}
+          notify={notify}
+        />
+      )
+
+      break
+
+    case "shopping":
+      screenContent = (
+        <ShoppingView
+          state={state}
+          onAddToInventory={(item: ShoppingItem, method) => {
+            const draft: Draft = {
+              ...emptyDraft(),
+              name: item.name,
+              quantity: String(item.quantity),
+              unit: item.unit as Unit,
+              category: (item.category || "other") as Category,
+            }
+            if (method === "scan")
+              go({
+                name: "scan",
+                shoppingItemId: item.id,
+                shoppingDraft: draft,
+              })
+            else
+              go({
+                name: "form",
+                mode: "manual",
+                draft,
+                shoppingItemId: item.id,
+              })
+          }}
           notify={notify}
         />
       )
@@ -1296,16 +1578,33 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const isFullBleed = route.name === "scan" || route.name === "add"
 
   return (
-    <div
-      className={`flex h-dvh w-full overflow-hidden ${
-        isFullBleed ? "bg-surface-darkest" : "bg-brand-tertiary"
-      } text-text-primary antialiased`}
-    >
+    <div className="flex h-dvh w-full overflow-hidden bg-brand-tertiary text-text-primary antialiased">
       {/* Desktop Sidebar Navigation */}
       <div className="hidden h-full md:block shrink-0">
         <SidebarNavigation
           isExpanded={isSidebarExpanded}
           onToggleExpanded={toggleSidebar}
+          primaryAction={
+            <button
+              type="button"
+              aria-label="Thêm thực phẩm"
+              aria-current={isAddFlow ? "page" : undefined}
+              title="Thêm thực phẩm"
+              onClick={() => handleNav("scan")}
+              className={`flex min-h-12 items-center justify-center rounded-corner-md bg-brand-primary text-on-brand shadow-xs transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary ${
+                isSidebarExpanded ? "w-full gap-3 px-3 text-left" : "size-12"
+              }`}
+            >
+              <Plus size={21} strokeWidth={2.5} aria-hidden="true" />
+              {isSidebarExpanded ? (
+                <span className="flex-1 truncate text-sm font-bold">
+                  Thêm thực phẩm
+                </span>
+              ) : (
+                <span className="sr-only">Thêm thực phẩm</span>
+              )}
+            </button>
+          }
           footer={
             state.mode !== "account" ? (
               <SidebarButton
@@ -1328,47 +1627,83 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             )
           }
         >
-          {navItems.map((n) => (
+          <div className="flex w-full flex-col gap-1.5">
+            {navItems.map((n) => (
+              <SidebarButton
+                key={n.r}
+                icon={n.icon}
+                aria-label={n.label}
+                title={n.label}
+                label={n.label}
+                isExpanded={isSidebarExpanded}
+                active={rootName === n.r}
+                badge={n.badge}
+                onClick={() => handleNav(n.r)}
+              />
+            ))}
+          </div>
+
+          <div className="flex w-full flex-col gap-1.5">
+            {isSidebarExpanded ? (
+              <div className="mt-3 border-t border-border-primary/60 px-3 pb-1 pt-4 text-xs font-semibold text-text-secondary">
+                Quản lý
+              </div>
+            ) : (
+              <div
+                role="separator"
+                aria-hidden="true"
+                className="my-2 h-px w-10 bg-border-primary/70"
+              />
+            )}
             <SidebarButton
-              key={n.r}
-              icon={n.icon}
-              aria-label={n.label}
-              title={n.label}
-              label={n.label}
+              icon={<Bell size={22} />}
+              aria-label={
+                unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"
+              }
+              title="Thông báo"
+              label="Thông báo"
               isExpanded={isSidebarExpanded}
-              active={rootName === n.r}
-              badge={n.badge}
-              onClick={() => handleNav(n.r)}
+              active={isNotificationsOpen || rootName === "notifications"}
+              badge={unreadCount}
+              onClick={() =>
+                requestSettingsLeave(() => setIsNotificationsOpen((v) => !v))
+              }
             />
-          ))}
-          <SidebarButton
-            icon={<Bell size={22} />}
-            aria-label={
-              unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"
-            }
-            title="Thông báo"
-            label="Thông báo"
-            isExpanded={isSidebarExpanded}
-            active={rootName === "notifications"}
-            badge={unreadCount}
-            onClick={() => tab({ name: "notifications" })}
-          />
+            <SidebarButton
+              icon={<SettingsIcon size={22} />}
+              aria-label="Cài đặt"
+              title="Cài đặt"
+              label="Cài đặt"
+              isExpanded={isSidebarExpanded}
+              active={rootName === "settings"}
+              onClick={() => handleNav("settings")}
+            />
+          </div>
         </SidebarNavigation>
       </div>
 
       {/* Main Content Area */}
-      <main className="h-full w-full min-w-0 flex-1 overflow-y-auto">
+      <main
+        ref={mainRef}
+        className="h-full w-full min-w-0 flex-1 overflow-y-auto"
+      >
         <div
-          className={`mx-auto w-full transition-all ${
+          className={`mx-auto w-full ${
             isFullBleed
-              ? "h-full min-h-full md:max-w-4xl md:p-6 md:flex md:items-center md:justify-center"
+              ? "h-full min-h-full flex flex-col md:max-w-[1120px] md:py-6 md:px-8 md:items-center md:justify-center"
               : route.name === "form"
                 ? "max-w-2xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-8 md:px-6 md:pt-6 md:pb-12"
-                : route.name === "settings" || route.name === "notifications"
-                  ? "max-w-2xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-12"
-                  : route.name === "detail" || route.name === "history"
-                    ? "max-w-3xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-12"
-                    : "max-w-6xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
+                : route.name === "shopping"
+                  ? "max-w-4xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-12"
+                  : route.name === "settings"
+                    ? "max-w-[960px] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
+                    : route.name === "notifications"
+                      ? "max-w-2xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-12"
+                      : route.name === "detail"
+                        ? "max-w-[1440px] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
+                        : route.name === "history"
+                          ? "max-w-3xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-12"
+                          : "max-w-6xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
           }`}
         >
           {problem === "write" && !isFullBleed && (
@@ -1386,7 +1721,9 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
           {syncError && !isFullBleed && (
             <div
-              className="mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/30 px-3.5 py-2 text-xs text-amber-800 dark:text-amber-200 shadow-xs"
+              className={`mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/30 px-3.5 text-xs text-amber-800 dark:text-amber-200 shadow-xs ${
+                route.name === "settings" ? "py-1.5" : "py-2"
+              }`}
               role="alert"
             >
               <div className="flex min-w-0 items-center gap-2">
@@ -1394,11 +1731,15 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                   size={16}
                   className="shrink-0 text-amber-600 dark:text-amber-400"
                 />
-                <span className="font-medium">{syncError}</span>
+                <span className="font-medium">
+                  {route.name === "settings"
+                    ? "Đang dùng dữ liệu tạm"
+                    : syncError}
+                </span>
               </div>
               <button
                 type="button"
-                className="shrink-0 font-semibold underline hover:text-amber-900 dark:hover:text-amber-100 cursor-pointer"
+                className="shrink-0 min-h-11 px-2 font-semibold underline hover:text-amber-900 dark:hover:text-amber-100 cursor-pointer"
                 onClick={() => window.location.reload()}
               >
                 Thử lại
@@ -1406,79 +1747,167 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             </div>
           )}
 
-          {state.mode === "demo" && !isFullBleed && (
-            <div className="mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-border-primary/60 bg-surface-bg px-3.5 py-1.5 text-xs shadow-xs">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-sage-100 text-sage-800">
-                  <Leaf size={14} aria-hidden="true" />
-                </span>
-                <span className="truncate font-medium text-text-secondary">
-                  Dữ liệu mẫu (chế độ xem thử)
-                </span>
-              </div>
-              <Button
-                size="small"
-                variant="subtle"
-                className="shrink-0 font-semibold text-brand-strong"
-                onClick={() => setPendingAuth({ name: "inventory" })}
+          {state.mode === "demo" &&
+            (!isFullBleed || typeof window !== "undefined") &&
+            route.name !== "detail" &&
+            route.name !== "settings" && (
+              <div
+                className={`mb-6 w-full ${
+                  isFullBleed ? "hidden md:flex" : "flex"
+                } items-center justify-between gap-3 rounded-corner-md border border-border-primary/60 bg-surface-bg px-3.5 py-1.5 text-xs shadow-xs`}
               >
-                Đăng nhập để đồng bộ
-              </Button>
-            </div>
-          )}
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-sage-100 text-sage-800">
+                    <Leaf size={14} aria-hidden="true" />
+                  </span>
+                  <span className="truncate font-medium text-text-secondary">
+                    Dữ liệu mẫu (chế độ xem thử)
+                  </span>
+                </div>
+                <Button
+                  size="small"
+                  variant="subtle"
+                  className="shrink-0 font-semibold text-brand-strong"
+                  onClick={() => setPendingAuth({ name: "inventory" })}
+                >
+                  Đăng nhập để đồng bộ
+                </Button>
+              </div>
+            )}
 
           {screenContent}
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation Bar */}
+      {/* Mobile Bottom Navigation Bar matching Figma node 309:217 & 312:136 */}
       {!isFullBleed && route.name !== "form" && (
         <nav
           aria-label="Điều hướng chính"
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-border-primary/60 bg-surface-bg/95 backdrop-blur-md px-2 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden shadow-lg"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-border-subtle bg-surface-bg px-4 sm:px-6 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden shadow-xs"
         >
-          <div className="grid grid-cols-5 w-full">
-            {navItems.map((n) => {
-              const activeTab = rootName === n.r
+          <div className="flex h-16 w-full items-center justify-between">
+            {/* Tab 1: Hôm nay */}
+            <button
+              type="button"
+              aria-label="Hôm nay"
+              aria-current={rootName === "inventory" ? "page" : undefined}
+              onClick={() => handleNav("inventory")}
+              className="flex min-w-16 flex-col items-center justify-center gap-1 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+            >
+              <span
+                className={`transition-colors ${
+                  rootName === "inventory"
+                    ? "text-brand-strong"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                <Home size={20} strokeWidth={2} />
+              </span>
+              <span
+                className={`text-[12px] leading-[18px] ${
+                  rootName === "inventory"
+                    ? "font-semibold text-brand-strong"
+                    : "font-medium text-text-secondary"
+                }`}
+              >
+                Hôm nay
+              </span>
+            </button>
 
-              return (
-                <button
-                  key={n.r}
-                  type="button"
-                  aria-label={n.badge ? `${n.label}, ${n.badge} mục` : n.label}
-                  aria-current={activeTab ? "page" : undefined}
-                  onClick={() => handleNav(n.r)}
-                  className="relative flex min-h-14 w-full flex-col items-center justify-center px-0.5 py-1 text-center transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary cursor-pointer"
-                >
-                  <span
-                    className={`relative flex h-7 w-12 items-center justify-center rounded-corner-full transition-all ${
-                      activeTab
-                        ? "bg-brand-primary text-on-brand shadow-xs"
-                        : "text-text-secondary hover:text-text-primary"
-                    }`}
-                  >
-                    {n.icon}
-                    {!!n.badge && n.badge > 0 && (
-                      <span
-                        aria-hidden="true"
-                        className="absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white shadow-xs"
-                      >
-                        {n.badge}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className={`mt-1 block w-full truncate text-[10px] sm:text-[11px] leading-tight text-center ${
-                      activeTab
-                        ? "font-bold text-brand-strong"
-                        : "text-text-secondary font-medium"
-                    }`}
-                  >
-                    {n.label}
-                  </span>
-                </button>
-              )
-            })}
+            {/* Tab 2: Kho */}
+            <button
+              type="button"
+              aria-label="Kho"
+              aria-current={rootName === "storage" ? "page" : undefined}
+              onClick={() => handleNav("storage")}
+              className="flex min-w-16 flex-col items-center justify-center gap-1 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+            >
+              <span
+                className={`transition-colors ${
+                  rootName === "storage"
+                    ? "text-brand-strong"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                <Archive size={20} strokeWidth={2} />
+              </span>
+              <span
+                className={`text-[12px] leading-[18px] ${
+                  rootName === "storage"
+                    ? "font-semibold text-brand-strong"
+                    : "font-medium text-text-secondary"
+                }`}
+              >
+                Kho
+              </span>
+            </button>
+
+            {/* Center Action FAB (309:93): Add button */}
+            <button
+              type="button"
+              aria-label="Thêm thực phẩm"
+              title="Thêm thực phẩm"
+              onClick={() => handleNav("scan")}
+              className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-on-brand border border-brand-primary/20 shadow-xs transition-transform hover:bg-brand-hover active:scale-95 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary -mt-2"
+            >
+              <Plus size={24} strokeWidth={2.5} />
+            </button>
+
+            {/* Tab 4: Mua sắm */}
+            <button
+              type="button"
+              aria-label="Mua sắm"
+              aria-current={rootName === "shopping" ? "page" : undefined}
+              onClick={() => handleNav("shopping")}
+              className="flex min-w-16 flex-col items-center justify-center gap-1 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+            >
+              <span
+                className={`transition-colors ${
+                  rootName === "shopping"
+                    ? "text-brand-strong"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                <ShoppingBag size={20} strokeWidth={2} />
+              </span>
+              <span
+                className={`text-[12px] leading-[18px] ${
+                  rootName === "shopping"
+                    ? "font-semibold text-brand-strong"
+                    : "font-medium text-text-secondary"
+                }`}
+              >
+                Mua sắm
+              </span>
+            </button>
+
+            {/* Tab 5: Thống kê */}
+            <button
+              type="button"
+              aria-label="Thống kê"
+              aria-current={rootName === "insight" ? "page" : undefined}
+              onClick={() => handleNav("insight")}
+              className="flex min-w-16 flex-col items-center justify-center gap-1 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+            >
+              <span
+                className={`transition-colors ${
+                  rootName === "insight"
+                    ? "text-brand-strong"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                <BarChart3 size={20} strokeWidth={2} />
+              </span>
+              <span
+                className={`text-[12px] leading-[18px] ${
+                  rootName === "insight"
+                    ? "font-semibold text-brand-strong"
+                    : "font-medium text-text-secondary"
+                }`}
+              >
+                Thống kê
+              </span>
+            </button>
           </div>
         </nav>
       )}
@@ -1498,6 +1927,40 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       )}
 
       {/* Discard confirmation modal */}
+      <Modal
+        isOpen={showSettingsLeavePrompt}
+        onClose={() => {
+          setShowSettingsLeavePrompt(false)
+          pendingSettingsLeaveRef.current = null
+        }}
+        title="Bỏ thay đổi chưa lưu?"
+        size="small"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowSettingsLeavePrompt(false)
+                pendingSettingsLeaveRef.current = null
+              }}
+            >
+              Ở lại
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                const action = pendingSettingsLeaveRef.current
+                pendingSettingsLeaveRef.current = null
+                settingsDirtyRef.current = false
+                setShowSettingsLeavePrompt(false)
+                action?.()
+              }}
+            >
+              Rời đi không lưu
+            </Button>
+          </>
+        }
+      />
       <Modal
         isOpen={!!discard}
         onClose={() => setDiscard(null)}
@@ -1525,6 +1988,25 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           Những gì bạn vừa nhập vào mẫu sẽ không được lưu lại.
         </p>
       </Modal>
+
+      {/* Notification Pop-up Modal */}
+      {showNotifications && (
+        <Notifications
+          isOpen={true}
+          onClose={closeNotifications}
+          state={state}
+          dispatch={dispatch}
+          onOpenDetail={(id) => {
+            closeNotifications()
+            go({ name: "detail", id })
+          }}
+          onOpenReminder={() => {
+            setIsNotificationsOpen(false)
+            tab({ name: "attention" })
+          }}
+          notify={notify}
+        />
+      )}
     </div>
   )
 }

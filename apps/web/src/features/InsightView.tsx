@@ -8,13 +8,7 @@ import type {
   State,
   Category,
 } from "../store/appStore"
-import {
-  CATEGORIES,
-  CATEGORY_LABELS,
-  formatDate,
-  statusOf,
-  today,
-} from "../store/appStore"
+import { CATEGORIES, formatDate, statusOf, today } from "../store/appStore"
 import type { QuantityMovement } from "../domain/types"
 import Card from "../components/ui/Card"
 import {
@@ -22,34 +16,16 @@ import {
   CalendarClock,
   ChevronDown,
   ChevronRight,
-  CircleAlert,
   CircleCheck,
   Clock,
   HelpCircle,
-  History,
-  Layers,
-  Leaf,
   Package,
-  PackageOpen,
-  Plus,
   RefreshCw,
-  Sparkles,
-  Trash2,
-  TrendingUp,
-  Utensils,
-  Wheat,
-  Croissant,
-  Milk,
-  Beef,
-  CupSoda,
   FileText as FileTextIcon,
   LayoutGrid as LayoutGridIcon,
-  LeafyGreen,
-  ShoppingCart as ShoppingCartIcon,
   Tag as TagIcon,
   TriangleAlert as AlertTriangleIcon,
   ArrowRight,
-  Info,
 } from "lucide-react"
 import PageHeader from "../components/ui/PageHeader"
 
@@ -59,10 +35,16 @@ export interface InsightViewProps {
   state: State
   dispatch?: Dispatch
   onOpenDetail?: (id: string) => void
+  onNavigateAttention?: () => void
   initialTab?: string
   onTabChange?: (tab: string) => void
   isLive?: boolean
   apiClient?: ApiClient
+}
+
+type UnitStat = {
+  used: number
+  discarded: number
 }
 
 export function fromQuantityMovement(
@@ -197,41 +179,11 @@ export interface CategoryStat {
   discard: number
 }
 
-function formatActivityTime(isoString: string): string {
-  try {
-    const d = new Date(isoString)
-    const now = new Date()
-    const isToday =
-      d.getDate() === now.getDate() &&
-      d.getMonth() === now.getMonth() &&
-      d.getFullYear() === now.getFullYear()
-
-    const yesterday = new Date(now)
-    yesterday.setDate(yesterday.getDate() - 1)
-    const isYesterday =
-      d.getDate() === yesterday.getDate() &&
-      d.getMonth() === yesterday.getMonth() &&
-      d.getFullYear() === yesterday.getFullYear()
-
-    const hours = String(d.getHours()).padStart(2, "0")
-    const minutes = String(d.getMinutes()).padStart(2, "0")
-    const timeStr = `${hours}:${minutes}`
-
-    if (isToday) return `Hôm nay, ${timeStr}`
-    if (isYesterday) return `Hôm qua, ${timeStr}`
-
-    const day = String(d.getDate()).padStart(2, "0")
-    const month = String(d.getMonth() + 1).padStart(2, "0")
-    return `${day}/${month}, ${timeStr}`
-  } catch {
-    return isoString
-  }
-}
-
 export default function InsightView({
   state,
   dispatch,
   onOpenDetail,
+  onNavigateAttention,
   initialTab = "overview",
   onTabChange,
   isLive: isLiveProp,
@@ -295,14 +247,38 @@ export default function InsightView({
     )
   }, [state.history, liveEvents, isLive])
 
-  // Filter history events by time range
-  const filteredEvents = useMemo(() => {
-    if (range === "all") return combinedHistory
-    const now = Date.now()
-    const daysLimit = range === "7d" ? 7 : 30
-    const cutoff = now - daysLimit * 24 * 3600_000
-    return combinedHistory.filter((e) => new Date(e.at).getTime() >= cutoff)
+  const rangeWindow = useMemo(() => {
+    const endMs = Date.now()
+    if (range !== "all") {
+      const daysLimit = range === "7d" ? 7 : 30
+      return { startMs: endMs - daysLimit * 24 * 3600_000, endMs }
+    }
+
+    const recordedTimes = combinedHistory
+      .map((event) => new Date(event.at).getTime())
+      .filter((time) => Number.isFinite(time) && time <= endMs)
+    const oldestRecordedTime = recordedTimes.reduce(
+      (oldest, time) => Math.min(oldest, time),
+      Number.POSITIVE_INFINITY,
+    )
+
+    return {
+      startMs: Number.isFinite(oldestRecordedTime) ? oldestRecordedTime : null,
+      endMs,
+    }
   }, [combinedHistory, range])
+
+  // Summary metrics and the trend chart use the same selected time window.
+  const filteredEvents = useMemo(() => {
+    const { startMs, endMs } = rangeWindow
+    if (startMs === null) return []
+    return combinedHistory.filter((event) => {
+      const eventTime = new Date(event.at).getTime()
+      return (
+        Number.isFinite(eventTime) && eventTime >= startMs && eventTime <= endMs
+      )
+    })
+  }, [combinedHistory, rangeWindow])
 
   const foodCategoryMap = useMemo(() => {
     const map = new Map<string, Category>()
@@ -325,7 +301,10 @@ export default function InsightView({
     [activeFoods, remindDays],
   )
   const soonFoods = useMemo(
-    () => activeFoods.filter((f) => statusOf(f, remindDays) === "soon"),
+    () =>
+      activeFoods
+        .filter((f) => statusOf(f, remindDays) === "soon")
+        .sort((a, b) => (a.expDate || "").localeCompare(b.expDate || "")),
     [activeFoods, remindDays],
   )
   const unknownExpFoods = useMemo(
@@ -339,14 +318,10 @@ export default function InsightView({
   const locationRate =
     totalActive > 0
       ? Math.round((withLocationFoods.length / totalActive) * 100)
-      : 100
+      : null
 
-  // Calculate consumption and waste metrics
-  const stats = useMemo(() => {
-    let consumeCount = 0
-    let discardCount = 0
-    let adjustCount = 0
-
+  // Count recorded consume and discard events by their event category.
+  const categoryEventStats = useMemo(() => {
     const catStats: Record<string, CategoryStat> = {}
     for (const c of CATEGORIES) {
       catStats[c.value] = { consume: 0, discard: 0 }
@@ -358,106 +333,101 @@ export default function InsightView({
       if (!catStats[cat]) catStats[cat] = { consume: 0, discard: 0 }
 
       if (e.kind === "consume") {
-        consumeCount++
         catStats[cat].consume++
       } else if (e.kind === "discard") {
-        discardCount++
         catStats[cat].discard++
-      } else if (e.kind === "adjust") {
-        adjustCount++
       }
     }
 
-    const totalDecided = consumeCount + discardCount
-    const hasData = totalDecided > 0
-    const consumptionRate = hasData
-      ? Math.round((consumeCount / totalDecided) * 100)
-      : 0
-    const wasteRate = hasData ? 100 - consumptionRate : 0
-
-    let worstCat: Category | null = null
-    let worstWasteCount = 0
-    for (const [c, s] of Object.entries(catStats)) {
-      if (s.discard > worstWasteCount) {
-        worstWasteCount = s.discard
-        worstCat = (c as Category)
-      }
-    }
-
-    return {
-      consumeCount,
-      discardCount,
-      adjustCount,
-      totalDecided,
-      hasData,
-      consumptionRate,
-      wasteRate,
-      catStats,
-      worstCat,
-      worstWasteCount,
-    }
+    return catStats
   }, [filteredEvents, foodCategoryMap])
 
-  // Weekly Trend calculation (Past 4 weeks in 30 days) — 100% computed from real event history
-  const trendWeeks = useMemo(() => {
-    const now = Date.now()
-    const oneDay = 24 * 3600_000
-    const weeksData = [
-      { label: "Tuần 1", startDays: 28, endDays: 21 },
-      { label: "Tuần 2", startDays: 21, endDays: 14 },
-      { label: "Tuần 3", startDays: 14, endDays: 7 },
-      { label: "Tuần 4", startDays: 7, endDays: 0 },
-    ]
-
-    return weeksData.map((w) => {
-      const startTime = now - w.startDays * oneDay
-      const endTime = now - w.endDays * oneDay
-      const wEvents = combinedHistory.filter((e) => {
-        const t = new Date(e.at).getTime()
-        return t >= startTime && t <= endTime
-      })
-
-      const wConsume = wEvents.filter((e) => e.kind === "consume").length
-      const wDiscard = wEvents.filter((e) => e.kind === "discard").length
-      const n = wConsume + wDiscard
-      const rate = n > 0 ? Math.round((wConsume / n) * 100) : 0
-
-      return { label: w.label, n, rate }
-    })
-  }, [combinedHistory])
-
-  // Delta comparison points between weeks with real records
-  const deltaPoints = useMemo(() => {
-    const activeWeeks = trendWeeks.filter((w) => w.n > 0)
-    if (activeWeeks.length >= 2) {
-      return activeWeeks[activeWeeks.length - 1].rate - activeWeeks[0].rate
+  // Unit breakdown for Figma Node 572:1688 (Insights / Recorded Quantities)
+  const unitStats = useMemo(() => {
+    const map = new Map<string, UnitStat>()
+    for (const e of filteredEvents) {
+      const u = (e.unit || "món").trim()
+      const amt =
+        typeof e.amount === "number" && !isNaN(e.amount) ? e.amount : 1
+      if (!map.has(u)) {
+        map.set(u, { used: 0, discarded: 0 })
+      }
+      const stat = map.get(u)!
+      if (e.kind === "consume") {
+        stat.used += amt
+      } else if (e.kind === "discard") {
+        stat.discarded += amt
+      }
     }
-    return 0
-  }, [trendWeeks])
+    const all = Array.from(map.entries()).map(([unit, data]) => ({
+      unit,
+      used: data.used,
+      discarded: data.discarded,
+    }))
+    // Evon & Norman Principle: Filter out zero-value units to eliminate visual clutter
+    const active = all.filter((item) => item.used > 0 || item.discarded > 0)
+    return active.length > 0 ? active : all
+  }, [filteredEvents])
 
-  // Dynamic SVG trend coordinates computed mathematically
-  const svgTrendData = useMemo(() => {
-    const points = trendWeeks.map((w, i) => {
-      const x = 35 + i * 85
-      const y = 10 + (1 - w.rate / 100) * 80
-      return { x, y, ...w }
+  // Date range formatted label for Figma Node 617:3406
+  const rangeDateString = useMemo(() => {
+    if (rangeWindow.startMs === null) return "Chưa có dữ liệu"
+    const start = new Date(rangeWindow.startMs)
+    const end = new Date(rangeWindow.endMs)
+    const fmt = (d: Date) =>
+      `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`
+    return `${fmt(start)} – ${fmt(end)}`
+  }, [rangeWindow])
+
+  // Split the selected period into four equal windows so labels and buckets match the filter.
+  const trendPeriods = useMemo(() => {
+    const { startMs, endMs } = rangeWindow
+    if (startMs === null) return []
+
+    const formatAxisDate = (time: number) => {
+      const date = new Date(time)
+      const day = String(date.getDate())
+      const month = String(date.getMonth() + 1).padStart(2, "0")
+      return { day, month }
+    }
+
+    const duration = endMs - startMs
+    const buckets = Array.from({ length: 4 }, (_, index) => {
+      const bucketStart = startMs + (duration * index) / 4
+      const bucketEnd =
+        index === 3 ? endMs : startMs + (duration * (index + 1)) / 4 - 1
+      const startDate = formatAxisDate(bucketStart)
+      const endDate = formatAxisDate(bucketEnd)
+      const label =
+        startDate.month === endDate.month
+          ? `${startDate.day}–${endDate.day}/${endDate.month}`
+          : `${startDate.day}/${startDate.month}–${endDate.day}/${endDate.month}`
+
+      return {
+        label,
+        consume: 0,
+        discard: 0,
+        n: 0,
+        rate: 0,
+      }
     })
-    const linePath = points
-      .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-      .join(" ")
-    const areaPath =
-      points.length > 0
-        ? `${linePath} L ${points[points.length - 1].x} 90 L ${points[0].x} 90 Z`
-        : ""
-    return { points, linePath, areaPath }
-  }, [trendWeeks])
 
-  // Consumption Donut Gradient
-  const consumptionConicGradient = useMemo(() => {
-    if (stats.totalDecided === 0) return "var(--neutral-200)"
-    const deg = Math.round((stats.consumptionRate / 100) * 360)
-    return `conic-gradient(var(--sage-700) 0deg ${deg}deg, var(--danger) ${deg}deg 360deg)`
-  }, [stats.totalDecided, stats.consumptionRate])
+    // Event rate = consume events / (consume + discard events); adjustments are excluded.
+    for (const event of filteredEvents) {
+      if (event.kind !== "consume" && event.kind !== "discard") continue
+      const eventTime = new Date(event.at).getTime()
+      const ratio = duration > 0 ? (eventTime - startMs) / duration : 0
+      const index = Math.max(0, Math.min(3, Math.floor(ratio * 4)))
+      const bucket = buckets[index]
+      bucket[event.kind] += 1
+      bucket.n += 1
+    }
+
+    return buckets.map((bucket) => ({
+      ...bucket,
+      rate: bucket.n > 0 ? Math.round((bucket.consume / bucket.n) * 100) : 0,
+    }))
+  }, [filteredEvents, rangeWindow])
 
   // Storage Location Breakdown
   const storageStats = useMemo(() => {
@@ -514,28 +484,6 @@ export default function InsightView({
       : "var(--neutral-200)"
   }, [totalActive, storageStats])
 
-  // Category list sorted with active categories first
-  const displayCategories = useMemo(() => {
-    return [
-      { key: "fresh_produce", label: "Rau củ quả", icon: LeafyGreen },
-      { key: "dairy_eggs", label: "Trứng & Sữa", icon: Milk },
-      { key: "meat_seafood", label: "Thịt & Cá", icon: Beef },
-      { key: "dry_pantry", label: "Bánh & Ngũ cốc", icon: Croissant },
-      { key: "other", label: "Khác", icon: LayoutGridIcon },
-    ].map((c) => {
-      const data = stats.catStats[c.key] || { consume: 0, discard: 0 }
-      const total = data.consume + data.discard
-      const rate = total > 0 ? Math.round((data.consume / total) * 100) : null
-      return {
-        ...c,
-        consume: data.consume,
-        discard: data.discard,
-        total,
-        rate,
-      }
-    })
-  }, [stats.catStats])
-
   const rangeLabel =
     range === "7d"
       ? "7 ngày gần nhất"
@@ -543,100 +491,13 @@ export default function InsightView({
         ? "30 ngày gần nhất"
         : "Toàn bộ"
 
-  const displayActivities = useMemo(() => {
-    return filteredEvents.slice(0, 3).map((ev) => ({
-      id: ev.id,
-      foodId: ev.foodId,
-      title: `${
-        ev.kind === "consume"
-          ? "Dùng hết"
-          : ev.kind === "discard"
-            ? "Vứt bỏ"
-            : "Điều chỉnh"
-      }: ${ev.foodName}`,
-      kind: ev.kind,
-      timeStr: formatActivityTime(ev.at),
-    }))
-  }, [filteredEvents])
-
-  // Dynamic Evidence-based suggestions directly reflecting database state
-  const dynamicSuggestions = useMemo(() => {
-    const list: Array<{
-      id: string
-      icon: "cart" | "leaf" | "file"
-      title: string
-      reason: string
-    }> = []
-
-    // 1. Sắp hết hạn
-    if (soonFoods.length > 0) {
-      list.push({
-        id: "sug-soon",
-        icon: "cart",
-        title: `Ưu tiên sử dụng ${soonFoods.length} món sắp hết hạn`,
-        reason: `Căn cứ: Giảm nguy cơ lãng phí (${soonFoods
-          .slice(0, 2)
-          .map((f) => f.name)
-          .join(", ")}).`,
-      })
-    } else {
-      list.push({
-        id: "sug-soon-ok",
-        icon: "cart",
-        title: "Tình trạng hạn dùng ổn định",
-        reason: "Căn cứ: Không có thực phẩm cận date cần xử lý khẩn.",
-      })
-    }
-
-    // 2. Nhóm bị vứt bỏ nhiều nhất
-    if (stats.worstCat && stats.worstWasteCount > 0) {
-      list.push({
-        id: "sug-waste",
-        icon: "leaf",
-        title: `Xem lại lượng mua ${CATEGORY_LABELS[stats.worstCat] || stats.worstCat}`,
-        reason: `Căn cứ: Có ${stats.worstWasteCount} lượt vứt bỏ trong ${rangeLabel.toLowerCase()}.`,
-      })
-    } else {
-      list.push({
-        id: "sug-waste-ok",
-        icon: "leaf",
-        title: "Duy trì tiêu dùng hiện tại",
-        reason: "Căn cứ: Chưa có thực phẩm bị vứt bỏ trong kỳ phân tích.",
-      })
-    }
-
-    // 3. Thiếu HSD
-    if (unknownExpFoods.length > 0) {
-      list.push({
-        id: "sug-missing",
-        icon: "file",
-        title: `Bổ sung HSD cho ${unknownExpFoods.length} món`,
-        reason: "Căn cứ: Giúp hệ thống nhắc hạn chính xác hơn.",
-      })
-    } else {
-      list.push({
-        id: "sug-missing-ok",
-        icon: "file",
-        title: "Dữ liệu HSD đầy đủ",
-        reason: "Căn cứ: 100% thực phẩm trong kho đều có ngày hết hạn.",
-      })
-    }
-
-    return list
-  }, [
-    soonFoods,
-    stats.worstCat,
-    stats.worstWasteCount,
-    rangeLabel,
-    unknownExpFoods.length,
-  ])
+  const hasTrendEvents = trendPeriods.some((period) => period.n > 0)
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      {/* Page Header */}
+      {/* Page Header without clutter subtitle */}
       <PageHeader
         title="Insight"
-        subtitle="Tổng quan kho thực phẩm, hiệu quả sử dụng và gợi ý tối ưu"
         actions={
           <div className="flex items-center gap-2">
             {/* Hidden/Subtle test ID badges to maintain contract compatibility */}
@@ -659,27 +520,29 @@ export default function InsightView({
             </span>
 
             {/* Time Range Selector */}
-            <button
-              type="button"
-              onClick={() => loadMovements()}
-              disabled={loadingLive}
-              title="Đồng bộ lại từ cơ sở dữ liệu"
-              className="inline-flex items-center gap-1.5 rounded-corner-md border border-border-primary/80 bg-surface-bg px-2.5 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw
-                size={13}
-                className={`text-text-secondary ${
-                  loadingLive ? "animate-spin" : ""
-                }`}
-              />
-              <span>{loadingLive ? "Đang tải..." : "Làm mới"}</span>
-            </button>
+            {isLive && (
+              <button
+                type="button"
+                onClick={() => loadMovements()}
+                disabled={loadingLive}
+                title="Đồng bộ lại từ cơ sở dữ liệu"
+                className="inline-flex min-h-11 md:min-h-10 items-center gap-1.5 rounded-corner-md border border-border-primary/80 bg-surface-bg px-2.5 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw
+                  size={13}
+                  className={`text-text-secondary ${
+                    loadingLive ? "animate-spin" : ""
+                  }`}
+                />
+                <span>{loadingLive ? "Đang tải..." : "Làm mới"}</span>
+              </button>
+            )}
 
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setRangeDropdownOpen((v) => !v)}
-                className="inline-flex items-center gap-2 rounded-corner-md border border-border-primary/80 bg-surface-bg px-3 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer"
+                className="inline-flex min-h-11 md:min-h-10 items-center gap-2 rounded-corner-md border border-border-primary/80 bg-surface-bg px-3 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer"
               >
                 <CalendarClock size={15} className="text-text-secondary" />
                 <span>{rangeLabel}</span>
@@ -717,11 +580,11 @@ export default function InsightView({
       />
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-1.5 p-1 rounded-corner-lg bg-surface-subtle border border-border-primary/40 w-fit">
+      <div className="flex w-fit max-w-full items-center gap-1.5 overflow-x-auto rounded-corner-lg border border-border-primary/40 bg-surface-subtle p-1">
         <button
           type="button"
           onClick={() => handleTabSelect("overview")}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
+          className={`inline-flex min-h-11 md:min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "overview"
               ? "bg-brand-primary text-on-brand shadow-xs"
               : "text-text-secondary hover:text-text-primary hover:bg-surface-bg"
@@ -733,19 +596,20 @@ export default function InsightView({
         <button
           type="button"
           onClick={() => handleTabSelect("categories")}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
+          className={`inline-flex min-h-11 md:min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "categories"
               ? "bg-brand-primary text-on-brand shadow-xs"
               : "text-text-secondary hover:text-text-primary hover:bg-surface-bg"
           }`}
         >
           <TagIcon size={14} />
-          <span>Theo danh mục</span>
+          <span className="hidden sm:inline">Theo danh mục</span>
+          <span className="sm:hidden">Danh mục</span>
         </button>
         <button
           type="button"
           onClick={() => handleTabSelect("history")}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
+          className={`inline-flex min-h-11 md:min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "history"
               ? "bg-brand-primary text-on-brand shadow-xs"
               : "text-text-secondary hover:text-text-primary hover:bg-surface-bg"
@@ -760,45 +624,38 @@ export default function InsightView({
         <>
           {/* Section 1: Việc cần chú ý (Actionable Attention Banner) */}
           <Card className="p-4 border-border-primary/60 bg-surface-bg shadow-xs">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="flex items-start gap-3 min-w-44">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+              <div className="flex items-start gap-3 min-w-44 xl:w-44 xl:shrink-0">
                 <div className="p-2 rounded-corner-md bg-danger/10 text-danger shrink-0 mt-0.5">
                   <AlertTriangleIcon size={20} />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-text-heading leading-tight">
+                  <h2 className="break-words text-base font-semibold text-text-heading leading-tight tracking-normal">
                     Việc cần chú ý
                   </h2>
-                  <p className="text-xs text-text-secondary mt-0.5">
-                    Các vấn đề cần xử lý để giảm lãng phí.
-                  </p>
                 </div>
               </div>
 
               {/* 3 distinct action cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 flex-1 max-w-2xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 flex-1 max-w-2xl">
                 {/* 1. Quá hạn */}
-                <div
-                  onClick={() =>
-                    onOpenDetail &&
-                    expiredFoods[0] &&
-                    onOpenDetail(expiredFoods[0].id)
-                  }
-                  className="flex items-center justify-between p-3 rounded-corner-md bg-status-expired-bg/40 border border-status-expired/20 hover:bg-status-expired-bg/60 transition-all cursor-pointer group"
+                <button
+                  type="button"
+                  disabled={!onNavigateAttention}
+                  aria-label={`Mở nhắc nhở, ${expiredFoods.length} món quá hạn`}
+                  onClick={onNavigateAttention}
+                  className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-status-expired/20 bg-status-expired-bg/40 p-3 text-left transition-all hover:bg-status-expired-bg/60 cursor-pointer group disabled:cursor-default disabled:opacity-60"
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="size-8 rounded-corner-sm bg-status-expired-bg flex items-center justify-center text-status-expired shrink-0">
                       <Package size={16} />
                     </div>
                     <div>
-                      <span className="text-[11px] font-semibold text-status-expired block leading-none">
+                      <span className="text-xs font-semibold text-status-expired block leading-none">
                         Quá hạn
                       </span>
                       <span className="text-sm font-extrabold text-status-expired mt-1 block leading-tight">
                         {expiredFoods.length} món
-                      </span>
-                      <span className="text-[10px] text-text-secondary mt-0.5 block">
-                        Kiểm tra và xử lý ngay
                       </span>
                     </div>
                   </div>
@@ -806,30 +663,30 @@ export default function InsightView({
                     size={14}
                     className="text-status-expired/60 group-hover:translate-x-0.5 transition-transform"
                   />
-                </div>
+                </button>
 
                 {/* 2. Sắp hết hạn */}
-                <div
-                  onClick={() =>
-                    onOpenDetail &&
-                    soonFoods[0] &&
-                    onOpenDetail(soonFoods[0].id)
+                <button
+                  type="button"
+                  aria-label={
+                    "Mở món sắp hết hạn đầu tiên, " + soonFoods.length + " món"
                   }
-                  className="flex items-center justify-between p-3 rounded-corner-md bg-status-soon-bg/40 border border-status-soon/20 hover:bg-status-soon-bg/60 transition-all cursor-pointer group"
+                  disabled={!onOpenDetail || soonFoods.length === 0}
+                  onClick={() =>
+                    soonFoods[0] && onOpenDetail?.(soonFoods[0].id)
+                  }
+                  className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-status-soon/20 bg-status-soon-bg/40 p-3 text-left transition-all hover:bg-status-soon-bg/60 cursor-pointer group disabled:cursor-default disabled:opacity-60"
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="size-8 rounded-corner-sm bg-status-soon-bg flex items-center justify-center text-status-soon shrink-0">
                       <Clock size={16} />
                     </div>
                     <div>
-                      <span className="text-[11px] font-semibold text-status-soon block leading-none">
+                      <span className="text-xs font-semibold text-status-soon block leading-none">
                         Sắp hết hạn
                       </span>
                       <span className="text-sm font-extrabold text-status-soon mt-1 block leading-tight">
                         {soonFoods.length} món
-                      </span>
-                      <span className="text-[10px] text-text-secondary mt-0.5 block">
-                        Ưu tiên sử dụng sớm
                       </span>
                     </div>
                   </div>
@@ -837,30 +694,32 @@ export default function InsightView({
                     size={14}
                     className="text-status-soon/60 group-hover:translate-x-0.5 transition-transform"
                   />
-                </div>
+                </button>
 
                 {/* 3. Thiếu HSD */}
-                <div
-                  onClick={() =>
-                    onOpenDetail &&
-                    unknownExpFoods[0] &&
-                    onOpenDetail(unknownExpFoods[0].id)
+                <button
+                  type="button"
+                  aria-label={
+                    "Mở món chưa có hạn sử dụng đầu tiên, " +
+                    unknownExpFoods.length +
+                    " món"
                   }
-                  className="flex items-center justify-between p-3 rounded-corner-md bg-surface-subtle border border-border-primary hover:bg-surface-hover transition-all cursor-pointer group"
+                  disabled={!onOpenDetail || unknownExpFoods.length === 0}
+                  onClick={() =>
+                    unknownExpFoods[0] && onOpenDetail?.(unknownExpFoods[0].id)
+                  }
+                  className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-border-primary bg-surface-subtle p-3 text-left transition-all hover:bg-surface-hover cursor-pointer group disabled:cursor-default disabled:opacity-60"
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="size-8 rounded-corner-sm bg-border-primary/30 flex items-center justify-center text-text-secondary shrink-0">
                       <HelpCircle size={16} />
                     </div>
                     <div>
-                      <span className="text-[11px] font-semibold text-text-secondary block leading-none">
+                      <span className="text-xs font-semibold text-text-secondary block leading-none">
                         Thiếu HSD
                       </span>
                       <span className="text-sm font-extrabold text-text-primary mt-1 block leading-tight">
                         {unknownExpFoods.length} món
-                      </span>
-                      <span className="text-[10px] text-text-secondary mt-0.5 block">
-                        Bổ sung thông tin
                       </span>
                     </div>
                   </div>
@@ -868,445 +727,315 @@ export default function InsightView({
                     size={14}
                     className="text-text-secondary group-hover:translate-x-0.5 transition-transform"
                   />
-                </div>
+                </button>
               </div>
 
               <button
                 type="button"
-                onClick={() => handleTabSelect("history")}
-                className="inline-flex items-center justify-center gap-1.5 shrink-0 rounded-corner-md bg-brand-primary px-3.5 py-2 text-xs font-semibold text-on-brand shadow-xs hover:bg-brand-primary/90 transition-all cursor-pointer text-center"
+                disabled={!onNavigateAttention}
+                onClick={onNavigateAttention}
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 shrink-0 rounded-corner-md bg-brand-primary px-3.5 py-2 text-xs font-semibold text-on-brand shadow-xs hover:bg-brand-primary/90 transition-all cursor-pointer text-center disabled:cursor-default disabled:opacity-60"
               >
                 Xem danh sách <ArrowRight size={14} aria-hidden="true" />
               </button>
             </div>
           </Card>
 
-          {/* Section 2: Hai khối hiệu quả tiêu dùng & Xu hướng (Grid 2 cols) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Card Left: Tỷ lệ dùng hết */}
-            <Card className="p-5 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2">
-                  <BarChart3 size={16} className="text-brand-strong" />
-                  <h3 className="text-sm font-bold text-text-heading">
-                    Xu hướng tỷ lệ dùng hết
-                  </h3>
-                </div>
-                <span className="text-[10px] text-text-secondary">
-                  So sánh theo tuần trong {rangeLabel.toLowerCase()}{" "}
-                  <Info
-                    size={12}
-                    aria-hidden="true"
-                    className="inline-block align-middle"
-                  />
-                </span>
+          <Card className="w-full min-w-0">
+            <div className="mb-5 flex min-w-0 items-center gap-2">
+              <BarChart3
+                size={16}
+                className="text-brand-strong"
+                aria-hidden="true"
+              />
+              <h3 className="text-sm font-semibold text-text-heading tracking-normal">
+                Tỷ lệ lượt dùng hết
+              </h3>
+            </div>
+
+            {!hasTrendEvents ? (
+              <div
+                role="status"
+                className="flex h-44 items-center justify-center rounded-corner-md border border-dashed border-border-primary/60 px-4 text-center text-sm font-medium text-text-secondary"
+              >
+                Chưa có lượt dùng hoặc bỏ
               </div>
-
-              {/* Line Graph SVG computed dynamically */}
-              <div className="relative w-full pt-2">
-                <div className="relative w-full h-32">
-                  <svg
-                    className="w-full h-full overflow-visible"
-                    viewBox="0 0 320 110"
-                    preserveAspectRatio="none"
-                  >
-                    <defs>
-                      <linearGradient
-                        id="trendAreaGrad"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="var(--sage-700)"
-                          stopOpacity="0.25"
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="var(--sage-700)"
-                          stopOpacity="0.02"
-                        />
-                      </linearGradient>
-                    </defs>
-
-                    {/* Grid lines */}
-                    {[100, 80, 60, 40, 20, 0].map((val) => {
-                      const y = 10 + (1 - val / 100) * 80
-                      return (
-                        <g key={val}>
-                          <line
-                            x1={28}
-                            y1={y}
-                            x2={305}
-                            y2={y}
-                            stroke="var(--neutral-200)"
-                            strokeDasharray="3 3"
-                            strokeWidth="0.8"
-                          />
-                          <text
-                            x={24}
-                            y={y + 3}
-                            textAnchor="end"
-                            className="text-[9px] fill-text-tertiary font-medium"
-                          >
-                            {val}%
-                          </text>
-                        </g>
-                      )
-                    })}
-
-                    {/* Dynamic trend curve and area */}
-                    {svgTrendData.areaPath && (
-                      <path
-                        d={svgTrendData.areaPath}
-                        fill="url(#trendAreaGrad)"
-                      />
-                    )}
-                    {svgTrendData.linePath && (
-                      <path
-                        d={svgTrendData.linePath}
-                        fill="none"
-                        stroke="var(--sage-700)"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                      />
-                    )}
-
-                    {/* Dynamic dots for each week */}
-                    {svgTrendData.points.map((p, i) => (
-                      <circle
-                        key={i}
-                        cx={p.x}
-                        cy={p.y}
-                        r={i === svgTrendData.points.length - 1 ? 4.5 : 3.5}
-                        fill={
-                          i === svgTrendData.points.length - 1
-                            ? "var(--sage-700)"
-                            : "var(--neutral-white)"
-                        }
-                        stroke={
-                          i === svgTrendData.points.length - 1
-                            ? "var(--neutral-white)"
-                            : "var(--sage-700)"
-                        }
-                        strokeWidth={
-                          i === svgTrendData.points.length - 1 ? 1.5 : 2
-                        }
-                      />
-                    ))}
-                  </svg>
-
-                  {stats.totalDecided > 0 && (
-                    <div className="absolute top-1 right-2">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-brand-primary text-on-brand text-xs font-bold shadow-xs">
-                        {`${trendWeeks[trendWeeks.length - 1]?.rate || stats.consumptionRate}%`}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* X-axis labels with real n values from database */}
-                <div className="flex justify-between pl-8 pr-5 pt-1 text-[10px] text-text-secondary font-medium">
-                  {trendWeeks.map((w, i) => (
-                    <div key={i} className="text-center">
-                      <div>{w.label}</div>
-                      <div className="text-[9px] text-text-tertiary font-normal">
-                        (n={w.n})
-                      </div>
-                    </div>
+            ) : (
+              <div
+                className="grid min-w-0 grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3"
+                role="img"
+                aria-label={`Tỷ lệ lượt dùng hết theo thời gian: ${trendPeriods.map((period) => `${period.label}, ${period.n === 0 ? "0 lượt" : `${period.rate}% từ ${period.n} lượt`}`).join("; ")}`}
+              >
+                <div
+                  aria-hidden="true"
+                  className="relative h-44 text-right text-xs leading-none text-text-secondary"
+                >
+                  {[100, 75, 50, 25, 0].map((value) => (
+                    <span
+                      key={value}
+                      className="absolute right-0 -translate-y-1/2"
+                      style={{ top: `${100 - value}%` }}
+                    >
+                      {value}%
+                    </span>
                   ))}
                 </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Section 3: Ba khối phân tích danh mục, nơi bảo quản & chất lượng dữ liệu */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Card 1: Phân tích theo danh mục */}
-            <Card className="p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
-                    <BarChart3 size={15} className="text-brand-strong" />
-                    <span>Phân tích theo danh mục</span>
-                  </h3>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-strong">
-                    Kết quả 30 ngày
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {displayCategories.map((c) => (
-                    <div key={c.key} className="flex flex-col gap-1 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 font-medium text-text-primary">
-                          <c.icon
-                            size={16}
-                            aria-hidden="true"
-                            className="shrink-0 text-brand-strong"
-                          />
-                          <span>{c.label}</span>
-                        </span>
-                        <span className="text-[11px] text-text-secondary font-semibold">
-                          {c.total === 0
-                            ? "Chưa có dữ liệu"
-                            : `${c.rate}% (${c.consume}/${c.total})`}
-                        </span>
-                      </div>
-
-                      {/* Progress bar */}
-                      <div className="h-2 w-full rounded-full bg-border-primary/40 overflow-hidden flex">
-                        {c.total === 0 ? (
+                <div
+                  className="relative h-44 border-b border-border-primary/80"
+                  aria-hidden="true"
+                >
+                  {[100, 75, 50, 25].map((value) => (
+                    <div
+                      key={value}
+                      className="absolute inset-x-0 border-t border-dashed border-border-primary/70"
+                      style={{ top: `${100 - value}%` }}
+                    />
+                  ))}
+                  <div className="absolute inset-0 grid grid-cols-4 gap-2 px-1 sm:gap-4 sm:px-3">
+                    {trendPeriods.map((period, index) => (
+                      <div
+                        key={index}
+                        className="flex min-w-0 items-end justify-center"
+                      >
+                        {period.n > 0 && (
                           <div
-                            className="h-full w-full opacity-40"
+                            className="w-full max-w-14 rounded-t-corner-sm bg-brand-primary"
                             style={{
-                              backgroundImage:
-                                "repeating-linear-gradient(45deg, var(--neutral-200), var(--neutral-200) 4px, var(--neutral-100) 4px, var(--neutral-100) 8px)",
+                              height:
+                                period.rate === 0 ? "3px" : `${period.rate}%`,
                             }}
+                            title={`${period.label}: ${period.rate}% (${period.n} lượt)`}
                           />
-                        ) : (
-                          <>
-                            <div
-                              style={{ width: `${c.rate}%` }}
-                              className="h-full bg-brand-primary transition-all duration-300"
-                            />
-                            <div
-                              style={{ width: `${100 - (c.rate || 0)}%` }}
-                              className="h-full bg-danger transition-all duration-300"
-                            />
-                          </>
                         )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Card>
-
-            {/* Card 2: Cơ cấu tồn kho hiện tại */}
-            <Card className="p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
-                    <Package size={15} className="text-brand-strong" />
-                    <span>Cơ cấu tồn kho hiện tại</span>
-                  </h3>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-strong">
-                    Dữ liệu hiện tại
-                  </span>
-                </div>
-                <p className="text-[10px] text-text-secondary mb-3">
-                  Tính đến hôm nay.
-                </p>
-
-                <div className="flex items-center justify-around gap-2 pt-2">
-                  {/* Storage Donut Chart */}
-                  <div
-                    className="relative size-24 shrink-0 rounded-full flex items-center justify-center shadow-xs"
-                    style={{
-                      background: storageConicGradient,
-                    }}
-                  >
-                    <div className="size-15 rounded-full bg-surface-bg flex flex-col items-center justify-center shadow-inner">
-                      <span className="text-sm font-extrabold text-text-primary leading-none">
-                        {totalActive}
-                      </span>
-                      <span className="text-[9px] text-text-secondary font-medium mt-0.5 leading-none">
-                        món
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Legend list */}
-                  <div className="flex flex-col gap-2 text-xs">
-                    {storageStats.map((loc) => (
-                      <div key={loc.label} className="flex items-center gap-2">
-                        <span
-                          className="size-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: loc.color }}
-                        />
-                        <span className="text-text-secondary">{loc.label}</span>
-                        <span className="font-bold text-text-primary ml-auto">
-                          {loc.percent}% ({loc.count})
-                        </span>
-                      </div>
                     ))}
                   </div>
                 </div>
-              </div>
-            </Card>
-
-            {/* Card 3: Chất lượng dữ liệu */}
-            <Card className="p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
-                    <FileTextIcon size={15} className="text-brand-strong" />
-                    <span>Chất lượng dữ liệu</span>
-                  </h3>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-strong">
-                    Dữ liệu hiện tại
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2.5">
-                  {/* 1. Món chưa có HSD */}
-                  <div
-                    onClick={() =>
-                      onOpenDetail &&
-                      unknownExpFoods[0] &&
-                      onOpenDetail(unknownExpFoods[0].id)
-                    }
-                    className="flex items-center justify-between p-3 rounded-corner-md bg-surface-subtle border border-border-primary/60 hover:bg-surface-hover transition-colors cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="size-7 rounded-corner-sm bg-border-primary/30 flex items-center justify-center text-text-secondary shrink-0">
-                        <HelpCircle size={15} />
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-text-primary block leading-tight">
-                          {unknownExpFoods.length} món chưa có HSD
-                        </span>
-                        <span className="text-[10px] text-text-secondary mt-0.5 block">
-                          Bổ sung để theo dõi chính xác hơn.
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronRight
-                      size={14}
-                      className="text-text-secondary group-hover:translate-x-0.5 transition-transform"
-                    />
-                  </div>
-
-                  {/* 2. Tỷ lệ có nơi bảo quản */}
-                  <div className="flex items-center justify-between p-3 rounded-corner-md bg-emerald-500/5 border border-emerald-500/20">
-                    <div className="flex items-center gap-2.5">
-                      <div className="size-7 rounded-corner-sm bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
-                        <CircleCheck size={15} />
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-text-primary block leading-tight">
-                          {locationRate}% có nơi bảo quản
-                        </span>
-                        <span className="text-[10px] text-text-secondary mt-0.5 block">
-                          Đã phân loại vị trí lưu trữ.
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Section 4: Chân trang (Hoạt động gần đây & Gợi ý có căn cứ) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            {/* Left: Hoạt động gần đây (5 cols) */}
-            <Card className="lg:col-span-5 p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
-                    <History size={15} className="text-brand-strong" />
-                    <span>Hoạt động gần đây</span>
-                  </h3>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-strong">
-                    Kết quả 30 ngày
-                  </span>
-                </div>
-
-                <div className="flex flex-col divide-y divide-border-primary/40">
-                  {displayActivities.length === 0 ? (
-                    <div className="py-6 text-center text-xs text-text-secondary">
-                      Chưa có thao tác dùng hoặc bỏ thực phẩm trong{" "}
-                      {rangeLabel.toLowerCase()}.
-                    </div>
-                  ) : (
-                    displayActivities.map((ev) => {
-                      const isConsume = ev.kind === "consume"
-                      const isDiscard = ev.kind === "discard"
-                      return (
-                        <div
-                          key={ev.id}
-                          className="py-2.5 flex items-center justify-between text-xs"
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            {isConsume ? (
-                              <CircleCheck
-                                size={14}
-                                className="text-status-ok shrink-0"
-                              />
-                            ) : isDiscard ? (
-                              <Trash2
-                                size={14}
-                                className="text-danger shrink-0"
-                              />
-                            ) : (
-                              <RefreshCw
-                                size={14}
-                                className="text-text-secondary shrink-0"
-                              />
-                            )}
-                            <span
-                              className="font-semibold text-text-primary truncate cursor-pointer hover:underline"
-                              onClick={() =>
-                                ev.foodId && onOpenDetail?.(ev.foodId)
-                              }
-                            >
-                              {ev.title}
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-text-secondary shrink-0 ml-2">
-                            {ev.timeStr}
-                          </span>
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {/* Right: Gợi ý có căn cứ (7 cols) — 100% dynamic */}
-            <Card className="lg:col-span-7 p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
-              <div>
-                <div className="flex items-center gap-1.5 mb-3">
-                  <Sparkles size={16} className="text-brand-strong" />
-                  <h3 className="text-sm font-bold text-text-heading">
-                    Gợi ý có căn cứ
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {dynamicSuggestions.map((sug) => (
+                <div aria-hidden="true" />
+                <div className="grid min-w-0 grid-cols-4 gap-2 pt-3 text-center sm:gap-4">
+                  {trendPeriods.map((period, index) => (
                     <div
-                      key={sug.id}
-                      className="p-3 rounded-corner-md bg-brand-primary/5 border border-brand-primary/20 flex flex-col justify-between"
+                      key={index}
+                      className="min-w-0 text-[11px] leading-tight text-text-secondary sm:text-xs"
                     >
-                      <div>
-                        <div className="size-7 rounded-corner-sm bg-brand-primary/10 text-brand-strong flex items-center justify-center mb-2">
-                          {sug.icon === "cart" ? (
-                            <ShoppingCartIcon size={15} />
-                          ) : sug.icon === "leaf" ? (
-                            <Leaf size={15} />
-                          ) : (
-                            <FileTextIcon size={15} />
-                          )}
-                        </div>
-                        <p className="text-xs font-bold text-text-primary leading-snug">
-                          {sug.title}
-                        </p>
+                      <div className="wrap-anywhere">{period.label}</div>
+                      <div
+                        className={`mt-1 font-medium ${
+                          period.n > 0
+                            ? "text-brand-strong"
+                            : "text-text-secondary"
+                        }`}
+                      >
+                        {period.n === 0
+                          ? "0 lượt"
+                          : `${period.rate}% · ${period.n} lượt`}
                       </div>
-                      <span className="mt-3 inline-block text-[10px] text-brand-strong font-medium bg-brand-primary/10 px-2 py-0.5 rounded-corner-sm">
-                        {sug.reason}
-                      </span>
                     </div>
                   ))}
                 </div>
               </div>
-            </Card>
-          </div>
+            )}
+          </Card>
+
+          <details className="rounded-corner-lg border border-border-primary/60 bg-surface-bg shadow-xs">
+            <summary className="min-h-11 cursor-pointer px-4 py-3 text-sm font-semibold text-text-heading marker:text-brand-strong">
+              Xem thêm số liệu
+            </summary>
+            <div className="flex flex-col gap-4 px-4 pb-4">
+              {/* Section: Recorded Quantities */}
+              <div
+                className="flex flex-col gap-3 w-full"
+                data-name="Insights / Recorded Quantities"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div>
+                    <h2 className="text-[20px] leading-[28px] font-semibold text-text-heading tracking-normal">
+                      Đã ghi
+                    </h2>
+                    <p className="text-xs text-text-secondary font-normal mt-0.5">
+                      {rangeDateString}
+                    </p>
+                  </div>
+                </div>
+
+                {unitStats.length === 0 ? (
+                  <div className="rounded-corner-card border border-border-primary/60 bg-surface-bg p-5 text-center text-xs text-text-secondary">
+                    Chưa có số lượng thực phẩm nào được ghi nhận trong{" "}
+                    {rangeLabel.toLowerCase()}.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {unitStats.map((item) => (
+                      <div
+                        key={item.unit}
+                        className="bg-surface-bg border border-border-primary rounded-corner-card p-4 flex flex-col gap-2.5 shadow-none"
+                      >
+                        <p className="font-medium text-sm text-text-secondary">
+                          {item.unit}
+                        </p>
+                        <div className="flex gap-4 items-start w-full">
+                          <div className="flex flex-1 flex-col gap-0.5 items-start min-w-0">
+                            <p className="text-[22px] leading-[30px] font-semibold text-text-heading">
+                              {item.used}
+                            </p>
+                            <p className="text-xs font-normal text-text-secondary">
+                              Đã dùng
+                            </p>
+                          </div>
+                          <div className="flex flex-1 flex-col gap-0.5 items-start min-w-0">
+                            <p className="text-[22px] leading-[30px] font-semibold text-text-heading">
+                              {item.discarded}
+                            </p>
+                            <p className="text-xs font-normal text-text-secondary">
+                              Đã bỏ
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Secondary current-inventory metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Card 2: Cơ cấu tồn kho hiện tại */}
+                <Card className="p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-text-heading flex items-center gap-1.5 tracking-normal">
+                        <Package size={15} className="text-brand-strong" />
+                        <span>Cơ cấu tồn kho hiện tại</span>
+                      </h3>
+                      <span className="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-bold bg-brand-primary/10 text-brand-strong">
+                        Dữ liệu hiện tại
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-around gap-2 pt-2">
+                      {/* Storage Donut Chart */}
+                      <div
+                        className="relative size-24 shrink-0 rounded-full flex items-center justify-center shadow-xs"
+                        style={{
+                          background: storageConicGradient,
+                        }}
+                      >
+                        <div className="size-15 rounded-full bg-surface-bg flex flex-col items-center justify-center shadow-inner">
+                          <span className="text-sm font-extrabold text-text-primary leading-none">
+                            {totalActive}
+                          </span>
+                          <span className="text-[9px] text-text-secondary font-medium mt-0.5 leading-none">
+                            món
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Legend list */}
+                      <div className="flex flex-col gap-2 text-xs">
+                        {storageStats.map((loc) => (
+                          <div
+                            key={loc.label}
+                            className="flex items-center gap-2"
+                          >
+                            <span
+                              className="size-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: loc.color }}
+                            />
+                            <span className="text-text-secondary">
+                              {loc.label}
+                            </span>
+                            <span className="font-semibold text-text-heading ml-auto">
+                              {loc.percent}% ({loc.count})
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Card 3: Chất lượng dữ liệu */}
+                <Card className="p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-text-heading flex items-center gap-1.5 tracking-normal">
+                        <FileTextIcon size={15} className="text-brand-strong" />
+                        <span>Chất lượng dữ liệu</span>
+                      </h3>
+                      <span className="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-bold bg-brand-primary/10 text-brand-strong">
+                        Dữ liệu hiện tại
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-2.5">
+                      {/* 1. Món chưa có HSD */}
+                      <button
+                        type="button"
+                        aria-label={
+                          "Mở món chưa có hạn sử dụng đầu tiên, " +
+                          unknownExpFoods.length +
+                          " món"
+                        }
+                        disabled={!onOpenDetail || unknownExpFoods.length === 0}
+                        onClick={() =>
+                          unknownExpFoods[0] &&
+                          onOpenDetail?.(unknownExpFoods[0].id)
+                        }
+                        className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-border-primary/60 bg-surface-subtle p-3 text-left transition-colors hover:bg-surface-hover cursor-pointer group disabled:cursor-default disabled:opacity-60"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="size-7 rounded-corner-sm bg-border-primary/30 flex items-center justify-center text-text-secondary shrink-0">
+                            <HelpCircle size={15} />
+                          </div>
+                          <div>
+                            <span className="text-xs font-semibold text-text-heading block leading-tight">
+                              {unknownExpFoods.length} món chưa có HSD
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronRight
+                          size={14}
+                          className="text-text-secondary group-hover:translate-x-0.5 transition-transform"
+                        />
+                      </button>
+
+                      {/* 2. Tỷ lệ có nơi bảo quản */}
+                      <div
+                        className={
+                          locationRate === null
+                            ? "flex items-center justify-between rounded-corner-md border border-border-primary/60 bg-surface-subtle p-3"
+                            : "flex items-center justify-between rounded-corner-md border border-emerald-500/20 bg-emerald-500/5 p-3"
+                        }
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={
+                              locationRate === null
+                                ? "size-7 rounded-corner-sm bg-border-primary/30 flex items-center justify-center text-text-secondary shrink-0"
+                                : "size-7 rounded-corner-sm bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0"
+                            }
+                          >
+                            {locationRate === null ? (
+                              <HelpCircle size={15} />
+                            ) : (
+                              <CircleCheck size={15} />
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-xs font-semibold text-text-heading block leading-tight">
+                              {locationRate === null
+                                ? "Chưa có dữ liệu"
+                                : `${locationRate}% có nơi bảo quản`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </details>
         </>
       )}
 
@@ -1315,13 +1044,9 @@ export default function InsightView({
         <Card className="p-5 flex flex-col gap-4 border-border-primary/60 bg-surface-bg shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-text-heading">
-                Chi tiết hiệu suất theo nhóm thực phẩm
+              <h3 className="text-base font-semibold text-text-heading tracking-normal">
+                Tỷ lệ dùng hết theo danh mục
               </h3>
-              <p className="text-xs text-text-secondary mt-0.5">
-                Đánh giá tỷ lệ tiêu thụ thành công so với lượng thực phẩm bị
-                lãng phí của từng danh mục
-              </p>
             </div>
             <span className="text-xs font-semibold text-brand-strong bg-brand-primary/10 px-2.5 py-1 rounded-full">
               {rangeLabel}
@@ -1330,7 +1055,10 @@ export default function InsightView({
 
           <div className="flex flex-col divide-y divide-border-primary/40 pt-2">
             {CATEGORIES.map((c) => {
-              const data = stats.catStats[c.value] || { consume: 0, discard: 0 }
+              const data = categoryEventStats[c.value] || {
+                consume: 0,
+                discard: 0,
+              }
               const total = data.consume + data.discard
               const rate =
                 total > 0 ? Math.round((data.consume / total) * 100) : null
@@ -1341,7 +1069,7 @@ export default function InsightView({
                   className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div className="min-w-44">
-                    <span className="font-bold text-sm text-text-primary block">
+                    <span className="font-semibold text-sm text-text-heading block">
                       {c.label}
                     </span>
                     <span className="text-xs text-text-secondary">
@@ -1369,7 +1097,7 @@ export default function InsightView({
                           />
                           <div
                             style={{ width: `${100 - (rate || 0)}%` }}
-                            className="h-full bg-danger transition-all duration-300"
+                            className="h-full bg-border-primary transition-all duration-300"
                           />
                         </>
                       )}
@@ -1378,7 +1106,7 @@ export default function InsightView({
 
                   <div className="text-right sm:w-28 shrink-0">
                     <span className="text-sm font-extrabold text-brand-strong">
-                      {total === 0 ? "Chưa có dữ liệu" : `${rate}% dùng`}
+                      {total === 0 ? "Chưa có dữ liệu" : `${rate}% dùng hết`}
                     </span>
                   </div>
                 </div>
@@ -1393,13 +1121,9 @@ export default function InsightView({
         <Card className="p-5 flex flex-col gap-4 border-border-primary/60 bg-surface-bg shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-text-heading">
+              <h3 className="text-base font-semibold text-text-heading tracking-normal">
                 Nhật ký thao tác chi tiết
               </h3>
-              <p className="text-xs text-text-secondary mt-0.5">
-                Toàn bộ lịch sử thêm, dùng hết, vứt bỏ và điều chỉnh số lượng
-                thực phẩm ({filteredEvents.length} bản ghi)
-              </p>
             </div>
             <span className="text-xs font-semibold text-brand-strong bg-brand-primary/10 px-2.5 py-1 rounded-full">
               {rangeLabel}
@@ -1427,16 +1151,19 @@ export default function InsightView({
                           isConsume
                             ? "bg-status-ok"
                             : isDiscard
-                              ? "bg-danger"
+                              ? "bg-text-secondary"
                               : "bg-warning"
                         }`}
                       />
-                      <span
-                        className="font-bold text-text-primary truncate cursor-pointer hover:underline"
-                        onClick={() => onOpenDetail && onOpenDetail(ev.foodId)}
+                      <button
+                        type="button"
+                        aria-label={"Mở chi tiết " + ev.foodName}
+                        disabled={!onOpenDetail}
+                        className="min-h-11 max-w-full truncate text-left font-semibold text-text-heading hover:underline disabled:cursor-default"
+                        onClick={() => onOpenDetail?.(ev.foodId)}
                       >
                         {ev.foodName}
-                      </span>
+                      </button>
                       <span className="text-xs text-text-secondary">
                         {isConsume
                           ? `Đã dùng ${ev.amount || ""} ${ev.unit || ""}`

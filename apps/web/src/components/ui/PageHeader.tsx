@@ -61,11 +61,11 @@ export function PageHeader({
             {eyebrow}
           </span>
         )}
-        <h1 className="text-xl md:text-2xl font-bold text-text-heading tracking-tight break-words">
+        <h1 className="text-xl md:text-2xl font-semibold text-text-heading tracking-normal break-words">
           {title}
         </h1>
         {sub && (
-          <p className="mt-0.5 text-xs md:text-sm text-text-secondary leading-relaxed break-words">
+          <p className="mt-0.5 text-xs md:text-sm text-text-secondary font-normal leading-relaxed break-words">
             {sub}
           </p>
         )}

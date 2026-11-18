@@ -39,7 +39,7 @@ export function Toast({ message, variant = "success", onDismiss }: ToastProps) {
           type="button"
           onClick={onDismiss}
           aria-label="Đóng thông báo"
-          className="p-1 rounded-corner-sm text-text-tertiary hover:text-text-primary transition-colors"
+          className="p-3.5 -m-3 md:p-1 md:m-0 rounded-corner-sm text-text-tertiary hover:text-text-primary transition-colors"
         >
           <X size={16} aria-hidden />
         </button>

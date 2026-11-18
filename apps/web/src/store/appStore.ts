@@ -2,7 +2,7 @@ import { useCallback, useEffect, useReducer, useState } from "react"
 
 import { api } from "../api/client"
 
-export type Unit = "cái" | "hộp" | "gói" | "chai" | "kg" | "g" | "lít" | "ml" | "quả"
+export type Unit = "cái" | "hộp" | "gói" | "chai" | "kg" | "g" | "lít" | "ml" | "quả" | "bó"
 
 export const UNITS: Unit[] = [
   "cái",
@@ -14,6 +14,8 @@ export const UNITS: Unit[] = [
   "chai",
 
   "quả",
+
+  "bó",
 
   "kg",
 
@@ -253,6 +255,10 @@ export type Action = {
 
   settings: Settings
 } | {
+  type: "remindDays"
+
+  days: number
+} | {
   type: "replace"
 
   state: State
@@ -326,6 +332,8 @@ export function reducer(s: State, a: Action): State {
 
       const userLocations = loadUserLocations(a.userId)
 
+      const inApp = loadUserInApp(a.userId || "")
+
       return {
         ...initial,
 
@@ -342,6 +350,8 @@ export function reducer(s: State, a: Action): State {
         history: [],
 
         locations: userLocations,
+
+        settings: { ...initial.settings, inApp },
 
         readNotifs: userNotifs.readNotifs,
 
@@ -575,12 +585,13 @@ export function reducer(s: State, a: Action): State {
         ...s,
 
         snoozed: { ...s.snoozed, [a.id]: a.until },
-
-        readNotifs: [...s.readNotifs, a.id],
       }
 
     case "settings":
       return { ...s, settings: a.settings }
+
+    case "remindDays":
+      return { ...s, settings: { ...s.settings, remindDays: a.days } }
   }
 }
 
@@ -1109,6 +1120,22 @@ function readStored(): StoredResult {
 }
 
 export const NOTIF_PREFIX = "expiry_notifs_"
+
+const IN_APP_PREFIX = "expiry_user_in_app_"
+
+export function loadUserInApp(userId: string): boolean {
+  try {
+    const raw = localStorage.getItem(`${IN_APP_PREFIX}${userId}`)
+
+    return raw === null ? initial.settings.inApp : JSON.parse(raw) === true
+  } catch {
+    return initial.settings.inApp
+  }
+}
+
+export function saveUserInApp(userId: string, enabled: boolean): void {
+  localStorage.setItem(`${IN_APP_PREFIX}${userId}`, JSON.stringify(enabled))
+}
 
 export function getNotifKey(userId?: string): string {
   return `${NOTIF_PREFIX}${userId || "guest"}`

@@ -711,4 +711,44 @@ describe("Manual Capture Form & Outcome Boundary (CAP-01)", () => {
     const { FilterDropdown } = await import("../src/components/ui/FilterChips")
     expect(typeof FilterDropdown).toBe("function")
   })
+
+  it("renders ShoppingView with auto-suggestions, input form, and uncluttered headers", async () => {
+    const React = await import("react")
+    const { renderToString } = await import("react-dom/server")
+    const { ShoppingView } = await import("../src/features/ShoppingView")
+
+    const mockState = {
+      foods: [
+        {
+          id: "f_depleted",
+          name: "Rau muống",
+          quantity: 0,
+          unit: "bó",
+          category: "fresh_produce",
+          finishedAt: "2026-11-15T00:00:00.000Z",
+          createdAt: "2026-11-10T00:00:00.000Z",
+        },
+      ],
+      locations: ["Ngăn mát"],
+      history: [],
+      readNotifs: [],
+      snoozed: {},
+      settings: { remindDays: 3, inApp: true, push: false },
+      mode: "demo" as const,
+    }
+
+    const html = renderToString(
+      React.createElement(ShoppingView, {
+        state: mockState,
+        dispatch: () => {},
+        notify: () => {},
+      }),
+    )
+
+    expect(html).toContain("Mua sắm")
+    expect(html).toContain("Gợi ý mua lại từ kho")
+    expect(html).toContain("Rau muống")
+    expect(html).toContain("Tên món cần mua")
+    expect(html).toContain("Thêm")
+  })
 })
