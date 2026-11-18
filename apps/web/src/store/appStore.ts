@@ -587,6 +587,8 @@ export function reducer(s: State, a: Action): State {
 const KEY = "expiry-state-v1"
 
 const DEMO_KEY = "expiry-demo-v1"
+const DEMO_SEED_DATE_REVISION_KEY = "expiry-demo-seed-date-revision"
+const DEMO_SEED_DATE_REVISION = "2026-11-18-v1"
 
 export type StorageProblem = "read" | "write" | null
 
@@ -780,6 +782,41 @@ export function seedFoods(): Food[] {
 
     createdAt: at,
   }))
+}
+
+function migrateDemoSeedDates(s: State): State {
+  if (
+    localStorage.getItem(DEMO_SEED_DATE_REVISION_KEY) ===
+    DEMO_SEED_DATE_REVISION
+  )
+    return s
+
+  const seedDays = new Map(SEED.map(({ id, days }) => [id, days]))
+  let changed = false
+  const foods = s.foods.map((food) => {
+    if (!seedDays.has(food.id)) return food
+
+    const days = seedDays.get(food.id)
+    const expDate =
+      days === null || days === undefined ? undefined : addDays(today(), days)
+    if (food.expDate === expDate) return food
+
+    changed = true
+    if (expDate === undefined) {
+      const { expDate: _previousDate, ...withoutExpiry } = food
+      return withoutExpiry
+    }
+    return { ...food, expDate }
+  })
+
+  const migrated = changed ? { ...s, foods } : s
+  try {
+    localStorage.setItem(DEMO_KEY, JSON.stringify(migrated))
+    localStorage.setItem(DEMO_SEED_DATE_REVISION_KEY, DEMO_SEED_DATE_REVISION)
+  } catch {
+    /* Keep the repaired in-memory demo state if storage is unavailable. */
+  }
+  return migrated
 }
 
 export function seedHistory(): HistoryEvent[] {
@@ -999,7 +1036,7 @@ function loadDemo(): State {
 
     if (s)
       return {
-        ...s,
+        ...migrateDemoSeedDates(s),
 
         mode: "demo",
 
