@@ -198,15 +198,21 @@ export function AuthForm({
           <div className="flex flex-col gap-3 text-[13px] font-medium text-text-primary">
             <div className="flex items-center justify-between">
               <span>Rau xanh</span>
-              <span className="text-text-secondary font-normal">Trong ngăn mát</span>
+              <span className="text-text-secondary font-normal">
+                Trong ngăn mát
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span>Sữa tươi</span>
-              <span className="text-text-secondary font-normal">Cần dùng sớm</span>
+              <span className="text-text-secondary font-normal">
+                Cần dùng sớm
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span>Trứng</span>
-              <span className="text-text-secondary font-normal">Trong ngăn mát</span>
+              <span className="text-text-secondary font-normal">
+                Trong ngăn mát
+              </span>
             </div>
           </div>
         </div>

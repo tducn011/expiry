@@ -473,7 +473,13 @@ export default function InsightView({
       locMap[locKey] = (locMap[locKey] || 0) + 1
     }
 
-    const palette = ["var(--brand-primary)", "var(--color-category-beverage)", "var(--color-category-dairy)", "var(--color-category-pantry)", "var(--color-category-meat)"]
+    const palette = [
+      "var(--brand-primary)",
+      "var(--color-category-beverage)",
+      "var(--color-category-dairy)",
+      "var(--color-category-pantry)",
+      "var(--color-category-meat)",
+    ]
     let colorIdx = 0
 
     const list = Object.entries(locMap)
@@ -490,7 +496,8 @@ export default function InsightView({
   }, [activeFoods, state.locations, totalActive])
 
   const storageConicGradient = useMemo(() => {
-    if (totalActive === 0 || storageStats.length === 0) return "var(--neutral-200)"
+    if (totalActive === 0 || storageStats.length === 0)
+      return "var(--neutral-200)"
     let currentAngle = 0
     const stops: string[] = []
     for (const s of storageStats) {
@@ -502,7 +509,9 @@ export default function InsightView({
         currentAngle = nextAngle
       }
     }
-    return stops.length > 0 ? `conic-gradient(${stops.join(", ")})` : "var(--neutral-200)"
+    return stops.length > 0
+      ? `conic-gradient(${stops.join(", ")})`
+      : "var(--neutral-200)"
   }, [totalActive, storageStats])
 
   // Category list sorted with active categories first
