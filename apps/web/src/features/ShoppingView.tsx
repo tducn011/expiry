@@ -447,7 +447,7 @@ export function ShoppingView({
             className="mb-3 flex items-center gap-2 text-sm font-semibold text-text-heading"
           >
             <Sparkles size={16} aria-hidden="true" />
-            Gợi ý từ kho
+            Gợi ý mua lại từ kho
           </h2>
           <div className="flex flex-wrap gap-2">
             {suggestions.slice(0, 6).map((suggestion) => (
