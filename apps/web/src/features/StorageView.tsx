@@ -394,7 +394,7 @@ export default function StorageView({
             {isLive && (
               <span
                 data-testid="live-storage-badge"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-strong border border-brand-primary/20"
               >
                 <span className="size-2 rounded-full bg-brand-primary animate-pulse" />
                 Trực tuyến
@@ -471,7 +471,7 @@ export default function StorageView({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2.5">
           <div>
             <h2 className="text-sm font-bold text-text-heading flex items-center gap-2">
-              <Boxes size={18} className="text-brand-primary" />
+              <Boxes size={18} className="text-brand-strong" />
               <span>Khu vực bảo quản</span>
             </h2>
             <p className="text-xs text-text-secondary mt-0.5">
@@ -496,7 +496,7 @@ export default function StorageView({
             }`}
           >
             <div className="flex items-center justify-between w-full mb-2">
-              <div className="w-8 h-8 rounded-corner-md flex items-center justify-center bg-brand-primary/10 text-brand-primary">
+              <div className="w-8 h-8 rounded-corner-md flex items-center justify-center bg-brand-primary/10 text-brand-strong">
                 <Boxes size={18} />
               </div>
               <div className="flex items-center gap-1">
@@ -604,7 +604,7 @@ export default function StorageView({
                 onClick={() => handleCategoryChange(cat.v)}
                 className={`min-h-8 shrink-0 rounded-corner-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
                   isActive
-                    ? "bg-brand-primary text-white shadow-xs"
+                    ? "bg-brand-primary text-on-brand shadow-xs"
                     : "bg-surface-bg border border-border-primary text-text-secondary hover:text-text-primary hover:bg-surface-hover"
                 }`}
               >

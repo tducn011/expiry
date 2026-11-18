@@ -132,7 +132,7 @@ export function Trash({
                 </p>
                 <p className="mt-1 text-xs text-text-secondary">
                   {f.quantity} {f.unit} · còn{" "}
-                  <strong className="text-brand-primary">
+                  <strong className="text-brand-strong">
                     {trashDaysLeft(f)} ngày
                   </strong>{" "}
                   trước khi xóa vĩnh viễn

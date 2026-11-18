@@ -167,7 +167,7 @@ export function AuthForm({
           WEB / DESKTOP (lg: >= 1024px): Brand Story Column (Figma node 1477:9 / 1477:59)
           Exact dimensions: w-[620px] on 1440px desktop, pt-[62px] px-[64px] pb-[42px]
          ========================================================================= */}
-      <div className="hidden lg:flex flex-col w-[480px] xl:w-[560px] 2xl:w-[620px] shrink-0 bg-teal-900 text-white pt-[62px] px-10 xl:px-[64px] pb-[42px] select-none">
+      <div className="hidden lg:flex flex-col w-[480px] xl:w-[560px] 2xl:w-[620px] shrink-0 bg-warm-ink-900 text-white pt-[62px] px-10 xl:px-[64px] pb-[42px] select-none">
         {/* Brand header (y=62) */}
         <div className="flex items-center gap-3">
           <Timer size={40} color="var(--neutral-white)" className="shrink-0" />
@@ -190,8 +190,8 @@ export function AuthForm({
         </div>
 
         {/* Spacing 38px -> Minh họa danh sách thực phẩm (Figma node 1477:18, y=479) */}
-        <div className="mt-[38px] bg-teal-50 rounded-[20px] p-6 w-full max-w-[492px] shadow-sm">
-          <p className="font-semibold text-[16px] text-teal-900">
+        <div className="mt-[38px] bg-surface-subtle rounded-[20px] p-6 w-full max-w-[492px] shadow-sm">
+          <p className="font-semibold text-[16px] text-text-heading">
             Kho thực phẩm của bạn
           </p>
           <div className="my-3.5 h-px bg-border-subtle" />
@@ -218,7 +218,7 @@ export function AuthForm({
         </div>
 
         {/* Spacing 32px -> Brand story footer (y=743) */}
-        <p className="mt-[32px] text-[13px] text-teal-100">
+        <p className="mt-[32px] text-[13px] text-sage-100">
           Quản lý thực phẩm dễ dàng mỗi ngày.
         </p>
       </div>
@@ -237,7 +237,7 @@ export function AuthForm({
               color="var(--brand-primary)"
               className="lg:w-[40px] lg:h-[40px] shrink-0"
             />
-            <span className="font-bold text-[21px] text-brand-primary tracking-tight">
+            <span className="font-bold text-[21px] text-brand-strong tracking-tight">
               Expiry
             </span>
           </div>
@@ -413,7 +413,7 @@ export function AuthForm({
             <button
               type="submit"
               disabled={loading}
-              className={`mt-3 h-[48px] min-h-[48px] w-full rounded-[12px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white font-semibold text-[14px] lg:text-[15px] flex items-center justify-center transition-all shadow-sm ${
+              className={`mt-3 h-[48px] min-h-[48px] w-full rounded-[12px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-on-brand font-semibold text-[14px] lg:text-[15px] flex items-center justify-center transition-all shadow-sm ${
                 loading
                   ? "opacity-55 cursor-not-allowed"
                   : !isFormValid && Object.keys(fieldErrors).length > 0
@@ -436,19 +436,19 @@ export function AuthForm({
           <button
             type="button"
             onClick={() => switchMode(view === "login" ? "register" : "login")}
-            className="min-h-[44px] py-2 flex items-center justify-center text-[13px] lg:text-[14px] text-text-secondary hover:text-brand-primary cursor-pointer transition-colors"
+            className="min-h-[44px] py-2 flex items-center justify-center text-[13px] lg:text-[14px] text-text-secondary hover:text-brand-strong cursor-pointer transition-colors"
           >
             {view === "login" ? (
               <span>
                 Chưa có tài khoản?{" "}
-                <strong className="font-semibold text-brand-primary underline-offset-2 hover:underline">
+                <strong className="font-semibold text-brand-strong underline-offset-2 hover:underline">
                   Tạo tài khoản
                 </strong>
               </span>
             ) : (
               <span>
                 Đã có tài khoản?{" "}
-                <strong className="font-semibold text-brand-primary underline-offset-2 hover:underline">
+                <strong className="font-semibold text-brand-strong underline-offset-2 hover:underline">
                   Đăng nhập
                 </strong>
               </span>

@@ -108,11 +108,11 @@ function AttentionSummary({
       className="flex cursor-pointer flex-col gap-2 border-brand-primary/20 bg-brand-tertiary/70 transition-all hover:bg-brand-tertiary shadow-xs"
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-brand-primary font-semibold text-sm">
+        <div className="flex items-center gap-2 text-brand-strong font-semibold text-sm">
           <CircleAlert size={18} aria-hidden="true" />
           <span>Cần chú ý ({total} món)</span>
         </div>
-        <span className="text-xs font-semibold text-brand-primary hover:underline">
+        <span className="text-xs font-semibold text-brand-strong hover:underline">
           Xem tất cả{" "}
           <ArrowRight
             size={14}
@@ -135,7 +135,7 @@ function AttentionSummary({
           </span>
         )}
         {reviewDue > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-corner-full bg-surface-bg px-2.5 py-0.5 font-semibold text-brand-primary border border-brand-primary/20">
+          <span className="inline-flex items-center gap-1 rounded-corner-full bg-surface-bg px-2.5 py-0.5 font-semibold text-brand-strong border border-brand-primary/20">
             {reviewDue} đến hẹn kiểm tra
           </span>
         )}
@@ -257,7 +257,7 @@ export function Inventory({
       {/* Mobile App Header */}
       <div className="flex items-center justify-between gap-3 pt-0 pb-1 md:hidden">
         <div className="flex items-center gap-2">
-          <div className="flex size-9 items-center justify-center rounded-corner-md bg-brand-primary text-white shadow-xs">
+          <div className="flex size-9 items-center justify-center rounded-corner-md bg-brand-primary text-on-brand shadow-xs">
             <Timer size={20} aria-hidden />
           </div>
           <span className="text-lg font-bold text-brand-primary">Expiry</span>
@@ -457,11 +457,11 @@ export function Inventory({
                               <div className="flex items-center gap-3">
                                 <span
                                   aria-hidden="true"
-                                  className="flex size-8 shrink-0 items-center justify-center rounded-corner-md bg-brand-tertiary text-brand-primary"
+                                  className="flex size-8 shrink-0 items-center justify-center rounded-corner-md bg-brand-tertiary text-brand-strong"
                                 >
                                   <IconComp size={18} />
                                 </span>
-                                <span className="font-semibold text-text-primary hover:text-brand-primary transition-colors">
+                                <span className="font-semibold text-text-primary hover:text-brand-strong transition-colors">
                                   {f.name}
                                 </span>
                               </div>

@@ -385,7 +385,7 @@ export function Detail({
       {isReviewDue && st !== "expired" && st !== "soon" && (
         <div
           role="status"
-          className="flex items-start gap-3 rounded-corner-md border border-brand-primary/30 bg-brand-tertiary px-4 py-3 text-sm text-brand-primary shadow-xs"
+          className="flex items-start gap-3 rounded-corner-md border border-brand-primary/30 bg-brand-tertiary px-4 py-3 text-sm text-brand-strong shadow-xs"
         >
           <CalendarClock
             size={20}
@@ -411,7 +411,7 @@ export function Detail({
                 <CalendarClock
                   size={16}
                   aria-hidden="true"
-                  className="text-brand-primary"
+                  className="text-brand-strong"
                 />{" "}
                 Hẹn kiểm tra lại: {formatDate(f.reviewAt)}
               </p>

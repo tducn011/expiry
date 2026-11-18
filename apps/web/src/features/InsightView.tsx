@@ -456,7 +456,7 @@ export default function InsightView({
   const consumptionConicGradient = useMemo(() => {
     if (stats.totalDecided === 0) return "var(--neutral-200)"
     const deg = Math.round((stats.consumptionRate / 100) * 360)
-    return `conic-gradient(var(--teal-700) 0deg ${deg}deg, var(--danger) ${deg}deg 360deg)`
+    return `conic-gradient(var(--sage-700) 0deg ${deg}deg, var(--danger) ${deg}deg 360deg)`
   }, [stats.totalDecided, stats.consumptionRate])
 
   // Storage Location Breakdown
@@ -643,7 +643,7 @@ export default function InsightView({
             {isLive && (
               <span
                 data-testid="live-insight-badge"
-                className="hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+                className="hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-strong border border-brand-primary/20"
               >
                 <span className="size-2 rounded-full bg-brand-primary animate-pulse" />
                 {loadingLive ? "Đang đồng bộ..." : "Dữ liệu thực tế"}
@@ -702,7 +702,7 @@ export default function InsightView({
                       }}
                       className={`flex w-full items-center px-3 py-1.5 text-xs rounded-corner-sm text-left transition-colors cursor-pointer ${
                         range === val
-                          ? "bg-brand-primary/10 text-brand-primary font-bold"
+                          ? "bg-brand-primary/10 text-brand-strong font-bold"
                           : "text-text-primary hover:bg-surface-hover"
                       }`}
                     >
@@ -723,7 +723,7 @@ export default function InsightView({
           onClick={() => handleTabSelect("overview")}
           className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "overview"
-              ? "bg-brand-primary text-white shadow-xs"
+              ? "bg-brand-primary text-on-brand shadow-xs"
               : "text-text-secondary hover:text-text-primary hover:bg-surface-bg"
           }`}
         >
@@ -735,7 +735,7 @@ export default function InsightView({
           onClick={() => handleTabSelect("categories")}
           className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "categories"
-              ? "bg-brand-primary text-white shadow-xs"
+              ? "bg-brand-primary text-on-brand shadow-xs"
               : "text-text-secondary hover:text-text-primary hover:bg-surface-bg"
           }`}
         >
@@ -747,7 +747,7 @@ export default function InsightView({
           onClick={() => handleTabSelect("history")}
           className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "history"
-              ? "bg-brand-primary text-white shadow-xs"
+              ? "bg-brand-primary text-on-brand shadow-xs"
               : "text-text-secondary hover:text-text-primary hover:bg-surface-bg"
           }`}
         >
@@ -874,7 +874,7 @@ export default function InsightView({
               <button
                 type="button"
                 onClick={() => handleTabSelect("history")}
-                className="inline-flex items-center justify-center gap-1.5 shrink-0 rounded-corner-md bg-brand-primary px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary/90 transition-all cursor-pointer text-center"
+                className="inline-flex items-center justify-center gap-1.5 shrink-0 rounded-corner-md bg-brand-primary px-3.5 py-2 text-xs font-semibold text-on-brand shadow-xs hover:bg-brand-primary/90 transition-all cursor-pointer text-center"
               >
                 Xem danh sách <ArrowRight size={14} aria-hidden="true" />
               </button>
@@ -887,7 +887,7 @@ export default function InsightView({
             <Card className="p-5 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
               <div className="flex items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2">
-                  <BarChart3 size={16} className="text-brand-primary" />
+                  <BarChart3 size={16} className="text-brand-strong" />
                   <h3 className="text-sm font-bold text-text-heading">
                     Xu hướng tỷ lệ dùng hết
                   </h3>
@@ -920,12 +920,12 @@ export default function InsightView({
                       >
                         <stop
                           offset="0%"
-                          stopColor="var(--teal-700)"
+                          stopColor="var(--sage-700)"
                           stopOpacity="0.25"
                         />
                         <stop
                           offset="100%"
-                          stopColor="var(--teal-700)"
+                          stopColor="var(--sage-700)"
                           stopOpacity="0.02"
                         />
                       </linearGradient>
@@ -968,7 +968,7 @@ export default function InsightView({
                       <path
                         d={svgTrendData.linePath}
                         fill="none"
-                        stroke="var(--teal-700)"
+                        stroke="var(--sage-700)"
                         strokeWidth="2.5"
                         strokeLinecap="round"
                       />
@@ -983,13 +983,13 @@ export default function InsightView({
                         r={i === svgTrendData.points.length - 1 ? 4.5 : 3.5}
                         fill={
                           i === svgTrendData.points.length - 1
-                            ? "var(--teal-700)"
+                            ? "var(--sage-700)"
                             : "var(--neutral-white)"
                         }
                         stroke={
                           i === svgTrendData.points.length - 1
                             ? "var(--neutral-white)"
-                            : "var(--teal-700)"
+                            : "var(--sage-700)"
                         }
                         strokeWidth={
                           i === svgTrendData.points.length - 1 ? 1.5 : 2
@@ -1000,7 +1000,7 @@ export default function InsightView({
 
                   {stats.totalDecided > 0 && (
                     <div className="absolute top-1 right-2">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-brand-primary text-white text-xs font-bold shadow-xs">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-brand-primary text-on-brand text-xs font-bold shadow-xs">
                         {`${trendWeeks[trendWeeks.length - 1]?.rate || stats.consumptionRate}%`}
                       </span>
                     </div>
@@ -1029,10 +1029,10 @@ export default function InsightView({
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
-                    <BarChart3 size={15} className="text-brand-primary" />
+                    <BarChart3 size={15} className="text-brand-strong" />
                     <span>Phân tích theo danh mục</span>
                   </h3>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-strong">
                     Kết quả 30 ngày
                   </span>
                 </div>
@@ -1045,7 +1045,7 @@ export default function InsightView({
                           <c.icon
                             size={16}
                             aria-hidden="true"
-                            className="shrink-0 text-brand-primary"
+                            className="shrink-0 text-brand-strong"
                           />
                           <span>{c.label}</span>
                         </span>
@@ -1090,10 +1090,10 @@ export default function InsightView({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
-                    <Package size={15} className="text-brand-primary" />
+                    <Package size={15} className="text-brand-strong" />
                     <span>Cơ cấu tồn kho hiện tại</span>
                   </h3>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-strong">
                     Dữ liệu hiện tại
                   </span>
                 </div>
@@ -1143,10 +1143,10 @@ export default function InsightView({
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
-                    <FileTextIcon size={15} className="text-brand-primary" />
+                    <FileTextIcon size={15} className="text-brand-strong" />
                     <span>Chất lượng dữ liệu</span>
                   </h3>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-strong">
                     Dữ liệu hiện tại
                   </span>
                 </div>
@@ -1208,10 +1208,10 @@ export default function InsightView({
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
-                    <History size={15} className="text-brand-primary" />
+                    <History size={15} className="text-brand-strong" />
                     <span>Hoạt động gần đây</span>
                   </h3>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-strong">
                     Kết quả 30 ngày
                   </span>
                 </div>
@@ -1272,7 +1272,7 @@ export default function InsightView({
             <Card className="lg:col-span-7 p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
               <div>
                 <div className="flex items-center gap-1.5 mb-3">
-                  <Sparkles size={16} className="text-brand-primary" />
+                  <Sparkles size={16} className="text-brand-strong" />
                   <h3 className="text-sm font-bold text-text-heading">
                     Gợi ý có căn cứ
                   </h3>
@@ -1285,7 +1285,7 @@ export default function InsightView({
                       className="p-3 rounded-corner-md bg-brand-primary/5 border border-brand-primary/20 flex flex-col justify-between"
                     >
                       <div>
-                        <div className="size-7 rounded-corner-sm bg-brand-primary/10 text-brand-primary flex items-center justify-center mb-2">
+                        <div className="size-7 rounded-corner-sm bg-brand-primary/10 text-brand-strong flex items-center justify-center mb-2">
                           {sug.icon === "cart" ? (
                             <ShoppingCartIcon size={15} />
                           ) : sug.icon === "leaf" ? (
@@ -1298,7 +1298,7 @@ export default function InsightView({
                           {sug.title}
                         </p>
                       </div>
-                      <span className="mt-3 inline-block text-[10px] text-brand-primary font-medium bg-brand-primary/10 px-2 py-0.5 rounded-corner-sm">
+                      <span className="mt-3 inline-block text-[10px] text-brand-strong font-medium bg-brand-primary/10 px-2 py-0.5 rounded-corner-sm">
                         {sug.reason}
                       </span>
                     </div>
@@ -1323,7 +1323,7 @@ export default function InsightView({
                 lãng phí của từng danh mục
               </p>
             </div>
-            <span className="text-xs font-semibold text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-semibold text-brand-strong bg-brand-primary/10 px-2.5 py-1 rounded-full">
               {rangeLabel}
             </span>
           </div>
@@ -1377,7 +1377,7 @@ export default function InsightView({
                   </div>
 
                   <div className="text-right sm:w-28 shrink-0">
-                    <span className="text-sm font-extrabold text-brand-primary">
+                    <span className="text-sm font-extrabold text-brand-strong">
                       {total === 0 ? "Chưa có dữ liệu" : `${rate}% dùng`}
                     </span>
                   </div>
@@ -1401,7 +1401,7 @@ export default function InsightView({
                 thực phẩm ({filteredEvents.length} bản ghi)
               </p>
             </div>
-            <span className="text-xs font-semibold text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-semibold text-brand-strong bg-brand-primary/10 px-2.5 py-1 rounded-full">
               {rangeLabel}
             </span>
           </div>

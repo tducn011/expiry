@@ -251,16 +251,13 @@ export function ManualBarcodeModal({
 
         {infoMessage && (
           <div className="p-3 bg-brand-tertiary/60 border border-brand-primary/20 rounded-corner-md text-text-primary text-xs leading-relaxed flex items-start gap-2">
-            <Sparkles
-              size={16}
-              className="text-brand-primary shrink-0 mt-0.5"
-            />
+            <Sparkles size={16} className="text-brand-strong shrink-0 mt-0.5" />
             <div>{infoMessage}</div>
           </div>
         )}
 
         <div className="flex items-start gap-2 text-[11px] text-text-tertiary leading-relaxed bg-bg-secondary p-3 rounded-corner-md">
-          <Lightbulb size={14} className="shrink-0 mt-0.5 text-brand-primary" />
+          <Lightbulb size={14} className="shrink-0 mt-0.5 text-brand-strong" />
           <div>
             <strong>Mẹo:</strong> Nếu chữ số bị rách mất một phần, bạn không cần
             đoán số còn thiếu — hãy bấm nút{" "}

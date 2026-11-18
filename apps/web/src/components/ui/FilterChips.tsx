@@ -112,7 +112,7 @@ export function FilterDropdown<T extends string = string>({
         onClick={() => setIsOpen((prev) => !prev)}
         className={`inline-flex items-center gap-1.5 min-h-8 shrink-0 rounded-corner-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
           isFiltered
-            ? "bg-brand-primary text-white shadow-xs hover:bg-brand-primary/90"
+            ? "bg-brand-primary text-on-brand shadow-xs hover:bg-brand-primary/90"
             : "bg-surface-bg border border-border-primary text-text-primary hover:bg-surface-hover hover:border-brand-primary/40"
         }`}
       >
@@ -148,7 +148,7 @@ export function FilterDropdown<T extends string = string>({
                 }}
                 className={`flex w-full items-center justify-between gap-3 rounded-corner-sm px-3 py-2 text-xs font-medium transition-colors cursor-pointer text-left ${
                   isSelected
-                    ? "bg-brand-primary/10 text-brand-primary font-semibold"
+                    ? "bg-brand-primary/10 text-brand-strong font-semibold"
                     : "text-text-primary hover:bg-surface-hover"
                 }`}
               >
@@ -161,7 +161,7 @@ export function FilterDropdown<T extends string = string>({
                 </div>
                 {isSelected && (
                   <Check
-                    className="size-3.5 text-brand-primary shrink-0"
+                    className="size-3.5 text-brand-strong shrink-0"
                     strokeWidth={2.5}
                     aria-hidden="true"
                   />

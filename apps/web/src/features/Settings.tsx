@@ -82,7 +82,7 @@ function SettingsRow({
       onClick={onClick}
       className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition-colors enabled:hover:bg-surface-hover enabled:active:bg-bg-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary cursor-pointer disabled:cursor-default"
     >
-      <span aria-hidden="true" className="shrink-0 text-brand-primary">
+      <span aria-hidden="true" className="shrink-0 text-brand-strong">
         {icon}
       </span>
       <span className="min-w-0 flex-1 text-sm font-medium text-text-primary">
@@ -368,7 +368,7 @@ export function Settings({
                 <CircleCheck
                   size={18}
                   aria-hidden="true"
-                  className="text-brand-primary"
+                  className="text-brand-strong"
                 />
               )}
             </button>
