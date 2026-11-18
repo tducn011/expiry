@@ -50,7 +50,7 @@ export function SidebarButton({
           : "size-12 justify-center"
       } ${
         active
-          ? "bg-brand-primary text-white shadow-xs"
+          ? "bg-brand-primary text-on-brand shadow-xs"
           : "text-text-secondary hover:text-text-primary hover:bg-surface-hover active:bg-bg-subtle"
       }`}
     >
@@ -114,7 +114,7 @@ export function SidebarNavigation({
           }`}
         >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-corner-md bg-brand-primary text-white shadow-xs">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-corner-md bg-brand-primary text-on-brand shadow-xs">
               <Timer size={22} aria-hidden />
             </div>
             {isExpanded && (

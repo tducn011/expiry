@@ -641,7 +641,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         <div className="flex flex-col items-center gap-3 text-text-secondary">
           <Loader2
             size={32}
-            className="animate-spin text-brand-primary"
+            className="animate-spin text-brand-strong"
             aria-hidden="true"
           />
           <p className="text-sm font-medium">Đang kiểm tra phiên làm việc…</p>
@@ -1409,7 +1409,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           {state.mode === "demo" && !isFullBleed && (
             <div className="mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-border-primary/60 bg-surface-bg px-3.5 py-1.5 text-xs shadow-xs">
               <div className="flex min-w-0 items-center gap-2">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-brand-accent text-brand-primary">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-sage-100 text-sage-800">
                   <Leaf size={14} aria-hidden="true" />
                 </span>
                 <span className="truncate font-medium text-text-secondary">
@@ -1419,7 +1419,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               <Button
                 size="small"
                 variant="subtle"
-                className="shrink-0 font-semibold text-brand-primary"
+                className="shrink-0 font-semibold text-brand-strong"
                 onClick={() => setPendingAuth({ name: "inventory" })}
               >
                 Đăng nhập để đồng bộ
@@ -1453,7 +1453,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                   <span
                     className={`relative flex h-7 w-12 items-center justify-center rounded-corner-full transition-all ${
                       activeTab
-                        ? "bg-brand-primary text-white shadow-xs"
+                        ? "bg-brand-primary text-on-brand shadow-xs"
                         : "text-text-secondary hover:text-text-primary"
                     }`}
                   >
@@ -1470,7 +1470,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                   <span
                     className={`mt-1 block w-full truncate text-[10px] sm:text-[11px] leading-tight text-center ${
                       activeTab
-                        ? "font-bold text-brand-primary"
+                        ? "font-bold text-brand-strong"
                         : "text-text-secondary font-medium"
                     }`}
                   >

@@ -30,7 +30,7 @@ export function Toast({ message, variant = "success", onDismiss }: ToastProps) {
         ) : isWarning ? (
           <CircleAlert size={18} className="text-status-soon" aria-hidden />
         ) : (
-          <CircleCheck size={18} className="text-brand-primary" aria-hidden />
+          <CircleCheck size={18} className="text-status-ok" aria-hidden />
         )}
       </span>
       <span className="flex-1 truncate">{message}</span>
