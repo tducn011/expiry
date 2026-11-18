@@ -26,7 +26,7 @@ export function Notice({
     Error: "bg-danger-bg text-danger",
     Warning:
       "bg-feedback-warning-bg text-feedback-warning-text border border-feedback-warning-border/60",
-    Info: "bg-surface-soft text-sage-800 border border-sage-700/20",
+    Info: "bg-surface-soft text-brand-primary border border-brand-primary/20",
     Success: "bg-feedback-success-bg text-feedback-success",
   }[tone]
 

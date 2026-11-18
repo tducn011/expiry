@@ -37,7 +37,7 @@ const kindTone: Record<string, string> = {
 
   discard: "bg-status-soon-bg text-status-soon border-status-soon/20",
 
-  adjust: "bg-brand-tertiary text-brand-strong border-brand-primary/20",
+  adjust: "bg-brand-tertiary text-brand-primary border-brand-primary/20",
 }
 
 function dayLabel(iso: string) {

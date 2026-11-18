@@ -451,7 +451,7 @@ describe("Storage & Insight Feature Integration", () => {
       createElement(InsightView, { state, isLive: false }),
     )
 
-    expect(html).toContain("Chưa ghi nhận")
+    expect(html).toContain("0 lượt")
     expect(html).toContain("75% · 4 lượt")
     expect(html).not.toContain("cần dữ liệu ở khoảng khác để thể hiện xu hướng")
     expect(html).not.toContain("Căn cứ:")
@@ -480,7 +480,7 @@ describe("Storage & Insight Feature Integration", () => {
       createElement(InsightView, { state, isLive: false }),
     )
 
-    expect(html).toContain("Chưa ghi nhận")
+    expect(html).toContain("0 lượt")
     expect(html).not.toContain("các khoảng này không liền nhau")
     expect(html).not.toContain('stroke="#0f5959" stroke-width="2.5"')
   })

@@ -27,16 +27,6 @@ import Modal from "../components/ui/Modal"
 import PageHeader from "../components/ui/PageHeader"
 import SwitchField from "../components/ui/SwitchField"
 
-type SettingsSaveResult = {
-  settings: AppSettings
-  savedToAccount: boolean
-}
-
-type SettingsSectionItem = {
-  key: SettingsSection
-  icon: ReactNode
-}
-
 const sectionLabels: Record<SettingsSection, string> = {
   account: "Tài khoản",
   notifications: "Thông báo & cảnh báo",
@@ -64,7 +54,7 @@ function SettingsRow({
       disabled={disabled}
       className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
     >
-      <span aria-hidden="true" className="shrink-0 text-brand-strong">
+      <span aria-hidden="true" className="shrink-0 text-brand-primary">
         {icon}
       </span>
       <span className="min-w-0 flex-1 text-sm font-medium text-text-primary">
@@ -104,7 +94,12 @@ export function Settings({
   onBack: () => void
   onDirtyChange: (dirty: boolean) => void
   onSavingChange: (saving: boolean) => void
-  onSave: (draft: AppSettings) => Promise<SettingsSaveResult>
+  onSave: (
+    draft: AppSettings,
+  ) => Promise<{
+    settings: AppSettings
+    savedToAccount: boolean
+  }>
   onNavigateTrash: () => void
   onLogin?: () => void
   notify: (message: string, variant?: "success" | "danger" | "warning") => void
@@ -151,7 +146,10 @@ export function Settings({
   useEffect(() => onSavingChange(saving), [saving, onSavingChange])
   useEffect(() => () => onSavingChange(false), [onSavingChange])
 
-  const sections: SettingsSectionItem[] = [
+  const sections: {
+    key: SettingsSection
+    icon: ReactNode
+  }[] = [
     { key: "account", icon: <UserRound size={19} /> },
     { key: "notifications", icon: <Bell size={19} /> },
     { key: "inventory", icon: <Archive size={19} /> },
@@ -256,11 +254,14 @@ export function Settings({
                 onClick={() => selectSection(key)}
                 className={`flex min-h-14 w-full items-center gap-3 border-b border-border-subtle px-4 text-left text-sm font-medium last:border-b-0 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary ${
                   activeSection === key
-                    ? "md:bg-brand-secondary md:text-brand-strong"
+                    ? "md:bg-brand-secondary md:text-brand-primary"
                     : "text-text-primary hover:bg-surface-hover"
                 }`}
               >
-                <span aria-hidden="true" className="shrink-0 text-brand-strong">
+                <span
+                  aria-hidden="true"
+                  className="shrink-0 text-brand-primary"
+                >
                   {icon}
                 </span>
                 <span className="min-w-0 flex-1">{sectionLabels[key]}</span>
@@ -283,7 +284,7 @@ export function Settings({
               type="button"
               onClick={backToSections}
               aria-label="Quay lại Cài đặt"
-              className="flex size-11 items-center justify-center rounded-corner-md text-brand-strong hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
+              className="flex size-11 items-center justify-center rounded-corner-md text-brand-primary hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
             >
               <ArrowLeft size={21} aria-hidden="true" />
             </button>
@@ -403,7 +404,7 @@ export function Settings({
           {activeSection === "account" && (
             <div className="rounded-corner-lg border border-border-primary bg-surface-bg p-4 shadow-xs">
               <div className="mb-4 flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-corner-full bg-brand-secondary text-brand-strong">
+                <span className="flex size-10 items-center justify-center rounded-corner-full bg-brand-secondary text-brand-primary">
                   <UserRound size={20} aria-hidden="true" />
                 </span>
                 <span className="text-sm font-semibold text-text-primary">
@@ -495,7 +496,7 @@ export function Settings({
                   <CircleCheck
                     size={18}
                     aria-hidden="true"
-                    className="text-brand-strong"
+                    className="text-brand-primary"
                   />
                 )}
               </button>

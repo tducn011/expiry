@@ -1055,7 +1055,7 @@ export function Scanner({
             step1Data
               ? "text-status-ok font-semibold"
               : step === 1
-                ? "text-brand-strong font-semibold"
+                ? "text-brand-primary font-semibold"
                 : "text-text-tertiary font-medium"
           }`}
         >
@@ -1081,7 +1081,7 @@ export function Scanner({
         <div
           className={`flex items-center gap-1.5 ${
             step === 2
-              ? "text-brand-strong font-semibold"
+              ? "text-brand-primary font-semibold"
               : "text-text-tertiary font-medium"
           }`}
         >
@@ -1132,10 +1132,10 @@ export function Scanner({
             </div>
 
             {state === "ready" && (
-              <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-white/95 border border-border-primary/40 backdrop-blur-sm px-3 py-1 text-[11px] font-medium text-brand-strong shadow-xs">
+              <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-white/95 border border-border-primary/40 backdrop-blur-sm px-3 py-1 text-[11px] font-medium text-brand-primary shadow-xs">
                 <Sparkles
                   size={12}
-                  className="animate-pulse text-brand-strong"
+                  className="animate-pulse text-brand-primary"
                 />
                 <span>Tự động nhận diện tức thì</span>
               </div>
@@ -1176,7 +1176,7 @@ export function Scanner({
               <>
                 <Loader2
                   size={24}
-                  className="animate-spin text-brand-strong shrink-0"
+                  className="animate-spin text-brand-primary shrink-0"
                   aria-hidden="true"
                 />
                 <p className="text-[15px] font-semibold text-text-heading">
@@ -1189,7 +1189,7 @@ export function Scanner({
               <>
                 <Loader2
                   size={24}
-                  className="animate-spin text-brand-strong shrink-0"
+                  className="animate-spin text-brand-primary shrink-0"
                   aria-hidden="true"
                 />
                 <p className="text-[15px] font-semibold text-text-heading">
@@ -1202,7 +1202,7 @@ export function Scanner({
               <>
                 <Loader2
                   size={24}
-                  className="animate-spin text-brand-strong shrink-0"
+                  className="animate-spin text-brand-primary shrink-0"
                   aria-hidden="true"
                 />
                 <p className="text-[15px] font-semibold text-text-heading">
@@ -1236,7 +1236,7 @@ export function Scanner({
                         Mã: {step1Data.draft.barcode}
                       </p>
                     )}
-                    <p className="mt-1 text-brand-strong font-medium text-[11px] leading-normal">
+                    <p className="mt-1 text-brand-primary font-medium text-[11px] leading-normal">
                       Lật đáy lon hoặc nắp hộp để quét ngày HSD
                     </p>
                   </div>
@@ -1250,7 +1250,7 @@ export function Scanner({
                         NSX: {step1Data.draft.mfgDate}
                       </p>
                     )}
-                    <p className="mt-1 text-brand-strong font-medium text-[11px] leading-normal">
+                    <p className="mt-1 text-brand-primary font-medium text-[11px] leading-normal">
                       Hướng vào mã vạch hoặc mặt trước để lấy tên sản phẩm
                     </p>
                   </div>
@@ -1263,7 +1263,7 @@ export function Scanner({
                 <ScanText
                   size={24}
                   aria-hidden="true"
-                  className="text-brand-strong shrink-0"
+                  className="text-brand-primary shrink-0"
                 />
                 <p className="text-[15px] font-semibold text-text-heading">
                   Chưa thấy ngày HSD
@@ -1329,7 +1329,7 @@ export function Scanner({
             {live ? (
               <button
                 type="button"
-                className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark active:text-white text-on-brand rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs disabled:opacity-50"
                 onClick={() => capture()}
                 disabled={state === "capturing"}
               >
@@ -1343,7 +1343,7 @@ export function Scanner({
             ) : (
               <button
                 type="button"
-                className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark active:text-white text-on-brand rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+                className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
                 onClick={() => libraryInputRef.current?.click()}
               >
                 <ImageUp size={20} />
@@ -1357,7 +1357,7 @@ export function Scanner({
 
             <button
               type="button"
-              className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-strong rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+              className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-primary rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
               onClick={skipStep2}
             >
               <Keyboard size={20} />
@@ -1392,7 +1392,7 @@ export function Scanner({
               <>
                 <button
                   type="button"
-                  className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark active:text-white text-on-brand rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                  className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs disabled:opacity-50"
                   onClick={() => capture()}
                   disabled={state === "capturing"}
                 >
@@ -1402,7 +1402,7 @@ export function Scanner({
 
                 <button
                   type="button"
-                  className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-strong rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+                  className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-primary rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
                   onClick={leave(() => {
                     const currentDraft = step1Data?.draft || detectedDraft
                     const currentImg = step1Data?.image || image
@@ -1439,7 +1439,7 @@ export function Scanner({
                 {state === "unavailable" ? (
                   <button
                     type="button"
-                    className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark active:text-white text-on-brand rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+                    className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
                     onClick={() => libraryInputRef.current?.click()}
                   >
                     <ImageUp size={20} />
@@ -1448,7 +1448,7 @@ export function Scanner({
                 ) : (
                   <button
                     type="button"
-                    className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark active:text-white text-on-brand rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                    className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs disabled:opacity-50"
                     onClick={start}
                     disabled={state === "requesting"}
                   >
@@ -1459,7 +1459,7 @@ export function Scanner({
 
                 <button
                   type="button"
-                  className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-strong rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+                  className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-primary rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
                   onClick={leave(() => {
                     const currentDraft = step1Data?.draft || detectedDraft
                     const currentImg = step1Data?.image || image
@@ -1499,7 +1499,7 @@ export function Scanner({
             {image && (
               <button
                 type="button"
-                className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark active:text-white text-on-brand rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+                className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
                 onClick={() => {
                   setStep1Data({
                     draft: detectedDraft || {
@@ -1528,7 +1528,7 @@ export function Scanner({
 
             <button
               type="button"
-              className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-strong rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+              className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-primary rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
               onClick={() =>
                 onReview(
                   images.length > 1 ? images : image || "",

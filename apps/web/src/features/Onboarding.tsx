@@ -40,7 +40,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   return (
     <div className="flex min-h-[80vh] items-center justify-center p-4">
       <Card className="flex w-full max-w-md flex-col items-center gap-6 text-center border border-border-primary/60 shadow-xs p-6 md:p-8">
-        <div className="flex size-20 items-center justify-center rounded-corner-full bg-sage-100 text-sage-800 shadow-xs">
+        <div className="flex size-20 items-center justify-center rounded-corner-full bg-brand-accent/10 text-brand-primary shadow-xs">
           {s.icon}
         </div>
         <div>

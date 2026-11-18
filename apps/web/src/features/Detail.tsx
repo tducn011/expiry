@@ -549,7 +549,7 @@ export function Detail({
           <div className="grid grid-cols-[6rem_minmax(0,1fr)] gap-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5">
             <div
               aria-hidden="true"
-              className="flex h-28 w-24 items-center justify-center self-start rounded-corner-lg border border-border-subtle bg-brand-tertiary text-brand-strong sm:h-40 sm:w-36"
+              className="flex h-28 w-24 items-center justify-center self-start rounded-corner-lg border border-border-subtle bg-brand-tertiary text-brand-primary sm:h-40 sm:w-36"
             >
               <FoodIcon size={44} strokeWidth={1.8} />
             </div>
@@ -578,7 +578,7 @@ export function Detail({
                   <Scale
                     size={14}
                     aria-hidden="true"
-                    className="text-brand-strong"
+                    className="text-brand-primary"
                   />
                   Số lượng
                 </dt>
@@ -591,7 +591,7 @@ export function Detail({
                   <CalendarDays
                     size={14}
                     aria-hidden="true"
-                    className="text-brand-strong"
+                    className="text-brand-primary"
                   />
                   Hạn sử dụng
                 </dt>
@@ -615,7 +615,7 @@ export function Detail({
                   <Boxes
                     size={14}
                     aria-hidden="true"
-                    className="text-brand-strong"
+                    className="text-brand-primary"
                   />
                   Nơi bảo quản
                 </dt>
@@ -629,7 +629,7 @@ export function Detail({
 
         <Card className="min-w-0">
           <SectionTitle className="mb-4 flex items-center gap-2">
-            <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-strong">
+            <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-primary">
               <Check size={17} aria-hidden="true" />
             </span>
             Thao tác nhanh
@@ -689,7 +689,7 @@ export function Detail({
 
         <Card className="min-w-0">
           <SectionTitle className="mb-4 flex items-center gap-2">
-            <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-strong">
+            <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-primary">
               <FileText size={17} aria-hidden="true" />
             </span>
             Thông tin chi tiết
@@ -713,7 +713,7 @@ export function Detail({
           <Card className="min-w-0">
             <div className="mb-4 flex items-center justify-between gap-3">
               <SectionTitle className="flex items-center gap-2">
-                <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-strong">
+                <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-primary">
                   <StickyNote size={17} aria-hidden="true" />
                 </span>
                 Ghi chú
@@ -734,7 +734,7 @@ export function Detail({
 
           <Card className="min-w-0">
             <SectionTitle className="mb-4 flex items-center gap-2">
-              <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-strong">
+              <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-primary">
                 <History size={17} aria-hidden="true" />
               </span>
               Lịch sử

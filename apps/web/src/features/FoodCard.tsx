@@ -124,59 +124,39 @@ export function FoodCard({
     statusLabel = "Chưa rõ HSD"
   }
 
-  // Grouped row layout matching Figma node 312:50 (413:77)
   if (variant === "grouped") {
     return (
-      <div
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
         onClick={onOpen}
-        onKeyDown={(e) =>
-          (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())
-        }
-        className={`group flex min-h-[88px] cursor-pointer items-center gap-3 px-3 py-3 transition-colors hover:bg-surface-hover active:bg-bg-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary ${className}`}
+        className={`home-food-row group ${className}`}
       >
-        <div
-          aria-hidden="true"
-          className="flex size-11 shrink-0 items-center justify-center rounded-[12px] border border-border-primary bg-surface-subtle text-text-primary transition-transform group-hover:scale-105"
-        >
-          <IconComponent size={20} strokeWidth={2} />
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-          <p className="truncate text-[18px] leading-[26px] font-semibold text-text-heading">
+        <span aria-hidden="true" className="home-food-icon">
+          <IconComponent size={18} strokeWidth={2} />
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-[15px] leading-[22px] font-semibold text-text-heading">
             {food.name}
-          </p>
-          <p className="truncate text-[14px] leading-[22px] text-text-secondary">
+          </span>
+          <span className="block truncate text-xs leading-5 text-text-secondary">
             {food.quantity} {food.unit}
-            {food.location ? ` · ${food.location}` : ""}
-            <span className="text-text-tertiary"> · </span>
-            <span className="text-text-tertiary">
-              {CATEGORY_LABELS[category] || "Khác"}
+            {food.location ? ` · ${food.location}` : ""} ·{" "}
+            {CATEGORY_LABELS[category] || "Khác"}
+          </span>
+        </span>
+        <span className="home-food-expiry">
+          <span
+            className={`block text-[13px] leading-5 font-semibold ${rowTone[st]}`}
+          >
+            {statusLabel}
+          </span>
+          {food.expDate && (
+            <span className="block text-[11px] leading-4 text-text-secondary">
+              HSD {formatDate(food.expDate)}
             </span>
-          </p>
-          <div className="flex flex-wrap items-center gap-1.5 text-[13px] leading-[18px]">
-            <span className={`whitespace-nowrap ${rowTone[st]}`}>
-              {statusLabel}
-            </span>
-            {food.expDate && (
-              <>
-                <span className="text-text-tertiary text-[12px]">·</span>
-                <span className="whitespace-nowrap text-text-secondary">
-                  HSD {formatDate(food.expDate)}
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center text-text-tertiary pl-1">
-          <ChevronRight
-            size={16}
-            strokeWidth={2}
-            aria-hidden="true"
-            className="transition-transform group-hover:translate-x-0.5"
-          />
-        </div>
-      </div>
+          )}
+        </span>
+      </button>
     )
   }
 

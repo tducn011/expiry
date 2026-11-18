@@ -746,7 +746,7 @@ describe("Manual Capture Form & Outcome Boundary (CAP-01)", () => {
     )
 
     expect(html).toContain("Mua sắm")
-    expect(html).toContain("Gợi ý mua lại từ kho")
+    expect(html).toContain("Gợi ý từ kho")
     expect(html).toContain("Rau muống")
     expect(html).toContain("Tên món cần mua")
     expect(html).toContain("Thêm")

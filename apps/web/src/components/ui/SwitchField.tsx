@@ -60,7 +60,7 @@ export function SwitchField({
       className={`flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {icon && (
-        <span aria-hidden="true" className="shrink-0 text-brand-strong">
+        <span aria-hidden="true" className="shrink-0 text-brand-primary">
           {icon}
         </span>
       )}

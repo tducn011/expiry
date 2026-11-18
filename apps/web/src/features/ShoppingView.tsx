@@ -261,7 +261,7 @@ export function ShoppingView({
               onClick={() => setFilter(value)}
               className={`min-h-11 md:min-h-10 min-w-0 whitespace-nowrap rounded-corner-full border px-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary sm:text-sm ${
                 filter === value
-                  ? "border-brand-primary bg-brand-primary text-on-brand"
+                  ? "border-brand-primary bg-brand-primary text-white"
                   : "border-border-primary bg-surface-bg text-text-primary hover:bg-surface-hover"
               }`}
             >
@@ -373,7 +373,7 @@ export function ShoppingView({
                           aria-checked={true}
                           aria-label={`Đánh dấu chưa mua ${item.name}`}
                           onClick={() => handleToggle(item.id)}
-                          className="relative flex size-6 shrink-0 items-center justify-center rounded-[6px] after:absolute after:-inset-2.5 after:content-[''] border-2 border-brand-primary bg-brand-primary text-on-brand cursor-pointer"
+                          className="relative flex size-6 shrink-0 items-center justify-center rounded-[6px] after:absolute after:-inset-2.5 after:content-[''] border-2 border-brand-primary bg-brand-primary text-white cursor-pointer"
                         >
                           <Check size={14} strokeWidth={3} />
                         </button>
@@ -447,7 +447,7 @@ export function ShoppingView({
             className="mb-3 flex items-center gap-2 text-sm font-semibold text-text-heading"
           >
             <Sparkles size={16} aria-hidden="true" />
-            Gợi ý mua lại từ kho
+            Gợi ý từ kho
           </h2>
           <div className="flex flex-wrap gap-2">
             {suggestions.slice(0, 6).map((suggestion) => (
@@ -459,7 +459,7 @@ export function ShoppingView({
               >
                 <Plus
                   size={15}
-                  className="text-brand-strong"
+                  className="text-brand-primary"
                   aria-hidden="true"
                 />
                 {suggestion.name}

@@ -5,9 +5,11 @@ import { AuthForm } from "../src/features/AuthForm"
 import { SidebarNavigation } from "../src/components/ui/SidebarNavigation"
 
 describe("Auth Flow & Design Verification (Figma AUTH · WEB & AUTH · APP)", () => {
-  it("uses Lucide Timer for both responsive brand headers", () => {
+  it("uses the shared Clock-e brand for both responsive headers", () => {
     const html = renderToString(<AuthForm dispatch={vi.fn()} onCancel={vi.fn()} />)
-    expect(html.match(/lucide-timer/g)).toHaveLength(2)
+    expect(html.match(/data-brand-lockup/g)).toHaveLength(2)
+    expect(html).toContain("clock-e-white.svg")
+    expect(html).toContain("clock-e-coral.svg")
     expect(html).not.toContain('viewBox="0 0 200 200"')
   })
 
@@ -39,18 +41,13 @@ describe("Auth Flow & Design Verification (Figma AUTH · WEB & AUTH · APP)", ()
     // Web Brand Story (desktop 2-column) elements
     expect(html).toContain("Biết mình có gì.")
     expect(html).toContain("Dùng thực phẩm đúng lúc.")
-    expect(html).toContain(
-      "Theo dõi thực phẩm, ngày sử dụng và nơi bảo quản trong cùng một ứng dụng.",
-    )
     expect(html).toContain("Kho thực phẩm của bạn")
     expect(html).toContain("Rau xanh")
     expect(html).toContain("Sữa tươi")
     expect(html).toContain("Trứng")
-    expect(html).toContain("Quản lý thực phẩm dễ dàng mỗi ngày.")
 
     // Form elements
     expect(html).toContain("Chào mừng bạn trở lại")
-    expect(html).toContain("Đăng nhập để tiếp tục quản lý thực phẩm của bạn.")
     expect(html).toContain("Email")
     expect(html).toContain("Mật khẩu")
     expect(html).not.toContain("Tên của bạn") // Login view should not ask for name
@@ -73,25 +70,23 @@ describe("Auth Flow & Design Verification (Figma AUTH · WEB & AUTH · APP)", ()
     )
 
     expect(html).toContain("Tạo tài khoản Expiry")
-    expect(html).toContain(
-      "Bắt đầu theo dõi thực phẩm và hạn sử dụng dễ dàng hơn.",
-    )
     expect(html).toContain("Tên của bạn")
     expect(html).toContain("Email")
     expect(html).toContain("Mật khẩu")
-    expect(html).toContain("Dùng ít nhất 8 ký tự để bảo vệ tài khoản.")
+    expect(html).toContain("Ít nhất 8 ký tự")
     expect(html).toContain("Tạo tài khoản")
     expect(html).toContain("Đã có tài khoản?")
     expect(html).toContain("Tiếp tục với chế độ xem thử")
   })
 
-  it("unifies brand logo icon using Lucide Timer in SidebarNavigation", () => {
+  it("uses the shared Clock-e brand in SidebarNavigation", () => {
     const html = renderToString(
       <SidebarNavigation>
         <div>nav items</div>
       </SidebarNavigation>,
     )
-    expect(html).toContain("lucide-timer")
+    expect(html).toContain("data-brand-lockup")
+    expect(html).toContain("clock-e-coral.svg")
     expect(html).not.toContain("lucide-leaf")
   })
 })
