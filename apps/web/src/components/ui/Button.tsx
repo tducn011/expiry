@@ -33,7 +33,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-brand-primary text-on-brand hover:bg-brand-hover active:bg-brand-dark active:text-white shadow-xs border-transparent",
+    "bg-brand-primary text-white hover:bg-brand-hover active:bg-brand-dark shadow-xs border-transparent",
 
   neutral:
     "bg-surface-bg border-border-primary text-text-primary hover:bg-surface-hover active:bg-bg-subtle shadow-xs",
@@ -53,7 +53,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   danger:
     "bg-status-expired-bg border-transparent text-status-expired hover:bg-red-100 active:bg-red-200",
 
-  cta: "bg-brand-primary text-on-brand hover:bg-brand-hover active:bg-brand-dark active:text-white shadow-sm border-transparent",
+  cta: "bg-brand-primary text-white hover:bg-brand-hover active:bg-brand-dark shadow-sm border-transparent",
 }
 
 const sizeStyles: Record<string, string> = {

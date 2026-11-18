@@ -476,7 +476,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const [confirmReset, setConfirmReset] = useState(false)
 
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(() => {
+  const [sidebarPreference, setIsSidebarExpanded] = useState<boolean>(() => {
     try {
       const savedPreference = localStorage.getItem("expiry_sidebar_expanded")
 
@@ -486,7 +486,21 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     }
   })
 
+  const [wideSidebar, setWideSidebar] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 1024px)").matches,
+  )
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)")
+    const update = () => setWideSidebar(query.matches)
+    query.addEventListener("change", update)
+    return () => query.removeEventListener("change", update)
+  }, [])
+  const isSidebarExpanded = wideSidebar && sidebarPreference
+
   const toggleSidebar = () => {
+    if (!wideSidebar) return
     setIsSidebarExpanded((prev) => {
       const next = !prev
 
@@ -824,7 +838,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         <div className="flex flex-col items-center gap-3 text-text-secondary">
           <Loader2
             size={32}
-            className="animate-spin text-brand-strong"
+            className="animate-spin text-brand-primary"
             aria-hidden="true"
           />
           <p className="text-sm font-medium">Đang kiểm tra phiên làm việc…</p>
@@ -1583,7 +1597,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       <div className="hidden h-full md:block shrink-0">
         <SidebarNavigation
           isExpanded={isSidebarExpanded}
-          onToggleExpanded={toggleSidebar}
+          onToggleExpanded={wideSidebar ? toggleSidebar : undefined}
           primaryAction={
             <button
               type="button"
@@ -1591,7 +1605,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               aria-current={isAddFlow ? "page" : undefined}
               title="Thêm thực phẩm"
               onClick={() => handleNav("scan")}
-              className={`flex min-h-12 items-center justify-center rounded-corner-md bg-brand-primary text-on-brand shadow-xs transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary ${
+              className={`flex min-h-12 items-center justify-center rounded-corner-md bg-brand-primary text-white shadow-xs transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary ${
                 isSidebarExpanded ? "w-full gap-3 px-3 text-left" : "size-12"
               }`}
             >
@@ -1646,7 +1660,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           <div className="flex w-full flex-col gap-1.5">
             {isSidebarExpanded ? (
               <div className="mt-3 border-t border-border-primary/60 px-3 pb-1 pt-4 text-xs font-semibold text-text-secondary">
-                Quản lý
+                Hệ thống
               </div>
             ) : (
               <div
@@ -1752,22 +1766,23 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             route.name !== "detail" &&
             route.name !== "settings" && (
               <div
-                className={`mb-6 w-full ${
+                className={`mb-3 w-full ${
                   isFullBleed ? "hidden md:flex" : "flex"
-                } items-center justify-between gap-3 rounded-corner-md border border-border-primary/60 bg-surface-bg px-3.5 py-1.5 text-xs shadow-xs`}
+                } items-center justify-between gap-3 text-xs text-text-secondary`}
               >
                 <div className="flex min-w-0 items-center gap-2">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-sage-100 text-sage-800">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-brand-accent/10 text-brand-primary">
                     <Leaf size={14} aria-hidden="true" />
                   </span>
                   <span className="truncate font-medium text-text-secondary">
-                    Dữ liệu mẫu (chế độ xem thử)
+                    Dữ liệu mẫu
+                    <span className="hidden sm:inline"> · Chế độ xem thử</span>
                   </span>
                 </div>
                 <Button
                   size="small"
                   variant="subtle"
-                  className="shrink-0 font-semibold text-brand-strong"
+                  className="shrink-0 font-semibold text-brand-primary md:hidden"
                   onClick={() => setPendingAuth({ name: "inventory" })}
                 >
                   Đăng nhập để đồng bộ
@@ -1797,7 +1812,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               <span
                 className={`transition-colors ${
                   rootName === "inventory"
-                    ? "text-brand-strong"
+                    ? "text-brand-primary"
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -1806,7 +1821,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               <span
                 className={`text-[12px] leading-[18px] ${
                   rootName === "inventory"
-                    ? "font-semibold text-brand-strong"
+                    ? "font-semibold text-brand-primary"
                     : "font-medium text-text-secondary"
                 }`}
               >
@@ -1825,7 +1840,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               <span
                 className={`transition-colors ${
                   rootName === "storage"
-                    ? "text-brand-strong"
+                    ? "text-brand-primary"
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -1834,7 +1849,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               <span
                 className={`text-[12px] leading-[18px] ${
                   rootName === "storage"
-                    ? "font-semibold text-brand-strong"
+                    ? "font-semibold text-brand-primary"
                     : "font-medium text-text-secondary"
                 }`}
               >
@@ -1848,7 +1863,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               aria-label="Thêm thực phẩm"
               title="Thêm thực phẩm"
               onClick={() => handleNav("scan")}
-              className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-on-brand border border-brand-primary/20 shadow-xs transition-transform hover:bg-brand-hover active:scale-95 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary -mt-2"
+              className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-white border border-brand-primary/20 shadow-xs transition-transform hover:bg-brand-hover active:scale-95 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary -mt-2"
             >
               <Plus size={24} strokeWidth={2.5} />
             </button>
@@ -1864,7 +1879,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               <span
                 className={`transition-colors ${
                   rootName === "shopping"
-                    ? "text-brand-strong"
+                    ? "text-brand-primary"
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -1873,7 +1888,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               <span
                 className={`text-[12px] leading-[18px] ${
                   rootName === "shopping"
-                    ? "font-semibold text-brand-strong"
+                    ? "font-semibold text-brand-primary"
                     : "font-medium text-text-secondary"
                 }`}
               >
@@ -1892,7 +1907,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               <span
                 className={`transition-colors ${
                   rootName === "insight"
-                    ? "text-brand-strong"
+                    ? "text-brand-primary"
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -1901,7 +1916,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               <span
                 className={`text-[12px] leading-[18px] ${
                   rootName === "insight"
-                    ? "font-semibold text-brand-strong"
+                    ? "font-semibold text-brand-primary"
                     : "font-medium text-text-secondary"
                 }`}
               >

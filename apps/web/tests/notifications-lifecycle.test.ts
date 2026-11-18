@@ -521,7 +521,7 @@ describe("Issue #213: UX Writing & In-Browser Notification Lifecycle", () => {
 
     // Must clearly state in-browser notifications
 
-    expect(settingsCode).toContain("Thông báo trên trình duyệt")
+    expect(settingsCode).toContain("Kiểm tra thông báo trình duyệt")
   })
 
   it("handles notification permission lifecycle states (granted, denied, unsupported)", async () => {
@@ -537,9 +537,9 @@ describe("Issue #213: UX Writing & In-Browser Notification Lifecycle", () => {
 
     // Denied guidance instructions
 
-    expect(settingsCode).toContain("Thông báo trên trình duyệt đang bị chặn")
+    expect(settingsCode).toContain("Trình duyệt đã chặn thông báo.")
 
-    expect(settingsCode).toContain("Site Settings")
+    expect(settingsCode).toContain("trang để thử lại.")
 
     // Test notification feature for granted permission
 
@@ -549,10 +549,10 @@ describe("Issue #213: UX Writing & In-Browser Notification Lifecycle", () => {
 
     // Unsupported fallback notice
 
-    expect(settingsCode).toContain("không hỗ trợ Web Notification API")
+    expect(settingsCode).toContain("Trình duyệt này không hỗ trợ thông báo.")
   })
 
-  it("navigates to notifications when clicking attention summary in Inventory", async () => {
+  it("keeps due-review navigation on the attention task queue", async () => {
     const fs = await import("fs")
     const path = await import("path")
     const appCode = fs.readFileSync(
@@ -560,7 +560,7 @@ describe("Issue #213: UX Writing & In-Browser Notification Lifecycle", () => {
       "utf-8",
     )
     expect(appCode).toMatch(
-      /onNavigateAttention=\{\(\)\s*=>\s*go\(\{\s*name:\s*"notifications"\s*\}\)\}/,
+      /onNavigateAttention=\{\(\)\s*=>\s*tab\(\{\s*name:\s*"attention"\s*\}\)\}/,
     )
   })
 })

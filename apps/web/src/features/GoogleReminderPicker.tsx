@@ -348,7 +348,7 @@ export function GoogleReminderPicker({
               }}
               className={`px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer text-text-primary ${
                 isCalendarOpen
-                  ? "bg-brand-primary/15 text-brand-strong ring-2 ring-brand-primary"
+                  ? "bg-brand-primary/15 text-brand-primary ring-2 ring-brand-primary"
                   : "bg-surface-secondary hover:bg-surface-tertiary border border-border-primary/60"
               }`}
             >
@@ -410,10 +410,10 @@ export function GoogleReminderPicker({
                         }
                         className={`size-11 md:size-8 mx-auto flex items-center justify-center rounded-full transition-all cursor-pointer ${
                           isSelected
-                            ? "bg-brand-primary text-on-brand font-semibold shadow-xs"
+                            ? "bg-brand-primary text-white font-semibold shadow-xs"
                             : item.isCurrent
                               ? isToday
-                                ? "border border-brand-primary text-brand-strong font-semibold hover:bg-surface-secondary"
+                                ? "border border-brand-primary text-brand-primary font-semibold hover:bg-surface-secondary"
                                 : "text-text-primary hover:bg-surface-secondary font-medium"
                               : "text-text-secondary/40 hover:bg-surface-secondary"
                         }`}
@@ -433,7 +433,7 @@ export function GoogleReminderPicker({
 
                       setIsCalendarOpen(false)
                     }}
-                    className="text-brand-strong font-semibold hover:underline cursor-pointer"
+                    className="text-brand-primary font-semibold hover:underline cursor-pointer"
                   >
                     Hôm nay
                   </button>
@@ -494,7 +494,7 @@ export function GoogleReminderPicker({
                       }}
                       className={`w-full text-left px-2 py-1.5 rounded transition-colors cursor-pointer ${
                         startTime === t
-                          ? "bg-brand-primary text-on-brand font-medium"
+                          ? "bg-brand-primary text-white font-medium"
                           : "hover:bg-surface-secondary text-text-primary"
                       }`}
                     >
@@ -535,7 +535,7 @@ export function GoogleReminderPicker({
                       }}
                       className={`w-full text-left px-2 py-1.5 rounded transition-colors cursor-pointer ${
                         endTime === t
-                          ? "bg-brand-primary text-on-brand font-medium"
+                          ? "bg-brand-primary text-white font-medium"
                           : "hover:bg-surface-secondary text-text-primary"
                       }`}
                     >

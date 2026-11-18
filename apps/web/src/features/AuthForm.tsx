@@ -167,7 +167,7 @@ export function AuthForm({
           WEB / DESKTOP (lg: >= 1024px): Brand Story Column (Figma node 1477:9 / 1477:59)
           Exact dimensions: w-[620px] on 1440px desktop, pt-[62px] px-[64px] pb-[42px]
          ========================================================================= */}
-      <div className="hidden lg:flex flex-col w-[480px] xl:w-[560px] 2xl:w-[620px] shrink-0 bg-warm-ink-900 text-white pt-[62px] px-10 xl:px-[64px] pb-[42px] select-none">
+      <div className="hidden lg:flex flex-col w-[480px] xl:w-[560px] 2xl:w-[620px] shrink-0 bg-brand-primary text-white pt-[62px] px-10 xl:px-[64px] pb-[42px] select-none">
         {/* Brand header (y=62) */}
         <BrandLockup
           className="self-start"
@@ -385,7 +385,7 @@ export function AuthForm({
             <button
               type="submit"
               disabled={loading}
-              className={`mt-3 h-[48px] min-h-[48px] w-full rounded-[12px] bg-brand-primary hover:bg-brand-hover active:bg-brand-muted text-on-brand font-semibold text-[14px] lg:text-[15px] flex items-center justify-center transition-all shadow-xs ${
+              className={`mt-3 h-[48px] min-h-[48px] w-full rounded-[12px] bg-brand-primary hover:bg-brand-hover active:bg-brand-muted text-white font-semibold text-[14px] lg:text-[15px] flex items-center justify-center transition-all shadow-xs ${
                 loading
                   ? "opacity-55 cursor-not-allowed"
                   : !isFormValid && Object.keys(fieldErrors).length > 0
@@ -408,19 +408,19 @@ export function AuthForm({
           <button
             type="button"
             onClick={() => switchMode(view === "login" ? "register" : "login")}
-            className="min-h-[44px] py-2 flex items-center justify-center text-[13px] lg:text-[14px] text-text-secondary hover:text-brand-strong cursor-pointer transition-colors"
+            className="min-h-[44px] py-2 flex items-center justify-center text-[13px] lg:text-[14px] text-text-secondary hover:text-brand-primary cursor-pointer transition-colors"
           >
             {view === "login" ? (
               <span>
                 Chưa có tài khoản?{" "}
-                <strong className="font-semibold text-brand-strong underline-offset-2 hover:underline">
+                <strong className="font-semibold text-brand-primary underline-offset-2 hover:underline">
                   Tạo tài khoản
                 </strong>
               </span>
             ) : (
               <span>
                 Đã có tài khoản?{" "}
-                <strong className="font-semibold text-brand-strong underline-offset-2 hover:underline">
+                <strong className="font-semibold text-brand-primary underline-offset-2 hover:underline">
                   Đăng nhập
                 </strong>
               </span>

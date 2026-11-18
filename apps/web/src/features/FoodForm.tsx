@@ -416,7 +416,7 @@ export function FoodForm({
               )}
             </div>
           ) : (
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-corner-md bg-brand-primary text-on-brand">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-corner-md bg-brand-primary text-white">
               <ScanText size={24} aria-hidden="true" />
             </div>
           )}
@@ -456,7 +456,7 @@ export function FoodForm({
             {isScanned("name") && (
               <span
                 title="Tên thực phẩm trích xuất tự động từ nhãn/mã vạch (chỉ đọc)"
-                className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-strong bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
+                className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
               >
                 <Lock size={13} aria-hidden="true" />
                 <span>Chỉ đọc</span>
@@ -465,7 +465,7 @@ export function FoodForm({
           </div>
           {d.barcode && (
             <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-1">
-              <Barcode size={14} className="text-brand-strong shrink-0" />
+              <Barcode size={14} className="text-brand-primary shrink-0" />
               <span>
                 Mã vạch:{" "}
                 <strong className="font-mono text-text-primary">
@@ -519,7 +519,7 @@ export function FoodForm({
               <button
                 type="button"
                 onClick={() => setNewLocModal(true)}
-                className="text-xs font-semibold text-brand-strong hover:underline cursor-pointer"
+                className="text-xs font-semibold text-brand-primary hover:underline cursor-pointer"
               >
                 + Thêm vị trí mới
               </button>
@@ -585,7 +585,7 @@ export function FoodForm({
               {isScanned("mfgDate") && (
                 <span
                   title="NSX trích xuất tự động từ nhãn (chỉ đọc)"
-                  className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-strong bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
+                  className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
                 >
                   <Lock size={13} aria-hidden="true" />
                   <span>Chỉ đọc</span>
@@ -600,10 +600,10 @@ export function FoodForm({
                 onClick={() => setShowReminderPicker((v) => !v)}
                 className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md transition-all cursor-pointer ${
                   d.reviewAt
-                    ? "bg-brand-primary/10 text-brand-strong border border-brand-primary/30 hover:bg-brand-primary/20 font-semibold"
+                    ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary/20 font-semibold"
                     : showReminderPicker
-                      ? "bg-brand-primary/10 text-brand-strong border border-brand-primary/40 shadow-xs"
-                      : "text-text-secondary hover:text-brand-strong hover:bg-surface-secondary border border-transparent hover:border-border-primary/40"
+                      ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/40 shadow-xs"
+                      : "text-text-secondary hover:text-brand-primary hover:bg-surface-secondary border border-transparent hover:border-border-primary/40"
                 }`}
                 title="Tùy chỉnh nhắc nhở"
                 aria-expanded={showReminderPicker}
@@ -611,7 +611,7 @@ export function FoodForm({
                 <Bell
                   size={14}
                   className={
-                    d.reviewAt ? "text-brand-strong" : "text-text-secondary"
+                    d.reviewAt ? "text-brand-primary" : "text-text-secondary"
                   }
                 />
                 <span>
@@ -652,7 +652,7 @@ export function FoodForm({
               {isScanned("expDate") && (
                 <span
                   title="HSD trích xuất tự động từ nhãn (chỉ đọc)"
-                  className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-strong bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
+                  className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
                 >
                   <Lock size={13} aria-hidden="true" />
                   <span>Chỉ đọc</span>
@@ -668,12 +668,12 @@ export function FoodForm({
           <div className="mt-2 pt-4 border-t border-border-primary/60 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
-                <Bell size={16} className="text-brand-strong" />
+                <Bell size={16} className="text-brand-primary" />
                 <span className="text-sm font-semibold text-text-heading">
                   Tùy chỉnh nhắc nhở
                 </span>
                 {d.reviewAt && (
-                  <span className="text-xs font-medium text-brand-strong bg-brand-primary/10 px-2 py-0.5 rounded-full border border-brand-primary/30">
+                  <span className="text-xs font-medium text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full border border-brand-primary/30">
                     Đã bật lịch nhắc
                   </span>
                 )}
@@ -722,7 +722,7 @@ export function FoodForm({
                     }
                     className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-brand-primary text-on-brand shadow-xs"
+                        ? "bg-brand-primary text-white shadow-xs"
                         : "bg-surface-secondary text-text-secondary hover:text-text-primary hover:bg-surface-tertiary border border-border-primary/50"
                     }`}
                   >

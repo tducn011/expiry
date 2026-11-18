@@ -52,7 +52,7 @@ export function SidebarButton({
           : "size-12 justify-center"
       } ${
         active
-          ? "bg-brand-secondary text-brand-strong shadow-xs"
+          ? "bg-brand-secondary text-brand-primary shadow-xs"
           : "text-text-secondary hover:text-text-primary hover:bg-surface-hover active:bg-bg-subtle"
       }`}
     >
@@ -130,6 +130,7 @@ export function SidebarNavigation({
           {onToggleExpanded && (
             <button
               type="button"
+              aria-expanded={isExpanded}
               onClick={onToggleExpanded}
               title={
                 isExpanded
@@ -141,7 +142,7 @@ export function SidebarNavigation({
                   ? "Thu gọn thanh điều hướng"
                   : "Mở rộng thanh điều hướng"
               }
-              className="flex size-8 shrink-0 items-center justify-center rounded-corner-md text-text-tertiary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
+              className="flex size-11 shrink-0 items-center justify-center rounded-corner-md text-text-tertiary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
             >
               {isExpanded ? (
                 <ChevronsLeft size={18} />

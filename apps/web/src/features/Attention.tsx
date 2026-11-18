@@ -56,7 +56,7 @@ export function AttentionFoodRow({
   } else {
     reasonText = "Đến hẹn kiểm tra"
 
-    reasonClass = "text-brand-strong font-medium"
+    reasonClass = "text-brand-primary font-medium"
   }
 
   return (
@@ -72,7 +72,7 @@ export function AttentionFoodRow({
     >
       <div
         aria-hidden="true"
-        className="flex size-11 shrink-0 items-center justify-center rounded-corner-md bg-brand-tertiary text-brand-strong transition-transform group-hover:scale-105 shadow-xs"
+        className="flex size-11 shrink-0 items-center justify-center rounded-corner-md bg-brand-tertiary text-brand-primary transition-transform group-hover:scale-105 shadow-xs"
       >
         <IconComponent size={22} />
       </div>
@@ -256,7 +256,7 @@ export function Attention({
                 id={`sec-${sec.id}`}
                 onClick={() => toggleCollapse(sec.id)}
                 aria-expanded={!isCollapsed}
-                className="flex min-h-11 items-center justify-between px-2 py-1.5 text-sm md:text-base font-semibold text-text-heading tracking-normal cursor-pointer hover:text-brand-strong transition-colors group select-none"
+                className="flex min-h-11 items-center justify-between px-2 py-1.5 text-sm md:text-base font-semibold text-text-heading tracking-normal cursor-pointer hover:text-brand-primary transition-colors group select-none"
               >
                 <span className="flex items-center gap-2">
                   <span>{sec.title}</span>

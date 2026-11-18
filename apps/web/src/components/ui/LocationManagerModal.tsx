@@ -253,7 +253,7 @@ export default function LocationManagerModal({
                 className="flex items-center justify-between gap-3 p-3 bg-surface-bg hover:bg-surface-hover/50 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-8 h-8 rounded-corner-md flex items-center justify-center bg-brand-primary/10 text-brand-strong shrink-0">
+                  <div className="w-8 h-8 rounded-corner-md flex items-center justify-center bg-brand-primary/10 text-brand-primary shrink-0">
                     <LocIcon size={16} />
                   </div>
 
@@ -307,7 +307,7 @@ export default function LocationManagerModal({
                       type="button"
                       onClick={() => handleStartRename(loc)}
                       title={`Đổi tên vị trí "${loc}"`}
-                      className="p-3.5 -m-2 md:p-1.5 md:m-0 text-text-secondary hover:text-brand-strong hover:bg-surface-subtle rounded-corner-md transition-colors cursor-pointer"
+                      className="p-3.5 -m-2 md:p-1.5 md:m-0 text-text-secondary hover:text-brand-primary hover:bg-surface-subtle rounded-corner-md transition-colors cursor-pointer"
                     >
                       <Pencil size={15} />
                     </button>

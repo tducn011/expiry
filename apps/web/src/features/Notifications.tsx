@@ -102,7 +102,7 @@ export function Notifications({
               Thông báo
             </h2>
             {unreadCount > 0 && (
-              <span className="inline-flex shrink-0 items-center rounded-corner-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-semibold text-brand-strong">
+              <span className="inline-flex shrink-0 items-center rounded-corner-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-semibold text-brand-primary">
                 {unreadCount} chưa đọc
               </span>
             )}
@@ -113,7 +113,7 @@ export function Notifications({
               <button
                 type="button"
                 onClick={handleMarkAllRead}
-                className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-corner-md px-2 text-xs font-semibold text-brand-strong transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
+                className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-corner-md px-2 text-xs font-semibold text-brand-primary transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
                 aria-label="Đánh dấu tất cả thông báo là đã đọc"
               >
                 <CheckCheck size={16} aria-hidden="true" />
@@ -166,7 +166,7 @@ export function Notifications({
                   <div className="min-w-0 flex-1">
                     <button
                       type="button"
-                      className="flex min-h-11 w-full items-start justify-between gap-2 text-left text-sm font-medium leading-snug text-text-heading hover:text-brand-strong focus-visible:outline-2 focus-visible:outline-brand-primary"
+                      className="flex min-h-11 w-full items-start justify-between gap-2 text-left text-sm font-medium leading-snug text-text-heading hover:text-brand-primary focus-visible:outline-2 focus-visible:outline-brand-primary"
                       onClick={() => {
                         dispatch({ type: "readNotif", id: n.id })
                         onOpenDetail(n.food.id)
@@ -182,7 +182,7 @@ export function Notifications({
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                       <button
                         type="button"
-                        className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-brand-strong hover:underline focus-visible:outline-2 focus-visible:outline-brand-primary"
+                        className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-brand-primary hover:underline focus-visible:outline-2 focus-visible:outline-brand-primary"
                         onClick={() =>
                           dispatch({ type: "readNotif", id: n.id })
                         }
@@ -217,7 +217,7 @@ export function Notifications({
             <button
               type="button"
               onClick={onOpenReminder}
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-corner-md bg-brand-primary px-4 text-sm font-semibold text-on-brand transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-corner-md bg-brand-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
             >
               Mở Nhắc nhở <ArrowRight size={16} aria-hidden="true" />
             </button>

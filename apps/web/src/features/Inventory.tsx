@@ -12,8 +12,6 @@ import {
 
 import Button from "../components/ui/Button"
 
-import Card from "../components/ui/Card"
-
 import EmptyState from "../components/ui/EmptyState"
 
 import {
@@ -25,7 +23,6 @@ import {
 import {
   Bell,
   ChevronRight,
-  Info,
   PackageOpen,
   Plus,
   Search,
@@ -33,8 +30,6 @@ import {
   Settings as SettingsIcon,
   X,
 } from "lucide-react"
-
-import IconButton from "../components/ui/IconButton"
 
 import StatusBadge from "../components/ui/StatusBadge"
 
@@ -60,9 +55,7 @@ export const defaultFilters: InventoryFilters = {
   attentionFilter: "all",
 }
 
-const inventoryHsdOptions = defaultHsdOptions.filter(
-  (option) => option.v !== "expired",
-)
+const inventoryHsdOptions = defaultHsdOptions
 
 export interface InventoryProps {
   state: State
@@ -82,75 +75,60 @@ export interface InventoryProps {
 
 function AttentionSummary({
   expired,
-
   soon,
-
   reviewDue,
-
-  onOpen,
+  onFilter,
+  onReview,
 }: {
   expired: number
-
   soon: number
-
   reviewDue: number
-
-  onOpen: () => void
+  onFilter: (filter: StatusFilter) => void
+  onReview: () => void
 }) {
   const total = expired + soon + reviewDue
-
-  if (total === 0) return null
-
+  if (!total) return null
   return (
-    <div
-      role="region"
-      aria-label="Tóm tắt món cần chú ý"
-      className="w-full rounded-[20px] border border-border-primary bg-surface-bg p-4 flex flex-col gap-3 shadow-none transition-all"
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-brand-primary font-semibold text-[16px] leading-[24px]">
-          <Info size={20} aria-hidden="true" className="shrink-0" />
-          <span>Cần chú ý ({total} món)</span>
-        </div>
-        <button
-          type="button"
-          onClick={onOpen}
-          className="inline-flex min-h-11 items-center gap-1 text-[14px] leading-[20px] font-medium text-brand-strong hover:underline cursor-pointer"
-        >
-          <span>Mở nhắc nhở</span>
-          <ChevronRight size={16} aria-hidden="true" />
-        </button>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        {soon > 0 && (
-          <span className="inline-flex items-center gap-1.5 h-6 rounded-[12px] border border-border-primary bg-status-soon-bg pl-2 pr-2.5 text-[13px] leading-[20px] font-medium text-status-soon">
-            <span
-              className="size-2 rounded-full bg-status-soon shrink-0"
-              aria-hidden="true"
-            />
-            {soon} sắp hết hạn
-          </span>
-        )}
+    <section aria-label="Cần xử lý" className="home-attention">
+      <h2 className="text-sm font-semibold text-text-heading">
+        Cần xử lý{" "}
+        <span className="ml-1 font-normal text-text-secondary">
+          {total} món
+        </span>
+      </h2>
+      <div className="flex flex-wrap gap-x-5 gap-y-1">
         {expired > 0 && (
-          <span className="inline-flex items-center gap-1.5 h-6 rounded-[12px] border border-border-primary bg-status-expired-bg pl-2 pr-2.5 text-[13px] leading-[20px] font-medium text-status-expired">
-            <span
-              className="size-2 rounded-full bg-status-expired shrink-0"
-              aria-hidden="true"
-            />
-            {expired} quá hạn
-          </span>
+          <button
+            type="button"
+            onClick={() => onFilter("expired")}
+            className="home-attention-action text-status-expired"
+          >
+            Kiểm tra {expired} món quá hạn{" "}
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>
+        )}
+        {soon > 0 && (
+          <button
+            type="button"
+            onClick={() => onFilter("soon")}
+            className="home-attention-action text-status-soon"
+          >
+            Xem {soon} món sắp hết hạn{" "}
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>
         )}
         {reviewDue > 0 && (
-          <span className="inline-flex items-center gap-1.5 h-6 rounded-[12px] border border-border-primary bg-surface-soft pl-2 pr-2.5 text-[13px] leading-[20px] font-medium text-sage-800">
-            <span
-              className="size-2 rounded-full bg-sage-700 shrink-0"
-              aria-hidden="true"
-            />
-            {reviewDue} đến hẹn kiểm tra
-          </span>
+          <button
+            type="button"
+            onClick={onReview}
+            className="home-attention-action text-brand-primary"
+          >
+            Kiểm tra {reviewDue} món đến hẹn{" "}
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>
         )}
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -204,7 +182,7 @@ export function Inventory({
 
   const activeItems = active(state)
 
-  const items = activeItems.filter((f) => statusOf(f, remind) !== "expired")
+  const items = activeItems
 
   const t = today()
 
@@ -258,7 +236,13 @@ export function Inventory({
       .sort((a, b) => {
         const priority = (food: Food) => {
           const status = statusOf(food, remind)
-          return status === "soon" ? 0 : status === "ok" ? 1 : 2
+          return status === "expired"
+            ? 0
+            : status === "soon"
+              ? 1
+              : status === "ok"
+                ? 2
+                : 3
         }
 
         return (
@@ -287,7 +271,7 @@ export function Inventory({
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="home-dashboard flex flex-col gap-4 w-full">
       {/* Page Header matching Figma node 312:50 (414:110) */}
       <div className="flex items-start justify-between gap-3 min-h-11 w-full">
         <div className="flex min-w-0 flex-col gap-1">
@@ -301,19 +285,7 @@ export function Inventory({
             {todayLabel}
           </time>
         </div>
-        <div className="flex items-center gap-2">
-          {activeItems.length > 0 && (
-            <div className="hidden md:block mr-1">
-              <Button
-                variant="primary"
-                size="small"
-                iconStart={<Plus size={16} />}
-                onClick={onAdd}
-              >
-                Thêm thực phẩm
-              </Button>
-            </div>
-          )}
+        <div className="flex items-center gap-2 md:hidden">
           {onOpenNotifications && (
             <div className="relative">
               <button
@@ -370,11 +342,15 @@ export function Inventory({
             expired={expired}
             soon={soon}
             reviewDue={reviewDue}
-            onOpen={onNavigateAttention}
+            onFilter={(filter) => {
+              clear()
+              setFilterHsd(filter)
+            }}
+            onReview={onNavigateAttention}
           />
 
           {/* Section 2: Search and Filters (414:127) */}
-          <div className="flex flex-col gap-3">
+          <div className="home-toolbar flex flex-col gap-3">
             <div className="relative flex items-center w-full">
               <div className="pointer-events-none absolute left-3 flex items-center text-text-tertiary">
                 <Search size={20} strokeWidth={2} aria-hidden="true" />
@@ -401,7 +377,7 @@ export function Inventory({
 
             <div className="flex flex-wrap items-center gap-2">
               <FilterDropdown<StatusFilter>
-                label="HSD"
+                label="Hạn sử dụng"
                 value={filterHsd}
                 onChange={setFilterHsd}
                 options={inventoryHsdOptions}
@@ -424,14 +400,15 @@ export function Inventory({
           {/* Section 3: Inventory List (414:149) */}
           <section
             aria-labelledby="inv-heading"
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-2"
           >
             <div className="flex min-h-8 items-center justify-between gap-4">
               <h2
                 id="inv-heading"
-                className="text-[22px] leading-[30px] font-semibold text-text-heading tracking-normal"
+                aria-live="polite"
+                className="text-[18px] leading-[26px] font-semibold text-text-heading tracking-normal"
               >
-                Danh sách ({list.length})
+                Thực phẩm trong kho ({list.length})
               </h2>
               {(q ||
                 filterHsd !== "all" ||
@@ -446,21 +423,11 @@ export function Inventory({
             {list.length === 0 ? (
               <EmptyState
                 icon={<SearchX size={32} />}
-                title={
-                  items.length === 0 && expired > 0
-                    ? "Không có món còn hạn"
-                    : "Không tìm thấy thực phẩm"
-                }
+                title="Không tìm thấy thực phẩm"
                 action={
-                  items.length === 0 && expired > 0 && onNavigateAttention ? (
-                    <Button variant="neutral" onClick={onNavigateAttention}>
-                      Mở nhắc nhở
-                    </Button>
-                  ) : (
-                    <Button variant="neutral" onClick={clear}>
-                      Xóa bộ lọc
-                    </Button>
-                  )
+                  <Button variant="neutral" onClick={clear}>
+                    Xóa bộ lọc
+                  </Button>
                 }
               />
             ) : (
@@ -483,19 +450,19 @@ export function Inventory({
                   <table className="w-full border-separate border-spacing-0 text-left text-sm">
                     <thead className="bg-bg-subtle/80 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                       <tr>
-                        <th scope="col" className="px-5 py-3.5">
+                        <th scope="col" className="px-5 py-2">
                           Thực phẩm
                         </th>
-                        <th scope="col" className="px-5 py-3.5">
+                        <th scope="col" className="px-5 py-2">
                           Số lượng
                         </th>
-                        <th scope="col" className="px-5 py-3.5">
+                        <th scope="col" className="px-5 py-2">
                           Nơi bảo quản
                         </th>
-                        <th scope="col" className="px-5 py-3.5">
+                        <th scope="col" className="px-5 py-2">
                           Hạn sử dụng
                         </th>
-                        <th scope="col" className="px-5 py-3.5 text-right">
+                        <th scope="col" className="px-5 py-2 text-right">
                           Trạng thái
                         </th>
                       </tr>
@@ -510,7 +477,7 @@ export function Inventory({
                             onClick={() => onOpenDetail(f.id)}
                             className="cursor-pointer transition-colors hover:bg-surface-hover"
                           >
-                            <td className="px-5 py-3.5">
+                            <td className="px-5 py-2">
                               <div className="flex items-center gap-3">
                                 <span
                                   aria-hidden="true"
@@ -518,23 +485,30 @@ export function Inventory({
                                 >
                                   <IconComp size={18} strokeWidth={2} />
                                 </span>
-                                <span className="font-semibold text-text-primary hover:text-brand-strong transition-colors">
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    onOpenDetail(f.id)
+                                  }}
+                                  className="min-h-11 text-left font-semibold text-text-primary hover:text-brand-primary focus-visible:outline-2 focus-visible:outline-brand-primary"
+                                >
                                   {f.name}
-                                </span>
+                                </button>
                               </div>
                             </td>
-                            <td className="px-5 py-3.5 font-medium text-text-primary">
+                            <td className="px-5 py-2 font-medium text-text-primary">
                               {f.quantity} {f.unit}
                             </td>
-                            <td className="px-5 py-3.5 text-text-secondary">
+                            <td className="px-5 py-2 text-text-secondary">
                               {f.location || "—"}
                             </td>
-                            <td className="px-5 py-3.5 text-text-primary font-medium">
+                            <td className="px-5 py-2 text-text-primary font-medium">
                               {f.expDate
                                 ? formatDate(f.expDate)
                                 : "Chưa rõ HSD"}
                             </td>
-                            <td className="px-5 py-3.5 text-right">
+                            <td className="px-5 py-2 text-right">
                               <StatusBadge food={f} remindDays={remind} />
                             </td>
                           </tr>

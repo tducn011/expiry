@@ -35,7 +35,7 @@ export function IconButton({
 
   const variantClass =
     variant === "primary"
-      ? "bg-brand-primary text-on-brand hover:bg-brand-hover active:bg-brand-dark active:text-white"
+      ? "bg-brand-primary text-white hover:bg-brand-hover active:bg-brand-dark"
       : variant === "neutral"
         ? "bg-surface-bg border border-border-primary text-text-primary hover:bg-surface-hover active:bg-bg-subtle shadow-xs"
         : variant === "danger"
