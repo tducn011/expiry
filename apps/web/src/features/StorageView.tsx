@@ -470,7 +470,7 @@ export default function StorageView({
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2.5">
           <div>
-            <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
+            <h2 className="text-sm font-bold text-text-heading flex items-center gap-2">
               <Boxes size={18} className="text-brand-primary" />
               <span>Khu vực bảo quản</span>
             </h2>
@@ -618,7 +618,7 @@ export default function StorageView({
       {/* Food Items List */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-text-primary">
+          <h3 className="text-sm font-bold text-text-heading">
             Danh sách món (
             {selectedLocation === "all" ? "Tất cả vị trí" : selectedLocation})
             {selectedCategory !== "all" &&

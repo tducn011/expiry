@@ -375,7 +375,7 @@ export function FoodForm({
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-bold text-text-primary tracking-tight">
+        <h1 className="text-xl md:text-2xl font-bold text-text-heading tracking-tight">
           {titles[mode]}
         </h1>
         <button
@@ -606,10 +606,10 @@ export function FoodForm({
                 onClick={() => setShowReminderPicker((v) => !v)}
                 className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md transition-all cursor-pointer ${
                   d.reviewAt
-                    ? "bg-[#0b57d0]/10 text-[#0b57d0] dark:text-blue-400 border border-[#0b57d0]/30 hover:bg-[#0b57d0]/20 font-semibold"
+                    ? "bg-teal-700/10 text-teal-700 dark:text-teal-300 border border-teal-700/30 hover:bg-teal-700/20 font-semibold"
                     : showReminderPicker
                       ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/40 shadow-xs"
-                      : "text-text-secondary hover:text-brand-primary hover:bg-surface-secondary border border-transparent hover:border-border-primary/40"
+                      : "text-text-secondary hover:text-brand-primary hover:bg-surface-subtle border border-transparent hover:border-border-primary/40"
                 }`}
                 title="Tùy chỉnh nhắc nhở"
                 aria-expanded={showReminderPicker}
@@ -618,7 +618,7 @@ export function FoodForm({
                   size={14}
                   className={
                     d.reviewAt
-                      ? "text-[#0b57d0] dark:text-blue-400"
+                      ? "text-teal-700 dark:text-teal-300"
                       : "text-text-secondary"
                   }
                 />
@@ -676,12 +676,12 @@ export function FoodForm({
           <div className="mt-2 pt-4 border-t border-border-primary/60 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
-                <Bell size={16} className="text-[#0b57d0] dark:text-blue-400" />
+                <Bell size={16} className="text-teal-700 dark:text-teal-300" />
                 <span className="text-sm font-semibold text-text-primary">
                   Tùy chỉnh nhắc nhở
                 </span>
                 {d.reviewAt && (
-                  <span className="text-xs font-medium text-[#0b57d0] dark:text-blue-400 bg-[#0b57d0]/10 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium text-teal-700 dark:text-teal-300 bg-teal-700/10 px-2 py-0.5 rounded-full">
                     Đã bật lịch nhắc
                   </span>
                 )}
@@ -730,8 +730,8 @@ export function FoodForm({
                     }
                     className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-[#0b57d0] text-white shadow-xs"
-                        : "bg-surface-secondary text-text-secondary hover:text-text-primary hover:bg-surface-tertiary border border-border-primary/50"
+                        ? "bg-teal-700 text-white shadow-xs"
+                        : "bg-surface-subtle text-text-secondary hover:text-text-primary hover:bg-surface-hover border border-border-primary/50"
                     }`}
                   >
                     +{num} ngày

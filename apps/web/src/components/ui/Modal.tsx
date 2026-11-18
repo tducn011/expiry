@@ -159,7 +159,7 @@ export function Modal({
             )}
             <h2
               id="modal-title"
-              className="text-base sm:text-lg font-semibold text-text-primary break-words text-balance"
+              className="text-base sm:text-lg font-semibold text-text-heading break-words text-balance"
             >
               {title}
             </h2>

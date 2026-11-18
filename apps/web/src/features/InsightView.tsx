@@ -454,9 +454,9 @@ export default function InsightView({
 
   // Consumption Donut Gradient
   const consumptionConicGradient = useMemo(() => {
-    if (stats.totalDecided === 0) return "#e5e7eb"
+    if (stats.totalDecided === 0) return "var(--neutral-200)"
     const deg = Math.round((stats.consumptionRate / 100) * 360)
-    return `conic-gradient(#0f5959 0deg ${deg}deg, #ef4444 ${deg}deg 360deg)`
+    return `conic-gradient(var(--teal-700) 0deg ${deg}deg, var(--danger) ${deg}deg 360deg)`
   }, [stats.totalDecided, stats.consumptionRate])
 
   // Storage Location Breakdown
@@ -473,7 +473,13 @@ export default function InsightView({
       locMap[locKey] = (locMap[locKey] || 0) + 1
     }
 
-    const palette = ["#0f5959", "#0ea5e9", "#f59e0b", "#8b5cf6", "#ec4899"]
+    const palette = [
+      "var(--brand-primary)",
+      "var(--color-category-beverage)",
+      "var(--color-category-dairy)",
+      "var(--color-category-pantry)",
+      "var(--color-category-meat)",
+    ]
     let colorIdx = 0
 
     const list = Object.entries(locMap)
@@ -490,7 +496,8 @@ export default function InsightView({
   }, [activeFoods, state.locations, totalActive])
 
   const storageConicGradient = useMemo(() => {
-    if (totalActive === 0 || storageStats.length === 0) return "#e5e7eb"
+    if (totalActive === 0 || storageStats.length === 0)
+      return "var(--neutral-200)"
     let currentAngle = 0
     const stops: string[] = []
     for (const s of storageStats) {
@@ -502,7 +509,9 @@ export default function InsightView({
         currentAngle = nextAngle
       }
     }
-    return stops.length > 0 ? `conic-gradient(${stops.join(", ")})` : "#e5e7eb"
+    return stops.length > 0
+      ? `conic-gradient(${stops.join(", ")})`
+      : "var(--neutral-200)"
   }, [totalActive, storageStats])
 
   // Category list sorted with active categories first
@@ -757,7 +766,7 @@ export default function InsightView({
                   <AlertTriangleIcon size={20} />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-text-primary leading-tight">
+                  <h2 className="text-base font-bold text-text-heading leading-tight">
                     Việc cần chú ý
                   </h2>
                   <p className="text-xs text-text-secondary mt-0.5">
@@ -879,7 +888,7 @@ export default function InsightView({
               <div className="flex items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2">
                   <BarChart3 size={16} className="text-brand-primary" />
-                  <h3 className="text-sm font-bold text-text-primary">
+                  <h3 className="text-sm font-bold text-text-heading">
                     Xu hướng tỷ lệ dùng hết
                   </h3>
                 </div>
@@ -911,12 +920,12 @@ export default function InsightView({
                       >
                         <stop
                           offset="0%"
-                          stopColor="#0f5959"
+                          stopColor="var(--teal-700)"
                           stopOpacity="0.25"
                         />
                         <stop
                           offset="100%"
-                          stopColor="#0f5959"
+                          stopColor="var(--teal-700)"
                           stopOpacity="0.02"
                         />
                       </linearGradient>
@@ -932,7 +941,7 @@ export default function InsightView({
                             y1={y}
                             x2={305}
                             y2={y}
-                            stroke="#e5e7eb"
+                            stroke="var(--neutral-200)"
                             strokeDasharray="3 3"
                             strokeWidth="0.8"
                           />
@@ -959,7 +968,7 @@ export default function InsightView({
                       <path
                         d={svgTrendData.linePath}
                         fill="none"
-                        stroke="#0f5959"
+                        stroke="var(--teal-700)"
                         strokeWidth="2.5"
                         strokeLinecap="round"
                       />
@@ -974,13 +983,13 @@ export default function InsightView({
                         r={i === svgTrendData.points.length - 1 ? 4.5 : 3.5}
                         fill={
                           i === svgTrendData.points.length - 1
-                            ? "#0f5959"
-                            : "#ffffff"
+                            ? "var(--teal-700)"
+                            : "var(--neutral-white)"
                         }
                         stroke={
                           i === svgTrendData.points.length - 1
-                            ? "#ffffff"
-                            : "#0f5959"
+                            ? "var(--neutral-white)"
+                            : "var(--teal-700)"
                         }
                         strokeWidth={
                           i === svgTrendData.points.length - 1 ? 1.5 : 2
@@ -1019,7 +1028,7 @@ export default function InsightView({
             <Card className="p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+                  <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
                     <BarChart3 size={15} className="text-brand-primary" />
                     <span>Phân tích theo danh mục</span>
                   </h3>
@@ -1054,7 +1063,7 @@ export default function InsightView({
                             className="h-full w-full opacity-40"
                             style={{
                               backgroundImage:
-                                "repeating-linear-gradient(45deg, #e5e7eb, #e5e7eb 4px, #f3f4f6 4px, #f3f4f6 8px)",
+                                "repeating-linear-gradient(45deg, var(--neutral-200), var(--neutral-200) 4px, var(--neutral-100) 4px, var(--neutral-100) 8px)",
                             }}
                           />
                         ) : (
@@ -1080,7 +1089,7 @@ export default function InsightView({
             <Card className="p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+                  <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
                     <Package size={15} className="text-brand-primary" />
                     <span>Cơ cấu tồn kho hiện tại</span>
                   </h3>
@@ -1133,7 +1142,7 @@ export default function InsightView({
             <Card className="p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+                  <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
                     <FileTextIcon size={15} className="text-brand-primary" />
                     <span>Chất lượng dữ liệu</span>
                   </h3>
@@ -1198,7 +1207,7 @@ export default function InsightView({
             <Card className="lg:col-span-5 p-4 flex flex-col justify-between border-border-primary/60 bg-surface-bg shadow-xs">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+                  <h3 className="text-sm font-bold text-text-heading flex items-center gap-1.5">
                     <History size={15} className="text-brand-primary" />
                     <span>Hoạt động gần đây</span>
                   </h3>
@@ -1264,7 +1273,7 @@ export default function InsightView({
               <div>
                 <div className="flex items-center gap-1.5 mb-3">
                   <Sparkles size={16} className="text-brand-primary" />
-                  <h3 className="text-sm font-bold text-text-primary">
+                  <h3 className="text-sm font-bold text-text-heading">
                     Gợi ý có căn cứ
                   </h3>
                 </div>
@@ -1306,7 +1315,7 @@ export default function InsightView({
         <Card className="p-5 flex flex-col gap-4 border-border-primary/60 bg-surface-bg shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-text-primary">
+              <h3 className="text-base font-bold text-text-heading">
                 Chi tiết hiệu suất theo nhóm thực phẩm
               </h3>
               <p className="text-xs text-text-secondary mt-0.5">
@@ -1349,7 +1358,7 @@ export default function InsightView({
                           className="h-full w-full opacity-40"
                           style={{
                             backgroundImage:
-                              "repeating-linear-gradient(45deg, #e5e7eb, #e5e7eb 4px, #f3f4f6 4px, #f3f4f6 8px)",
+                              "repeating-linear-gradient(45deg, var(--neutral-200), var(--neutral-200) 4px, var(--neutral-100) 4px, var(--neutral-100) 8px)",
                           }}
                         />
                       ) : (
@@ -1384,7 +1393,7 @@ export default function InsightView({
         <Card className="p-5 flex flex-col gap-4 border-border-primary/60 bg-surface-bg shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-text-primary">
+              <h3 className="text-base font-bold text-text-heading">
                 Nhật ký thao tác chi tiết
               </h3>
               <p className="text-xs text-text-secondary mt-0.5">

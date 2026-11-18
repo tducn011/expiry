@@ -167,10 +167,10 @@ export function AuthForm({
           WEB / DESKTOP (lg: >= 1024px): Brand Story Column (Figma node 1477:9 / 1477:59)
           Exact dimensions: w-[620px] on 1440px desktop, pt-[62px] px-[64px] pb-[42px]
          ========================================================================= */}
-      <div className="hidden lg:flex flex-col w-[480px] xl:w-[560px] 2xl:w-[620px] shrink-0 bg-[#06464b] text-white pt-[62px] px-10 xl:px-[64px] pb-[42px] select-none">
+      <div className="hidden lg:flex flex-col w-[480px] xl:w-[560px] 2xl:w-[620px] shrink-0 bg-teal-900 text-white pt-[62px] px-10 xl:px-[64px] pb-[42px] select-none">
         {/* Brand header (y=62) */}
         <div className="flex items-center gap-3">
-          <Timer size={40} color="#ffffff" className="shrink-0" />
+          <Timer size={40} color="var(--neutral-white)" className="shrink-0" />
           <span className="font-bold text-[21px] text-white tracking-tight">
             Expiry
           </span>
@@ -183,36 +183,42 @@ export function AuthForm({
             <br />
             Dùng thực phẩm đúng lúc.
           </h2>
-          <p className="mt-4 text-[#e6f5ef] text-[16px] xl:text-[17px] leading-relaxed text-left max-w-[488px]">
+          <p className="mt-4 text-neutral-100 text-[16px] xl:text-[17px] leading-relaxed text-left max-w-[488px]">
             Theo dõi thực phẩm, ngày sử dụng và nơi bảo quản trong cùng một ứng
             dụng.
           </p>
         </div>
 
         {/* Spacing 38px -> Minh họa danh sách thực phẩm (Figma node 1477:18, y=479) */}
-        <div className="mt-[38px] bg-[#f2faf6] rounded-[20px] p-6 w-full max-w-[492px] shadow-sm">
-          <p className="font-semibold text-[16px] text-[#06464b]">
+        <div className="mt-[38px] bg-teal-50 rounded-[20px] p-6 w-full max-w-[492px] shadow-sm">
+          <p className="font-semibold text-[16px] text-teal-900">
             Kho thực phẩm của bạn
           </p>
-          <div className="my-3.5 h-px bg-[#d9e5e5]" />
-          <div className="flex flex-col gap-3 text-[13px] font-medium text-[#0f172a]">
+          <div className="my-3.5 h-px bg-border-subtle" />
+          <div className="flex flex-col gap-3 text-[13px] font-medium text-text-primary">
             <div className="flex items-center justify-between">
               <span>Rau xanh</span>
-              <span className="text-[#526171] font-normal">Trong ngăn mát</span>
+              <span className="text-text-secondary font-normal">
+                Trong ngăn mát
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span>Sữa tươi</span>
-              <span className="text-[#526171] font-normal">Cần dùng sớm</span>
+              <span className="text-text-secondary font-normal">
+                Cần dùng sớm
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span>Trứng</span>
-              <span className="text-[#526171] font-normal">Trong ngăn mát</span>
+              <span className="text-text-secondary font-normal">
+                Trong ngăn mát
+              </span>
             </div>
           </div>
         </div>
 
         {/* Spacing 32px -> Brand story footer (y=743) */}
-        <p className="mt-[32px] text-[13px] text-[#cfe6e2]">
+        <p className="mt-[32px] text-[13px] text-teal-100">
           Quản lý thực phẩm dễ dàng mỗi ngày.
         </p>
       </div>
@@ -228,22 +234,22 @@ export function AuthForm({
           <div className="flex items-center gap-3">
             <Timer
               size={36}
-              color="#015D67"
+              color="var(--brand-primary)"
               className="lg:w-[40px] lg:h-[40px] shrink-0"
             />
-            <span className="font-bold text-[21px] text-[#015d67] tracking-tight">
+            <span className="font-bold text-[21px] text-brand-primary tracking-tight">
               Expiry
             </span>
           </div>
 
           {/* Heading and Subtitle (y=228 on Web Desktop, aligns with left heading y=233) */}
           <div className="mt-10 lg:mt-[86px]">
-            <h1 className="font-bold text-[24px] lg:text-[30px] text-[#0f172a] leading-tight text-left">
+            <h1 className="font-bold text-[24px] lg:text-[30px] text-text-heading leading-tight text-left">
               {view === "login"
                 ? "Chào mừng bạn trở lại"
                 : "Tạo tài khoản Expiry"}
             </h1>
-            <p className="mt-2 text-[14px] lg:text-[16px] text-[#526171] text-left leading-normal">
+            <p className="mt-2 text-[14px] lg:text-[16px] text-text-secondary text-left leading-normal">
               {view === "login"
                 ? "Đăng nhập để tiếp tục quản lý thực phẩm của bạn."
                 : "Bắt đầu theo dõi thực phẩm và hạn sử dụng dễ dàng hơn."}
@@ -302,7 +308,7 @@ export function AuthForm({
               <div className="flex flex-col gap-1.5 w-full">
                 <label
                   htmlFor="auth-name"
-                  className="font-semibold text-[13px] lg:text-[14px] text-[#0f172a] text-left"
+                  className="font-semibold text-[13px] lg:text-[14px] text-text-primary text-left"
                 >
                   Tên của bạn
                 </label>
@@ -314,16 +320,16 @@ export function AuthForm({
                   placeholder="Ví dụ: Minh Anh"
                   autoComplete="name"
                   autoFocus
-                  className={`h-[48px] w-full rounded-[10px] lg:rounded-[12px] bg-white px-3.5 text-[16px] text-[#0f172a] placeholder:text-[#586572] outline-none transition-colors border ${
+                  className={`h-[48px] w-full rounded-[10px] lg:rounded-[12px] bg-white px-3.5 text-[16px] text-text-primary placeholder:text-text-tertiary outline-none transition-colors border ${
                     fieldErrors.name
-                      ? "border-[1.5px] border-[#b42318] focus:ring-2 focus:ring-[#b42318]/20"
-                      : "border-[#d9e5e5] focus:border-[#015d67] focus:ring-2 focus:ring-[#015d67]/20"
+                      ? "border-[1.5px] border-danger focus:ring-2 focus:ring-danger/20"
+                      : "border-border-control focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
                   }`}
                 />
                 {fieldErrors.name && (
                   <p
                     role="alert"
-                    className="text-[#b42318] text-[12px] font-medium leading-normal text-left"
+                    className="text-danger text-[12px] font-medium leading-normal text-left"
                   >
                     {fieldErrors.name}
                   </p>
@@ -335,7 +341,7 @@ export function AuthForm({
             <div className="flex flex-col gap-1.5 w-full">
               <label
                 htmlFor="auth-email"
-                className="font-semibold text-[13px] lg:text-[14px] text-[#0f172a] text-left"
+                className="font-semibold text-[13px] lg:text-[14px] text-text-primary text-left"
               >
                 Email
               </label>
@@ -347,16 +353,16 @@ export function AuthForm({
                 placeholder="name@example.com"
                 autoComplete="email"
                 autoFocus={view === "login"}
-                className={`h-[48px] w-full rounded-[10px] lg:rounded-[12px] bg-white px-3.5 text-[16px] text-[#0f172a] placeholder:text-[#586572] outline-none transition-colors border ${
+                className={`h-[48px] w-full rounded-[10px] lg:rounded-[12px] bg-white px-3.5 text-[16px] text-text-primary placeholder:text-text-tertiary outline-none transition-colors border ${
                   fieldErrors.email
-                    ? "border-[1.5px] border-[#b42318] focus:ring-2 focus:ring-[#b42318]/20"
-                    : "border-[#d9e5e5] focus:border-[#015d67] focus:ring-2 focus:ring-[#015d67]/20"
+                    ? "border-[1.5px] border-danger focus:ring-2 focus:ring-danger/20"
+                    : "border-border-control focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
                 }`}
               />
               {fieldErrors.email && (
                 <p
                   role="alert"
-                  className="text-[#b42318] text-[12px] font-medium leading-normal text-left"
+                  className="text-danger text-[12px] font-medium leading-normal text-left"
                 >
                   {fieldErrors.email}
                 </p>
@@ -367,7 +373,7 @@ export function AuthForm({
             <div className="flex flex-col gap-1.5 w-full">
               <label
                 htmlFor="auth-password"
-                className="font-semibold text-[13px] lg:text-[14px] text-[#0f172a] text-left"
+                className="font-semibold text-[13px] lg:text-[14px] text-text-primary text-left"
               >
                 Mật khẩu
               </label>
@@ -382,22 +388,22 @@ export function AuthForm({
                 autoComplete={
                   view === "login" ? "current-password" : "new-password"
                 }
-                className={`h-[48px] w-full rounded-[10px] lg:rounded-[12px] bg-white px-3.5 text-[16px] text-[#0f172a] placeholder:text-[#586572] outline-none transition-colors border ${
+                className={`h-[48px] w-full rounded-[10px] lg:rounded-[12px] bg-white px-3.5 text-[16px] text-text-primary placeholder:text-text-tertiary outline-none transition-colors border ${
                   fieldErrors.pw
-                    ? "border-[1.5px] border-[#b42318] focus:ring-2 focus:ring-[#b42318]/20"
-                    : "border-[#d9e5e5] focus:border-[#015d67] focus:ring-2 focus:ring-[#015d67]/20"
+                    ? "border-[1.5px] border-danger focus:ring-2 focus:ring-danger/20"
+                    : "border-border-control focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
                 }`}
               />
               {fieldErrors.pw && (
                 <p
                   role="alert"
-                  className="text-[#b42318] text-[12px] font-medium leading-normal text-left"
+                  className="text-danger text-[12px] font-medium leading-normal text-left"
                 >
                   {fieldErrors.pw}
                 </p>
               )}
               {view === "register" && !fieldErrors.pw && (
-                <p className="text-[11px] text-[#526171] text-left">
+                <p className="text-[11px] text-text-secondary text-left">
                   Dùng ít nhất 8 ký tự để bảo vệ tài khoản.
                 </p>
               )}
@@ -407,7 +413,7 @@ export function AuthForm({
             <button
               type="submit"
               disabled={loading}
-              className={`mt-3 h-[48px] min-h-[48px] w-full rounded-[12px] bg-[#015d67] hover:bg-[#014a52] active:bg-[#013d44] text-white font-semibold text-[14px] lg:text-[15px] flex items-center justify-center transition-all shadow-sm ${
+              className={`mt-3 h-[48px] min-h-[48px] w-full rounded-[12px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white font-semibold text-[14px] lg:text-[15px] flex items-center justify-center transition-all shadow-sm ${
                 loading
                   ? "opacity-55 cursor-not-allowed"
                   : !isFormValid && Object.keys(fieldErrors).length > 0
@@ -424,25 +430,25 @@ export function AuthForm({
           </form>
 
           {/* Divider */}
-          <div className="my-5 h-px bg-[#d9e5e5] w-full" />
+          <div className="my-5 h-px bg-border-subtle w-full" />
 
           {/* Secondary Action 1: Switch between Login & Register */}
           <button
             type="button"
             onClick={() => switchMode(view === "login" ? "register" : "login")}
-            className="min-h-[44px] py-2 flex items-center justify-center text-[13px] lg:text-[14px] text-[#526171] hover:text-[#015d67] cursor-pointer transition-colors"
+            className="min-h-[44px] py-2 flex items-center justify-center text-[13px] lg:text-[14px] text-text-secondary hover:text-brand-primary cursor-pointer transition-colors"
           >
             {view === "login" ? (
               <span>
                 Chưa có tài khoản?{" "}
-                <strong className="font-semibold text-[#015d67] underline-offset-2 hover:underline">
+                <strong className="font-semibold text-brand-primary underline-offset-2 hover:underline">
                   Tạo tài khoản
                 </strong>
               </span>
             ) : (
               <span>
                 Đã có tài khoản?{" "}
-                <strong className="font-semibold text-[#015d67] underline-offset-2 hover:underline">
+                <strong className="font-semibold text-brand-primary underline-offset-2 hover:underline">
                   Đăng nhập
                 </strong>
               </span>
@@ -453,7 +459,7 @@ export function AuthForm({
           <button
             type="button"
             onClick={onCancel}
-            className="min-h-[44px] py-2 flex items-center justify-center text-[13px] lg:text-[14px] font-medium text-[#526171] hover:text-[#0f172a] hover:underline underline-offset-2 cursor-pointer transition-colors"
+            className="min-h-[44px] py-2 flex items-center justify-center text-[13px] lg:text-[14px] font-medium text-text-secondary hover:text-text-primary hover:underline underline-offset-2 cursor-pointer transition-colors"
           >
             Tiếp tục với chế độ xem thử
           </button>
