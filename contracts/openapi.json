@@ -2976,13 +2976,21 @@
           "quantity": {
             "type": "string",
             "pattern": "^(0|[1-9][0-9]{0,8})(\\.[0-9]{1,3})?$",
-            "description": "Decimal amount string, max 999999999.999. piece must be integral; business validation rejects zero for create/consume/discard."
+            "description": "Decimal amount string, max 999999999.999. Legacy piece must be integral; other supported units retain the selected unit and allow up to three decimal places. Create rejects zero."
           },
           "unit": {
             "type": "string",
             "enum": [
               "piece",
+              "cái",
+              "hộp",
+              "gói",
+              "chai",
+              "quả",
+              "bó",
+              "kg",
               "g",
+              "lít",
               "ml"
             ]
           }
@@ -2993,7 +3001,7 @@
           "unit"
         ],
         "additionalProperties": false,
-        "description": "Defaults: location unspecified, category other, date null, certainty/source unknown, label unspecified; optional metadata null. Validate normalized full object. quantity>0; piece whole. Date certainty/source coherence is enforced by RULE-09/10."
+        "description": "Defaults: location unspecified, category other, date null, certainty/source unknown, label unspecified; optional metadata null. Validate normalized full object. quantity>0; legacy piece is whole; selected unit is persisted without conversion. Date certainty/source coherence is enforced by RULE-09/10."
       },
       "EntryPatch": {
         "type": "object",
@@ -3331,13 +3339,21 @@
           "remaining_quantity": {
             "type": "string",
             "pattern": "^(0|[1-9][0-9]{0,8})(\\.[0-9]{1,3})?$",
-            "description": "Decimal amount string, max 999999999.999. piece must be integral; business validation rejects zero for create/consume/discard."
+            "description": "Nonnegative decimal amount string in the entry's unit, max 999999999.999; legacy piece is integral."
           },
           "unit": {
             "type": "string",
             "enum": [
               "piece",
+              "cái",
+              "hộp",
+              "gói",
+              "chai",
+              "quả",
+              "bó",
+              "kg",
               "g",
+              "lít",
               "ml"
             ]
           },
@@ -3409,7 +3425,7 @@
           "amount": {
             "type": "string",
             "pattern": "^(0|[1-9][0-9]{0,8})(\\.[0-9]{1,3})?$",
-            "description": "Decimal amount string, max 999999999.999. piece must be integral; business validation rejects zero for create/consume/discard."
+            "description": "Positive decimal amount string in the entry's unit, max 999999999.999; legacy piece is integral."
           },
           "expected_version": {
             "type": "integer",
@@ -3437,7 +3453,7 @@
           "actual_quantity": {
             "type": "string",
             "pattern": "^(0|[1-9][0-9]{0,8})(\\.[0-9]{1,3})?$",
-            "description": "Decimal amount string, max 999999999.999. piece must be integral; business validation rejects zero for create/consume/discard."
+            "description": "Nonnegative decimal amount string in the entry's unit, max 999999999.999; legacy piece is integral."
           },
           "reason": {
             "type": "string",
@@ -3494,12 +3510,12 @@
           "quantity_before": {
             "type": "string",
             "pattern": "^(0|[1-9][0-9]{0,8})(\\.[0-9]{1,3})?$",
-            "description": "Decimal amount string, max 999999999.999. piece must be integral; business validation rejects zero for create/consume/discard."
+            "description": "Nonnegative decimal amount string in the entry's unit, max 999999999.999; legacy piece is integral."
           },
           "quantity_after": {
             "type": "string",
             "pattern": "^(0|[1-9][0-9]{0,8})(\\.[0-9]{1,3})?$",
-            "description": "Decimal amount string, max 999999999.999. piece must be integral; business validation rejects zero for create/consume/discard."
+            "description": "Nonnegative decimal amount string in the entry's unit, max 999999999.999; legacy piece is integral."
           },
           "delta": {
             "type": "string",

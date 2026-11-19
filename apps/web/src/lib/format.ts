@@ -9,9 +9,15 @@ import type {
 
 export const unitLabel: Record<Unit, string> = {
   piece: "cái",
-
+  cái: "cái",
+  hộp: "hộp",
+  gói: "gói",
+  chai: "chai",
+  quả: "quả",
+  bó: "bó",
+  kg: "kg",
   g: "g",
-
+  lít: "lít",
   ml: "ml",
 }
 

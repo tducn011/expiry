@@ -177,6 +177,14 @@ test('detail/list/trash project exact Entry and EntryList contracts, including o
   assert.equal(invalidCategoryRes.status, 422);
 });
 
+test('Entry contract and DTO preserve a localized selected unit', async t => {
+  const { projected } = await harness(t);
+  const entry = { ...projected(), unit: 'hộp' };
+  validate(entry, 'Entry');
+  assert.equal(entry.unit, 'hộp');
+  assert.ok(contract.components.schemas.EntryCreate.properties.unit.enum.includes('kg'));
+});
+
 test('empty EntryList retains its repository owner-local as_of_date', async t => {
   const { request } = await harness(t, { list: async () => ({ items: [], page: 1, limit: 20, total: 0, as_of_date: '2026-10-11' }) });
   const list = await (await request('/food-entries')).json();

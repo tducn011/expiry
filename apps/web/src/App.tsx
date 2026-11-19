@@ -982,22 +982,6 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         ? "storage"
         : route.name
 
-  function toBackendUnitAndQty(quantity: number, unit: string): {
-    quantity: number
-
-    unit: "piece" | "g" | "ml"
-  } {
-    if (unit === "kg") return { quantity: quantity * 1000, unit: "g" }
-
-    if (unit === "lít") return { quantity: quantity * 1000, unit: "ml" }
-
-    if (unit === "g") return { quantity, unit: "g" }
-
-    if (unit === "ml") return { quantity, unit: "ml" }
-
-    return { quantity, unit: "piece" }
-  }
-
   async function finishShoppingImport(
     shoppingItemId?: string,
     accountAlreadyMarked = false,
@@ -1217,11 +1201,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         try {
           const rawQty = Number(d.quantity) || 1
 
-          const { quantity, unit } = toBackendUnitAndQty(
-            rawQty,
-
-            d.unit || "cái",
-          )
+          const quantity = rawQty
+          const unit = d.unit || "cái"
 
           const entry: CreateEntryDTO = {
             name: d.name.trim(),

@@ -1,10 +1,38 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ShoppingService } from '../src/modules/shopping/shopping.service.mjs';
+import { InventoryRepository } from '../src/shared/repository.mjs';
 
 const owner = 'owner-1';
 const itemId = 'shopping-item-1';
 const commandKey = 'shopping_atomic_import_001';
+
+test('atomic import inventory writer accepts and stores the selected unit', async () => {
+  const calls = [];
+  const row = {
+    id: 'food-entry-1', name: 'Sữa', storage_location: 'unspecified',
+    category: 'dairy_eggs', remaining_quantity: '3.000', unit: 'hộp',
+    expiry_date: null, date_certainty: 'unknown', date_source: 'unknown',
+    date_label_type: 'unspecified', opened_on: null, manufactured_on: null,
+    review_at: null, note: null, barcode: null, barcode_format: null,
+    version: 1, deleted_at: null, created_at: '2026-11-19 10:00:00.000000',
+    updated_at: '2026-11-19 10:00:00.000000',
+  };
+  const connection = {
+    execute: async (sql, values) => {
+      calls.push({ sql, values });
+      return sql.startsWith('SELECT * FROM food_entries') ? [[row], []] : [{ affectedRows: 1 }, []];
+    },
+  };
+  const repository = new InventoryRepository('unused');
+  const entry = await repository.createEntryInTransaction(connection, owner, {
+    name: 'Sữa', quantity: '3', unit: 'hộp', category: 'dairy_eggs',
+  });
+  assert.equal(entry.unit, 'hộp');
+  assert.equal(calls[0].values.at(-1), 'hộp');
+  assert.equal(calls[0].values.at(-2), '3.000');
+  assert.equal(calls[1].values.at(-1), '3.000');
+});
 const entryInput = {
   name: 'Sữa', storage_location: 'unspecified', category: 'dairy_eggs',
   expiry_date: null, date_certainty: 'unknown', date_source: 'unknown',

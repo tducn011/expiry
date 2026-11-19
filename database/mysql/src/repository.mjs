@@ -1,6 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {connect} from './connection.mjs';
-import {DomainError,uuid,milli,decimal,metadata,metadataFields,reason,allow,expected,preferences,invalid,localDay,attention,fingerprint} from './domain.mjs';
+import {DomainError,uuid,milli,decimal,metadata,metadataFields,reason,allow,expected,preferences,invalid,localDay,attention,fingerprint,units} from './domain.mjs';
 
 // Sandbox integration repository. HTTP authentication/provider and UI adapters are external.
 export class InventoryRepository {
@@ -52,7 +52,7 @@ export class InventoryRepository {
   async entry(c,id) { const [[entry]]=await c.execute('SELECT * FROM food_entries WHERE id=?',[id]); return entry; }
   async create(owner,key,input) {
     allow(input,[...metadataFields,'quantity','unit']);
-    if (!['piece','g','ml'].includes(input.unit)) invalid();
+    if (!units.includes(input.unit)) invalid();
     const meta=metadata(input), quantity=decimal(milli(input.quantity,input.unit,true));
     const payload={...meta,quantity,unit:input.unit};
     return this.execute(owner,key,'create:food-entry',payload,async c=>{

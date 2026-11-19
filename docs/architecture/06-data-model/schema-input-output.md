@@ -36,7 +36,7 @@ Contract names below refer to the 17 operations in `contracts/openapi.json` (13 
 | `GET /auth/session` | Session cookie | Cookie required for a valid session | `200 AuthSession` or `401 Problem` for missing/invalid/expired session |
 | `POST /auth/logout` | Valid session cookie plus configured Origin and per-session `X-CSRF-Token` | Revoke session | `204`; no password reset/change operation is exposed |
 
-[A] `ScanResult.raw_text` is always a string and `candidates` is always an object; only candidate values can be null. Expiry candidates carry date certainty, label kind, source text, alternatives, ambiguity, and `requires_confirmation:true`; manufactured-date candidate is a different object. Quantities are decimal **strings**, not JSON numbers: finite, maximum `999999999.999`, at most three fractional digits; units are `piece`, `g`, `ml`, and `piece` values must be whole. Server-owned response fields include principal/owner, IDs, versions, created/updated/deleted/recorded timestamps, lifecycle, attention, and movement/audit rows.
+[A] `ScanResult.raw_text` is always a string and `candidates` is always an object; only candidate values can be null. Expiry candidates carry date certainty, label kind, source text, alternatives, ambiguity, and `requires_confirmation:true`; manufactured-date candidate is a different object. Quantities are decimal **strings**, not JSON numbers: finite, maximum `999999999.999`, at most three fractional digits; legacy `piece` values must be whole and the selected unit is retained without conversion. Server-owned response fields include principal/owner, IDs, versions, created/updated/deleted/recorded timestamps, lifecycle, attention, and movement/audit rows.
 
 ## OCR sample table proposal — review only
 
