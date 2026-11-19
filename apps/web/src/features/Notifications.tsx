@@ -7,7 +7,6 @@ import {
   BellOff,
   Check,
   CheckCheck,
-  ChevronRight,
   CircleAlert,
   Clock3,
   HelpCircle,
@@ -49,6 +48,34 @@ export function Notifications({
     dialogRef.current?.focus()
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Tab") {
+        const controls = dialogRef.current?.querySelectorAll<HTMLButtonElement>(
+          "button:not(:disabled)",
+        )
+        if (!controls?.length) {
+          e.preventDefault()
+          return
+        }
+        const first = controls[0]
+        const last = controls[controls.length - 1]
+        if (
+          e.shiftKey &&
+          (document.activeElement === first ||
+            !dialogRef.current?.contains(document.activeElement) ||
+            document.activeElement === dialogRef.current)
+        ) {
+          e.preventDefault()
+          last.focus()
+        } else if (
+          !e.shiftKey &&
+          (document.activeElement === last ||
+            !dialogRef.current?.contains(document.activeElement) ||
+            document.activeElement === dialogRef.current)
+        ) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
       if (e.key === "Escape") {
         e.stopPropagation()
         onCloseRef.current()
@@ -79,7 +106,7 @@ export function Notifications({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/35 backdrop-blur-xs sm:items-start sm:justify-end sm:p-4 animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/15 sm:items-start sm:justify-end sm:p-5 animate-in fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose()
       }}
@@ -91,18 +118,18 @@ export function Notifications({
         aria-modal="true"
         aria-labelledby="notifications-popup-title"
         tabIndex={-1}
-        className="relative flex w-full max-w-md flex-col overflow-hidden rounded-t-[20px] border border-border-primary bg-surface-bg text-text-primary shadow-2xl max-h-[80dvh] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[20px] animate-in slide-in-from-bottom-2 sm:slide-in-from-right-2 duration-200"
+        className="relative flex w-full max-w-[420px] flex-col overflow-hidden rounded-t-[20px] border border-border-subtle bg-surface-bg text-text-primary shadow-2xl max-h-[80dvh] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[20px] animate-in slide-in-from-bottom-2 sm:slide-in-from-right-2 duration-200"
       >
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border-subtle px-5 py-4">
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border-subtle px-4 py-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <h2
               id="notifications-popup-title"
-              className="truncate text-lg font-semibold text-text-heading"
+              className="truncate text-base font-semibold text-text-heading"
             >
               Thông báo
             </h2>
             {unreadCount > 0 && (
-              <span className="inline-flex shrink-0 items-center rounded-corner-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-semibold text-brand-primary">
+              <span className="shrink-0 text-xs font-medium text-text-secondary">
                 {unreadCount} chưa đọc
               </span>
             )}
@@ -113,11 +140,13 @@ export function Notifications({
               <button
                 type="button"
                 onClick={handleMarkAllRead}
-                className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-corner-md px-2 text-xs font-semibold text-brand-primary transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
+                className="notification-icon-action flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-corner-md px-2 text-xs font-semibold text-text-secondary transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
                 aria-label="Đánh dấu tất cả thông báo là đã đọc"
               >
                 <CheckCheck size={16} aria-hidden="true" />
-                <span className="hidden sm:inline">Đã đọc hết</span>
+                <span className="notification-tooltip">
+                  Đánh dấu tất cả đã đọc
+                </span>
               </button>
             )}
             <button
@@ -131,7 +160,7 @@ export function Notifications({
           </div>
         </header>
 
-        <div className="min-h-32 flex-1 overflow-y-auto">
+        <div className="min-h-0 overflow-y-auto overscroll-contain">
           {unreadCount === 0 ? (
             <EmptyState
               icon={<BellOff size={32} />}
@@ -144,82 +173,84 @@ export function Notifications({
           ) : (
             <div className="divide-y divide-border-subtle">
               {preview.map((n) => (
-                <div key={n.id} className="flex items-start gap-3 px-5 py-3.5">
-                  <span
-                    aria-hidden="true"
-                    className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-corner-md ${
-                      n.rule === "expired"
-                        ? "bg-status-expired-bg text-status-expired"
-                        : n.rule === "review"
-                          ? "bg-bg-subtle text-text-secondary"
-                          : "bg-status-soon-bg text-status-soon"
-                    }`}
+                <article
+                  key={n.id}
+                  className="flex items-center gap-1 border-l-2 border-l-brand-primary/50 px-3 py-3"
+                >
+                  <button
+                    type="button"
+                    className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-corner-sm text-left text-sm leading-5 text-text-heading hover:text-brand-primary focus-visible:outline-2 focus-visible:outline-brand-primary"
+                    onClick={() => {
+                      dispatch({ type: "readNotif", id: n.id })
+                      onOpenDetail(n.food.id)
+                    }}
                   >
-                    {n.rule === "expired" ? (
-                      <CircleAlert size={18} />
-                    ) : n.rule === "review" ? (
-                      <HelpCircle size={18} />
-                    ) : (
-                      <Clock3 size={18} />
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
+                    <span
+                      aria-hidden="true"
+                      className={`flex size-8 shrink-0 items-center justify-center rounded-corner-md ${
+                        n.rule === "expired"
+                          ? "bg-status-expired-bg text-status-expired"
+                          : n.rule === "review"
+                            ? "bg-bg-subtle text-text-secondary"
+                            : "bg-status-soon-bg text-status-soon"
+                      }`}
+                    >
+                      {n.rule === "expired" ? (
+                        <CircleAlert size={17} />
+                      ) : n.rule === "review" ? (
+                        <HelpCircle size={17} />
+                      ) : (
+                        <Clock3 size={17} />
+                      )}
+                    </span>
+                    <span className="min-w-0 break-words font-medium">
+                      {n.message}
+                    </span>
+                  </button>
+                  <div className="flex shrink-0 items-center">
                     <button
                       type="button"
-                      className="flex min-h-11 w-full items-start justify-between gap-2 text-left text-sm font-medium leading-snug text-text-heading hover:text-brand-primary focus-visible:outline-2 focus-visible:outline-brand-primary"
+                      className="notification-icon-action"
+                      aria-label={`Đánh dấu đã đọc: ${n.food.name}`}
+                      onClick={() => dispatch({ type: "readNotif", id: n.id })}
+                    >
+                      <Check size={17} aria-hidden="true" />
+                      <span className="notification-tooltip">
+                        Đánh dấu đã đọc
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="notification-icon-action"
+                      aria-label={`Nhắc lại ${n.food.name} vào ngày mai`}
                       onClick={() => {
-                        dispatch({ type: "readNotif", id: n.id })
-                        onOpenDetail(n.food.id)
+                        dispatch({
+                          type: "snooze",
+                          id: n.id,
+                          until: addDays(today(), 1),
+                        })
+                        notify("Sẽ nhắc lại vào ngày mai")
                       }}
                     >
-                      <span>{n.message}</span>
-                      <ChevronRight
-                        size={16}
-                        className="mt-0.5 shrink-0"
-                        aria-hidden="true"
-                      />
+                      <Clock3 size={16} aria-hidden="true" />
+                      <span className="notification-tooltip">
+                        Nhắc ngày mai
+                      </span>
                     </button>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <button
-                        type="button"
-                        className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-brand-primary hover:underline focus-visible:outline-2 focus-visible:outline-brand-primary"
-                        onClick={() =>
-                          dispatch({ type: "readNotif", id: n.id })
-                        }
-                        aria-label={`Đánh dấu đã đọc: ${n.food.name}`}
-                      >
-                        <Check size={14} aria-hidden="true" /> Đã đọc
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-flex min-h-11 items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-heading hover:underline focus-visible:outline-2 focus-visible:outline-brand-primary"
-                        onClick={() => {
-                          dispatch({
-                            type: "snooze",
-                            id: n.id,
-                            until: addDays(today(), 1),
-                          })
-                          notify("Sẽ nhắc lại vào ngày mai")
-                        }}
-                        aria-label={`Nhắc lại ${n.food.name} vào ngày mai`}
-                      >
-                        <Clock3 size={14} aria-hidden="true" /> Nhắc mai
-                      </button>
-                    </div>
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           )}
         </div>
         {onOpenReminder && (
-          <div className="shrink-0 border-t border-border-subtle p-4">
+          <div className="shrink-0 border-t border-border-subtle px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={onOpenReminder}
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-corner-md bg-brand-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-corner-md px-4 text-sm font-semibold text-text-heading transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
             >
-              Mở Nhắc nhở <ArrowRight size={16} aria-hidden="true" />
+              Xem tất cả nhắc nhở <ArrowRight size={16} aria-hidden="true" />
             </button>
           </div>
         )}

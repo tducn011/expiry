@@ -10,11 +10,11 @@ import type {
 } from "../store/appStore"
 import { CATEGORIES, formatDate, statusOf, today } from "../store/appStore"
 import type { QuantityMovement } from "../domain/types"
+import { FilterDropdown } from "../components/ui/FilterChips"
 import Card from "../components/ui/Card"
 import {
   BarChart3,
   CalendarClock,
-  ChevronDown,
   ChevronRight,
   CircleCheck,
   Clock,
@@ -30,6 +30,53 @@ import {
 import PageHeader from "../components/ui/PageHeader"
 
 export type TimeRange = "7d" | "30d" | "all"
+
+export type RecordedQuantityStat = {
+  unit: string
+  used: number
+  discarded: number
+  usedWithoutAmount: number
+  discardedWithoutAmount: number
+  eventsWithoutUnit: number
+}
+
+export function summarizeRecordedQuantities(
+  events: HistoryEvent[],
+): RecordedQuantityStat[] {
+  const stats = new Map<string, RecordedQuantityStat>()
+  for (const event of events) {
+    if (event.kind !== "consume" && event.kind !== "discard") continue
+    const unit = event.unit?.trim() || ""
+    const key = unit || "__unknown_unit__"
+    const stat = stats.get(key) ?? {
+      unit: unit || "Chưa rõ đơn vị",
+      used: 0,
+      discarded: 0,
+      usedWithoutAmount: 0,
+      discardedWithoutAmount: 0,
+      eventsWithoutUnit: 0,
+    }
+    if (!unit) stat.eventsWithoutUnit++
+    const amount = event.amount
+    if (typeof amount === "number" && Number.isFinite(amount) && amount >= 0) {
+      if (unit && event.kind === "consume") stat.used += amount
+      if (unit && event.kind === "discard") stat.discarded += amount
+    } else if (event.kind === "consume") {
+      stat.usedWithoutAmount++
+    } else {
+      stat.discardedWithoutAmount++
+    }
+    stats.set(key, stat)
+  }
+  return [...stats.values()].filter(
+    (stat) =>
+      stat.used > 0 ||
+      stat.discarded > 0 ||
+      stat.usedWithoutAmount > 0 ||
+      stat.discardedWithoutAmount > 0 ||
+      stat.eventsWithoutUnit > 0,
+  )
+}
 
 export interface InsightViewProps {
   state: State
@@ -66,7 +113,8 @@ export function fromQuantityMovement(
     amount: diff,
     from: m.quantity_before,
     to: m.quantity_after,
-    unit: food?.unit || "cái",
+    // A missing unit is unknown; never infer "cái" from the event kind.
+    unit: food?.unit,
     category: food?.category || "other",
   }
 }
@@ -187,7 +235,6 @@ export default function InsightView({
   const isLive = isLiveProp ?? state.mode === "account"
   const [range, setRange] = useState<TimeRange>("30d")
   const [activeTab, setActiveTab] = useState<string>(initialTab)
-  const [rangeDropdownOpen, setRangeDropdownOpen] = useState(false)
   const [liveEvents, setLiveEvents] = useState<HistoryEvent[]>([])
   const [loadingLive, setLoadingLive] = useState(false)
 
@@ -339,32 +386,7 @@ export default function InsightView({
 
   // Unit breakdown for Figma Node 572:1688 (Insights / Recorded Quantities)
   const unitStats = useMemo(() => {
-    const map = new Map<string, {
-      used: number
-      discarded: number
-    }>()
-    for (const e of filteredEvents) {
-      const u = (e.unit || "món").trim()
-      const amt =
-        typeof e.amount === "number" && !isNaN(e.amount) ? e.amount : 1
-      if (!map.has(u)) {
-        map.set(u, { used: 0, discarded: 0 })
-      }
-      const stat = map.get(u)!
-      if (e.kind === "consume") {
-        stat.used += amt
-      } else if (e.kind === "discard") {
-        stat.discarded += amt
-      }
-    }
-    const all = Array.from(map.entries()).map(([unit, data]) => ({
-      unit,
-      used: data.used,
-      discarded: data.discarded,
-    }))
-    // Evon & Norman Principle: Filter out zero-value units to eliminate visual clutter
-    const active = all.filter((item) => item.used > 0 || item.discarded > 0)
-    return active.length > 0 ? active : all
+    return summarizeRecordedQuantities(filteredEvents)
   }, [filteredEvents])
 
   // Date range formatted label for Figma Node 617:3406
@@ -495,7 +517,7 @@ export default function InsightView({
     <div className="flex flex-col gap-6 w-full">
       {/* Page Header without clutter subtitle */}
       <PageHeader
-        title="Insight"
+        title="Thống kê"
         actions={
           <div className="flex items-center gap-2">
             {/* Hidden/Subtle test ID badges to maintain contract compatibility */}
@@ -536,43 +558,19 @@ export default function InsightView({
               </button>
             )}
 
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setRangeDropdownOpen((v) => !v)}
-                className="inline-flex min-h-11 md:min-h-10 items-center gap-2 rounded-corner-md border border-border-primary/80 bg-surface-bg px-3 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer"
-              >
-                <CalendarClock size={15} className="text-text-secondary" />
-                <span>{rangeLabel}</span>
-                <ChevronDown size={14} className="text-text-secondary" />
-              </button>
-
-              {rangeDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1 z-30 min-w-36 overflow-hidden rounded-corner-md border border-border-primary bg-surface-bg p-1 shadow-lg">
-                  {[
-                    ["7d", "7 ngày gần nhất"],
-                    ["30d", "30 ngày gần nhất"],
-                    ["all", "Toàn bộ thời gian"],
-                  ].map(([val, label]) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => {
-                        setRange(val as TimeRange)
-                        setRangeDropdownOpen(false)
-                      }}
-                      className={`flex w-full items-center px-3 py-1.5 text-xs rounded-corner-sm text-left transition-colors cursor-pointer ${
-                        range === val
-                          ? "bg-brand-primary/10 text-brand-primary font-bold"
-                          : "text-text-primary hover:bg-surface-hover"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <FilterDropdown<TimeRange>
+              label="Khoảng thời gian"
+              ariaLabel="Khoảng thời gian thống kê"
+              requiredSelection
+              triggerIcon={<CalendarClock size={15} aria-hidden="true" />}
+              value={range}
+              onChange={setRange}
+              options={[
+                { v: "7d", label: "7 ngày gần nhất" },
+                { v: "30d", label: "30 ngày gần nhất" },
+                { v: "all", label: "Toàn bộ thời gian" },
+              ]}
+            />
           </div>
         }
       />
@@ -747,7 +745,7 @@ export default function InsightView({
                 aria-hidden="true"
               />
               <h3 className="text-sm font-semibold text-text-heading tracking-normal">
-                Tỷ lệ lượt dùng hết
+                Tỷ lệ lượt ghi đã dùng
               </h3>
             </div>
 
@@ -762,7 +760,7 @@ export default function InsightView({
               <div
                 className="grid min-w-0 grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3"
                 role="img"
-                aria-label={`Tỷ lệ lượt dùng hết theo thời gian: ${trendPeriods.map((period) => `${period.label}, ${period.n === 0 ? "0 lượt" : `${period.rate}% từ ${period.n} lượt`}`).join("; ")}`}
+                aria-label={`Tỷ lệ lượt ghi đã dùng theo thời gian: ${trendPeriods.map((period) => `${period.label}, ${period.n === 0 ? "0 lượt" : `${period.rate}% từ ${period.n} lượt`}`).join("; ")}`}
               >
                 <div
                   aria-hidden="true"
@@ -874,7 +872,10 @@ export default function InsightView({
                         <div className="flex gap-4 items-start w-full">
                           <div className="flex flex-1 flex-col gap-0.5 items-start min-w-0">
                             <p className="text-[22px] leading-[30px] font-semibold text-text-heading">
-                              {item.used}
+                              {item.unit === "Chưa rõ đơn vị" ||
+                              (item.used === 0 && item.usedWithoutAmount > 0)
+                                ? "—"
+                                : item.used}
                             </p>
                             <p className="text-xs font-normal text-text-secondary">
                               Đã dùng
@@ -882,13 +883,26 @@ export default function InsightView({
                           </div>
                           <div className="flex flex-1 flex-col gap-0.5 items-start min-w-0">
                             <p className="text-[22px] leading-[30px] font-semibold text-text-heading">
-                              {item.discarded}
+                              {item.unit === "Chưa rõ đơn vị" ||
+                              (item.discarded === 0 &&
+                                item.discardedWithoutAmount > 0)
+                                ? "—"
+                                : item.discarded}
                             </p>
                             <p className="text-xs font-normal text-text-secondary">
                               Đã bỏ
                             </p>
                           </div>
                         </div>
+                        {(item.usedWithoutAmount > 0 ||
+                          item.discardedWithoutAmount > 0 ||
+                          item.eventsWithoutUnit > 0) && (
+                          <p className="text-xs text-text-secondary">
+                            {item.unit === "Chưa rõ đơn vị"
+                              ? `${item.eventsWithoutUnit} lượt thiếu đơn vị; không cộng lượng.`
+                              : `Chưa ghi lượng: ${item.usedWithoutAmount} lượt dùng, ${item.discardedWithoutAmount} lượt bỏ.`}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1046,7 +1060,7 @@ export default function InsightView({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-semibold text-text-heading tracking-normal">
-                Tỷ lệ dùng hết theo danh mục
+                Tỷ lệ lượt ghi đã dùng theo danh mục
               </h3>
             </div>
             <span className="text-xs font-semibold text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-full">
@@ -1076,7 +1090,7 @@ export default function InsightView({
                     <span className="text-xs text-text-secondary">
                       {total === 0
                         ? "Chưa có phát sinh trong kỳ"
-                        : `${data.consume} dùng hết · ${data.discard} vứt bỏ`}
+                        : `${data.consume} lượt ghi đã dùng · ${data.discard} lượt ghi đã bỏ`}
                     </span>
                   </div>
 
@@ -1107,7 +1121,9 @@ export default function InsightView({
 
                   <div className="text-right sm:w-28 shrink-0">
                     <span className="text-sm font-extrabold text-brand-primary">
-                      {total === 0 ? "Chưa có dữ liệu" : `${rate}% dùng hết`}
+                      {total === 0
+                        ? "Chưa có dữ liệu"
+                        : `${rate}% lượt ghi đã dùng`}
                     </span>
                   </div>
                 </div>

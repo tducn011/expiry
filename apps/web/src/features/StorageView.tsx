@@ -33,6 +33,7 @@ import LocationManagerModal from "../components/ui/LocationManagerModal"
 import PageHeader from "../components/ui/PageHeader"
 
 import FoodCard from "./FoodCard"
+import { FilterDropdown } from "../components/ui/FilterChips"
 
 export interface LocationStatItem {
   total: number
@@ -402,7 +403,7 @@ export default function StorageView({
   ]
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="storage-view flex flex-col gap-4 w-full">
       <PageHeader
         title="Nơi lưu trữ"
         actions={
@@ -513,8 +514,9 @@ export default function StorageView({
           {/* Card: Tất cả */}
           <button
             type="button"
+            aria-pressed={selectedLocation === "all"}
             onClick={() => handleLocationChange("all")}
-            className={`flex flex-col justify-between p-3.5 rounded-corner-md border text-left transition-all cursor-pointer ${
+            className={`storage-location-card flex flex-col justify-between p-3 rounded-corner-md border text-left transition-all cursor-pointer ${
               selectedLocation === "all"
                 ? "border-brand-primary bg-brand-primary/5 shadow-xs ring-2 ring-brand-primary/20"
                 : "border-border-primary/80 bg-surface-bg hover:border-brand-primary/40 hover:bg-surface-hover"
@@ -525,13 +527,8 @@ export default function StorageView({
                 <Boxes size={18} />
               </div>
               <div className="flex items-center gap-1">
-                {selectedLocation === "all" && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-brand-primary text-white">
-                    Đang chọn
-                  </span>
-                )}
                 {soonCount > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-status-soon-bg text-status-soon">
+                  <span className="shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-status-soon-bg text-status-soon">
                     {soonCount} sắp HSD
                   </span>
                 )}
@@ -574,8 +571,9 @@ export default function StorageView({
               <button
                 key={loc}
                 type="button"
+                aria-pressed={isSelected}
                 onClick={() => handleLocationChange(loc)}
-                className={`flex flex-col justify-between p-3.5 rounded-corner-md border text-left transition-all cursor-pointer ${
+                className={`storage-location-card flex flex-col justify-between p-3 rounded-corner-md border text-left transition-all cursor-pointer ${
                   isSelected
                     ? "border-brand-primary bg-brand-primary/5 shadow-xs ring-2 ring-brand-primary/20"
                     : "border-border-primary/80 bg-surface-bg hover:border-brand-primary/40 hover:bg-surface-hover"
@@ -588,13 +586,8 @@ export default function StorageView({
                     <LocIcon size={18} />
                   </div>
                   <div className="flex items-center gap-1">
-                    {isSelected && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-brand-primary text-white">
-                        Đang chọn
-                      </span>
-                    )}
                     {stats.attention > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full border border-status-soon/30 bg-status-soon-bg text-[10px] font-medium text-status-soon">
+                      <span className="shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded-full border border-status-soon/30 bg-status-soon-bg text-[10px] font-medium text-status-soon">
                         {stats.attention} sắp HSD
                       </span>
                     )}
@@ -614,8 +607,17 @@ export default function StorageView({
         </div>
       </div>
 
+      <div className="sm:hidden">
+        <FilterDropdown<Category | "all">
+          label="Danh mục"
+          value={selectedCategory}
+          onChange={handleCategoryChange}
+          options={categoryOptions}
+        />
+      </div>
+
       {/* Horizontal Category Filter Chips */}
-      <div>
+      <div className="hidden sm:block">
         <p className="text-xs font-semibold text-text-secondary mb-2">
           Phân loại theo nhóm:
         </p>
@@ -643,20 +645,21 @@ export default function StorageView({
 
       {/* Food Items List */}
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-start justify-between gap-3 mb-3">
           <h3 className="text-sm font-semibold text-text-heading tracking-normal">
             Danh sách món (
             {selectedLocation === "all" ? "Tất cả vị trí" : selectedLocation})
             {selectedCategory !== "all" &&
               ` · ${categoryOptions.find((c) => c.v === selectedCategory)?.label}`}
           </h3>
-          <span className="text-xs text-text-secondary">
+          <span className="shrink-0 pt-0.5 text-xs text-text-secondary">
             {filteredFoods.length} kết quả
           </span>
         </div>
 
         {filteredFoods.length === 0 ? (
           <EmptyState
+            className="storage-empty-state"
             icon={<SearchX size={36} />}
             title={
               query || onlySoon || selectedCategory !== "all"
@@ -678,9 +681,21 @@ export default function StorageView({
                 >
                   Mở nhắc nhở
                 </Button>
+              ) : query || onlySoon || selectedCategory !== "all" ? (
+                <Button
+                  variant="secondary"
+                  size="small"
+                  onClick={() => {
+                    setQuery("")
+                    setOnlySoon(false)
+                    handleCategoryChange("all")
+                  }}
+                >
+                  Xóa bộ lọc
+                </Button>
               ) : (
                 <Button variant="primary" size="small" onClick={onAdd}>
-                  + Thêm món vào vị trí này
+                  Thêm thực phẩm
                 </Button>
               )
             }
@@ -692,6 +707,7 @@ export default function StorageView({
                 key={food.id}
                 food={food}
                 remindDays={remindDays}
+                variant="grouped"
                 onOpen={() => onOpenDetail(food.id)}
               />
             ))}

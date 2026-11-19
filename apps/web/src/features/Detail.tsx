@@ -147,7 +147,7 @@ function movementToHistoryEvent(
   }
 }
 
-function historyDescription(event: HistoryEvent, food: Food) {
+export function historyDescription(event: HistoryEvent, food: Food) {
   const unit = event.unit || food.unit
 
   if (event.kind === "consume" || event.kind === "discard") {
@@ -159,7 +159,9 @@ function historyDescription(event: HistoryEvent, food: Food) {
   }
 
   if (event.kind === "add") {
-    return `Số lượng ban đầu: ${event.to ?? event.amount ?? food.quantity} ${unit}`
+    return event.to !== undefined || event.amount !== undefined
+      ? `Số lượng ban đầu: ${event.to ?? event.amount} ${unit}`
+      : "Không có dữ liệu lượng lúc nhập"
   }
 
   if (event.kind === "trash") return "Bản ghi được chuyển vào Thùng rác"
@@ -483,8 +485,6 @@ export function Detail({
           foodName: f.name,
           kind: "add" as const,
           at: f.createdAt,
-          amount: f.quantity,
-          to: f.quantity,
           unit: f.unit,
           category: f.category,
         },
@@ -523,24 +523,14 @@ export function Detail({
         title={f.name}
         onBack={onBack}
         actions={
-          <>
-            <Button
-              variant="neutral"
-              size="small"
-              iconStart={<Pencil size={16} />}
-              onClick={() => onEdit(f)}
-            >
-              Sửa
-            </Button>
-            <Button
-              variant="danger"
-              size="small"
-              iconStart={<Trash2 size={15} />}
-              onClick={() => setConfirmTrash(true)}
-            >
-              Xóa
-            </Button>
-          </>
+          <Button
+            variant="neutral"
+            size="small"
+            iconStart={<Pencil size={16} />}
+            onClick={() => onEdit(f)}
+          >
+            Sửa
+          </Button>
         }
       />
 
@@ -684,6 +674,9 @@ export function Detail({
             >
               Chuyển vào Thùng rác
             </Button>
+            <p className="text-center text-xs text-text-secondary">
+              Có thể khôi phục trong 30 ngày.
+            </p>
           </div>
         </Card>
 
@@ -711,22 +704,12 @@ export function Detail({
 
         <aside className="grid min-w-0 content-start gap-4">
           <Card className="min-w-0">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <SectionTitle className="flex items-center gap-2">
-                <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-primary">
-                  <StickyNote size={17} aria-hidden="true" />
-                </span>
-                Ghi chú
-              </SectionTitle>
-              <Button
-                variant="subtle"
-                size="small"
-                iconStart={<Pencil size={14} aria-hidden="true" />}
-                onClick={() => onEdit(f)}
-              >
-                Sửa
-              </Button>
-            </div>
+            <SectionTitle className="mb-4 flex items-center gap-2">
+              <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-primary">
+                <StickyNote size={17} aria-hidden="true" />
+              </span>
+              Ghi chú
+            </SectionTitle>
             <p className="min-h-16 whitespace-pre-wrap break-words rounded-corner-md bg-bg-faint px-4 py-3 text-sm leading-relaxed text-text-secondary">
               {f.note || "Chưa có ghi chú cho sản phẩm này."}
             </p>

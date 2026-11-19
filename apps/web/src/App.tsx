@@ -1,6 +1,9 @@
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -21,12 +24,12 @@ import {
   type Unit,
 } from "./store/appStore"
 
-import {
-  emptyDraft,
-  draftFrom,
-  type Draft,
-  type FormMode,
-} from "./features/FoodForm"
+import { emptyDraft, draftFrom } from "./domain/foodDraft"
+import type { Draft, FormMode } from "./features/FoodForm"
+import type { HomeFilters } from "./features/Inventory"
+import type { ShoppingFilter } from "./features/ShoppingView"
+import type { FoodEntry, ShoppingItem } from "./domain/types"
+import { getShoppingItems, updateShoppingItem } from "./api/shoppingStorage"
 
 import {
   Archive,
@@ -58,43 +61,27 @@ import {
   SidebarNavigation,
 } from "./components/ui/SidebarNavigation"
 
-// Feature screens
-
-import Inventory from "./features/Inventory"
-
-import Attention from "./features/Attention"
-
-import StorageView from "./features/StorageView"
-
-import Scanner from "./features/Scanner"
-
-import FoodForm from "./features/FoodForm"
-
-import Detail from "./features/Detail"
-
-import History from "./features/History"
-
-import InsightView from "./features/InsightView"
-
-import Trash from "./features/Trash"
-
-import Notifications from "./features/Notifications"
-
-import Settings from "./features/Settings"
-
-import type { FoodEntry } from "./domain/types"
-
-import AuthForm from "./features/AuthForm"
-
-import Onboarding from "./features/Onboarding"
-
-import ShoppingView from "./features/ShoppingView"
-import type { ShoppingItem } from "./domain/types"
-import { updateShoppingItem } from "./api/shoppingStorage"
+// Feature screens are loaded only when their route is rendered.
+const Inventory = lazy(() => import("./features/Inventory"))
+const Attention = lazy(() => import("./features/Attention"))
+const StorageView = lazy(() => import("./features/StorageView"))
+const Scanner = lazy(() => import("./features/Scanner"))
+const FoodForm = lazy(() => import("./features/FoodForm"))
+const Detail = lazy(() => import("./features/Detail"))
+const InsightView = lazy(() => import("./features/InsightView"))
+const Trash = lazy(() => import("./features/Trash"))
+const Notifications = lazy(() => import("./features/Notifications"))
+const Settings = lazy(() => import("./features/Settings"))
+const AuthForm = lazy(() => import("./features/AuthForm"))
+const Onboarding = lazy(() => import("./features/Onboarding"))
+const ShoppingView = lazy(() => import("./features/ShoppingView"))
 
 export type SettingsSection = "account" | "notifications" | "inventory" | "data"
 
-export type Route = { name: "inventory" } | {
+export type Route = {
+  name: "inventory"
+  filters?: HomeFilters
+} | {
   name: "storage"
 
   location?: string
@@ -104,6 +91,7 @@ export type Route = { name: "inventory" } | {
   name: "attention"
 } | { name: "add" } | {
   name: "scan"
+  missingForm?: boolean
   shoppingItemId?: string
   shoppingDraft?: Draft
 } | {
@@ -125,10 +113,16 @@ export type Route = { name: "inventory" } | {
   tab?: string
 } | { name: "history" } | {
   name: "trash"
-} | { name: "notifications" } | {
+} | {
+  name: "notifications"
+  filters?: HomeFilters
+} | {
   name: "settings"
   section?: SettingsSection
-} | { name: "shopping" }
+} | {
+  name: "shopping"
+  filter?: ShoppingFilter
+}
 
 export function routeFromUrl(
   search = typeof window !== "undefined"
@@ -157,7 +151,7 @@ export function routeFromUrl(
   }
 
   if (v === "insight" || v === "history") {
-    const tab = q.get("tab") || undefined
+    const tab = v === "history" ? "history" : q.get("tab") || undefined
 
     return [{ name: "insight", tab }]
   }
@@ -179,9 +173,20 @@ export function routeFromUrl(
     return [{ name: "settings" }]
   }
 
-  if (v === "shopping") return [{ name: "shopping" }]
+  if (v === "shopping") {
+    const filter = q.get("filter")
+    return [
+      {
+        name: "shopping",
+        filter:
+          filter === "active" || filter === "checked" ? filter : undefined,
+      },
+    ]
+  }
 
   if (v === "add" || v === "scan") return [{ name: "scan" }]
+
+  if (v === "form") return [{ name: "scan", missingForm: true }]
 
   if (v === "notifications") return [{ name: "notifications" }]
 
@@ -209,11 +214,26 @@ export function urlFromRoute(r: Route): string {
     if (r.category && r.category !== "all") p.set("cat", r.category)
   } else if (r.name === "insight") {
     if (r.tab && r.tab !== "overview") p.set("tab", r.tab)
+  } else if (r.name === "shopping") {
+    if (r.filter && r.filter !== "all") p.set("filter", r.filter)
   } else if (r.name === "settings") {
     if (r.section) p.set("section", r.section)
   }
 
   return `?${p.toString()}`
+}
+
+function RouteLoading() {
+  return (
+    <div
+      className="flex min-h-[40vh] items-center justify-center text-text-secondary"
+      role="status"
+      aria-live="polite"
+    >
+      <Loader2 size={24} className="animate-spin" aria-hidden="true" />
+      <span className="sr-only">Đang tải màn hình…</span>
+    </div>
+  )
 }
 
 export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
@@ -523,66 +543,109 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const handleSettingsSaving = useCallback((saving: boolean) => {
     settingsSavingRef.current = saving
   }, [])
-  const allowSettingsPopRef = useRef(false)
   const pendingSettingsLeaveRef = useRef<null | (() => void)>(null)
   const [showSettingsLeavePrompt, setShowSettingsLeavePrompt] = useState(false)
   const stateRef = useRef(state)
   stateRef.current = state
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const current = stack[stack.length - 1] || { name: "inventory" }
-
-      window.history.replaceState({ stack }, "", urlFromRoute(current))
-    }
+  const pendingShoppingImports = useRef(new Set<string>())
+  const formDirty = useRef(false)
+  const onFormDirty = useCallback((dirty: boolean) => {
+    formDirty.current = dirty
   }, [])
+  const owner = state.userId ?? "demo"
+  const historyOwner = useRef<string | undefined>(undefined)
+  const position = useRef(0)
+  const restoringTraversal = useRef<number | null>(null)
+  const allowedTraversal = useRef(false)
+  const lastShoppingFilter = useRef<ShoppingFilter>("all")
+  const shoppingRoot = stack[0]
+  if (shoppingRoot?.name === "shopping") {
+    lastShoppingFilter.current = shoppingRoot.filter ?? "all"
+  }
+
+  // Recover only entries belonging to the session that was just verified.
+  useLayoutEffect(() => {
+    if (isCheckingSession || historyOwner.current === owner) return
+    const saved = window.history.state
+    const recover =
+      saved?.owner === owner &&
+      Array.isArray(saved.stack) &&
+      saved.stack.length > 0
+    const next: Route[] = recover ? saved.stack : routeFromUrl()
+    historyOwner.current = owner
+    position.current = recover ? saved.position : 0
+    stackRef.current = next
+    setStack(next)
+    window.history.replaceState(
+      {
+        ...(recover ? saved : {}),
+        owner,
+        stack: next,
+        position: position.current,
+      },
+      "",
+      urlFromRoute(next[next.length - 1]),
+    )
+    if (!recover && next[0]?.name === "scan" && next[0].missingForm) {
+      notify(
+        "Không tìm thấy bản nhập. Bạn có thể quét nhãn hoặc nhập tay.",
+        "warning",
+      )
+    }
+  }, [isCheckingSession, owner])
 
   useEffect(() => {
-    if (typeof window === "undefined") return
-
     const handlePopState = (event: PopStateEvent) => {
-      if (allowSettingsPopRef.current) {
-        allowSettingsPopRef.current = false
-      } else {
-        const current = stackRef.current[stackRef.current.length - 1]
-        if (
-          current?.name === "settings" &&
-          (settingsDirtyRef.current || settingsSavingRef.current)
-        ) {
-          window.history.pushState(
-            { stack: stackRef.current },
-            "",
-            urlFromRoute(current),
-          )
-          if (settingsSavingRef.current) return
-          pendingSettingsLeaveRef.current = () => {
-            allowSettingsPopRef.current = true
-            window.history.go(-2)
-          }
-          setShowSettingsLeavePrompt(true)
-          return
+      const current = stackRef.current.at(-1)
+      const entry = event.state
+      const owned =
+        entry?.owner === historyOwner.current && Array.isArray(entry.stack)
+      const target =
+        owned && Number.isInteger(entry.position) ? entry.position : 0
+      const delta = target - position.current
+      const previouslyRequested = restoringTraversal.current
+      if (previouslyRequested !== null && delta === 0) {
+        restoringTraversal.current = null
+        const leave = () => {
+          allowedTraversal.current = true
+          window.history.go(previouslyRequested)
         }
+        if (current?.name === "form" && !pendingShoppingImports.current.size) {
+          setDiscard(() => leave)
+        } else if (current?.name === "settings" && !settingsSavingRef.current) {
+          pendingSettingsLeaveRef.current = leave
+          setShowSettingsLeavePrompt(true)
+        }
+        return
       }
-
       if (
-        event.state &&
-        Array.isArray(event.state.stack) &&
-        event.state.stack.length > 0
+        !allowedTraversal.current &&
+        delta &&
+        owned &&
+        ((current?.name === "form" &&
+          (formDirty.current || pendingShoppingImports.current.size)) ||
+          (current?.name === "settings" &&
+            (settingsDirtyRef.current || settingsSavingRef.current)))
       ) {
-        setStack(event.state.stack)
-      } else {
-        setStack(routeFromUrl())
+        restoringTraversal.current = delta
+        window.history.go(-delta)
+        return
       }
+      allowedTraversal.current = false
+      restoringTraversal.current = null
+      const next: Route[] =
+        owned && entry.stack.length ? entry.stack : routeFromUrl()
+      position.current = target
+      stackRef.current = next
+      setStack(next)
     }
-
     window.addEventListener("popstate", handlePopState)
-
     return () => window.removeEventListener("popstate", handlePopState)
   }, [])
 
   useEffect(() => {
     const guardUnload = (event: BeforeUnloadEvent) => {
-      if (!settingsDirtyRef.current) return
+      if (!settingsDirtyRef.current && !formDirty.current) return
       event.preventDefault()
       event.returnValue = ""
     }
@@ -620,66 +683,65 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     }
   }
 
+  const scrollContext =
+    route.name === "inventory" || route.name === "notifications"
+      ? route.name
+      : route
   useEffect(() => {
     if (mainRef.current) {
       mainRef.current.scrollTop = 0
     }
-  }, [route])
+  }, [scrollContext])
 
-  const go = (r: Route) => {
-    setStack((s) => {
-      const next = [...s, r]
-
-      if (typeof window !== "undefined") {
-        window.history.pushState({ stack: next }, "", urlFromRoute(r))
-      }
-
-      return next
-    })
+  const navigateStack = (next: Route[], replace = false) => {
+    const current = next[next.length - 1]
+    const entry = {
+      owner,
+      stack: next,
+      position: replace ? position.current : position.current + 1,
+      hasParent: replace ? window.history.state?.hasParent : next.length > 1,
+    }
+    if (replace) window.history.replaceState(entry, "", urlFromRoute(current))
+    else window.history.pushState(entry, "", urlFromRoute(current))
+    position.current = entry.position
+    stackRef.current = next
+    setStack(next)
   }
 
+  const go = (r: Route) => navigateStack([...stackRef.current, r])
+
   const tab = (r: Route) => {
-    setStack(() => {
-      const next = [r]
-
-      if (typeof window !== "undefined") {
-        window.history.pushState({ stack: next }, "", urlFromRoute(r))
-      }
-
-      return next
-    })
+    if (r.name === "shopping" && r.filter === undefined) {
+      r = { ...r, filter: lastShoppingFilter.current }
+    }
+    if (
+      stackRef.current.length === 1 &&
+      urlFromRoute(r) === urlFromRoute(stackRef.current[0])
+    )
+      return
+    navigateStack([r])
   }
 
   const back = () => {
-    setStack((s) => {
-      if (s.length > 1) {
-        const next = s.slice(0, -1)
+    if (window.history.state?.hasParent) {
+      allowedTraversal.current = true
+      window.history.back()
+      return
+    }
+    // A directly opened URL can have a logical parent without a browser entry.
+    const parent = stackRef.current.slice(0, -1)
+    navigateStack(parent.length ? parent : [{ name: "inventory" }], true)
+  }
 
-        const current = next[next.length - 1]
-
-        if (typeof window !== "undefined") {
-          window.history.pushState({ stack: next }, "", urlFromRoute(current))
-        }
-
-        return next
-      }
-
-      if (s.length === 1 && s[0].name !== "inventory") {
-        const fallback: Route[] = [{ name: "inventory" }]
-
-        if (typeof window !== "undefined") {
-          window.history.pushState(
-            { stack: fallback },
-            "",
-            urlFromRoute(fallback[0]),
-          )
-        }
-
-        return fallback
-      }
-
-      return s
-    })
+  const reviewScan = (nextRoute: Route) => {
+    const parent = stackRef.current.slice(0, -1)
+    navigateStack(
+      [
+        ...(parent.length ? parent : [{ name: "inventory" as const }]),
+        nextRoute,
+      ],
+      true,
+    )
   }
 
   const requestSettingsLeave = (action: () => void) => {
@@ -693,14 +755,22 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   }
 
   const handleNav = (targetName: Route["name"]) => {
-    requestSettingsLeave(() => {
+    const navigate = () => {
       if (targetName === "scan") {
         if (route.name === "scan") return
         go({ name: "scan" })
       } else {
         tab({ name: targetName } as Route)
       }
-    })
+    }
+    if (route.name === "form") {
+      if (pendingShoppingImports.current.size) return
+      if (formDirty.current) {
+        setDiscard(() => navigate)
+        return
+      }
+    }
+    requestSettingsLeave(navigate)
   }
 
   const notify = (
@@ -851,14 +921,20 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   if (state.mode !== "account" && pendingAuth) {
     return (
-      <AuthForm dispatch={dispatch} onCancel={() => setPendingAuth(null)} />
+      <Suspense fallback={<RouteLoading />}>
+        <AuthForm dispatch={dispatch} onCancel={() => setPendingAuth(null)} />
+      </Suspense>
     )
   }
 
   // Onboarding flow
 
   if (state.mode === "account" && !state.onboarded) {
-    return <Onboarding onDone={() => dispatch({ type: "onboarded" })} />
+    return (
+      <Suspense fallback={<RouteLoading />}>
+        <Onboarding onDone={() => dispatch({ type: "onboarded" })} />
+      </Suspense>
+    )
   }
 
   if (pendingAuth && state.mode === "account") {
@@ -900,7 +976,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       icon: <ShoppingBag size={22} />,
     },
 
-    { r: "insight", label: "Insight", icon: <BarChart3 size={22} /> },
+    { r: "insight", label: "Thống kê", icon: <BarChart3 size={22} /> },
   ]
 
   const isAddFlow =
@@ -934,12 +1010,27 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   function finishShoppingImport(shoppingItemId?: string) {
     if (shoppingItemId) {
-      updateShoppingItem(
-        shoppingItemId,
-        { inventoryAddedAt: new Date().toISOString() },
-        state.userId,
+      try {
+        updateShoppingItem(
+          shoppingItemId,
+          { inventoryAddedAt: new Date().toISOString() },
+          state.userId,
+        )
+      } catch {
+        notify(
+          "Thực phẩm đã lưu. Chưa cập nhật được dấu đã nhập trong danh sách mua.",
+          "warning",
+        )
+      }
+      if (
+        stackRef.current[0]?.name === "shopping" &&
+        stackRef.current.length === 2
       )
-      tab({ name: "shopping" })
+        back()
+      else if (stackRef.current[0]?.name !== "shopping")
+        tab({ name: "shopping" })
+    } else if (stackRef.current.at(-1)?.name === "form") {
+      back()
     } else {
       tab({ name: "inventory" })
     }
@@ -950,8 +1041,60 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     mode: FormMode,
     shoppingItemId?: string,
   ) {
+    if (!shoppingItemId) return saveFoodDraft(d, mode)
+
+    const owner = state.userId
+    // History and retries of the same purchase must refer to the same create.
+    const commandKey = `shopping_import_${shoppingItemId}`
+    const pendingKey = JSON.stringify([owner, commandKey])
+    if (pendingShoppingImports.current.has(pendingKey)) return
+
+    let item: ShoppingItem | undefined
+    try {
+      item = getShoppingItems(owner).find((item) => item.id === shoppingItemId)
+    } catch {
+      notify("Không đọc được danh sách mua. Hãy thử lại.", "warning")
+      return
+    }
+    const returnToShopping = () => {
+      if (
+        stackRef.current[0]?.name === "shopping" &&
+        stackRef.current.length === 2
+      )
+        back()
+      else tab({ name: "shopping" })
+    }
+    if (!item?.checked) {
+      notify("Món này không còn trong danh sách đã mua.", "warning")
+      returnToShopping()
+      return
+    }
+    if (
+      item.inventoryAddedAt ||
+      (state.mode === "demo" &&
+        stateRef.current.foods.some((food) => food.id === commandKey))
+    ) {
+      notify("Món này đã được thêm vào kho.", "warning")
+      returnToShopping()
+      return
+    }
+
+    pendingShoppingImports.current.add(pendingKey)
+    try {
+      await saveFoodDraft(d, mode, shoppingItemId, commandKey)
+    } finally {
+      pendingShoppingImports.current.delete(pendingKey)
+    }
+  }
+
+  async function saveFoodDraft(
+    d: Draft,
+    mode: FormMode,
+    shoppingItemId?: string,
+    commandKey?: string,
+  ) {
     if (state.mode === "account") {
-      const idempotencyKey = `idemp_${crypto.randomUUID()}`
+      const idempotencyKey = commandKey ?? `idemp_${crypto.randomUUID()}`
 
       if (mode === "edit" && d.id) {
         const existing = state.foods.find((f) => f.id === d.id)
@@ -1094,39 +1237,44 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             idempotencyKey,
           )
 
-          dispatch({
-            type: "save",
+          if (
+            !shoppingItemId ||
+            !stateRef.current.foods.some((food) => food.id === created.id)
+          ) {
+            dispatch({
+              type: "save",
 
-            food: {
-              id: created.id,
+              food: {
+                id: created.id,
 
-              name: created.name,
+                name: created.name,
 
-              quantity: Number(d.quantity),
+                quantity: Number(d.quantity),
 
-              unit: (d.unit || "cái") as Unit,
+                unit: (d.unit || "cái") as Unit,
 
-              category: d.category || "other",
+                category: d.category || "other",
 
-              mfgDate: d.mfgDate || undefined,
+                mfgDate: d.mfgDate || undefined,
 
-              opened_on: d.opened_on || undefined,
+                opened_on: d.opened_on || undefined,
 
-              expDate: created.expiry_date || undefined,
+                expDate: created.expiry_date || undefined,
 
-              location: created.storage_location || undefined,
+                location: created.storage_location || undefined,
 
-              barcode: d.barcode || undefined,
+                barcode: d.barcode || undefined,
 
-              reviewAt: d.reviewAt || undefined,
+                reviewAt: d.reviewAt || undefined,
 
-              note: d.note?.trim() || undefined,
+                note: d.note?.trim() || undefined,
 
-              finishedAt: undefined,
+                finishedAt: undefined,
 
-              version: created.version,
-            },
-          })
+                version: created.version,
+              },
+            })
+          }
 
           notify(
             d.expDate
@@ -1137,8 +1285,28 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           finishShoppingImport(shoppingItemId)
 
           return
-        } catch {
-          notify("Lỗi kết nối máy chủ. Không thể tạo thực phẩm.")
+        } catch (err: unknown) {
+          if (
+            shoppingItemId &&
+            err instanceof ApiError &&
+            err.code === "IDEMPOTENCY_KEY_REUSED"
+          ) {
+            notify(
+              "Hãy kiểm tra Kho: món này có thể đã được lưu với thông tin trước đó.",
+              "warning",
+            )
+          } else if (
+            shoppingItemId &&
+            err instanceof ApiError &&
+            err.uncertain
+          ) {
+            notify(
+              "Chưa xác nhận được kết quả. Hãy kiểm tra Kho trước khi thử lưu lại.",
+              "warning",
+            )
+          } else {
+            notify("Lỗi kết nối máy chủ. Không thể tạo thực phẩm.")
+          }
 
           return
         }
@@ -1149,7 +1317,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       type: "save",
 
       food: {
-        id: mode === "edit" ? d.id : undefined,
+        id: mode === "edit" ? d.id : commandKey,
 
         name: d.name.trim(),
 
@@ -1191,10 +1359,18 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   let screenContent: ReactNode
 
   switch (route.name) {
+    case "notifications":
     case "inventory":
       screenContent = (
         <Inventory
           state={state}
+          filters={route.filters}
+          onFiltersChange={(filters) =>
+            navigateStack(
+              [...stackRef.current.slice(0, -1), { ...route, filters }],
+              true,
+            )
+          }
           onOpenDetail={(id) => go({ name: "detail", id })}
           onAdd={() => go({ name: "scan" })}
           onNavigateAttention={() => tab({ name: "attention" })}
@@ -1224,17 +1400,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               category: cat !== "all" ? cat : undefined,
             }
 
-            setStack([nextRoute])
-
-            if (typeof window !== "undefined") {
-              window.history.replaceState(
-                { stack: [nextRoute] },
-
-                "",
-
-                urlFromRoute(nextRoute),
-              )
-            }
+            navigateStack([nextRoute], true)
           }}
           onAddLocation={async (name) => {
             dispatch({ type: "addLocation", name })
@@ -1373,8 +1539,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                     ...shoppingDraft,
                     ...draft,
                     name: draft?.name || shoppingDraft.name,
-                    quantity: shoppingDraft.quantity,
-                    unit: shoppingDraft.unit,
+                    quantity: shoppingDraft.quantity || draft?.quantity || "",
+                    unit: shoppingDraft.unit || draft?.unit || "",
                     category: draft?.category || shoppingDraft.category,
                   }
                 : draft || emptyDraft(),
@@ -1382,24 +1548,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               shoppingItemId:
                 route.name === "scan" ? route.shoppingItemId : undefined,
             }
-            setStack((s) => {
-              const base =
-                s.length > 0 && s[s.length - 1].name === "scan"
-                  ? s.slice(0, -1)
-                  : s
-              const next: Route[] = [
-                ...(base.length > 0 ? base : [{ name: "inventory" as const }]),
-                nextRoute,
-              ]
-              if (typeof window !== "undefined") {
-                window.history.pushState(
-                  { stack: next },
-                  "",
-                  urlFromRoute(nextRoute),
-                )
-              }
-              return next
-            })
+            reviewScan(nextRoute)
           }}
           existingFoods={state.foods}
           onReview={(image, draft) => {
@@ -1413,8 +1562,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                     ...shoppingDraft,
                     ...draft,
                     name: draft?.name || shoppingDraft.name,
-                    quantity: shoppingDraft.quantity,
-                    unit: shoppingDraft.unit,
+                    quantity: shoppingDraft.quantity || draft?.quantity || "",
+                    unit: shoppingDraft.unit || draft?.unit || "",
                     category: draft?.category || shoppingDraft.category,
                   }
                 : draft || emptyDraft(),
@@ -1422,24 +1571,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               shoppingItemId:
                 route.name === "scan" ? route.shoppingItemId : undefined,
             }
-            setStack((s) => {
-              const base =
-                s.length > 0 && s[s.length - 1].name === "scan"
-                  ? s.slice(0, -1)
-                  : s
-              const next: Route[] = [
-                ...(base.length > 0 ? base : [{ name: "inventory" as const }]),
-                nextRoute,
-              ]
-              if (typeof window !== "undefined") {
-                window.history.pushState(
-                  { stack: next },
-                  "",
-                  urlFromRoute(nextRoute),
-                )
-              }
-              return next
-            })
+            reviewScan(nextRoute)
           }}
         />
       )
@@ -1457,6 +1589,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onAddLocation={(name) => dispatch({ type: "addLocation", name })}
           onSubmit={(d) => handleSaveDraft(d, route.mode, route.shoppingItemId)}
           onCancel={(dirty) => (dirty ? setDiscard(() => back) : back())}
+          onDirtyChange={onFormDirty}
+          restored={window.history.state?.formDraft}
         />
       )
 
@@ -1490,15 +1624,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onTabChange={(t) => {
             const nextRoute: Route = { name: "insight", tab: t }
 
-            if (typeof window !== "undefined") {
-              window.history.replaceState(
-                { stack: [nextRoute] },
-
-                "",
-
-                urlFromRoute(nextRoute),
-              )
-            }
+            navigateStack([nextRoute], true)
           }}
           onNavigateAttention={() => tab({ name: "attention" })}
           onOpenDetail={(id) => go({ name: "detail", id })}
@@ -1514,21 +1640,6 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           dispatch={dispatch}
           onBack={back}
           notify={notify}
-        />
-      )
-
-      break
-
-    case "notifications":
-      screenContent = (
-        <Inventory
-          state={state}
-          onOpenDetail={(id) => go({ name: "detail", id })}
-          onAdd={() => go({ name: "scan" })}
-          onNavigateAttention={() => tab({ name: "attention" })}
-          onOpenNotifications={() => setIsNotificationsOpen(true)}
-          onOpenAccount={() => go({ name: "settings" })}
-          unreadNotificationsCount={unreadCount}
         />
       )
 
@@ -1559,13 +1670,18 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     case "shopping":
       screenContent = (
         <ShoppingView
+          key={state.userId ?? state.mode}
           state={state}
+          filter={route.filter ?? "all"}
+          onFilterChange={(filter) =>
+            navigateStack([{ name: "shopping", filter }], true)
+          }
           onAddToInventory={(item: ShoppingItem, method) => {
             const draft: Draft = {
               ...emptyDraft(),
               name: item.name,
-              quantity: String(item.quantity),
-              unit: item.unit as Unit,
+              quantity: item.quantity?.toString() ?? "",
+              unit: (item.unit ?? "") as Draft["unit"],
               category: (item.category || "other") as Category,
             }
             if (method === "scan")
@@ -1590,6 +1706,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   }
 
   const isFullBleed = route.name === "scan" || route.name === "add"
+  const showMobileDock = !isFullBleed && route.name !== "form"
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-brand-tertiary text-text-primary antialiased">
@@ -1699,7 +1816,11 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       {/* Main Content Area */}
       <main
         ref={mainRef}
-        className="h-full w-full min-w-0 flex-1 overflow-y-auto"
+        className={`h-full w-full min-w-0 flex-1 overflow-y-auto ${
+          showMobileDock
+            ? "scroll-pb-[var(--dock-clearance)] md:scroll-pb-3"
+            : ""
+        }`}
       >
         <div
           className={`mx-auto w-full ${
@@ -1790,24 +1911,24 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               </div>
             )}
 
-          {screenContent}
+          <Suspense fallback={<RouteLoading />}>{screenContent}</Suspense>
         </div>
       </main>
 
       {/* Mobile Bottom Navigation Bar matching Figma node 309:217 & 312:136 */}
-      {!isFullBleed && route.name !== "form" && (
+      {showMobileDock && (
         <nav
           aria-label="Điều hướng chính"
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-border-subtle bg-surface-bg px-4 sm:px-6 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden shadow-xs"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-border-subtle bg-surface-bg px-2 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden shadow-xs"
         >
-          <div className="flex h-16 w-full items-center justify-between">
+          <div className="mx-auto grid min-h-16 w-full max-w-lg grid-cols-[repeat(2,minmax(0,1fr))_auto_repeat(2,minmax(0,1fr))] items-center">
             {/* Tab 1: Hôm nay */}
             <button
               type="button"
               aria-label="Hôm nay"
               aria-current={rootName === "inventory" ? "page" : undefined}
               onClick={() => handleNav("inventory")}
-              className="flex min-w-16 flex-col items-center justify-center gap-1 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+              className="flex min-h-11 min-w-0 flex-col items-center justify-center gap-1 px-0.5 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
             >
               <span
                 className={`transition-colors ${
@@ -1835,7 +1956,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               aria-label="Kho"
               aria-current={rootName === "storage" ? "page" : undefined}
               onClick={() => handleNav("storage")}
-              className="flex min-w-16 flex-col items-center justify-center gap-1 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+              className="flex min-h-11 min-w-0 flex-col items-center justify-center gap-1 px-0.5 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
             >
               <span
                 className={`transition-colors ${
@@ -1863,7 +1984,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               aria-label="Thêm thực phẩm"
               title="Thêm thực phẩm"
               onClick={() => handleNav("scan")}
-              className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-white border border-brand-primary/20 shadow-xs transition-transform hover:bg-brand-hover active:scale-95 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary -mt-2"
+              className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-white border border-brand-primary/20 shadow-xs transition-transform hover:bg-brand-hover active:scale-95 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
             >
               <Plus size={24} strokeWidth={2.5} />
             </button>
@@ -1874,7 +1995,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               aria-label="Mua sắm"
               aria-current={rootName === "shopping" ? "page" : undefined}
               onClick={() => handleNav("shopping")}
-              className="flex min-w-16 flex-col items-center justify-center gap-1 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+              className="flex min-h-11 min-w-0 flex-col items-center justify-center gap-1 px-0.5 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
             >
               <span
                 className={`transition-colors ${
@@ -1902,7 +2023,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               aria-label="Thống kê"
               aria-current={rootName === "insight" ? "page" : undefined}
               onClick={() => handleNav("insight")}
-              className="flex min-w-16 flex-col items-center justify-center gap-1 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+              className="flex min-h-11 min-w-0 flex-col items-center justify-center gap-1 px-0.5 py-1 text-center cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
             >
               <span
                 className={`transition-colors ${
@@ -1989,6 +2110,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             <Button
               variant="danger"
               onClick={() => {
+                const entry = window.history.state
+                if (entry?.formDraft)
+                  window.history.replaceState(
+                    { ...entry, formDraft: undefined },
+                    "",
+                  )
                 discard?.()
 
                 setDiscard(null)
@@ -2006,21 +2133,23 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
       {/* Notification Pop-up Modal */}
       {showNotifications && (
-        <Notifications
-          isOpen={true}
-          onClose={closeNotifications}
-          state={state}
-          dispatch={dispatch}
-          onOpenDetail={(id) => {
-            closeNotifications()
-            go({ name: "detail", id })
-          }}
-          onOpenReminder={() => {
-            setIsNotificationsOpen(false)
-            tab({ name: "attention" })
-          }}
-          notify={notify}
-        />
+        <Suspense fallback={null}>
+          <Notifications
+            isOpen={true}
+            onClose={closeNotifications}
+            state={state}
+            dispatch={dispatch}
+            onOpenDetail={(id) => {
+              closeNotifications()
+              go({ name: "detail", id })
+            }}
+            onOpenReminder={() => {
+              setIsNotificationsOpen(false)
+              tab({ name: "attention" })
+            }}
+            notify={notify}
+          />
+        </Suspense>
       )}
     </div>
   )

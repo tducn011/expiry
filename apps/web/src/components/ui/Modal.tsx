@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 
 import Button from "./Button"
 
@@ -50,9 +50,13 @@ export interface ModalProps {
   dismissible?: boolean
 }
 
-export function Modal({
-  isOpen = true,
+export function Modal(props: ModalProps) {
+  return props.isOpen === false ? null : <OpenModal {...props} />
+}
 
+const openDialogs: HTMLElement[] = []
+
+function OpenModal({
   active = true,
 
   eyebrow,
@@ -73,8 +77,7 @@ export function Modal({
 
   dismissible = true,
 }: ModalProps) {
-  if (!isOpen) return null
-
+  const titleId = useId()
   const dialogRef = useRef<HTMLElement>(null)
 
   const [opener] = useState(() =>
@@ -98,8 +101,34 @@ export function Modal({
     if (!dialog) return
 
     const releaseScrollLock = acquireModalScrollLock()
+    openDialogs.push(dialog)
+    const controls = () =>
+      [
+        ...dialog.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex="0"]',
+        ),
+      ].filter((element) => element.getClientRects().length > 0)
+    const first = controls()[0] ?? dialog
+    first.focus()
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (openDialogs.at(-1) !== dialog) return
+      if (e.key === "Tab") {
+        const focusable = controls()
+        const target = document.activeElement
+        const first = focusable[0] ?? dialog
+        const last = focusable.at(-1) ?? dialog
+        if (
+          !focusable.length ||
+          target === dialog ||
+          !dialog.contains(target) ||
+          (e.shiftKey ? target === first : target === last)
+        ) {
+          e.preventDefault()
+          const next = e.shiftKey ? last : first
+          next.focus()
+        }
+      }
       if (e.key === "Escape" && dismissibleRef.current) {
         e.stopPropagation()
 
@@ -110,6 +139,8 @@ export function Modal({
     window.addEventListener("keydown", onKeyDown)
 
     return () => {
+      const index = openDialogs.indexOf(dialog)
+      if (index >= 0) openDialogs.splice(index, 1)
       releaseScrollLock()
 
       window.removeEventListener("keydown", onKeyDown)
@@ -147,10 +178,11 @@ export function Modal({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className={`modal relative flex flex-col w-full ${maxWClass} max-h-[calc(100dvh-2rem)] rounded-corner-lg bg-surface-bg shadow-xl border border-border-primary/50 overflow-hidden text-text-primary`}
       >
-        <header className="flex items-start justify-between gap-3 px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border-primary/40">
+        <header className="flex shrink-0 items-start justify-between gap-3 px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border-primary/40">
           <div className="min-w-0 flex-1">
             {eyebrow && (
               <span className="block text-xs font-semibold uppercase tracking-wider text-text-tertiary">
@@ -158,7 +190,7 @@ export function Modal({
               </span>
             )}
             <h2
-              id="modal-title"
+              id={titleId}
               className="text-base sm:text-lg font-semibold text-text-heading tracking-normal break-words text-balance"
             >
               {title}
@@ -174,7 +206,7 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="Đóng"
-              className="p-3 -m-1.5 md:p-1.5 md:m-0 rounded-corner-md text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
+              className="grid size-11 shrink-0 place-items-center -my-2 -mr-2 rounded-corner-md text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
             >
               <X size={20} aria-hidden />
             </button>
@@ -182,7 +214,7 @@ export function Modal({
         </header>
 
         <div
-          className={`p-4 sm:p-6 overflow-y-auto max-h-[calc(100dvh-10rem)] ${
+          className={`min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 ${
             layout === "form" ? "flex flex-col gap-4" : ""
           }`}
         >
@@ -190,7 +222,7 @@ export function Modal({
         </div>
 
         {footer && (
-          <footer className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-bg-subtle/50 border-t border-border-primary/40">
+          <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-bg-subtle/50 border-t border-border-primary/40">
             {footer}
           </footer>
         )}
