@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
-import {connect,rootSql,migrate,grants,base,run,containerId,environment,migrationChecksumMatches} from '../src/connection.mjs';
+import {connect,rootSql,migrate,grants,base,run,containerId,environment} from '../src/connection.mjs';
+import {migrationChecksumMatches} from '../src/migration-checksum.mjs';
 const mode=process.argv[2];
 const dir=new URL('evidence/',base);
 await mkdir(dir,{recursive:true});

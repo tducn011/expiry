@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { migrationChecksumMatches } from '../../../database/mysql/src/connection.mjs';
+import { migrationChecksumMatches } from '../../../database/mysql/src/migration-checksum.mjs';
 
 test('migration 003 accepts the verified homeserver checksum without rewriting its ledger', () => {
   const current = '4db6ee3d7fe81921901c2390a477ec7b54536ad69aebf89aead40cee84453791';
