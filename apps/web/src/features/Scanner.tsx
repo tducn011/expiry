@@ -488,7 +488,7 @@ export function Scanner({
 
         quantity: "1",
 
-        unit: "cái",
+        unit: "",
 
         category,
 
@@ -616,7 +616,7 @@ export function Scanner({
 
           quantity: "1",
 
-          unit: "cái",
+          unit: "",
 
           category: finalCategory,
 
@@ -650,7 +650,7 @@ export function Scanner({
 
           quantity: "1",
 
-          unit: "cái",
+          unit: "",
 
           category: "other",
 
@@ -978,7 +978,7 @@ export function Scanner({
 
       quantity: "1",
 
-      unit: "cái",
+      unit: "",
 
       category: finalCategory,
 
@@ -1505,7 +1505,7 @@ export function Scanner({
                     draft: detectedDraft || {
                       name: "",
                       quantity: "1",
-                      unit: "cái",
+                      unit: "",
                       category: "other",
                       mfgDate: "",
                       expDate: "",
@@ -1593,7 +1593,7 @@ export function Scanner({
               name: barcodeDraft.name,
               barcode: barcodeDraft.barcode,
               quantity: "1",
-              unit: "cái",
+              unit: "",
               category: "other",
               mfgDate: "",
               expDate: "",

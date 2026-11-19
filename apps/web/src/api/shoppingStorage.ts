@@ -1,4 +1,4 @@
-import type { ShoppingItem, Unit } from "../domain/types"
+import type { ShoppingItem } from "../domain/types"
 import { inferCategory } from "../store/appStore"
 
 const DEFAULT_SHOPPING_ITEMS: ShoppingItem[] = [
@@ -65,33 +65,38 @@ function getStorage(): {
 }
 
 export function getShoppingItems(userId?: string): ShoppingItem[] {
-  const storage = getStorage()
-  const key = getStorageKey(userId)
-  try {
-    const raw = storage.getItem(key)
-    if (!raw) {
-      storage.setItem(key, JSON.stringify(DEFAULT_SHOPPING_ITEMS))
-      return [...DEFAULT_SHOPPING_ITEMS]
-    }
-    const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed)) return parsed
-  } catch {
-    // fallback
-  }
-  return [...DEFAULT_SHOPPING_ITEMS]
+  const raw = getStorage().getItem(getStorageKey(userId))
+  if (raw === null) return userId ? [] : [...DEFAULT_SHOPPING_ITEMS]
+  const parsed = JSON.parse(raw)
+  if (!Array.isArray(parsed)) throw new Error("Invalid shopping list")
+  return parsed
 }
 
 export function saveShoppingItems(
   items: ShoppingItem[],
   userId?: string,
 ): void {
-  const storage = getStorage()
-  const key = getStorageKey(userId)
-  try {
-    storage.setItem(key, JSON.stringify(items))
-  } catch {
-    // ignore quota errors
+  getStorage().setItem(getStorageKey(userId), JSON.stringify(items))
+}
+
+export class ShoppingItemChanged extends Error {}
+
+export function changeShoppingItem(
+  expected: ShoppingItem,
+  change: (item: ShoppingItem) => ShoppingItem | null,
+  userId?: string,
+): ShoppingItem[] {
+  const items = getShoppingItems(userId)
+  const current = items.find((item) => item.id === expected.id)
+  if (!current || JSON.stringify(current) !== JSON.stringify(expected)) {
+    throw new ShoppingItemChanged()
   }
+  const updated = change(current)
+  const next = items.flatMap((item) =>
+    item.id === current.id ? (updated ? [updated] : []) : [item],
+  )
+  saveShoppingItems(next, userId)
+  return next
 }
 
 export function addShoppingItem(
@@ -121,7 +126,6 @@ export function toggleShoppingItem(
       ? {
           ...item,
           checked: !item.checked,
-          inventoryAddedAt: item.checked ? undefined : item.inventoryAddedAt,
         }
       : item,
   )

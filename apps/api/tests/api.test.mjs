@@ -1,11 +1,32 @@
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFile } from 'node:fs/promises';
 import { createApp } from '../src/app.mjs';
 import express from 'express';
 import { idempotencyMiddleware, errorHandler } from '../src/shared/middleware.mjs';
 import { DomainError, decimal, metadata, metadataFields } from '../src/shared/domain.mjs';
 import { closePools } from '../src/shared/connection.mjs';
+
+const contract = JSON.parse(await readFile(new URL('../../../contracts/openapi.json', import.meta.url), 'utf8'));
+
+function assertProblem(response, body, status, code) {
+  const schema = contract.components.schemas.Problem;
+  assert.equal(response.status, status);
+  assert.match(response.headers.get('content-type'), /^application\/problem\+json/);
+  for (const key of schema.required) assert.ok(Object.hasOwn(body, key), `Problem is missing ${key}`);
+  for (const [key, value] of Object.entries(body)) {
+    const property = schema.properties[key];
+    assert.ok(property, `Problem contains undocumented property ${key}`);
+    const types = [].concat(property.type ?? []);
+    if (types.includes('integer')) assert.ok(Number.isInteger(value), `Problem.${key} must be an integer`);
+    else if (types.includes('string')) assert.equal(typeof value, 'string', `Problem.${key} must be a string`);
+  }
+  assert.equal(body.type, `https://api.expiry.app/problems/${code}`);
+  assert.equal(body.title, code);
+  assert.equal(body.status, status);
+  assert.equal(body.code, code);
+}
 
 test.after(async () => {
   await closePools();
@@ -34,7 +55,20 @@ test('App initialization and healthcheck', async () => {
 test('problem responses use problem media type and always include a stable code', async t => {
   const app = express();
   app.use(express.json({ limit: '16b' }));
-  app.get('/domain-error', (_req, _res, next) => next(new DomainError(422, 'BAD_INPUT')));
+  for (const [status, code] of [
+    [401, 'AUTH_REQUIRED'],
+    [403, 'CSRF_FAILED'],
+    [409, 'VERSION_CONFLICT'],
+    [422, 'BAD_INPUT'],
+    [429, 'AUTH_RATE_LIMITED'],
+    [503, 'AUTH_UNAVAILABLE'],
+  ]) {
+    app.get(`/domain-error-${status}`, (_req, _res, next) => {
+      const error = new DomainError(status, code);
+      if (status === 503) error.message = 'private upstream database details';
+      next(error);
+    });
+  }
   app.post('/unhandled', (_req, _res, next) => next(new Error('private database details')));
   app.use(errorHandler);
   const server = app.listen(0, '127.0.0.1');
@@ -42,26 +76,49 @@ test('problem responses use problem media type and always include a stable code'
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
   const base = `http://127.0.0.1:${server.address().port}`;
   for (const [path, init, status, code] of [
-    ['/domain-error', {}, 422, 'BAD_INPUT'],
+    ['/domain-error-401', {}, 401, 'AUTH_REQUIRED'],
+    ['/domain-error-403', {}, 403, 'CSRF_FAILED'],
+    ['/domain-error-409', {}, 409, 'VERSION_CONFLICT'],
+    ['/domain-error-422', {}, 422, 'BAD_INPUT'],
+    ['/domain-error-429', {}, 429, 'AUTH_RATE_LIMITED'],
+    ['/domain-error-503', {}, 503, 'AUTH_UNAVAILABLE'],
     ['/bad-json', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{' }, 400, 'MALFORMED_JSON'],
     ['/too-large', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: 'a'.repeat(64) }) }, 413, 'PAYLOAD_TOO_LARGE'],
     ['/unhandled', { method: 'POST' }, 500, 'INTERNAL_SERVER_ERROR']
   ]) {
     const response = await fetch(`${base}${path}`, init);
-    assert.equal(response.status, status);
-    assert.match(response.headers.get('content-type'), /^application\/problem\+json/);
     const body = await response.json();
-    assert.equal(body.code, code);
-    if (path === '/unhandled') assert.doesNotMatch(JSON.stringify(body), /private database details/);
+    assertProblem(response, body, status, code);
+    if (path === '/domain-error-503') {
+      assert.doesNotMatch(JSON.stringify(body), /private .* details/);
+      assert.equal(body.detail, code);
+    }
+    if (path === '/unhandled') {
+      assert.doesNotMatch(JSON.stringify(body), /private .* details/);
+      assert.equal(body.detail, 'An unexpected server error occurred.');
+    }
   }
   const appServer = createApp().listen(0, '127.0.0.1');
   await new Promise(resolve => appServer.once('listening', resolve));
   try {
     const missing = await fetch(`http://127.0.0.1:${appServer.address().port}/no-such-route`);
-    assert.equal(missing.status, 404);
-    assert.match(missing.headers.get('content-type'), /^application\/problem\+json/);
-    assert.equal((await missing.json()).code, 'NOT_FOUND');
+    assertProblem(missing, await missing.json(), 404, 'NOT_FOUND');
   } finally { await new Promise(resolve => { appServer.close(resolve); appServer.closeAllConnections(); }); }
+});
+
+test('storage location defaults distinguish omitted from explicit null', () => {
+  assert.equal(metadata({ name: 'Sữa' }).storage_location, 'unspecified');
+  assert.equal(metadata({ name: 'Sữa', storage_location: 'unspecified' }).storage_location, 'unspecified');
+  assert.equal(metadata({ name: 'Sữa' }).category, 'other');
+  assert.equal(metadata({ name: 'Sữa', category: 'other' }).category, 'other');
+  assert.throws(
+    () => metadata({ name: 'Sữa', storage_location: null }),
+    error => error instanceof DomainError && error.status === 422 && error.code === 'VALIDATION_ERROR'
+  );
+  assert.throws(
+    () => metadata({ name: 'Sữa', category: null }),
+    error => error instanceof DomainError && error.status === 422 && error.code === 'VALIDATION_ERROR'
+  );
 });
 
 test('Idempotency Key validation middleware', async () => {

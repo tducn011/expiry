@@ -13,6 +13,66 @@ import {
 import { FoodCard, categoryTones } from "../src/features/FoodCard"
 
 describe("Storage & Insight Feature Integration", () => {
+  it("does not invent quantities when movement events omit amounts or units", async () => {
+    const { summarizeRecordedQuantities } = await import(
+      "../src/features/InsightView"
+    )
+    const stats = summarizeRecordedQuantities([
+      {
+        id: "known-amount",
+        foodId: "food-a",
+        foodName: "Sữa",
+        kind: "consume",
+        at: "2026-11-18T10:00:00.000Z",
+        amount: 0.5,
+        unit: "hộp",
+      },
+      {
+        id: "missing-amount",
+        foodId: "food-b",
+        foodName: "Bánh",
+        kind: "discard",
+        at: "2026-11-18T11:00:00.000Z",
+        unit: "gói",
+      },
+      {
+        id: "missing-unit",
+        foodId: "food-c",
+        foodName: "Rau",
+        kind: "discard",
+        at: "2026-11-18T12:00:00.000Z",
+        amount: 250,
+      },
+    ])
+
+    expect(stats).toEqual([
+      {
+        unit: "hộp",
+        used: 0.5,
+        discarded: 0,
+        usedWithoutAmount: 0,
+        discardedWithoutAmount: 0,
+        eventsWithoutUnit: 0,
+      },
+      {
+        unit: "gói",
+        used: 0,
+        discarded: 0,
+        usedWithoutAmount: 0,
+        discardedWithoutAmount: 1,
+        eventsWithoutUnit: 0,
+      },
+      {
+        unit: "Chưa rõ đơn vị",
+        used: 0,
+        discarded: 0,
+        usedWithoutAmount: 0,
+        discardedWithoutAmount: 0,
+        eventsWithoutUnit: 1,
+      },
+    ])
+  })
+
   it("defines 7 business categories with valid Vietnamese labels", () => {
     expect(CATEGORIES.length).toBe(7)
 
@@ -213,6 +273,19 @@ describe("Storage & Insight Feature Integration", () => {
     expect(consumeEv.amount).toBe(2)
 
     expect(consumeEv.category).toBe("dairy_eggs")
+
+    expect(consumeEv.unit).toBe("hộp")
+
+    const movementWithoutUnit = fromQuantityMovement({
+      id: "mov-no-unit",
+      entry_id: "food-unknown-unit",
+      kind: "consume",
+      quantity_before: 3,
+      quantity_after: 2,
+      reason: "",
+      recorded_at: "2026-10-21T08:00:00.000Z",
+    })
+    expect(movementWithoutUnit.unit).toBeUndefined()
 
     // 2. Discard movement
 
@@ -504,7 +577,7 @@ describe("Storage & Insight Feature Integration", () => {
 
     expect(html).toContain("Chưa có lượt dùng hoặc bỏ")
     expect(html).not.toContain("Chưa thể tính tỷ lệ trong 30 ngày gần nhất.")
-    expect(html).not.toContain('aria-label="Biểu đồ tỷ lệ dùng hết theo các khoảng thời gian"')
+    expect(html).not.toContain("dùng hết theo thời gian")
   })
 
   it("handles OCR scan navigation routes and maintains URL synchronization", async () => {

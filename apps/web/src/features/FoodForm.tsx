@@ -4,7 +4,10 @@ import { api } from "../api/client"
 
 import { playBeep } from "../lib/barcode"
 
-import type { Category, Food, Unit } from "../store/appStore"
+import type { Draft } from "../domain/foodDraft"
+
+export { draftFrom, emptyDraft } from "../domain/foodDraft"
+export type { Draft } from "../domain/foodDraft"
 
 import {
   CATEGORIES,
@@ -43,85 +46,15 @@ import GoogleReminderPicker, { formatGoogleDate } from "./GoogleReminderPicker"
 
 import { prepareScanImage } from "./image-optimization"
 
-export interface Draft {
-  id?: string
-
-  name: string
-
-  quantity: string
-
-  unit: Unit | ""
-
-  category: Category | ""
-
-  mfgDate: string
-
-  opened_on?: string
-
-  expDate: string
-
-  location: string
-
-  barcode?: string
-
-  note?: string
-
-  reviewAt?: string
-}
-
-export const emptyDraft = (): Draft => ({
-  name: "",
-
-  quantity: "1",
-
-  unit: "cái",
-
-  category: "other",
-
-  mfgDate: "",
-
-  opened_on: "",
-
-  expDate: "",
-
-  location: "",
-
-  note: "",
-
-  reviewAt: "",
-})
-
-export const draftFrom = (f: Food, keepQty = true): Draft => ({
-  id: f.id,
-
-  name: f.name,
-
-  quantity: keepQty ? String(f.quantity) : "",
-
-  unit: f.unit,
-
-  category: f.category ?? "other",
-
-  mfgDate: f.mfgDate ?? "",
-
-  opened_on: f.opened_on ?? "",
-
-  expDate: f.expDate ?? "",
-
-  location: f.location ?? "",
-
-  barcode: f.barcode ?? undefined,
-
-  note: f.note ?? "",
-
-  reviewAt: f.reviewAt ?? "",
-})
-
 export type Errors = Partial<Record<"name" | "quantity" | "unit" | "location" | "note" | "mfgDate" | "opened_on" | "expDate" | "save", string>>
 
-const validDate = (v: string) =>
-  !v ||
-  (/^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(new Date(v + "T00:00:00").getTime()))
+const validDate = (v: string) => {
+  if (!v) return true
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false
+
+  const date = new Date(`${v}T00:00:00.000Z`)
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === v
+}
 
 export function validate(d: Draft): Errors {
   const e: Errors = {}
@@ -198,6 +131,8 @@ export function FoodForm({
   onSubmit,
 
   onCancel,
+  onDirtyChange,
+  restored,
 }: {
   mode: FormMode
 
@@ -212,8 +147,12 @@ export function FoodForm({
   onSubmit: (d: Draft) => Promise<void>
 
   onCancel: (dirty: boolean) => void
+
+  restored?: Draft
+
+  onDirtyChange?: (dirty: boolean) => void
 }) {
-  const [d, setD] = useState<Draft>(initial)
+  const [d, setD] = useState<Draft>(restored ?? initial)
 
   const [showReminderPicker, setShowReminderPicker] = useState<boolean>(
     () => !!initial.reviewAt,
@@ -333,6 +272,25 @@ export function FoodForm({
   const submitting = useRef(false)
 
   const dirty = JSON.stringify(d) !== JSON.stringify(initial)
+  useEffect(() => {
+    onDirtyChange?.(dirty)
+    return () => onDirtyChange?.(false)
+  }, [dirty, onDirtyChange])
+
+  useEffect(() => {
+    // Keep an interrupted browser reload in the same form and history entry.
+    const persistDraft = () => {
+      const entry = window.history.state
+      if (entry?.stack?.at(-1)?.name === "form") {
+        window.history.replaceState(
+          { ...entry, formDraft: dirty ? d : undefined },
+          "",
+        )
+      }
+    }
+    window.addEventListener("pagehide", persistDraft)
+    return () => window.removeEventListener("pagehide", persistDraft)
+  }, [dirty, d])
 
   const set = (k: keyof Draft) => (v: string) => {
     // Strictly prevent changes to machine-scanned fields
@@ -492,7 +450,10 @@ export function FoodForm({
           <div>
             <SelectField
               label="Đơn vị *"
-              options={UNITS.map((u) => ({ value: u, label: u }))}
+              options={[
+                { value: "", label: "Chọn đơn vị" },
+                ...UNITS.map((u) => ({ value: u, label: u })),
+              ]}
               value={d.unit}
               onChange={set("unit")}
             />

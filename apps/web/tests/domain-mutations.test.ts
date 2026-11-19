@@ -77,6 +77,19 @@ const mutationResponse: MutationResultDTO = {
 }
 
 describe("Domain Error Message Translations", () => {
+  it("maps transport error statuses to safe recovery guidance", () => {
+    expect(errorMessage(400, "UNKNOWN_ERROR")).toContain("thử lại")
+    expect(errorMessage(401, "UNKNOWN_ERROR")).toContain("Đăng nhập lại")
+    expect(errorMessage(403, "UNKNOWN_ERROR")).toContain("Đăng nhập")
+    expect(errorMessage(404, "UNKNOWN_ERROR")).toContain("quay lại kho")
+    expect(errorMessage(409, "UNKNOWN_ERROR")).toContain("thử lại")
+    expect(errorMessage(422, "UNKNOWN_ERROR")).toContain("Kiểm tra")
+    expect(errorMessage(429, "UNKNOWN_ERROR")).toContain("chờ")
+    expect(errorMessage(503, "PRIVATE_DATABASE_ERROR")).not.toContain(
+      "PRIVATE_DATABASE_ERROR",
+    )
+  })
+
   it("translates VERSION_CONFLICT to Vietnamese data changed advisory", () => {
     const msg = errorMessage(409, "VERSION_CONFLICT")
 
@@ -207,6 +220,36 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
     expect(dto.opened_on).toBe("2026-10-20")
 
     expect(dto.note).toBe("Đã mở 1 hộp")
+  })
+
+  it("omits an unchanged location and normalizes explicit empty locations", () => {
+    const base = {
+      name: "Sữa",
+      expiry_date: null,
+      expiry_date_certainty: "unknown" as const,
+      expiry_date_source: "unknown" as const,
+      expiry_date_label_type: "unknown" as const,
+      opened_on: null,
+      note: null,
+    }
+
+    const omitted = draftDTO(base as EntryDraft)
+    expect(Object.hasOwn(omitted, "storage_location")).toBe(false)
+    expect(Object.hasOwn(omitted, "category")).toBe(false)
+
+    expect(draftDTO({ ...base, storage_location: "" }).storage_location).toBe(
+      "unspecified",
+    )
+    expect(draftDTO({ ...base, storage_location: null }).storage_location).toBe(
+      "unspecified",
+    )
+
+    expect(
+      Object.hasOwn(
+        draftDTO({ ...base, category: null } as EntryDraft),
+        "category",
+      ),
+    ).toBe(false)
   })
 
   it("preserves canonical user_entered source in draftDTO", () => {

@@ -22,7 +22,7 @@ export function errorHandler(err, req, res, next) {
       title: err.code,
       status: err.status,
       code: err.code,
-      detail: err.message || err.code
+      detail: err.code
     });
   }
 

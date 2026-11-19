@@ -225,6 +225,8 @@ export function Settings({
       if (nextPermission === "granted") {
         new Notification("Expiry · Thông báo thử", { icon: "/favicon.svg" })
         notify("Đã gửi thông báo thử")
+      } else if (nextPermission === "default") {
+        notify("Chưa gửi thông báo thử vì chưa cấp quyền", "warning")
       }
     } catch {
       notify("Không thể gửi thông báo thử", "warning")

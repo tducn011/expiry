@@ -1,487 +1,593 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import {
   Check,
   PackagePlus,
+  Pencil,
   Plus,
   ShoppingBag,
-  Sparkles,
   Trash2,
-  X,
 } from "lucide-react"
-
-import type { State } from "../store/appStore"
-import { CATEGORY_LABELS, inferCategory } from "../store/appStore"
 import type { ShoppingItem } from "../domain/types"
+import { normalizeShoppingName } from "../domain/shoppingStock"
+import { inferCategory, UNITS, type State } from "../store/appStore"
 import {
   addShoppingItem,
-  deleteShoppingItem,
+  changeShoppingItem,
   getShoppingItems,
+  ShoppingItemChanged,
   suggestItemsFromInventory,
-  toggleShoppingItem,
 } from "../api/shoppingStorage"
 import Button from "../components/ui/Button"
+import SelectField from "../components/ui/SelectField"
 import EmptyState from "../components/ui/EmptyState"
 import Modal from "../components/ui/Modal"
 import PageHeader from "../components/ui/PageHeader"
 import type { ToastProps } from "../components/ui/Toast"
 import { getFoodIcon } from "./FoodCard"
+import { ShoppingStockCheck, useShoppingStock } from "./ShoppingStockCheck"
+
+export type ShoppingFilter = "all" | "active" | "checked"
 
 export interface ShoppingViewProps {
   state: State
+  filter?: ShoppingFilter
+  onFilterChange?: (filter: ShoppingFilter) => void
   onAddToInventory: (item: ShoppingItem, method: "scan" | "manual") => void
   notify: (msg: string, variant?: ToastProps["variant"]) => void
 }
 
+const units = [
+  { value: "", label: "Đơn vị" },
+  ...UNITS.map((unit) => ({ value: unit, label: unit })),
+]
+const blankDraft = { name: "", quantity: "", unit: "" }
+
+function readList(owner: string | undefined) {
+  try {
+    return { items: getShoppingItems(owner), unavailable: false }
+  } catch {
+    return { items: [], unavailable: true }
+  }
+}
+
+function describeQuantity(item: ShoppingItem) {
+  if (item.quantity === null)
+    return item.unit ? `Chưa rõ lượng · ${item.unit}` : "Chưa rõ lượng"
+  return item.unit
+    ? `${item.quantity} ${item.unit}`
+    : `${item.quantity} · Chưa rõ đơn vị`
+}
+
 export function ShoppingView({
   state,
+  filter: routeFilter,
+  onFilterChange,
   onAddToInventory,
   notify,
 }: ShoppingViewProps) {
-  const [items, setItems] = useState<ShoppingItem[]>(() =>
-    getShoppingItems(state.userId),
+  const owner = state.userId
+  const [list, setList] = useState(() => readList(owner))
+  const [draft, setDraft] = useState(blankDraft)
+  const [error, setError] = useState("")
+  const [localFilter, setLocalFilter] = useState<ShoppingFilter>("all")
+  const [editing, setEditing] = useState<ShoppingItem>()
+  const [removing, setRemoving] = useState<ShoppingItem>()
+  const [importItemId, setImportItemId] = useState<string>()
+  const [revision, setRevision] = useState(0)
+  const reloadStock = () => setRevision((value) => value + 1)
+  const snapshot = useShoppingStock(state, revision)
+  const { items, unavailable } = list
+  const filter = routeFilter ?? localFilter
+
+  useEffect(() => {
+    setList(readList(owner))
+    const refresh = () => {
+      setList(readList(owner))
+      setRevision((value) => value + 1)
+    }
+    window.addEventListener("storage", refresh)
+    window.addEventListener("focus", refresh)
+    return () => {
+      window.removeEventListener("storage", refresh)
+      window.removeEventListener("focus", refresh)
+    }
+  }, [owner])
+
+  const active = items.filter((item) => !item.checked)
+  const bought = items.filter((item) => item.checked)
+  const importItem = bought.find(
+    (item) => item.id === importItemId && !item.inventoryAddedAt,
   )
-  const [newName, setNewName] = useState("")
-  const [newQty, setNewQty] = useState("1")
-  const [newUnit, setNewUnit] = useState<string>("cái")
-  const [filter, setFilter] = useState<"all" | "active" | "checked">("all")
-  const [lastBoughtId, setLastBoughtId] = useState<string | null>(null)
-  const [importItemId, setImportItemId] = useState<string | null>(null)
+  const suggestionFoods =
+    state.mode === "demo"
+      ? state.foods
+      : snapshot.status === "ready"
+        ? snapshot.foods.filter((food) => !food.inactive)
+        : []
+  const suggestions = suggestItemsFromInventory(suggestionFoods, items)
 
-  useEffect(() => setItems(getShoppingItems(state.userId)), [state.userId])
+  const updateList = (next: ShoppingItem[]) =>
+    setList({ items: next, unavailable: false })
 
-  const suggestions = useMemo(
-    () => suggestItemsFromInventory(state.foods, items),
-    [state.foods, items],
-  )
-
-  const activeItems = useMemo(() => items.filter((i) => !i.checked), [items])
-  const checkedItems = useMemo(() => items.filter((i) => i.checked), [items])
-  const importItem = items.find((item) => item.id === importItemId) || null
-  const lastBought = items.find(
-    (item) =>
-      item.id === lastBoughtId && item.checked && !item.inventoryAddedAt,
-  )
-  const progress = items.length
-    ? Math.round((checkedItems.length / items.length) * 100)
-    : 0
-
-  const handleAddItem = (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    const trimmed = newName.trim()
-    if (!trimmed) return
-
-    const qty = Math.max(1, Number(newQty) || 1)
-    const category = inferCategory(trimmed)
-    const added = addShoppingItem(
-      {
-        name: trimmed,
-        quantity: qty,
-        unit: newUnit,
-        category,
-        checked: false,
-        addedFromInventory: false,
-      },
-      state.userId,
-    )
-
-    setItems((prev) => [added, ...prev])
-    setNewName("")
-    setNewQty("1")
-    notify(`Đã thêm "${trimmed}" vào danh sách mua sắm`)
-  }
-
-  const handleAddSuggestion = (
-    s: ReturnType<typeof suggestItemsFromInventory>[number],
-  ) => {
-    const added = addShoppingItem(
-      {
-        name: s.name,
-        quantity: s.quantity,
-        unit: s.unit || "cái",
-        category: s.category || inferCategory(s.name),
-        checked: false,
-        addedFromInventory: true,
-        note: s.note,
-      },
-      state.userId,
-    )
-    setItems((prev) => [added, ...prev])
-    notify(`Đã thêm "${s.name}" từ kho vào danh sách`)
-  }
-
-  const handleToggle = (id: string) => {
-    const item = items.find((entry) => entry.id === id)
-    const next = toggleShoppingItem(id, state.userId)
-    setItems(next)
-    if (item && !item.checked) {
-      setLastBoughtId(id)
-    } else if (lastBoughtId === id) {
-      setLastBoughtId(null)
+  function change(
+    item: ShoppingItem,
+    update: (current: ShoppingItem) => ShoppingItem | null,
+  ) {
+    try {
+      updateList(changeShoppingItem(item, update, owner))
+      setError("")
+      return true
+    } catch (failure) {
+      if (failure instanceof ShoppingItemChanged) {
+        setList(readList(owner))
+        setError(
+          "Mục mua đã thay đổi. Hãy xem lại danh sách trước khi xác nhận.",
+        )
+      } else {
+        setError(
+          "Chưa lưu được danh sách. Hãy kiểm tra quyền lưu dữ liệu rồi thử lại.",
+        )
+      }
+      return false
     }
   }
 
-  const handleDelete = (id: string, name: string) => {
-    const next = deleteShoppingItem(id, state.userId)
-    setItems(next)
-    notify(`Đã xóa "${name}"`)
+  function add(values: Omit<ShoppingItem, "id" | "createdAt">) {
+    try {
+      const latest = getShoppingItems(owner)
+      if (
+        latest.some(
+          (item) =>
+            !item.checked &&
+            normalizeShoppingName(item.name) ===
+              normalizeShoppingName(values.name) &&
+            (item.quantity ?? null) === values.quantity &&
+            (item.unit ?? null) === values.unit,
+        )
+      ) {
+        setError(
+          "Món với lượng và đơn vị này đã có trong danh sách cần mua. Bạn có thể sửa mục hiện tại.",
+        )
+        return false
+      }
+      const added = addShoppingItem(values, owner)
+      updateList([added, ...latest])
+      setError("")
+      reloadStock()
+      notify(`Đã thêm ${added.name} vào danh sách`)
+      return true
+    } catch {
+      setError("Chưa lưu được danh sách. Thông tin bạn nhập vẫn còn.")
+      return false
+    }
   }
 
-  return (
-    <div className="flex flex-col gap-6 w-full">
-      <PageHeader title="Mua sắm" />
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const name = draft.name.trim()
+    const quantityText = draft.quantity.trim().replace(",", ".")
+    const quantity = quantityText ? Number(quantityText) : null
+    if (!normalizeShoppingName(name) || [...name].length > 200) {
+      setError("Nhập tên món từ 1 đến 200 ký tự.")
+      return
+    }
+    if (
+      quantity !== null &&
+      (!/^\d+(?:\.\d{1,3})?$/.test(quantityText) ||
+        quantity <= 0 ||
+        quantity > 999999999.999)
+    ) {
+      setError("Nhập số lượng lớn hơn 0, tối đa 3 chữ số thập phân.")
+      return
+    }
+    const unit = draft.unit || null
+    const category = inferCategory(name)
+    if (editing) {
+      if (
+        !change(editing, (item) => ({
+          ...item,
+          name,
+          quantity,
+          unit,
+          category: name === item.name ? item.category : category,
+          matchedFoodId:
+            name === item.name &&
+            quantity === item.quantity &&
+            unit === item.unit
+              ? item.matchedFoodId
+              : undefined,
+        }))
+      )
+        return
+      reloadStock()
+      notify("Đã cập nhật mục mua")
+    } else if (!add({ name, quantity, unit, category, checked: false })) return
+    setEditing(undefined)
+    setDraft(blankDraft)
+  }
 
+  function startEdit(item: ShoppingItem) {
+    setEditing(item)
+    setDraft({
+      name: item.name,
+      quantity: item.quantity?.toString() ?? "",
+      unit: item.unit ?? "",
+    })
+    setError("")
+    document.getElementById("shopping-name")?.focus()
+  }
+
+  function renderItem(item: ShoppingItem) {
+    const Icon = getFoodIcon(item.name)
+    return (
+      <article key={item.id} className="min-w-0 px-3 py-2.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={item.checked}
+            aria-label={`${
+              item.checked ? "Đánh dấu chưa mua" : "Đánh dấu đã mua"
+            } ${item.name}`}
+            onClick={() => {
+              if (
+                change(item, (current) => ({
+                  ...current,
+                  checked: !current.checked,
+                }))
+              ) {
+                notify(
+                  item.checked ? "Đã chuyển về Cần mua" : "Đã đánh dấu đã mua",
+                )
+              }
+            }}
+            className="grid size-11 shrink-0 place-items-center rounded-corner-md hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
+          >
+            <span
+              className={`grid size-6 place-items-center rounded-md border-2 ${
+                item.checked
+                  ? "border-brand-primary bg-brand-primary text-white"
+                  : "border-border-control"
+              }`}
+            >
+              {item.checked && <Check size={15} aria-hidden="true" />}
+            </span>
+          </button>
+          <Icon
+            size={18}
+            className="hidden shrink-0 text-text-secondary min-[360px]:block"
+            aria-hidden="true"
+          />
+          <div className="min-w-0 flex-1">
+            <h3 className="break-words text-sm font-semibold text-text-heading">
+              {item.name}
+            </h3>
+            <p className="text-xs text-text-secondary">
+              {describeQuantity(item)}
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label={`Sửa ${item.name}`}
+            onClick={() => startEdit(item)}
+            className="grid size-11 shrink-0 place-items-center rounded-corner-md text-text-secondary hover:bg-surface-hover"
+          >
+            <Pencil size={16} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            aria-label={`Xóa ${item.name}`}
+            onClick={() => setRemoving(item)}
+            className="grid size-11 shrink-0 place-items-center rounded-corner-md text-text-secondary hover:bg-surface-hover"
+          >
+            <Trash2 size={16} aria-hidden="true" />
+          </button>
+        </div>
+        <ShoppingStockCheck
+          item={item}
+          state={state}
+          snapshot={snapshot}
+          onRetry={reloadStock}
+          onLink={(foodId) => {
+            if (
+              change(item, (current) => ({ ...current, matchedFoodId: foodId }))
+            ) {
+              notify(foodId ? "Đã liên kết gói trong kho" : "Đã bỏ liên kết")
+            }
+          }}
+        />
+        {(item.inventoryAddedAt || item.checked) && (
+          <div className="flex justify-end">
+            {item.inventoryAddedAt ? (
+              <span className="py-2 text-xs font-semibold text-status-ok">
+                Đã nhập kho
+              </span>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={() => setImportItemId(item.id)}
+                iconStart={<PackagePlus size={15} />}
+              >
+                Thêm vào kho
+              </Button>
+            )}
+          </div>
+        )}
+      </article>
+    )
+  }
+
+  const sections = [
+    {
+      id: "active",
+      label: "Cần mua",
+      items: active,
+      empty: "Không còn món cần mua",
+    },
+    {
+      id: "checked",
+      label: "Đã mua",
+      items: bought,
+      empty: "Chưa có món đã mua",
+    },
+  ] as const
+
+  return (
+    <div className="shopping-view flex w-full flex-col gap-4">
+      <PageHeader
+        title="Mua sắm"
+        actions={
+          items.length > 0 && (
+            <Button variant="subtle" onClick={reloadStock}>
+              Đọc lại kho
+            </Button>
+          )
+        }
+      />
       {items.length > 0 && (
         <section
           aria-label="Tiến độ mua sắm"
-          className="rounded-corner-lg border border-border-primary bg-surface-bg p-4 shadow-xs"
+          className="rounded-corner-lg border border-border-primary bg-surface-bg p-3"
         >
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-sm font-semibold text-text-heading">
-              Danh sách của tôi
-            </h2>
-            <span className="text-sm font-semibold tabular-nums text-text-primary">
-              {checkedItems.length}/{items.length} đã mua
+          <div className="flex justify-between gap-2 text-xs font-semibold">
+            <span>{active.length} cần mua</span>
+            <span>
+              {bought.length}/{items.length} đã mua
             </span>
           </div>
           <div
-            className="mt-3 h-2 overflow-hidden rounded-full bg-surface-soft"
+            className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-secondary"
             role="progressbar"
+            aria-label="Số món đã mua"
             aria-valuemin={0}
             aria-valuemax={items.length}
-            aria-valuenow={checkedItems.length}
-            aria-label="Số món đã mua"
+            aria-valuenow={bought.length}
           >
             <div
-              className="h-full rounded-full bg-brand-primary transition-[width] duration-200"
-              style={{ width: `${progress}%` }}
+              className="h-full rounded-full bg-brand-primary"
+              style={{ width: `${(100 * bought.length) / items.length}%` }}
             />
           </div>
         </section>
       )}
 
-      {/* Add Item Input Form */}
-      <form
-        onSubmit={handleAddItem}
-        className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-3 rounded-[16px] border border-border-control bg-surface-bg shadow-none"
-      >
-        <div className="relative flex-1">
+      <form onSubmit={submit} className="flex flex-col gap-2">
+        {editing && (
+          <h2 className="text-sm font-semibold text-text-heading">
+            Sửa mục mua
+          </h2>
+        )}
+        <div
+          className={`shopping-entry-fields grid min-w-0 items-center gap-2 ${
+            editing
+              ? "grid-cols-2 sm:grid-cols-[minmax(0,1fr)_100px_112px]"
+              : "grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_auto] sm:grid-cols-[minmax(0,1fr)_100px_112px_auto]"
+          }`}
+        >
           <input
+            id="shopping-name"
             type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
+            value={draft.name}
+            maxLength={200}
+            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             placeholder="Tên món cần mua"
             aria-label="Tên món cần mua"
-            className="h-11 w-full rounded-[12px] bg-transparent px-3 text-[14px] leading-[20px] text-text-primary placeholder:text-text-placeholder outline-none"
+            className="col-span-full h-11 min-w-0 rounded-corner-md border border-border-control bg-surface-bg px-3 text-base sm:col-span-1 md:text-sm"
           />
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
           <input
-            type="number"
-            min="1"
-            value={newQty}
-            onChange={(e) => setNewQty(e.target.value)}
-            className="h-11 w-16 rounded-[12px] border border-border-primary bg-surface-subtle px-2.5 text-center text-[14px] font-medium text-text-primary outline-none focus:border-brand-primary"
-            title="Số lượng"
-            aria-label="Số lượng"
+            type="text"
+            inputMode="decimal"
+            value={draft.quantity}
+            onChange={(e) => setDraft({ ...draft, quantity: e.target.value })}
+            placeholder="Số lượng"
+            aria-label="Số lượng (tùy chọn)"
+            className="h-11 min-w-0 rounded-corner-md border border-border-control bg-surface-bg px-2 text-base md:text-sm"
           />
-          <select
-            value={newUnit}
-            onChange={(e) => setNewUnit(e.target.value)}
+          <SelectField
+            value={draft.unit}
+            onChange={(unit) => setDraft({ ...draft, unit })}
             aria-label="Đơn vị"
-            className="h-11 rounded-[12px] border border-border-primary bg-surface-subtle px-2.5 text-[14px] font-medium text-text-primary outline-none focus:border-brand-primary cursor-pointer"
+            options={units}
+          />
+          <div
+            className={
+              editing
+                ? "col-span-full grid grid-cols-2 gap-2 sm:flex sm:justify-end"
+                : "grid"
+            }
           >
-            <option value="cái">cái</option>
-            <option value="hộp">hộp</option>
-            <option value="g">g</option>
-            <option value="kg">kg</option>
-            <option value="ml">ml</option>
-            <option value="lít">lít</option>
-            <option value="quả">quả</option>
-            <option value="bó">bó</option>
-            <option value="gói">gói</option>
-          </select>
-          <Button
-            type="submit"
-            variant="secondary"
-            size="small"
-            iconStart={<Plus size={16} />}
-            disabled={!newName.trim()}
-          >
-            Thêm
-          </Button>
-        </div>
-      </form>
-
-      {lastBought && (
-        <div
-          role="status"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-corner-lg border border-status-ok/30 bg-status-ok-bg px-4 py-3"
-        >
-          <span className="inline-flex items-center gap-2 text-sm font-medium text-text-primary">
-            <Check size={18} className="text-status-ok" aria-hidden="true" />
-            Đã mua {lastBought.name}
-          </span>
-          <div className="flex items-center gap-2">
+            {editing && (
+              <Button
+                variant="subtle"
+                onClick={() => {
+                  setEditing(undefined)
+                  setDraft(blankDraft)
+                  setError("")
+                }}
+              >
+                Hủy sửa
+              </Button>
+            )}
             <Button
-              size="small"
-              variant="secondary"
-              onClick={() => setImportItemId(lastBought.id)}
-              iconStart={<PackagePlus size={15} />}
+              type="submit"
+              variant="primary"
+              className="px-3"
+              disabled={unavailable || !draft.name.trim()}
+              iconStart={editing ? undefined : <Plus size={16} />}
             >
-              Thêm vào kho
+              {editing ? "Lưu mục mua" : "Thêm"}
             </Button>
-            <button
-              type="button"
-              aria-label="Ẩn gợi ý thêm vào kho"
-              onClick={() => setLastBoughtId(null)}
-              className="flex size-11 md:size-8 items-center justify-center rounded-corner-sm text-text-secondary hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
-            >
-              <X size={16} aria-hidden="true" />
-            </button>
           </div>
         </div>
-      )}
-
-      {items.length > 0 && (
-        <div
-          role="tablist"
-          aria-label="Lọc danh sách mua sắm"
-          className="grid grid-cols-3 gap-1.5"
+      </form>
+      {error && (
+        <p
+          role="alert"
+          className="rounded-corner-md bg-status-expired-bg px-3 py-2 text-sm text-status-expired"
         >
-          {([
-            ["all", `Tất cả (${items.length})`],
-            ["active", `Chưa mua (${activeItems.length})`],
-            ["checked", `Đã mua (${checkedItems.length})`],
-          ] as const).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="tab"
-              aria-selected={filter === value}
-              onClick={() => setFilter(value)}
-              className={`min-h-11 md:min-h-10 min-w-0 whitespace-nowrap rounded-corner-full border px-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary sm:text-sm ${
-                filter === value
-                  ? "border-brand-primary bg-brand-primary text-white"
-                  : "border-border-primary bg-surface-bg text-text-primary hover:bg-surface-hover"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+          {error}
+        </p>
+      )}
+      {unavailable && (
+        <div className="flex flex-wrap items-center gap-2">
+          <p role="alert">Không đọc được danh sách mua.</p>
+          <Button
+            variant="secondary"
+            size="small"
+            onClick={() => setList(readList(owner))}
+          >
+            Thử lại
+          </Button>
         </div>
       )}
-
-      {/* Active Items List */}
-      {items.length === 0 ? (
+      {!unavailable && items.length === 0 && (
         <EmptyState
-          icon={<ShoppingBag size={36} />}
+          icon={<ShoppingBag size={32} />}
           title="Danh sách mua sắm trống"
         />
-      ) : (
-        <div className="flex flex-col gap-6">
-          {filter !== "checked" && activeItems.length > 0 && (
-            <section
-              aria-labelledby="active-list-heading"
-              className="flex flex-col gap-2.5"
-            >
-              <div className="flex items-center justify-between">
-                <h2
-                  id="active-list-heading"
-                  className="text-[18px] leading-[26px] font-semibold text-text-heading tracking-normal"
-                >
-                  Cần mua ({activeItems.length})
+      )}
+      {items.length > 0 && (
+        <>
+          <div
+            role="group"
+            aria-label="Lọc danh sách mua sắm"
+            className="grid grid-cols-3 gap-1.5 sm:w-fit sm:gap-2"
+          >
+            {([
+              ["all", "Tất cả", items.length],
+              ["active", "Chưa mua", active.length],
+              ["checked", "Đã mua", bought.length],
+            ] as const).map(([value, label, count]) => (
+              <Button
+                key={value}
+                size="small"
+                className="min-w-0 !min-h-11 !px-0.5 min-[360px]:!px-1.5 sm:!px-3"
+                type="button"
+                aria-pressed={filter === value}
+                variant={filter === value ? "primary" : "secondary"}
+                onClick={() => {
+                  setLocalFilter(value)
+                  onFilterChange?.(value)
+                }}
+              >
+                {label} ({count})
+              </Button>
+            ))}
+          </div>
+          {sections
+            .filter(
+              (section) =>
+                filter === section.id ||
+                (filter === "all" && section.items.length),
+            )
+            .map((section) => (
+              <section
+                key={section.id}
+                aria-label={section.label}
+                className="grid gap-2"
+              >
+                <h2 className="text-sm font-semibold text-text-heading">
+                  {section.label} ({section.items.length})
                 </h2>
-              </div>
-              <div className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-[16px] border border-border-primary bg-surface-bg shadow-none">
-                {activeItems.map((item) => {
-                  const IconComp = getFoodIcon(item.name)
-                  return (
-                    <div
-                      key={item.id}
-                      className="group flex min-h-[64px] items-center justify-between gap-3 px-3.5 py-2.5 transition-colors hover:bg-surface-hover"
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <button
-                          type="button"
-                          role="checkbox"
-                          aria-checked={false}
-                          aria-label={`Đánh dấu đã mua ${item.name}`}
-                          onClick={() => handleToggle(item.id)}
-                          className="relative flex size-6 shrink-0 items-center justify-center rounded-[6px] after:absolute after:-inset-2.5 after:content-[''] border-2 border-border-control bg-surface-bg hover:border-brand-primary transition-colors cursor-pointer"
-                        />
-                        <span
-                          aria-hidden="true"
-                          className="flex size-10 shrink-0 items-center justify-center rounded-[12px] border border-border-primary bg-surface-subtle text-text-primary"
-                        >
-                          <IconComp size={18} strokeWidth={2} />
-                        </span>
-                        <div className="flex min-w-0 flex-col">
-                          <span className="truncate text-[15px] font-semibold text-text-heading">
-                            {item.name}
-                          </span>
-                          <span className="text-[12px] text-text-secondary">
-                            {item.quantity} {item.unit}
-                            {item.category
-                              ? ` · ${CATEGORY_LABELS[(item.category as keyof typeof CATEGORY_LABELS)] || item.category}`
-                              : ""}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          aria-label={`Xóa ${item.name}`}
-                          onClick={() => handleDelete(item.id, item.name)}
-                          className="flex size-11 md:size-8 items-center justify-center rounded-[8px] text-text-tertiary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* Checked Items List */}
-          {filter !== "active" && checkedItems.length > 0 && (
-            <section
-              aria-labelledby="checked-list-heading"
-              className="flex flex-col gap-2.5"
-            >
-              <div className="flex items-center justify-between">
-                <h2
-                  id="checked-list-heading"
-                  className="text-[16px] leading-[24px] font-semibold text-text-secondary"
-                >
-                  Đã mua ({checkedItems.length})
-                </h2>
-              </div>
-              <div className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-[16px] border border-border-primary bg-surface-bg shadow-none">
-                {checkedItems.map((item) => {
-                  const IconComp = getFoodIcon(item.name)
-                  return (
-                    <div
-                      key={item.id}
-                      className="group flex min-h-[64px] flex-col items-stretch gap-2 px-3.5 py-3 transition-colors hover:bg-surface-hover sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <button
-                          type="button"
-                          role="checkbox"
-                          aria-checked={true}
-                          aria-label={`Đánh dấu chưa mua ${item.name}`}
-                          onClick={() => handleToggle(item.id)}
-                          className="relative flex size-6 shrink-0 items-center justify-center rounded-[6px] after:absolute after:-inset-2.5 after:content-[''] border-2 border-brand-primary bg-brand-primary text-white cursor-pointer"
-                        >
-                          <Check size={14} strokeWidth={3} />
-                        </button>
-                        <span
-                          aria-hidden="true"
-                          className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-border-primary bg-surface-subtle text-text-primary"
-                        >
-                          <IconComp size={16} strokeWidth={2} />
-                        </span>
-                        <div className="flex min-w-0 flex-col">
-                          <span className="truncate text-[14px] font-medium text-text-primary line-through">
-                            {item.name}
-                          </span>
-                          <span className="text-[12px] text-text-secondary">
-                            {item.quantity} {item.unit}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
-                        {item.inventoryAddedAt ? (
-                          <span className="text-xs font-medium text-status-ok">
-                            Trong kho
-                          </span>
-                        ) : (
-                          <Button
-                            size="small"
-                            variant="secondary"
-                            onClick={() => setImportItemId(item.id)}
-                            iconStart={<PackagePlus size={15} />}
-                          >
-                            Thêm vào kho
-                          </Button>
-                        )}
-                        <button
-                          type="button"
-                          aria-label={`Xóa ${item.name}`}
-                          onClick={() => handleDelete(item.id, item.name)}
-                          className="flex size-11 md:size-8 items-center justify-center rounded-[8px] text-text-tertiary hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
-          )}
-          {filter === "active" && activeItems.length === 0 && (
-            <EmptyState
-              icon={<Check size={32} />}
-              title="Đã mua hết danh sách"
-            />
-          )}
-          {filter === "checked" && checkedItems.length === 0 && (
-            <EmptyState
-              icon={<ShoppingBag size={32} />}
-              title="Chưa có món đã mua"
-            />
-          )}
-        </div>
+                {section.items.length ? (
+                  <div className="divide-y divide-border-subtle rounded-corner-lg border border-border-primary bg-surface-bg">
+                    {section.items.map(renderItem)}
+                  </div>
+                ) : (
+                  <EmptyState title={section.empty} />
+                )}
+              </section>
+            ))}
+        </>
       )}
 
-      {suggestions.length > 0 && (
-        <section
-          aria-labelledby="suggestions-heading"
-          className="rounded-corner-lg border border-border-primary bg-surface-subtle p-4"
-        >
-          <h2
-            id="suggestions-heading"
-            className="mb-3 flex items-center gap-2 text-sm font-semibold text-text-heading"
-          >
-            <Sparkles size={16} aria-hidden="true" />
+      {!unavailable && suggestions.length > 0 && (
+        <section aria-label="Gợi ý từ kho" className="grid gap-2">
+          <h2 className="text-sm font-semibold text-text-heading">
             Gợi ý từ kho
           </h2>
           <div className="flex flex-wrap gap-2">
             {suggestions.slice(0, 6).map((suggestion) => (
-              <button
+              <Button
                 key={suggestion.name}
-                type="button"
-                onClick={() => handleAddSuggestion(suggestion)}
-                className="inline-flex min-h-11 md:min-h-10 items-center gap-2 rounded-corner-full border border-border-primary bg-surface-bg px-3 text-sm font-medium text-text-primary hover:border-brand-primary focus-visible:outline-2 focus-visible:outline-brand-primary"
+                size="small"
+                variant="secondary"
+                onClick={() => add({ ...suggestion, checked: false })}
               >
-                <Plus
-                  size={15}
-                  className="text-brand-primary"
-                  aria-hidden="true"
-                />
                 {suggestion.name}
-                <span className="text-xs text-text-secondary">
-                  {suggestion.quantity} {suggestion.unit}
-                </span>
-              </button>
+              </Button>
             ))}
           </div>
         </section>
       )}
 
-      <Modal
-        isOpen={Boolean(importItem)}
-        title={importItem ? `Thêm ${importItem.name} vào kho` : "Thêm vào kho"}
-        onClose={() => setImportItemId(null)}
-        size="compact"
-      >
-        {importItem && (
-          <div className="flex flex-col gap-3">
-            <div className="rounded-corner-md border border-border-primary bg-surface-subtle px-4 py-3 text-sm text-text-primary">
-              {importItem.quantity} {importItem.unit}
+      {removing && (
+        <Modal
+          title="Xóa mục mua?"
+          onClose={() => setRemoving(undefined)}
+          footer={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setRemoving(undefined)}
+              >
+                Hủy
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  if (change(removing, () => null)) {
+                    reloadStock()
+                    notify("Đã xóa mục mua")
+                  }
+                  setRemoving(undefined)
+                }}
+              >
+                Xóa mục mua
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-text-secondary [overflow-wrap:anywhere]">
+            {removing.name}
+          </p>
+        </Modal>
+      )}
+
+      {importItem && (
+        <Modal
+          title="Thêm vào kho"
+          onClose={() => setImportItemId(undefined)}
+          size="compact"
+        >
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-2">
+            <div className="min-w-0 [overflow-wrap:anywhere] sm:col-span-2">
+              <p className="text-sm font-semibold text-text-heading">
+                {importItem.name}
+              </p>
+              <p className="text-xs text-text-secondary">
+                {describeQuantity(importItem)}
+              </p>
             </div>
             <Button
               block
@@ -500,13 +606,14 @@ export function ShoppingView({
             <Button
               block
               variant="subtle"
-              onClick={() => setImportItemId(null)}
+              className="sm:col-span-2"
+              onClick={() => setImportItemId(undefined)}
             >
               Để sau
             </Button>
           </div>
-        )}
-      </Modal>
+        </Modal>
+      )}
     </div>
   )
 }

@@ -3791,3 +3791,30 @@ input:-webkit-autofill:active {
   .home-toolbar { display: grid; grid-template-columns: minmax(180px, 1fr) auto; align-items: center; }
   .home-attention { display: flex; align-items: center; flex-wrap: wrap; column-gap: 24px; padding-block: 4px; }
 }
+
+/* Notification preview actions keep a full pointer target without tall action rows. */
+.notification-icon-action { position: relative; display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 8px; color: var(--color-text-secondary); cursor: pointer; }
+.notification-icon-action:hover { background: var(--color-surface-hover); color: var(--color-text-heading); }
+.notification-icon-action:focus-visible { outline: 2px solid var(--color-brand-primary); outline-offset: -2px; }
+.notification-tooltip { position: absolute; right: 0; bottom: calc(100% + 2px); z-index: 1; width: max-content; max-width: 190px; padding: 5px 8px; border-radius: 6px; background: var(--color-text-heading); color: var(--color-surface-bg); font-size: 11px; font-weight: 500; pointer-events: none; visibility: hidden; }
+.notification-icon-action:hover .notification-tooltip, .notification-icon-action:focus-visible .notification-tooltip { visibility: visible; }
+
+header .notification-tooltip { top: calc(100% + 2px); bottom: auto; }
+
+.storage-location-card { min-width: 0; min-height: 92px; }
+.storage-location-card:focus-visible { outline: 2px solid var(--color-brand-primary); outline-offset: 3px; }
+@media (max-width: 639px) {
+  .storage-view .storage-location-card { min-height: 88px; }
+  .storage-view > header { padding-block: 0; }
+  .shopping-view > header { padding-block: 0; }
+}
+
+.storage-view .storage-empty-state { padding-block: 20px; gap: 12px; }
+.storage-view .storage-empty-state h2 { font-size: 16px; }
+
+.shopping-entry-fields select { min-height: 44px; }
+
+@media (max-width: 767px) {
+  .shopping-entry-fields select { font-size: 16px; padding-inline: 8px 30px; }
+  .shopping-entry-fields select + span { right: 8px; }
+}

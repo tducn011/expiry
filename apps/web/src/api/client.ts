@@ -436,8 +436,6 @@ export function draftDTO(draft: EntryDraft): EntryDraftDTO {
   const dto: EntryDraftDTO = {
     name: draft.name,
 
-    category: draft.category ?? null,
-
     expiry_date: unknown ? null : draft.expiry_date,
 
     date_certainty:
@@ -471,6 +469,10 @@ export function draftDTO(draft: EntryDraft): EntryDraftDTO {
         (draft as Record<string, unknown>).reviewAt) as string | null ?? null,
 
     note: draft.note,
+  }
+
+  if (typeof draft.category === "string" && draft.category.trim()) {
+    dto.category = draft.category
   }
 
   if (draft.barcode) {

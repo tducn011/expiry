@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 
 import type { Food, State } from "../store/appStore"
 
@@ -57,8 +57,24 @@ export const defaultFilters: InventoryFilters = {
 
 const inventoryHsdOptions = defaultHsdOptions
 
+export type HomeFilters = {
+  query: string
+  status: StatusFilter
+  category: string
+  location: string
+}
+
+const initialHomeFilters: HomeFilters = {
+  query: "",
+  status: "all",
+  category: "all",
+  location: "all",
+}
+
 export interface InventoryProps {
   state: State
+  filters?: HomeFilters
+  onFiltersChange: (filters: HomeFilters) => void
 
   onOpenDetail: (id: string) => void
 
@@ -134,6 +150,8 @@ function AttentionSummary({
 
 export function Inventory({
   state,
+  filters = initialHomeFilters,
+  onFiltersChange,
 
   onOpenDetail,
 
@@ -147,13 +165,12 @@ export function Inventory({
 
   unreadNotificationsCount = 0,
 }: InventoryProps) {
-  const [q, setQ] = useState("")
-
-  const [filterHsd, setFilterHsd] = useState<StatusFilter>("all")
-
-  const [selectedCategory, setSelectedCategory] = useState<string>("all")
-
-  const [selectedLocation, setSelectedLocation] = useState<string>("all")
+  const {
+    query: q,
+    status: filterHsd,
+    category: selectedCategory,
+    location: selectedLocation,
+  } = filters
 
   const categoryOptions = useMemo(
     () =>
@@ -260,15 +277,7 @@ export function Inventory({
     state.locations,
   ])
 
-  const clear = () => {
-    setQ("")
-
-    setFilterHsd("all")
-
-    setSelectedCategory("all")
-
-    setSelectedLocation("all")
-  }
+  const clear = () => onFiltersChange(initialHomeFilters)
 
   return (
     <div className="home-dashboard flex flex-col gap-4 w-full">
@@ -342,10 +351,9 @@ export function Inventory({
             expired={expired}
             soon={soon}
             reviewDue={reviewDue}
-            onFilter={(filter) => {
-              clear()
-              setFilterHsd(filter)
-            }}
+            onFilter={(status) =>
+              onFiltersChange({ ...initialHomeFilters, status })
+            }
             onReview={onNavigateAttention}
           />
 
@@ -359,7 +367,9 @@ export function Inventory({
                 type="search"
                 aria-label="Tìm thực phẩm theo tên"
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) =>
+                  onFiltersChange({ ...filters, query: e.target.value })
+                }
                 placeholder="Tìm thực phẩm theo tên..."
                 className="h-12 w-full rounded-[12px] border border-border-control bg-surface-bg pl-10 pr-10 text-[14px] leading-[22px] text-text-primary placeholder:text-text-placeholder outline-none transition-all focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
               />
@@ -367,7 +377,7 @@ export function Inventory({
                 <button
                   type="button"
                   aria-label="Xóa tìm kiếm"
-                  onClick={() => setQ("")}
+                  onClick={() => onFiltersChange({ ...filters, query: "" })}
                   className="absolute right-3 flex size-6 items-center justify-center rounded-full text-text-tertiary hover:text-text-primary cursor-pointer"
                 >
                   <X size={16} strokeWidth={2} />
@@ -379,19 +389,23 @@ export function Inventory({
               <FilterDropdown<StatusFilter>
                 label="Hạn sử dụng"
                 value={filterHsd}
-                onChange={setFilterHsd}
+                onChange={(status) => onFiltersChange({ ...filters, status })}
                 options={inventoryHsdOptions}
               />
               <FilterDropdown
                 label="Danh mục"
                 value={selectedCategory}
-                onChange={setSelectedCategory}
+                onChange={(category) =>
+                  onFiltersChange({ ...filters, category })
+                }
                 options={categoryOptions}
               />
               <FilterDropdown
                 label="Lưu trữ"
                 value={selectedLocation}
-                onChange={setSelectedLocation}
+                onChange={(location) =>
+                  onFiltersChange({ ...filters, location })
+                }
                 options={locationOptions}
               />
             </div>
