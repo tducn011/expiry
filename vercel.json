@@ -3,6 +3,10 @@
   "outputDirectory": "apps/web/dist",
   "rewrites": [
     {
+      "source": "/health/(.*)",
+      "destination": "https://homeserver.tailc535bb.ts.net/health/$1"
+    },
+    {
       "source": "/health",
       "destination": "https://homeserver.tailc535bb.ts.net/health"
     },
