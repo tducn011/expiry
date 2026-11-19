@@ -50,6 +50,12 @@ export function errorMessage(status: number, code: string) {
     INSUFFICIENT_QUANTITY:
       "Lượng hiện tại không đủ. Kiểm tra lại trước khi xác nhận.",
 
+    SHOPPING_NOT_CHECKED:
+      "Mục mua chưa được đánh dấu đã mua. Quay lại danh sách để cập nhật.",
+
+    SHOPPING_ALREADY_IMPORTED:
+      "Mục mua này đã được nhập vào kho. Tải lại danh sách để xem trạng thái mới.",
+
     IDEMPOTENCY_KEY_REUSED:
       "Nội dung yêu cầu đã thay đổi. Kiểm tra dữ liệu trước khi thao tác lại.",
 
@@ -179,6 +185,16 @@ export type CreateEntryDTO = EntryDraftDTO & {
   quantity: string
 
   unit: Unit
+}
+
+export type ShoppingInventoryImportDTO = {
+  expected_version: number
+  entry: CreateEntryDTO
+}
+
+export type ShoppingInventoryImportResult = {
+  item: ShoppingItem
+  entry: FoodEntry
 }
 
 export type MovementDTO = {
@@ -1137,6 +1153,23 @@ export class ApiClient {
     return this.request<ShoppingItem>(
       `/shopping-items/${encodeURIComponent(id)}`,
     )
+  }
+
+  async importShoppingItemToInventory(
+    id: string,
+    command: ShoppingInventoryImportDTO,
+    commandKey?: string,
+  ): Promise<ShoppingInventoryImportResult> {
+    const result = await this.mutation<{
+      item: ShoppingItem
+      entry: EntryDTO
+    }>(
+      "POST",
+      `/shopping-items/${encodeURIComponent(id)}/import-to-inventory`,
+      command,
+      commandKey,
+    )
+    return { item: result.item, entry: fromEntry(result.entry) }
   }
 
   createShoppingItem(

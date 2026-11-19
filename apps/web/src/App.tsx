@@ -10,7 +10,13 @@ import {
   type ReactNode,
 } from "react"
 
-import { api, ApiError, decimal, type EditEntryDTO } from "./api/client"
+import {
+  api,
+  ApiError,
+  decimal,
+  type CreateEntryDTO,
+  type EditEntryDTO,
+} from "./api/client"
 
 import {
   attention,
@@ -992,22 +998,27 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     return { quantity, unit: "piece" }
   }
 
-  async function finishShoppingImport(shoppingItemId?: string) {
+  async function finishShoppingImport(
+    shoppingItemId?: string,
+    accountAlreadyMarked = false,
+  ) {
     if (shoppingItemId) {
       if (state.mode === "account") {
-        try {
-          const item = await api.shoppingItem(shoppingItemId)
-          if (item && !item.inventoryAddedAt)
-            await api.updateShoppingItem(
-              item,
-              { inventoryAddedAt: new Date().toISOString() },
-              `shopping_mark_${crypto.randomUUID()}`,
+        if (!accountAlreadyMarked) {
+          try {
+            const item = await api.shoppingItem(shoppingItemId)
+            if (item && !item.inventoryAddedAt)
+              await api.updateShoppingItem(
+                item,
+                { inventoryAddedAt: new Date().toISOString() },
+                `shopping_mark_${crypto.randomUUID()}`,
+              )
+          } catch {
+            notify(
+              "Thực phẩm đã lưu. Chưa cập nhật được dấu đã nhập trong danh sách mua.",
+              "warning",
             )
-        } catch {
-          notify(
-            "Thực phẩm đã lưu. Chưa cập nhật được dấu đã nhập trong danh sách mua.",
-            "warning",
-          )
+          }
         }
       } else {
         const current = getShoppingItems()
@@ -1046,7 +1057,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     const owner = state.userId
     // History and retries of the same purchase must refer to the same create.
-    const commandKey = `shopping_import_${shoppingItemId}`
+    const commandKey = `shopping_atomic_import_${shoppingItemId}`
     const pendingKey = JSON.stringify([owner, commandKey])
     if (pendingShoppingImports.current.has(pendingKey)) return
 
@@ -1087,7 +1098,13 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     pendingShoppingImports.current.add(pendingKey)
     try {
-      await saveFoodDraft(d, mode, shoppingItemId, commandKey)
+      await saveFoodDraft(
+        d,
+        mode,
+        shoppingItemId,
+        commandKey,
+        item.version ?? 1,
+      )
     } finally {
       pendingShoppingImports.current.delete(pendingKey)
     }
@@ -1098,6 +1115,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     mode: FormMode,
     shoppingItemId?: string,
     commandKey?: string,
+    shoppingExpectedVersion?: number,
   ) {
     if (state.mode === "account") {
       const idempotencyKey = commandKey ?? `idemp_${crypto.randomUUID()}`
@@ -1205,43 +1223,51 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             d.unit || "cái",
           )
 
-          const created = await api.createEntry(
-            {
-              name: d.name.trim(),
+          const entry: CreateEntryDTO = {
+            name: d.name.trim(),
 
-              storage_location: d.location?.trim() || "unspecified",
+            storage_location: d.location?.trim() || "unspecified",
 
-              expiry_date: d.expDate || null,
+            expiry_date: d.expDate || null,
 
-              date_certainty: d.expDate ? "known" : "unknown",
+            date_certainty: d.expDate ? "known" : "unknown",
 
-              date_source: d.expDate
-                ? mode === "ocr"
-                  ? "printed_label"
-                  : "user_entered"
-                : "unknown",
+            date_source: d.expDate
+              ? mode === "ocr"
+                ? "printed_label"
+                : "user_entered"
+              : "unknown",
 
-              date_label_type: "unspecified",
+            date_label_type: "unspecified",
 
-              opened_on: d.opened_on || null,
+            opened_on: d.opened_on || null,
 
-              manufactured_on: d.mfgDate || null,
+            manufactured_on: d.mfgDate || null,
 
-              review_at: d.reviewAt || null,
+            review_at: d.reviewAt || null,
 
-              note: d.note?.trim() || null,
+            note: d.note?.trim() || null,
 
-              category: d.category || null,
+            category: d.category || null,
 
-              barcode: d.barcode || null,
+            barcode: d.barcode || null,
 
-              quantity: decimal(quantity),
+            quantity: decimal(quantity),
 
-              unit,
-            },
-
-            idempotencyKey,
-          )
+            unit,
+          }
+          const created = shoppingItemId
+            ? (
+                await api.importShoppingItemToInventory(
+                  shoppingItemId,
+                  {
+                    expected_version: shoppingExpectedVersion ?? 1,
+                    entry,
+                  },
+                  idempotencyKey,
+                )
+              ).entry
+            : await api.createEntry(entry, idempotencyKey)
 
           if (
             !shoppingItemId ||
@@ -1288,7 +1314,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
           )
 
-          await finishShoppingImport(shoppingItemId)
+          await finishShoppingImport(shoppingItemId, Boolean(shoppingItemId))
 
           return
         } catch (err: unknown) {
@@ -1301,6 +1327,14 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               "Hãy kiểm tra Kho: món này có thể đã được lưu với thông tin trước đó.",
               "warning",
             )
+          } else if (
+            shoppingItemId &&
+            err instanceof ApiError &&
+            ["SHOPPING_NOT_CHECKED", "SHOPPING_ALREADY_IMPORTED"].includes(
+              err.code,
+            )
+          ) {
+            notify(err.message, "warning")
           } else if (
             shoppingItemId &&
             err instanceof ApiError &&
