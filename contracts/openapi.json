@@ -2523,6 +2523,42 @@
       }
     },
     "/shopping-items/{id}": {
+      "get": {
+        "operationId": "SHOP-06",
+        "summary": "Read one Shopping item owned by the authenticated user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shopping item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Problem details",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch": {
         "operationId": "SHOP-03",
         "summary": "Update a Shopping item",

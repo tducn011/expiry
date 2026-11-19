@@ -720,7 +720,7 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
     }
   })
 
-  it("manages shopping list items in mockApi and shoppingStorage", async () => {
+  it("manages demo shopping list items in memory", async () => {
     const { mockApi } = await import("../src/mockApi")
     const {
       getShoppingItems,
@@ -730,7 +730,7 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
       deleteShoppingItem,
       clearCheckedShoppingItems,
       suggestItemsFromInventory,
-    } = await import("../src/api/shoppingStorage")
+    } = await import("../src/api/shoppingMemory")
 
     // 1. mockApi shopping methods
     const initialShopping = mockApi.listShoppingItems()
@@ -758,9 +758,8 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
     mockApi.clearCheckedShoppingItems()
     expect(mockApi.listShoppingItems().some((i) => i.id === added.id)).toBe(false)
 
-    // 2. shoppingStorage helpers
-    const testUserId = "test_user_shopping"
-    const items = getShoppingItems(testUserId)
+    // 2. Demo-only client-side memory helpers. Account state uses the API.
+    const items = getShoppingItems()
     expect(Array.isArray(items)).toBe(true)
 
     const clientAdded = addShoppingItem(
@@ -771,18 +770,16 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
         category: "dry_pantry",
         checked: false,
       },
-      testUserId,
     )
     expect(clientAdded.name).toBe("Bánh mì sandwich")
     expect(clientAdded.category).toBe("dry_pantry")
 
-    const toggledList = toggleShoppingItem(clientAdded.id, testUserId)
+    const toggledList = toggleShoppingItem(clientAdded.id)
     expect(toggledList.find((i) => i.id === clientAdded.id)?.checked).toBe(true)
 
     const updatedList = updateShoppingItem(
       clientAdded.id,
       { note: "Bánh mì đen" },
-      testUserId,
     )
     expect(updatedList.find((i) => i.id === clientAdded.id)?.note).toBe("Bánh mì đen")
 
@@ -794,8 +791,8 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
     expect(suggestions[0].name).toBe("Cá hồi")
     expect(suggestions[0].addedFromInventory).toBe(true)
 
-    deleteShoppingItem(clientAdded.id, testUserId)
-    const afterDelete = getShoppingItems(testUserId)
+    deleteShoppingItem(clientAdded.id)
+    const afterDelete = getShoppingItems()
     expect(afterDelete.some((i) => i.id === clientAdded.id)).toBe(false)
   })
 })
