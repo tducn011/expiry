@@ -48,6 +48,15 @@ export class ShoppingService {
     try { const [rows] = await c.execute('SELECT id,payload,version,created_at FROM shopping_items WHERE user_id=? ORDER BY created_at DESC,id DESC', [owner]); return rows.map(dto); }
     finally { await c.end(); }
   }
+  async get(owner, id) {
+    if (!idPattern.test(id)) throw new DomainError(422, 'VALIDATION_ERROR');
+    const c = await this.connection(this.database);
+    try {
+      const [[row]] = await c.execute('SELECT id,payload,version,created_at FROM shopping_items WHERE id=? AND user_id=?', [id, owner]);
+      if (!row) throw new DomainError(404, 'NOT_FOUND');
+      return dto(row);
+    } finally { await c.end(); }
+  }
   async create(owner, key, input) {
     validate(input);
     const payload = { ...input, quantity: input.quantity ?? null, unit: input.unit ?? null, checked: input.checked ?? false, addedFromInventory: input.addedFromInventory ?? false, category: input.category ?? 'other' };

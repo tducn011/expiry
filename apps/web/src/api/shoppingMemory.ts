@@ -37,41 +37,17 @@ const DEFAULT_SHOPPING_ITEMS: ShoppingItem[] = [
   },
 ]
 
-const inMemoryLists = new Map<string, ShoppingItem[]>()
+// Demo-only state. Signed-in Shopping lists are owned by the API.
+let demoList: ShoppingItem[] | undefined
 
-export function getShoppingItems(userId?: string): ShoppingItem[] {
-  const key = userId || "demo"
-  const existing = inMemoryLists.get(key)
-  if (existing) return [...existing]
-  const initial = userId ? [] : [...DEFAULT_SHOPPING_ITEMS]
-  inMemoryLists.set(key, initial)
-  return [...initial]
+export function getShoppingItems(): ShoppingItem[] {
+  if (demoList) return [...demoList]
+  demoList = [...DEFAULT_SHOPPING_ITEMS]
+  return [...demoList]
 }
 
-export function saveShoppingItems(
-  items: ShoppingItem[],
-  userId?: string,
-): void {
-  inMemoryLists.set(userId || "demo", [...items])
-}
-
-export function readLegacyShoppingItems(userId: string): ShoppingItem[] {
-  try {
-    const raw = window.localStorage.getItem(`expiry_shopping_items_${userId}`)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed as ShoppingItem[] : []
-  } catch {
-    return []
-  }
-}
-
-export function clearLegacyShoppingItems(userId: string): void {
-  try {
-    window.localStorage.removeItem(`expiry_shopping_items_${userId}`)
-  } catch {
-    /* storage may be unavailable */
-  }
+export function saveShoppingItems(items: ShoppingItem[]): void {
+  demoList = [...items]
 }
 
 export class ShoppingItemChanged extends Error {}
@@ -79,9 +55,8 @@ export class ShoppingItemChanged extends Error {}
 export function changeShoppingItem(
   expected: ShoppingItem,
   change: (item: ShoppingItem) => ShoppingItem | null,
-  userId?: string,
 ): ShoppingItem[] {
-  const items = getShoppingItems(userId)
+  const items = getShoppingItems()
   const current = items.find((item) => item.id === expected.id)
   if (!current || JSON.stringify(current) !== JSON.stringify(expected)) {
     throw new ShoppingItemChanged()
@@ -90,15 +65,14 @@ export function changeShoppingItem(
   const next = items.flatMap((item) =>
     item.id === current.id ? (updated ? [updated] : []) : [item],
   )
-  saveShoppingItems(next, userId)
+  saveShoppingItems(next)
   return next
 }
 
 export function addShoppingItem(
   item: Omit<ShoppingItem, "id" | "createdAt">,
-  userId?: string,
 ): ShoppingItem {
-  const items = getShoppingItems(userId)
+  const items = getShoppingItems()
   const category = item.category || inferCategory(item.name)
   const newItem: ShoppingItem = {
     ...item,
@@ -107,15 +81,12 @@ export function addShoppingItem(
     createdAt: new Date().toISOString(),
   }
   const next = [newItem, ...items]
-  saveShoppingItems(next, userId)
+  saveShoppingItems(next)
   return newItem
 }
 
-export function toggleShoppingItem(
-  id: string,
-  userId?: string,
-): ShoppingItem[] {
-  const items = getShoppingItems(userId)
+export function toggleShoppingItem(id: string): ShoppingItem[] {
+  const items = getShoppingItems()
   const next = items.map((item) =>
     item.id === id
       ? {
@@ -124,37 +95,33 @@ export function toggleShoppingItem(
         }
       : item,
   )
-  saveShoppingItems(next, userId)
+  saveShoppingItems(next)
   return next
 }
 
 export function updateShoppingItem(
   id: string,
   patch: Partial<ShoppingItem>,
-  userId?: string,
 ): ShoppingItem[] {
-  const items = getShoppingItems(userId)
+  const items = getShoppingItems()
   const next = items.map((item) =>
     item.id === id ? { ...item, ...patch } : item,
   )
-  saveShoppingItems(next, userId)
+  saveShoppingItems(next)
   return next
 }
 
-export function deleteShoppingItem(
-  id: string,
-  userId?: string,
-): ShoppingItem[] {
-  const items = getShoppingItems(userId)
+export function deleteShoppingItem(id: string): ShoppingItem[] {
+  const items = getShoppingItems()
   const next = items.filter((item) => item.id !== id)
-  saveShoppingItems(next, userId)
+  saveShoppingItems(next)
   return next
 }
 
-export function clearCheckedShoppingItems(userId?: string): ShoppingItem[] {
-  const items = getShoppingItems(userId)
+export function clearCheckedShoppingItems(): ShoppingItem[] {
+  const items = getShoppingItems()
   const next = items.filter((item) => !item.checked)
-  saveShoppingItems(next, userId)
+  saveShoppingItems(next)
   return next
 }
 

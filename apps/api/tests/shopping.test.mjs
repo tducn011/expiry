@@ -30,3 +30,20 @@ test('shopping create rejects invalid input before opening MySQL', async () => {
   const service = new ShoppingService('expiry_test_shopping', { connect: async () => { throw new Error('must not connect'); } });
   await assert.rejects(service.create('owner-1', 'shopping_create_002', { name: ' ', checked: false }), error => error.code === 'VALIDATION_ERROR' && error.status === 422);
 });
+
+test('shopping get scopes lookup to the verified owner', async () => {
+  const calls = [];
+  const connection = {
+    async execute(sql, values) {
+      calls.push({ sql, values });
+      return [[{ id: 'item-1', payload: { name: 'Sữa', checked: true }, version: 2, created_at: '2026-11-19 10:00:00.000000' }]];
+    },
+    async end() {},
+  };
+  const service = new ShoppingService('expiry_test_shopping', { connect: async () => connection });
+  const result = await service.get('owner-1', 'item-1');
+  assert.equal(result.id, 'item-1');
+  assert.equal(calls[0].values[0], 'item-1');
+  assert.equal(calls[0].values[1], 'owner-1');
+  assert.match(calls[0].sql, /WHERE id=\? AND user_id=\?/);
+});

@@ -1133,6 +1133,12 @@ export class ApiClient {
     return result.items
   }
 
+  async shoppingItem(id: string) {
+    return this.request<ShoppingItem>(
+      `/shopping-items/${encodeURIComponent(id)}`,
+    )
+  }
+
   createShoppingItem(
     item: Omit<ShoppingItem, "id" | "createdAt" | "version">,
     commandKey?: string,
@@ -1535,7 +1541,5 @@ export class ApiClient {
     return result
   }
 }
-
-export * from "./shoppingStorage"
 
 export const api = new ApiClient()

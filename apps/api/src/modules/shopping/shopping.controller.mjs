@@ -1,6 +1,7 @@
 export class ShoppingController {
   constructor(service) { this.service = service; }
   list = async (req,res,next) => { try { res.json({ items: await this.service.list(req.userId) }); } catch (e) { next(e); } };
+  get = async (req,res,next) => { try { res.json(await this.service.get(req.userId, req.params.id)); } catch (e) { next(e); } };
   send = (res, result) => {
     if (result.replayed) res.setHeader('Idempotency-Replayed', 'true');
     return result.status === 204 ? res.status(204).end() : res.status(result.status).json(result.body);

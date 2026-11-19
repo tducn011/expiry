@@ -15,11 +15,9 @@ import {
   addShoppingItem,
   changeShoppingItem,
   getShoppingItems,
-  readLegacyShoppingItems,
-  clearLegacyShoppingItems,
   ShoppingItemChanged,
   suggestItemsFromInventory,
-} from "../api/shoppingStorage"
+} from "../api/shoppingMemory"
 import Button from "../components/ui/Button"
 import SelectField from "../components/ui/SelectField"
 import EmptyState from "../components/ui/EmptyState"
@@ -45,9 +43,9 @@ const units = [
 ]
 const blankDraft = { name: "", quantity: "", unit: "" }
 
-function readList(owner: string | undefined) {
+function readDemoList() {
   try {
-    return { items: getShoppingItems(owner), unavailable: false }
+    return { items: getShoppingItems(), unavailable: false }
   } catch {
     return { items: [], unavailable: true }
   }
@@ -70,9 +68,7 @@ export function ShoppingView({
 }: ShoppingViewProps) {
   const owner = state.userId
   const [list, setList] = useState(() =>
-    state.mode === "demo"
-      ? readList(undefined)
-      : { items: [], unavailable: true },
+    state.mode === "demo" ? readDemoList() : { items: [], unavailable: true },
   )
   const [draft, setDraft] = useState(blankDraft)
   const [error, setError] = useState("")
@@ -90,7 +86,7 @@ export function ShoppingView({
     let active = true
     const refresh = async () => {
       if (state.mode === "demo") {
-        if (active) setList(readList(undefined))
+        if (active) setList(readDemoList())
         return
       }
       if (!owner) {
@@ -98,23 +94,14 @@ export function ShoppingView({
         return
       }
       try {
-        let items = await api.shoppingItems()
-        const legacy = readLegacyShoppingItems(owner)
-        if (legacy.length) {
-          const result = await api.importShoppingItems(legacy)
-          if (result.imported || result.existing)
-            clearLegacyShoppingItems(owner)
-          items = await api.shoppingItems()
-        } else clearLegacyShoppingItems(owner)
+        const items = await api.shoppingItems()
         if (active) setList({ items, unavailable: false })
       } catch {
         if (active) setList((current) => ({ ...current, unavailable: true }))
       }
     }
     setList(
-      state.mode === "demo"
-        ? readList(undefined)
-        : { items: [], unavailable: true },
+      state.mode === "demo" ? readDemoList() : { items: [], unavailable: true },
     )
     void refresh()
     const onFocus = () => {
@@ -178,7 +165,7 @@ export function ShoppingView({
       return true
     } catch (failure) {
       if (failure instanceof ShoppingItemChanged) {
-        if (state.mode === "demo") setList(readList(undefined))
+        if (state.mode === "demo") setList(readDemoList())
         else
           void api
             .shoppingItems()
@@ -528,7 +515,7 @@ export function ShoppingView({
             variant="secondary"
             size="small"
             onClick={() => {
-              if (state.mode === "demo") setList(readList(undefined))
+              if (state.mode === "demo") setList(readDemoList())
               else
                 void api
                   .shoppingItems()

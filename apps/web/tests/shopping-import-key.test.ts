@@ -27,4 +27,27 @@ describe("Shopping legacy import idempotency", () => {
     expect(keys[0]).not.toBe(keys[2])
     expect(keys[0]).toMatch(/^shopping_import_[a-f0-9]{64}$/)
   })
+
+  it("reads a single Shopping item through its owner-authenticated API route", async () => {
+    const calls: string[] = []
+    const item = {
+      id: "item-1",
+      version: 2,
+      name: "Sữa",
+      quantity: 1,
+      unit: "hộp",
+      checked: true,
+      createdAt: "2026-11-19T10:00:00.000Z",
+    }
+    const client = new ApiClient(async (url) => {
+      calls.push(String(url))
+      return new Response(JSON.stringify(item), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    })
+
+    await expect(client.shoppingItem("item-1")).resolves.toEqual(item)
+    expect(calls).toEqual(["/api/v1/shopping-items/item-1"])
+  })
 })

@@ -29,7 +29,7 @@ import type { Draft, FormMode } from "./features/FoodForm"
 import type { HomeFilters } from "./features/Inventory"
 import type { ShoppingFilter } from "./features/ShoppingView"
 import type { FoodEntry, ShoppingItem } from "./domain/types"
-import { getShoppingItems, saveShoppingItems } from "./api/shoppingStorage"
+import { getShoppingItems, saveShoppingItems } from "./api/shoppingMemory"
 
 import {
   Archive,
@@ -992,26 +992,23 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     return { quantity, unit: "piece" }
   }
 
-  function finishShoppingImport(shoppingItemId?: string) {
+  async function finishShoppingImport(shoppingItemId?: string) {
     if (shoppingItemId) {
       if (state.mode === "account") {
-        void api
-          .shoppingItems()
-          .then(async (items) => {
-            const item = items.find(
-              (candidate) => candidate.id === shoppingItemId,
+        try {
+          const item = await api.shoppingItem(shoppingItemId)
+          if (item && !item.inventoryAddedAt)
+            await api.updateShoppingItem(
+              item,
+              { inventoryAddedAt: new Date().toISOString() },
+              `shopping_mark_${crypto.randomUUID()}`,
             )
-            if (item)
-              await api.updateShoppingItem(item, {
-                inventoryAddedAt: new Date().toISOString(),
-              })
-          })
-          .catch(() =>
-            notify(
-              "Thực phẩm đã lưu. Chưa cập nhật được dấu đã nhập trong danh sách mua.",
-              "warning",
-            ),
+        } catch {
+          notify(
+            "Thực phẩm đã lưu. Chưa cập nhật được dấu đã nhập trong danh sách mua.",
+            "warning",
           )
+        }
       } else {
         const current = getShoppingItems()
         const item = current.find(
@@ -1055,7 +1052,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     let item: ShoppingItem | undefined
     try {
-      item = getShoppingItems(owner).find((item) => item.id === shoppingItemId)
+      item =
+        state.mode === "account"
+          ? await api.shoppingItem(shoppingItemId)
+          : getShoppingItems().find(
+              (candidate) => candidate.id === shoppingItemId,
+            )
     } catch {
       notify("Không đọc được danh sách mua. Hãy thử lại.", "warning")
       return
@@ -1175,7 +1177,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
           notify("Đã lưu thay đổi")
 
-          finishShoppingImport(shoppingItemId)
+          await finishShoppingImport(shoppingItemId)
 
           return
         } catch (err: unknown) {
@@ -1286,7 +1288,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
           )
 
-          finishShoppingImport(shoppingItemId)
+          await finishShoppingImport(shoppingItemId)
 
           return
         } catch (err: unknown) {
@@ -1357,7 +1359,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           : `Đã lưu ${d.name.trim()} — chưa rõ HSD`,
     )
 
-    finishShoppingImport(shoppingItemId)
+    await finishShoppingImport(shoppingItemId)
   }
 
   let screenContent: ReactNode
