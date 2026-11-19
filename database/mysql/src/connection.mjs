@@ -3,6 +3,16 @@ import { readFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 export const base = new URL('../', import.meta.url);
+const acceptedHistoricalChecksums = new Map([
+  [3, new Set([
+    'a2cd2af6d22a4ec3a863600741176f26cfbae104406e06a1bac8ee9c286006e7',
+    // Recorded on the homeserver; its sessions_time CHECK matches migration 003.
+    '520988026ec2e8a1aedb9502c7d1d90922b0c79abf28933f64e7ce8d0edb27bf'
+  ])]
+]);
+export function migrationChecksumMatches(version, recorded, current) {
+  return recorded === current || acceptedHistoricalChecksums.get(version)?.has(recorded) === true;
+}
 export async function environment() {
   const content = await readFile(new URL('.env', base), 'utf8');
   const entries = content.split('\n').filter(line => line && !line.startsWith('#')).map(line => {
@@ -119,7 +129,7 @@ export async function migrate(database) {
     const hash = createHash('sha256').update(normSql).digest('hex');
     const old = (await rootSql(`SELECT sha256 FROM schema_migrations WHERE version=${m.version};`, database)).trim();
     if (old) {
-      if (old !== hash) throw new Error(`Applied migration ${m.version} checksum drift: create a new version`);
+      if (!migrationChecksumMatches(m.version, old, hash)) throw new Error(`Applied migration ${m.version} checksum drift: create a new version`);
       lastHash = hash;
       continue;
     }

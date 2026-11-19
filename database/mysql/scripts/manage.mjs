@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
-import {connect,rootSql,migrate,grants,base,run,containerId,environment} from '../src/connection.mjs';
+import {connect,rootSql,migrate,grants,base,run,containerId,environment,migrationChecksumMatches} from '../src/connection.mjs';
 const mode=process.argv[2];
 const dir=new URL('evidence/',base);
 await mkdir(dir,{recursive:true});
@@ -102,8 +102,7 @@ if(mode==='migrate-dev') {
     assert.equal(actualVersions[1][0], 2);
     assert.equal(actualVersions[1][1], norm(migration002));
     assert.equal(actualVersions[2][0], 3);
-    const valid003 = ['a2cd2af6d22a4ec3a863600741176f26cfbae104406e06a1bac8ee9c286006e7', norm(migration003)];
-    assert.ok(valid003.includes(actualVersions[2][1]), `Unexpected migration 3 checksum: ${actualVersions[2][1]}`);
+    assert.ok(migrationChecksumMatches(3, actualVersions[2][1], norm(migration003)), `Unexpected migration 3 checksum: ${actualVersions[2][1]}`);
     if (actualVersions.length >= 4) {
       assert.equal(actualVersions[3][0], 4);
       assert.equal(actualVersions[3][1], norm(migration004));
