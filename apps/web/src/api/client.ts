@@ -1167,11 +1167,18 @@ export class ApiClient {
     )
   }
 
-  importShoppingItems(items: ShoppingItem[], commandKey?: string) {
+  async importShoppingItems(items: ShoppingItem[], commandKey?: string) {
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(JSON.stringify(items)),
+    )
+    const contentKey = `shopping_import_${Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("")}`
     return this.mutation<{
       imported: boolean
       existing: boolean
-    }>("POST", "/shopping-items/import", { items }, commandKey)
+    }>("POST", "/shopping-items/import", { items }, commandKey ?? contentKey)
   }
 
   async entries(query: Record<string, string | number> = {}, trash = false) {

@@ -101,10 +101,7 @@ export function ShoppingView({
         let items = await api.shoppingItems()
         const legacy = readLegacyShoppingItems(owner)
         if (legacy.length) {
-          const result = await api.importShoppingItems(
-            legacy,
-            `shopping_import_${owner.split("-").join("")}`,
-          )
+          const result = await api.importShoppingItems(legacy)
           if (result.imported || result.existing)
             clearLegacyShoppingItems(owner)
           items = await api.shoppingItems()
