@@ -166,7 +166,7 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
   const expiryController = new ExpiryController(expiryService);
   v1Router.use('/', createExpiryRouter(expiryController));
 
-  const shoppingService = new ShoppingService(database);
+  const shoppingService = new ShoppingService(database, { inventoryRepository: inventoryService.repo });
   const shoppingController = new ShoppingController(shoppingService);
   v1Router.use('/', createShoppingRouter(shoppingController));
 

@@ -4,6 +4,7 @@ export function createShoppingRouter(controller) {
   router.get('/shopping-items', controller.list);
   router.post('/shopping-items', controller.create);
   router.post('/shopping-items/import', controller.importLegacy);
+  router.post('/shopping-items/:id/import-to-inventory', controller.importToInventory);
   router.get('/shopping-items/:id', controller.get);
   router.patch('/shopping-items/:id', controller.update);
   router.delete('/shopping-items/:id', controller.remove);

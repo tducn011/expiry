@@ -418,4 +418,14 @@ test('CAP-01 manual capture create normalizes unit aliases, quantity and returns
   assert.equal(createCall[1].quantity, '1.5');
 });
 
+test('SHOP-07 declares the atomic Shopping-to-inventory request and response contract', () => {
+  const operation = contract.paths['/shopping-items/{id}/import-to-inventory'].post;
+  assert.equal(operation.operationId, 'SHOP-07');
+  assert.equal(operation.responses['201'].content['application/json'].schema.$ref,
+    '#/components/schemas/ShoppingInventoryImportResult');
+  assert.equal(contract.components.schemas.ShoppingInventoryImportRequest.properties.entry.$ref,
+    '#/components/schemas/EntryCreate');
+  assert.deepEqual(contract.components.schemas.ShoppingInventoryImportResult.required, ['item', 'entry']);
+});
+
 

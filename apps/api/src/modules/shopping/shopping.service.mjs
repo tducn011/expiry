@@ -1,6 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { connect } from '../../shared/connection.mjs';
 import { DomainError } from '../../shared/domain.mjs';
+import { commandDTO } from '../../shared/public-dto.mjs';
+import { ownerPreferences } from '../inventory/public-inventory.repository.mjs';
 
 const categories = new Set(['fresh_produce','meat_seafood','dairy_eggs','prepared_food','dry_pantry','beverage','other']);
 const idPattern = /^[A-Za-z0-9_-]{1,100}$/;
@@ -20,18 +22,32 @@ function dto(row) {
 }
 function hash(value) { return createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
 export class ShoppingService {
-  constructor(database, options = {}) { this.database = database; this.connection = options.connect ?? connect; }
+  constructor(database, options = {}) {
+    this.database = database;
+    this.connection = options.connect ?? connect;
+    this.inventoryRepository = options.inventoryRepository;
+    this.clock = options.clock ?? (() => new Date());
+  }
   async command(owner, key, operation, input, work) {
     if (!/^[A-Za-z0-9_-]{8,100}$/.test(key ?? '')) throw new DomainError(400, 'IDEMPOTENCY_KEY_REQUIRED');
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try { return await this.executeCommand(owner,key,operation,input,work); }
+      catch (error) {
+        if (error.code !== 'ER_LOCK_DEADLOCK' || attempt === 3) throw error;
+        await new Promise(resolve => setTimeout(resolve,10 * (attempt + 1)));
+      }
+    }
+  }
+  async executeCommand(owner, key, operation, input, work) {
     const c = await this.connection(this.database);
     try {
       await c.beginTransaction();
-      const fingerprint = hash(input);
-      try { await c.execute('INSERT INTO api_requests(user_id,idempotency_key,operation,request_hash) VALUES (?,?,?,?)', [owner,key,operation,fingerprint]); }
+      const requestHash = hash(input);
+      try { await c.execute('INSERT INTO api_requests(user_id,idempotency_key,operation,request_hash) VALUES (?,?,?,?)', [owner,key,operation,requestHash]); }
       catch (error) {
         if (error.code !== 'ER_DUP_ENTRY') throw error;
         const [[old]] = await c.execute('SELECT operation,request_hash,response_status,response_body FROM api_requests WHERE user_id=? AND idempotency_key=?', [owner,key]);
-        if (!old || old.operation !== operation || old.request_hash !== fingerprint) throw new DomainError(409, 'IDEMPOTENCY_KEY_REUSED');
+        if (!old || old.operation !== operation || old.request_hash !== requestHash) throw new DomainError(409, 'IDEMPOTENCY_KEY_REUSED');
         if (old.response_status === null) throw new DomainError(500, 'INCOMPLETE_RESERVATION');
         await c.commit();
         return { status: old.response_status, body: typeof old.response_body === 'string' ? JSON.parse(old.response_body) : old.response_body, replayed: true };
@@ -85,6 +101,46 @@ export class ShoppingService {
       }
       const [[row]] = await c.execute('SELECT id,payload,version,created_at FROM shopping_items WHERE id=? AND user_id=?', [id,owner]);
       return { status: 200, body: dto(row) };
+    });
+  }
+  async importToInventory(owner, key, id, input) {
+    if (!this.inventoryRepository) throw new Error('Inventory repository is required');
+    if (!idPattern.test(id) || !input || typeof input !== 'object' || Array.isArray(input) ||
+      Object.keys(input).some(field => !['expected_version','entry'].includes(field)) ||
+      !Number.isSafeInteger(input.expected_version) || input.expected_version < 1 || input.expected_version > 2147483647 ||
+      !input.entry || typeof input.entry !== 'object' || Array.isArray(input.entry)) {
+      throw new DomainError(422, 'VALIDATION_ERROR');
+    }
+    const request = { id, ...input };
+    return this.command(owner,key,`shopping.import-to-inventory:${id}`,request,async c => {
+      const [[row]] = await c.execute(
+        'SELECT id,payload,version,created_at FROM shopping_items WHERE id=? AND user_id=? FOR UPDATE',
+        [id,owner],
+      );
+      if (!row) throw new DomainError(404,'NOT_FOUND');
+      const item = dto(row);
+      if (Number(row.version) !== input.expected_version) throw new DomainError(409,'VERSION_CONFLICT');
+      if (!item.checked) throw new DomainError(409,'SHOPPING_NOT_CHECKED');
+      if (item.inventoryAddedAt) throw new DomainError(409,'SHOPPING_ALREADY_IMPORTED');
+
+      const entry = await this.inventoryRepository.createEntryInTransaction(c,owner,input.entry);
+      const importedAt = this.clock().toISOString();
+      const [updated] = await c.execute(
+        "UPDATE shopping_items SET payload=JSON_SET(payload,'$.inventoryAddedAt',?),version=version+1 WHERE id=? AND user_id=? AND version=?",
+        [importedAt,id,owner,input.expected_version],
+      );
+      if (!updated.affectedRows) throw new DomainError(409,'VERSION_CONFLICT');
+      const [[updatedRow]] = await c.execute(
+        'SELECT id,payload,version,created_at FROM shopping_items WHERE id=? AND user_id=?',
+        [id,owner],
+      );
+      if (!updatedRow) throw new DomainError(404,'NOT_FOUND');
+      const publicResult = commandDTO(
+        { status:201, body:{ entry, item:dto(updatedRow) } },
+        await ownerPreferences(c,owner),
+        this.clock(),
+      );
+      return publicResult;
     });
   }
   async remove(owner, key, id) {

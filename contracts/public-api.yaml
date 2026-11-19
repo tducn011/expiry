@@ -1556,6 +1556,34 @@ paths:
         '204':
           description: Deleted
         '404': *id010
+  /shopping-items/{id}/import-to-inventory:
+    post:
+      operationId: SHOP-07
+      summary: Atomically import a purchased Shopping item into inventory
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      - *id011
+      - *id012
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShoppingInventoryImportRequest'
+      responses:
+        '201':
+          description: Inventory entry created and Shopping item marked imported
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingInventoryImportResult'
+        '404': *id010
+        '409': *id010
+        '422': *id010
   /shopping-items/import:
     post:
       operationId: SHOP-05
@@ -2471,3 +2499,27 @@ components:
       required:
       - imported
       - existing
+    ShoppingInventoryImportRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        entry:
+          $ref: '#/components/schemas/EntryCreate'
+      required:
+      - expected_version
+      - entry
+    ShoppingInventoryImportResult:
+      type: object
+      additionalProperties: false
+      properties:
+        item:
+          $ref: '#/components/schemas/ShoppingItem'
+        entry:
+          $ref: '#/components/schemas/Entry'
+      required:
+      - item
+      - entry
