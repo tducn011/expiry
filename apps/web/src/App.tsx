@@ -257,6 +257,10 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const authGenRef = useRef(0)
 
+  const dispatchRef = useRef(dispatch)
+
+  dispatchRef.current = dispatch
+
   const hydrationGenRef = useRef(0)
 
   const refreshInventoryRef = useRef<(() => Promise<void>) | null>(null)
@@ -306,7 +310,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         if (!isMounted || authGenRef.current !== gen) return
 
         if (s.user) {
-          dispatch({
+          dispatchRef.current({
             type: "login",
 
             mode: "account",
@@ -317,7 +321,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           })
         } else {
           if (state.mode === "account") {
-            dispatch({ type: "logout" })
+            dispatchRef.current({ type: "logout" })
           }
         }
       })
@@ -327,7 +331,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
         if (err instanceof ApiError && err.status === 401) {
           if (state.mode === "account") {
-            dispatch({ type: "logout" })
+            dispatchRef.current({ type: "logout" })
           }
         }
       })
@@ -343,7 +347,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
       authGenRef.current++
     }
-  }, [demoMode, dispatch])
+  }, [demoMode])
 
   // 2. Hydrate Account Inventory when verified userId is established
 
