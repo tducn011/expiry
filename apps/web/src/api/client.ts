@@ -11,6 +11,7 @@ import type {
   Preferences,
   QuantityMovement,
   Session,
+  ShoppingItem,
   Unit,
 } from "../domain/types.ts"
 
@@ -1122,6 +1123,55 @@ export class ApiClient {
 
       commandKey,
     )
+  }
+
+  async shoppingItems() {
+    const result = await this.request<{ items: ShoppingItem[] }>(
+      "/shopping-items",
+    )
+    if (!result || !Array.isArray(result.items)) throw contractError()
+    return result.items
+  }
+
+  createShoppingItem(
+    item: Omit<ShoppingItem, "id" | "createdAt" | "version">,
+    commandKey?: string,
+  ) {
+    return this.mutation<ShoppingItem>(
+      "POST",
+      "/shopping-items",
+      item,
+      commandKey,
+    )
+  }
+
+  updateShoppingItem(
+    item: ShoppingItem,
+    patch: Partial<ShoppingItem>,
+    commandKey?: string,
+  ) {
+    return this.mutation<ShoppingItem>(
+      "PATCH",
+      `/shopping-items/${encodeURIComponent(item.id)}`,
+      { ...patch, expected_version: item.version ?? 1 },
+      commandKey,
+    )
+  }
+
+  async deleteShoppingItem(item: ShoppingItem, commandKey?: string) {
+    await this.mutation<void>(
+      "DELETE",
+      `/shopping-items/${encodeURIComponent(item.id)}`,
+      undefined,
+      commandKey,
+    )
+  }
+
+  importShoppingItems(items: ShoppingItem[], commandKey?: string) {
+    return this.mutation<{
+      imported: boolean
+      existing: boolean
+    }>("POST", "/shopping-items/import", { items }, commandKey)
   }
 
   async entries(query: Record<string, string | number> = {}, trash = false) {

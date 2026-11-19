@@ -107,6 +107,7 @@ export async function migrate(database) {
     { version: 8, file: 'migrations/008_workspace_invites.sql' },
     { version: 9, file: 'migrations/009_product_batches.sql' },
     { version: 10, file: 'migrations/010_add_review_at.sql' },
+    { version: 11, file: 'migrations/011_shopping_items.sql' },
   ];
   await rootSql('CREATE TABLE IF NOT EXISTS schema_migrations (version INT PRIMARY KEY, sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, applied_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)) ENGINE=InnoDB;', database);
   
@@ -146,5 +147,5 @@ export async function grants(database) {
     }
   }
   const exact=database.replaceAll('_','\\_');
-  await rootSql(`GRANT SELECT ON \`${exact}\`.* TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.users TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.food_entries TO 'expiry_app'@'%';\nGRANT INSERT ON \`${database}\`.stock_movements TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.api_requests TO 'expiry_app'@'%';`);
+  await rootSql(`GRANT SELECT ON \`${exact}\`.* TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.users TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.food_entries TO 'expiry_app'@'%';\nGRANT INSERT ON \`${database}\`.stock_movements TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.api_requests TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE, DELETE ON \`${database}\`.shopping_items TO 'expiry_app'@'%';`);
 }

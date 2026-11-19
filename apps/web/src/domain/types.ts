@@ -134,6 +134,7 @@ export type Session = {
 
 export interface ShoppingItem {
   id: string
+  version?: number
   name: string
   quantity: number | null
   unit: Unit | string | null
@@ -143,5 +144,5 @@ export interface ShoppingItem {
   createdAt: string
   note?: string | null
   inventoryAddedAt?: string
-  matchedFoodId?: string
+  matchedFoodId?: string | null
 }

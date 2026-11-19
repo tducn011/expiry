@@ -9,11 +9,14 @@ import {
 } from "lucide-react"
 import type { ShoppingItem } from "../domain/types"
 import { normalizeShoppingName } from "../domain/shoppingStock"
+import { api } from "../api/client"
 import { inferCategory, UNITS, type State } from "../store/appStore"
 import {
   addShoppingItem,
   changeShoppingItem,
   getShoppingItems,
+  readLegacyShoppingItems,
+  clearLegacyShoppingItems,
   ShoppingItemChanged,
   suggestItemsFromInventory,
 } from "../api/shoppingStorage"
@@ -66,7 +69,11 @@ export function ShoppingView({
   notify,
 }: ShoppingViewProps) {
   const owner = state.userId
-  const [list, setList] = useState(() => readList(owner))
+  const [list, setList] = useState(() =>
+    state.mode === "demo"
+      ? readList(undefined)
+      : { items: [], unavailable: true },
+  )
   const [draft, setDraft] = useState(blankDraft)
   const [error, setError] = useState("")
   const [localFilter, setLocalFilter] = useState<ShoppingFilter>("all")
@@ -80,18 +87,48 @@ export function ShoppingView({
   const filter = routeFilter ?? localFilter
 
   useEffect(() => {
-    setList(readList(owner))
-    const refresh = () => {
-      setList(readList(owner))
-      setRevision((value) => value + 1)
+    let active = true
+    const refresh = async () => {
+      if (state.mode === "demo") {
+        if (active) setList(readList(undefined))
+        return
+      }
+      if (!owner) {
+        if (active) setList({ items: [], unavailable: true })
+        return
+      }
+      try {
+        let items = await api.shoppingItems()
+        const legacy = readLegacyShoppingItems(owner)
+        if (legacy.length) {
+          const result = await api.importShoppingItems(
+            legacy,
+            `shopping_import_${owner.split("-").join("")}`,
+          )
+          if (result.imported || result.existing)
+            clearLegacyShoppingItems(owner)
+          items = await api.shoppingItems()
+        } else clearLegacyShoppingItems(owner)
+        if (active) setList({ items, unavailable: false })
+      } catch {
+        if (active) setList((current) => ({ ...current, unavailable: true }))
+      }
     }
-    window.addEventListener("storage", refresh)
-    window.addEventListener("focus", refresh)
+    setList(
+      state.mode === "demo"
+        ? readList(undefined)
+        : { items: [], unavailable: true },
+    )
+    void refresh()
+    const onFocus = () => {
+      void refresh()
+    }
+    window.addEventListener("focus", onFocus)
     return () => {
-      window.removeEventListener("storage", refresh)
-      window.removeEventListener("focus", refresh)
+      active = false
+      window.removeEventListener("focus", onFocus)
     }
-  }, [owner])
+  }, [owner, state.mode])
 
   const active = items.filter((item) => !item.checked)
   const bought = items.filter((item) => item.checked)
@@ -109,17 +146,47 @@ export function ShoppingView({
   const updateList = (next: ShoppingItem[]) =>
     setList({ items: next, unavailable: false })
 
-  function change(
+  async function change(
     item: ShoppingItem,
     update: (current: ShoppingItem) => ShoppingItem | null,
-  ) {
+  ): Promise<boolean> {
     try {
-      updateList(changeShoppingItem(item, update, owner))
+      const updated = update(item)
+      if (state.mode === "demo") {
+        const next = changeShoppingItem(item, update)
+        updateList(next)
+      } else if (updated) {
+        const saved = await api.updateShoppingItem(
+          item,
+          Object.fromEntries(
+            Object.entries(updated)
+              .filter(
+                ([key, value]) =>
+                  key !== "id" &&
+                  key !== "version" &&
+                  key !== "createdAt" &&
+                  value !== item[(key as keyof ShoppingItem)],
+              )
+              .map(([key, value]) => [key, value === undefined ? null : value]),
+          ),
+        )
+        updateList(
+          items.map((current) => (current.id === saved.id ? saved : current)),
+        )
+      } else {
+        await api.deleteShoppingItem(item)
+        updateList(items.filter((current) => current.id !== item.id))
+      }
       setError("")
       return true
     } catch (failure) {
       if (failure instanceof ShoppingItemChanged) {
-        setList(readList(owner))
+        if (state.mode === "demo") setList(readList(undefined))
+        else
+          void api
+            .shoppingItems()
+            .then((items) => setList({ items, unavailable: false }))
+            .catch(() => {})
         setError(
           "Mục mua đã thay đổi. Hãy xem lại danh sách trước khi xác nhận.",
         )
@@ -132,9 +199,11 @@ export function ShoppingView({
     }
   }
 
-  function add(values: Omit<ShoppingItem, "id" | "createdAt">) {
+  async function add(
+    values: Omit<ShoppingItem, "id" | "createdAt" | "version">,
+  ) {
     try {
-      const latest = getShoppingItems(owner)
+      const latest = state.mode === "demo" ? getShoppingItems() : items
       if (
         latest.some(
           (item) =>
@@ -150,7 +219,10 @@ export function ShoppingView({
         )
         return false
       }
-      const added = addShoppingItem(values, owner)
+      const added =
+        state.mode === "demo"
+          ? addShoppingItem(values)
+          : await api.createShoppingItem(values)
       updateList([added, ...latest])
       setError("")
       reloadStock()
@@ -162,7 +234,7 @@ export function ShoppingView({
     }
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const name = draft.name.trim()
     const quantityText = draft.quantity.trim().replace(",", ".")
@@ -184,7 +256,7 @@ export function ShoppingView({
     const category = inferCategory(name)
     if (editing) {
       if (
-        !change(editing, (item) => ({
+        !(await change(editing, (item) => ({
           ...item,
           name,
           quantity,
@@ -196,12 +268,13 @@ export function ShoppingView({
             unit === item.unit
               ? item.matchedFoodId
               : undefined,
-        }))
+        })))
       )
         return
       reloadStock()
       notify("Đã cập nhật mục mua")
-    } else if (!add({ name, quantity, unit, category, checked: false })) return
+    } else if (!(await add({ name, quantity, unit, category, checked: false })))
+      return
     setEditing(undefined)
     setDraft(blankDraft)
   }
@@ -230,16 +303,17 @@ export function ShoppingView({
               item.checked ? "Đánh dấu chưa mua" : "Đánh dấu đã mua"
             } ${item.name}`}
             onClick={() => {
-              if (
-                change(item, (current) => ({
-                  ...current,
-                  checked: !current.checked,
-                }))
-              ) {
-                notify(
-                  item.checked ? "Đã chuyển về Cần mua" : "Đã đánh dấu đã mua",
-                )
-              }
+              void change(item, (current) => ({
+                ...current,
+                checked: !current.checked,
+              })).then((changed) => {
+                if (changed)
+                  notify(
+                    item.checked
+                      ? "Đã chuyển về Cần mua"
+                      : "Đã đánh dấu đã mua",
+                  )
+              })
             }}
             className="grid size-11 shrink-0 place-items-center rounded-corner-md hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
           >
@@ -289,11 +363,13 @@ export function ShoppingView({
           snapshot={snapshot}
           onRetry={reloadStock}
           onLink={(foodId) => {
-            if (
-              change(item, (current) => ({ ...current, matchedFoodId: foodId }))
-            ) {
-              notify(foodId ? "Đã liên kết gói trong kho" : "Đã bỏ liên kết")
-            }
+            void change(item, (current) => ({
+              ...current,
+              matchedFoodId: foodId,
+            })).then((changed) => {
+              if (changed)
+                notify(foodId ? "Đã liên kết gói trong kho" : "Đã bỏ liên kết")
+            })
           }}
         />
         {(item.inventoryAddedAt || item.checked) && (
@@ -454,7 +530,14 @@ export function ShoppingView({
           <Button
             variant="secondary"
             size="small"
-            onClick={() => setList(readList(owner))}
+            onClick={() => {
+              if (state.mode === "demo") setList(readList(undefined))
+              else
+                void api
+                  .shoppingItems()
+                  .then((items) => setList({ items, unavailable: false }))
+                  .catch(() => {})
+            }}
           >
             Thử lại
           </Button>
@@ -532,7 +615,9 @@ export function ShoppingView({
                 key={suggestion.name}
                 size="small"
                 variant="secondary"
-                onClick={() => add({ ...suggestion, checked: false })}
+                onClick={() => {
+                  void add({ ...suggestion, checked: false })
+                }}
               >
                 {suggestion.name}
               </Button>
@@ -556,11 +641,13 @@ export function ShoppingView({
               <Button
                 variant="danger"
                 onClick={() => {
-                  if (change(removing, () => null)) {
-                    reloadStock()
-                    notify("Đã xóa mục mua")
-                  }
-                  setRemoving(undefined)
+                  void change(removing, () => null).then((changed) => {
+                    if (changed) {
+                      reloadStock()
+                      notify("Đã xóa mục mua")
+                    }
+                    setRemoving(undefined)
+                  })
                 }}
               >
                 Xóa mục mua

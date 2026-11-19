@@ -161,7 +161,7 @@ test('Protected routes reject missing credentials and caller identity headers', 
   const port = server.address().port;
 
   try {
-    for (const path of ['/food-entries', '/me/preferences']) {
+    for (const path of ['/food-entries', '/me/preferences', '/shopping-items']) {
       const res = await fetch(`http://127.0.0.1:${port}/api/v1${path}`, {
         headers: { Authorization: 'Bearer 00000000-0000-4000-8000-000000000001', 'X-User-Id': '00000000-0000-4000-8000-000000000001' }
       });
