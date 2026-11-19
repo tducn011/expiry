@@ -13,6 +13,9 @@ import { createExpiryRouter } from './modules/expiry/expiry.routes.mjs';
 import { ScanService } from './modules/scan/scan.service.mjs';
 import { ScanController } from './modules/scan/scan.controller.mjs';
 import { createScanRouter } from './modules/scan/scan.routes.mjs';
+import { ShoppingService } from './modules/shopping/shopping.service.mjs';
+import { ShoppingController } from './modules/shopping/shopping.controller.mjs';
+import { createShoppingRouter } from './modules/shopping/shopping.routes.mjs';
 
 export function createApp({ database, scanServiceUrl, authRepository, allowedOrigins, secureCookies = process.env.NODE_ENV === 'production', now, scanOptions = {} } = {}) {
   const app = express();
@@ -162,6 +165,10 @@ export function createApp({ database, scanServiceUrl, authRepository, allowedOri
   const expiryService = new ExpiryService(database);
   const expiryController = new ExpiryController(expiryService);
   v1Router.use('/', createExpiryRouter(expiryController));
+
+  const shoppingService = new ShoppingService(database);
+  const shoppingController = new ShoppingController(shoppingService);
+  v1Router.use('/', createShoppingRouter(shoppingController));
 
   // Mount API v1
   app.use('/api/v1', v1Router);

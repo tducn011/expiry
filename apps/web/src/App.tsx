@@ -29,7 +29,7 @@ import type { Draft, FormMode } from "./features/FoodForm"
 import type { HomeFilters } from "./features/Inventory"
 import type { ShoppingFilter } from "./features/ShoppingView"
 import type { FoodEntry, ShoppingItem } from "./domain/types"
-import { getShoppingItems, updateShoppingItem } from "./api/shoppingStorage"
+import { getShoppingItems, saveShoppingItems } from "./api/shoppingStorage"
 
 import {
   Archive,
@@ -239,8 +239,6 @@ function RouteLoading() {
 export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const { state, dispatch, problem, retry, reset } = useAppStore()
 
-  const [syncError, setSyncError] = useState<string | null>(null)
-
   const [isCheckingSession, setIsCheckingSession] = useState(!demoMode)
 
   // authGenRef guards Effect 1 (session verification) only.
@@ -301,8 +299,6 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       .then((s) => {
         if (!isMounted || authGenRef.current !== gen) return
 
-        setSyncError(null)
-
         if (s.user) {
           dispatch({
             type: "login",
@@ -327,10 +323,6 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           if (state.mode === "account") {
             dispatch({ type: "logout" })
           }
-        } else {
-          setSyncError(
-            "Không thể kết nối máy chủ backend. Đang dùng dữ liệu lưu tạm.",
-          )
         }
       })
 
@@ -454,15 +446,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     refreshInventoryRef.current = hydrateInventory
 
-    hydrateInventory().catch(() => {
-      if (
-        isMounted &&
-        hydrationGenRef.current === gen &&
-        state.userId === activeUserId
-      ) {
-        setSyncError("Không thể tải đầy đủ danh mục thực phẩm từ máy chủ.")
-      }
-    })
+    hydrateInventory().catch(() => {})
 
     api
 
@@ -1010,17 +994,37 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   function finishShoppingImport(shoppingItemId?: string) {
     if (shoppingItemId) {
-      try {
-        updateShoppingItem(
-          shoppingItemId,
-          { inventoryAddedAt: new Date().toISOString() },
-          state.userId,
+      if (state.mode === "account") {
+        void api
+          .shoppingItems()
+          .then(async (items) => {
+            const item = items.find(
+              (candidate) => candidate.id === shoppingItemId,
+            )
+            if (item)
+              await api.updateShoppingItem(item, {
+                inventoryAddedAt: new Date().toISOString(),
+              })
+          })
+          .catch(() =>
+            notify(
+              "Thực phẩm đã lưu. Chưa cập nhật được dấu đã nhập trong danh sách mua.",
+              "warning",
+            ),
+          )
+      } else {
+        const current = getShoppingItems()
+        const item = current.find(
+          (candidate) => candidate.id === shoppingItemId,
         )
-      } catch {
-        notify(
-          "Thực phẩm đã lưu. Chưa cập nhật được dấu đã nhập trong danh sách mua.",
-          "warning",
-        )
+        if (item) {
+          const next = current.map((candidate) =>
+            candidate.id === shoppingItemId
+              ? { ...candidate, inventoryAddedAt: new Date().toISOString() }
+              : candidate,
+          )
+          saveShoppingItems(next)
+        }
       }
       if (
         stackRef.current[0]?.name === "shopping" &&
@@ -1851,34 +1855,6 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 Không lưu được vào thiết bị. Thay đổi gần nhất có thể bị mất khi
                 đóng ứng dụng.
               </span>
-            </div>
-          )}
-
-          {syncError && !isFullBleed && (
-            <div
-              className={`mb-4 flex items-center justify-between gap-3 rounded-corner-md border border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/30 px-3.5 text-xs text-amber-800 dark:text-amber-200 shadow-xs ${
-                route.name === "settings" ? "py-1.5" : "py-2"
-              }`}
-              role="alert"
-            >
-              <div className="flex min-w-0 items-center gap-2">
-                <CircleAlert
-                  size={16}
-                  className="shrink-0 text-amber-600 dark:text-amber-400"
-                />
-                <span className="font-medium">
-                  {route.name === "settings"
-                    ? "Đang dùng dữ liệu tạm"
-                    : syncError}
-                </span>
-              </div>
-              <button
-                type="button"
-                className="shrink-0 min-h-11 px-2 font-semibold underline hover:text-amber-900 dark:hover:text-amber-100 cursor-pointer"
-                onClick={() => window.location.reload()}
-              >
-                Thử lại
-              </button>
             </div>
           )}
 

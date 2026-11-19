@@ -37,46 +37,41 @@ const DEFAULT_SHOPPING_ITEMS: ShoppingItem[] = [
   },
 ]
 
-function getStorageKey(userId?: string): string {
-  return `expiry_shopping_items_${userId || "demo"}`
-}
-
-const inMemoryFallback = new Map<string, string>()
-
-function getStorage(): {
-  getItem(key: string): string | null
-  setItem(key: string, value: string): void
-  removeItem(key: string): void
-} {
-  if (typeof window !== "undefined" && window.localStorage) {
-    return window.localStorage
-  }
-  return {
-    getItem(key: string) {
-      return inMemoryFallback.get(key) ?? null
-    },
-    setItem(key: string, value: string) {
-      inMemoryFallback.set(key, value)
-    },
-    removeItem(key: string) {
-      inMemoryFallback.delete(key)
-    },
-  }
-}
+const inMemoryLists = new Map<string, ShoppingItem[]>()
 
 export function getShoppingItems(userId?: string): ShoppingItem[] {
-  const raw = getStorage().getItem(getStorageKey(userId))
-  if (raw === null) return userId ? [] : [...DEFAULT_SHOPPING_ITEMS]
-  const parsed = JSON.parse(raw)
-  if (!Array.isArray(parsed)) throw new Error("Invalid shopping list")
-  return parsed
+  const key = userId || "demo"
+  const existing = inMemoryLists.get(key)
+  if (existing) return [...existing]
+  const initial = userId ? [] : [...DEFAULT_SHOPPING_ITEMS]
+  inMemoryLists.set(key, initial)
+  return [...initial]
 }
 
 export function saveShoppingItems(
   items: ShoppingItem[],
   userId?: string,
 ): void {
-  getStorage().setItem(getStorageKey(userId), JSON.stringify(items))
+  inMemoryLists.set(userId || "demo", [...items])
+}
+
+export function readLegacyShoppingItems(userId: string): ShoppingItem[] {
+  try {
+    const raw = window.localStorage.getItem(`expiry_shopping_items_${userId}`)
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed as ShoppingItem[] : []
+  } catch {
+    return []
+  }
+}
+
+export function clearLegacyShoppingItems(userId: string): void {
+  try {
+    window.localStorage.removeItem(`expiry_shopping_items_${userId}`)
+  } catch {
+    /* storage may be unavailable */
+  }
 }
 
 export class ShoppingItemChanged extends Error {}
