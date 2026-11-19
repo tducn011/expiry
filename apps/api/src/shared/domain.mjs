@@ -3,6 +3,8 @@ export class DomainError extends Error {
   constructor(status, code) { super(code); this.status=status; this.code=code; }
 }
 export const invalid = () => { throw new DomainError(422,'VALIDATION_ERROR'); };
+export const units = ['piece','cái','hộp','gói','chai','quả','bó','kg','g','lít','ml'];
+export const wholeQuantityUnits = new Set(['piece']);
 export const uuid = value => {
   if (typeof value !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)) invalid();
   return value;
@@ -11,7 +13,7 @@ export function milli(value, unit, positive=false) {
   if (typeof value !== 'string' || !/^(0|[1-9]\d{0,8})(\.\d{1,3})?$/.test(value)) invalid();
   const [whole,fraction=''] = value.split('.');
   const amount = BigInt(whole)*1000n + BigInt(fraction.padEnd(3,'0'));
-  if (positive && amount===0n || unit==='piece' && amount%1000n!==0n) invalid();
+  if (positive && amount===0n || unit && wholeQuantityUnits.has(unit) && amount%1000n!==0n) invalid();
   return amount;
 }
 export function decimal(value) {

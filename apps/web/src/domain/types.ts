@@ -1,6 +1,6 @@
-/** UI view types; canonical transport mapping lives in api/client.ts. */
+/** Transport and UI view types; legacy piece maps to the current label cái. */
 
-export type Unit = "piece" | "g" | "ml"
+export type Unit = "piece" | "cái" | "hộp" | "gói" | "chai" | "quả" | "bó" | "kg" | "g" | "lít" | "ml"
 
 export type DateCertainty = "exact" | "estimated" | "unknown"
 

@@ -22,7 +22,7 @@ Một nơi định nghĩa rule; artifact khác chỉ link/reference ID.
 |---|---|---|
 | RULE-01 | Owner lấy từ principal authenticated; không nhận user_id trong business DTO | Service + scoped repo |
 | RULE-02 | Một FoodEntry = food quantity có cùng unit/date/location/opening context. Cùng tên không phải cùng identity | Capture service |
-| RULE-03 | Create quantity >0; remaining ≥0; max 999999999.999; piece số nguyên; g/ml 3 decimal; không convert unit ở MVP | Service + DB CHECK |
+| RULE-03 | Create quantity >0; remaining ≥0; max 999999999.999; legacy piece số nguyên; các unit được chọn giữ nguyên và cho tối đa 3 decimal; không convert unit ở MVP | Service + DB CHECK |
 | RULE-04 | Create lưu initial movement trước 0 → quantity; operational remaining là nguồn đọc, ledger cập nhật cùng transaction | Create service + DB |
 | RULE-05 | Consume/discard amount >0 và ≤remaining; deleted/depleted không cho movement giảm | RecordMovement |
 | RULE-06 | Recount nhập actual_quantity ≥0, reason bắt buộc; cùng lượng hiện có thì 200 no-op, không thêm movement/version | Recount service |

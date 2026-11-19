@@ -184,6 +184,9 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
     expect(dto.date_source).toBe("printed_label")
 
     expect(dto.date_label_type).toBe("use_by")
+
+    const boxDto = createDTO({ ...payload, initial_quantity: 3, unit: "hộp" })
+    expect(boxDto).toMatchObject({ quantity: "3", unit: "hộp" })
   })
 
   it("formats draftDTO correctly for PATCH edit mutation", () => {
@@ -693,6 +696,16 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
     } as any)
     expect(food.category).toBe("dairy_eggs")
     expect(food.review_at).toBe("2026-11-18")
+
+    const boxEntry = fromEntry({
+      ...entryResponse,
+      unit: "hộp",
+      remaining_quantity: "3.000",
+    } as any)
+    expect(boxEntry).toMatchObject({
+      remaining_quantity: 3,
+      unit: "hộp",
+    })
 
     // Test getAttentionSummary calculation
     const summary = api.getAttentionSummary([

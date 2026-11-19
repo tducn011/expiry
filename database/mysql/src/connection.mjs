@@ -89,7 +89,7 @@ export async function rootSql(sql, database) {
   }
 
   try {
-    const args = ['exec','-i',await containerId(),'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --user=root --batch --skip-column-names "$@"','sh'];
+    const args = ['exec','-i',await containerId(),'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --default-character-set=utf8mb4 --user=root --batch --skip-column-names "$@"','sh'];
     if (database) args.push('--database',database);
     return await run('docker',args, "SET SESSION time_zone='+00:00';\n" + sql);
   } catch {
@@ -109,6 +109,7 @@ export async function migrate(database) {
     { version: 9, file: 'migrations/009_product_batches.sql' },
     { version: 10, file: 'migrations/010_add_review_at.sql' },
     { version: 11, file: 'migrations/011_shopping_items.sql' },
+    { version: 12, file: 'migrations/012_preserve_food_units.sql' },
   ];
   await rootSql('CREATE TABLE IF NOT EXISTS schema_migrations (version INT PRIMARY KEY, sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, applied_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)) ENGINE=InnoDB;', database);
   

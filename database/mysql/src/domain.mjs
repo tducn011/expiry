@@ -3,6 +3,7 @@ export class DomainError extends Error {
   constructor(status, code) { super(code); this.status=status; this.code=code; }
 }
 export const invalid = () => { throw new DomainError(422,'VALIDATION_ERROR'); };
+export const units = ['piece','cái','hộp','gói','chai','quả','bó','kg','g','lít','ml'];
 export const uuid = value => {
   if (typeof value !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)) invalid();
   return value;

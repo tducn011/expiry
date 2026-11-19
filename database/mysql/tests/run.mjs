@@ -100,7 +100,7 @@ await check('DB-ROW-GUARDS','RULE-03/09/10/17/18; VT-04/14','Valid owner and ent
   const owner=await user(),entry=await create(owner,{unit:'piece',quantity:'2'});
   const rejected=[];
   await db(async c=>{
-    for(const [field,value] of [['remaining_quantity','-1'],['remaining_quantity','1.5'],['unit','kg'],['version',0],['name',' '],['date_source','printed_label'],['date_certainty','known']]) {
+    for(const [field,value] of [['remaining_quantity','-1'],['remaining_quantity','1.5'],['unit','bad-unit'],['version',0],['name',' '],['date_source','printed_label'],['date_certainty','known']]) {
       await code(()=>c.execute(`UPDATE food_entries SET ${field}=? WHERE id=?`,[value,entry.id]),'ER_CHECK_CONSTRAINT_VIOLATED');rejected.push(field+':'+value);
     }
     await code(()=>c.execute('UPDATE users SET attention_lead_days=31 WHERE id=?',[owner]),'ER_CHECK_CONSTRAINT_VIOLATED');

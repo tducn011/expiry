@@ -222,6 +222,46 @@ async function runBehavioralAndContractSuite() {
     record('STAGE 6: IDEMPOTENT REPLAY', 'Hệ thống nhận diện đúng Idempotency-Key và trả về kết quả replay');
   }
 
+  // Stage 6A: Persist and read back a user-selected display unit.
+  {
+    const create = await fetch(`${API_BASE}/api/v1/food-entries`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', Origin: ORIGIN, Cookie: cookie,
+        'X-CSRF-Token': csrfToken, 'Idempotency-Key': `idemp_${randomUUID()}`
+      },
+      body: JSON.stringify({ name: 'Sữa kiểm tra đơn vị', quantity: '3', unit: 'hộp' })
+    });
+    assert.equal(create.status, 201);
+    const created = await create.json();
+    conform(created, 'Entry');
+    assert.equal(created.unit, 'hộp');
+    assert.equal(created.remaining_quantity, '3.000');
+
+    const reloaded = await fetch(`${API_BASE}/api/v1/food-entries/${created.id}`, {
+      headers: { Cookie: cookie, Origin: ORIGIN }
+    });
+    assert.equal(reloaded.status, 200);
+    const loaded = await reloaded.json();
+    conform(loaded, 'Entry');
+    assert.equal(loaded.unit, 'hộp');
+
+    const consume = await fetch(`${API_BASE}/api/v1/food-entries/${created.id}/movements`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', Origin: ORIGIN, Cookie: cookie,
+        'X-CSRF-Token': csrfToken, 'Idempotency-Key': `idemp_${randomUUID()}`
+      },
+      body: JSON.stringify({ kind: 'consume', amount: '0.5', expected_version: loaded.version })
+    });
+    assert.equal(consume.status, 201);
+    const result = await consume.json();
+    conform(result, 'MutationResult');
+    assert.equal(result.entry.unit, 'hộp');
+    assert.equal(result.entry.remaining_quantity, '2.500');
+    record('STAGE 6A: UNIT PERSISTENCE', 'Giữ hộp qua create, API readback và consume 0.5 hộp');
+  }
+
   // Stage 7: Optimistic Concurrency Control (Conflict on Version Mismatch)
   {
     const wrongVersion = 999;
