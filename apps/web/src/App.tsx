@@ -2403,6 +2403,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           pendingSettingsLeaveRef.current = null
         }}
         title="Bỏ thay đổi chưa lưu?"
+        description="Bạn có thay đổi cài đặt chưa được lưu. Rời đi sẽ hủy các thay đổi này."
         size="small"
         footer={
           <>
@@ -2429,7 +2430,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             </Button>
           </>
         }
-      />
+      >
+        <p className="text-sm text-text-secondary leading-relaxed">
+          Những cài đặt bạn vừa thay đổi sẽ không được áp dụng nếu bạn rời đi mà
+          không lưu.
+        </p>
+      </Modal>
       <Modal
         isOpen={!!discard}
         onClose={() => setDiscard(null)}

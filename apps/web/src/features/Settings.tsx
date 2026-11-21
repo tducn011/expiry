@@ -381,38 +381,6 @@ export function Settings({
                   </p>
                 )}
               </div>
-
-              {saveError && (
-                <p
-                  role="alert"
-                  className="rounded-corner-md border border-status-expired/30 bg-status-expired-bg p-3 text-sm text-status-expired"
-                >
-                  {saveError}
-                </p>
-              )}
-              {dirty && (
-                <div className="fixed inset-x-0 bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex gap-3 border-t border-border-primary bg-surface-bg p-3 shadow-lg md:static md:justify-end md:rounded-corner-lg md:border md:shadow-xs">
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setDraft(state.settings)
-                      setSaveError(null)
-                    }}
-                    disabled={saving}
-                    className="min-h-12 flex-[3] md:flex-none"
-                  >
-                    Hủy
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={save}
-                    loading={saving}
-                    className="min-h-12 flex-[7] md:flex-none"
-                  >
-                    {saving ? "Đang lưu..." : "Lưu thay đổi"}
-                  </Button>
-                </div>
-              )}
             </div>
           )}
 
@@ -538,6 +506,38 @@ export function Settings({
               )}
             </div>
           )}
+
+          {saveError && (
+            <p
+              role="alert"
+              className="rounded-corner-md border border-status-expired/30 bg-status-expired-bg p-3 text-sm text-status-expired"
+            >
+              {saveError}
+            </p>
+          )}
+          {dirty && (
+            <div className="fixed inset-x-0 bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex gap-3 border-t border-border-primary bg-surface-bg p-3 shadow-lg md:static md:justify-end md:rounded-corner-lg md:border md:shadow-xs">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setDraft(state.settings)
+                  setSaveError(null)
+                }}
+                disabled={saving}
+                className="min-h-12 flex-[3] md:flex-none"
+              >
+                Hủy
+              </Button>
+              <Button
+                variant="primary"
+                onClick={save}
+                loading={saving}
+                className="min-h-12 flex-[7] md:flex-none"
+              >
+                {saving ? "Đang lưu..." : "Lưu thay đổi"}
+              </Button>
+            </div>
+          )}
         </section>
       </div>
 
@@ -578,6 +578,7 @@ export function Settings({
         isOpen={pendingLeave !== null}
         onClose={() => setPendingLeave(null)}
         title="Bỏ thay đổi chưa lưu?"
+        description="Bạn có thay đổi cài đặt chưa được lưu. Rời đi sẽ hủy các thay đổi này."
         size="small"
         footer={
           <>
@@ -589,7 +590,12 @@ export function Settings({
             </Button>
           </>
         }
-      />
+      >
+        <p className="text-sm text-text-secondary leading-relaxed">
+          Những cài đặt bạn vừa thay đổi sẽ không được áp dụng nếu bạn rời đi mà
+          không lưu.
+        </p>
+      </Modal>
       <Modal
         isOpen={pendingReset !== null}
         onClose={() => setPendingReset(null)}
