@@ -282,13 +282,15 @@ function OpenModal({
           )}
         </header>
 
-        <div
-          className={`min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 ${
-            layout === "form" ? "flex flex-col gap-4" : ""
-          }`}
-        >
-          {children}
-        </div>
+        {children && (
+          <div
+            className={`min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 ${
+              layout === "form" ? "flex flex-col gap-4" : ""
+            }`}
+          >
+            {children}
+          </div>
+        )}
 
         {footer && (
           <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-bg-subtle/50 border-t border-border-primary/40">
