@@ -178,7 +178,7 @@ export function AuthForm({
 
         {/* Spacing 95px -> Heading (y=233) */}
         <div className="mt-[95px]">
-          <h2 className="font-semibold text-[32px] xl:text-[36px] text-white leading-[1.3] text-left">
+          <h2 className="font-semibold text-[30px] xl:text-[36px] text-white leading-[38px] xl:leading-[44px] text-left">
             Biết mình có gì.
             <br />
             Dùng thực phẩm đúng lúc.
@@ -226,7 +226,7 @@ export function AuthForm({
 
           {/* Heading (y=228 on Web Desktop, aligns with left heading y=233) */}
           <div className="mt-10 lg:mt-[86px]">
-            <h1 className="font-semibold text-[24px] lg:text-[30px] text-text-heading leading-tight text-left tracking-normal">
+            <h1 className="font-semibold text-[24px] lg:text-[30px] text-text-heading leading-tight lg:leading-[38px] text-left tracking-normal">
               {view === "login"
                 ? "Chào mừng bạn trở lại"
                 : "Tạo tài khoản Expiry"}
@@ -385,7 +385,7 @@ export function AuthForm({
             <button
               type="submit"
               disabled={loading}
-              className={`mt-3 h-[48px] min-h-[48px] w-full rounded-[12px] bg-brand-primary hover:bg-brand-hover active:bg-brand-muted text-white font-semibold text-[14px] lg:text-[15px] flex items-center justify-center transition-all shadow-xs ${
+              className={`mt-3 h-[48px] min-h-[48px] w-full rounded-[12px] bg-brand-primary hover:bg-brand-hover active:bg-brand-muted text-white font-semibold text-[14px] lg:text-[16px] flex items-center justify-center transition-[color,background-color,border-color,box-shadow] shadow-xs ${
                 loading
                   ? "opacity-55 cursor-not-allowed"
                   : !isFormValid && Object.keys(fieldErrors).length > 0

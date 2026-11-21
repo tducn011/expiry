@@ -16,7 +16,9 @@ import { Trash2, Undo2 } from "lucide-react"
 
 import Modal from "../components/ui/Modal"
 
-import PageHeader from "../components/ui/PageHeader"
+import PageHeader, {
+  type PageBreadcrumbItem,
+} from "../components/ui/PageHeader"
 
 export function Trash({
   state,
@@ -25,6 +27,8 @@ export function Trash({
 
   onBack,
 
+  breadcrumbs,
+
   notify,
 }: {
   state: State
@@ -32,6 +36,8 @@ export function Trash({
   dispatch: Dispatch
 
   onBack?: () => void
+
+  breadcrumbs?: readonly PageBreadcrumbItem[]
 
   notify: (m: string) => void
 }) {
@@ -110,7 +116,7 @@ export function Trash({
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      <PageHeader title="Thùng rác" onBack={onBack} />
+      <PageHeader title="Thùng rác" onBack={onBack} breadcrumbs={breadcrumbs} />
 
       {list.length === 0 ? (
         <EmptyState icon={<Trash2 size={32} />} title="Thùng rác trống" />

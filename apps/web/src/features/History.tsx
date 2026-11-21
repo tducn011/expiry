@@ -180,7 +180,7 @@ export function History({
                       )}
                     </div>
                     <ChevronRight
-                      size={18}
+                      size={16}
                       aria-hidden="true"
                       className="shrink-0 text-text-tertiary"
                     />

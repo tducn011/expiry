@@ -1041,7 +1041,7 @@ export function Scanner({
           aria-label="Quay lại"
           className="font-semibold text-text-heading text-[20px] p-3 -ml-3 rounded-[8px] hover:bg-surface-subtle transition-colors cursor-pointer"
         >
-          <ArrowLeft size={22} />
+          <ArrowLeft size={20} />
         </button>
         <h1 className="text-[22px] font-semibold text-text-heading truncate">
           Chụp nhãn
@@ -1060,7 +1060,7 @@ export function Scanner({
           }`}
         >
           {step1Data ? (
-            <CircleCheck size={15} className="text-status-ok shrink-0" />
+            <CircleCheck size={16} className="text-status-ok shrink-0" />
           ) : (
             <span
               className={`size-2 rounded-full shrink-0 ${
@@ -1132,9 +1132,9 @@ export function Scanner({
             </div>
 
             {state === "ready" && (
-              <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-white/95 border border-border-primary/40 backdrop-blur-sm px-3 py-1 text-[11px] font-medium text-brand-primary shadow-xs">
+              <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-white/95 border border-border-primary/40 backdrop-blur-sm px-3 py-1 text-[12px] font-medium text-brand-primary shadow-xs">
                 <Sparkles
-                  size={12}
+                  size={16}
                   className="animate-pulse text-brand-primary"
                 />
                 <span>Tự động nhận diện tức thì</span>
@@ -1153,7 +1153,7 @@ export function Scanner({
           state === "denied" ||
           state === "unavailable") && (
           <div
-            className="bg-white border border-border-primary flex flex-col gap-2 items-center justify-center px-5 py-4 relative rounded-[14px] shadow-[0px_3px_8px_0px_rgba(0,0,0,0.06)] shrink-0 w-[280px] text-center z-10 transition-all duration-300"
+            className="bg-white border border-border-primary flex flex-col gap-2 items-center justify-center px-5 py-4 relative rounded-[14px] shadow-[0px_3px_8px_0px_rgba(0,0,0,0.06)] shrink-0 w-[280px] text-center z-10 transition-opacity duration-200"
             aria-live="polite"
             onClick={() => {
               if (state === "step2_ready") setShowStep2Notice(false)
@@ -1166,7 +1166,7 @@ export function Scanner({
                   aria-hidden="true"
                   className="text-text-heading shrink-0"
                 />
-                <p className="text-[15px] font-semibold text-text-heading leading-normal whitespace-nowrap">
+                <p className="text-[16px] font-semibold text-text-heading leading-normal whitespace-nowrap">
                   Camera chưa bật
                 </p>
               </>
@@ -1179,7 +1179,7 @@ export function Scanner({
                   className="animate-spin text-brand-primary shrink-0"
                   aria-hidden="true"
                 />
-                <p className="text-[15px] font-semibold text-text-heading">
+                <p className="text-[16px] font-semibold text-text-heading">
                   Đang mở camera…
                 </p>
               </>
@@ -1192,7 +1192,7 @@ export function Scanner({
                   className="animate-spin text-brand-primary shrink-0"
                   aria-hidden="true"
                 />
-                <p className="text-[15px] font-semibold text-text-heading">
+                <p className="text-[16px] font-semibold text-text-heading">
                   Đang chụp…
                 </p>
               </>
@@ -1205,7 +1205,7 @@ export function Scanner({
                   className="animate-spin text-brand-primary shrink-0"
                   aria-hidden="true"
                 />
-                <p className="text-[15px] font-semibold text-text-heading">
+                <p className="text-[16px] font-semibold text-text-heading">
                   {batchProgress && batchProgress.total > 1
                     ? `Đang đọc ảnh ${batchProgress.current}/${batchProgress.total}…`
                     : step === 2
@@ -1232,11 +1232,11 @@ export function Scanner({
                       {step1Data.draft.name}
                     </p>
                     {step1Data.draft.barcode && (
-                      <p className="text-text-tertiary text-[11px]">
+                      <p className="text-text-tertiary text-[12px]">
                         Mã: {step1Data.draft.barcode}
                       </p>
                     )}
-                    <p className="mt-1 text-brand-primary font-medium text-[11px] leading-normal">
+                    <p className="mt-1 text-brand-primary font-medium text-[12px] leading-normal">
                       Lật đáy lon hoặc nắp hộp để quét ngày HSD
                     </p>
                   </div>
@@ -1246,11 +1246,11 @@ export function Scanner({
                       HSD: {step1Data.draft.expDate}
                     </p>
                     {step1Data.draft.mfgDate && (
-                      <p className="text-text-tertiary text-[11px]">
+                      <p className="text-text-tertiary text-[12px]">
                         NSX: {step1Data.draft.mfgDate}
                       </p>
                     )}
-                    <p className="mt-1 text-brand-primary font-medium text-[11px] leading-normal">
+                    <p className="mt-1 text-brand-primary font-medium text-[12px] leading-normal">
                       Hướng vào mã vạch hoặc mặt trước để lấy tên sản phẩm
                     </p>
                   </div>
@@ -1265,7 +1265,7 @@ export function Scanner({
                   aria-hidden="true"
                   className="text-brand-primary shrink-0"
                 />
-                <p className="text-[15px] font-semibold text-text-heading">
+                <p className="text-[16px] font-semibold text-text-heading">
                   Chưa thấy ngày HSD
                 </p>
                 <p className="text-[12px] text-text-tertiary leading-normal">
@@ -1280,9 +1280,9 @@ export function Scanner({
                 <ShieldAlert
                   size={24}
                   aria-hidden="true"
-                  className="text-status-warning shrink-0"
+                  className="text-status-soon shrink-0"
                 />
-                <p className="text-[15px] font-semibold text-text-heading">
+                <p className="text-[16px] font-semibold text-text-heading">
                   Chưa có quyền dùng camera
                 </p>
                 <p className="text-[12px] text-text-tertiary leading-normal">
@@ -1297,9 +1297,9 @@ export function Scanner({
                 <CameraOff
                   size={24}
                   aria-hidden="true"
-                  className="text-status-warning shrink-0"
+                  className="text-status-soon shrink-0"
                 />
-                <p className="text-[15px] font-semibold text-text-heading">
+                <p className="text-[16px] font-semibold text-text-heading">
                   Không mở được camera
                 </p>
                 <p className="text-[12px] text-text-tertiary leading-normal">
@@ -1367,18 +1367,18 @@ export function Scanner({
             <div className="flex gap-2.5 sm:gap-3 w-full">
               <button
                 type="button"
-                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-text-primary text-[15px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                 onClick={resetToStep1}
               >
-                <RefreshCw size={18} />
+                <RefreshCw size={16} />
                 <span>Quét lại từ đầu</span>
               </button>
               <button
                 type="button"
-                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-text-primary text-[15px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                 onClick={() => libraryInputRef.current?.click()}
               >
-                <ImageUp size={18} />
+                <ImageUp size={16} />
                 <span>Chọn ảnh khác</span>
               </button>
             </div>
@@ -1416,7 +1416,7 @@ export function Scanner({
                 <div className="flex gap-2.5 sm:gap-3 w-full">
                   <button
                     type="button"
-                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-text-primary text-[15px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                     onClick={() => {
                       stop()
                       setState("idle")
@@ -1426,10 +1426,10 @@ export function Scanner({
                   </button>
                   <button
                     type="button"
-                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-text-primary text-[15px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                     onClick={() => setShowManualBarcode(true)}
                   >
-                    <Barcode size={18} />
+                    <Barcode size={16} />
                     <span>Nhập mã vạch</span>
                   </button>
                 </div>
@@ -1473,18 +1473,18 @@ export function Scanner({
                 <div className="flex gap-2.5 sm:gap-3 w-full">
                   <button
                     type="button"
-                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-text-primary text-[15px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                     onClick={() => libraryInputRef.current?.click()}
                   >
-                    <ImageUp size={18} />
+                    <ImageUp size={16} />
                     <span>Thư viện ảnh</span>
                   </button>
                   <button
                     type="button"
-                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-text-primary text-[15px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                     onClick={() => setShowManualBarcode(true)}
                   >
-                    <Barcode size={18} />
+                    <Barcode size={16} />
                     <span>Nhập mã vạch</span>
                   </button>
                 </div>
@@ -1543,22 +1543,22 @@ export function Scanner({
             <div className="flex gap-2.5 sm:gap-3 w-full">
               <button
                 type="button"
-                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-text-primary text-[15px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                 onClick={resetToStep1}
               >
-                <RefreshCw size={18} />
+                <RefreshCw size={16} />
                 <span>Quét lại từ đầu</span>
               </button>
               <button
                 type="button"
-                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-text-primary text-[15px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                 onClick={leave(() => {
                   const currentDraft = step1Data?.draft || detectedDraft
                   const currentImg = step1Data?.image || image
                   onManual(currentDraft, currentImg)
                 })}
               >
-                <Keyboard size={18} />
+                <Keyboard size={16} />
                 <span>Nhập tay</span>
               </button>
             </div>

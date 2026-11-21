@@ -134,6 +134,11 @@ export interface Settings {
   inApp: boolean
 
   push: boolean
+
+  homeAttentionExpanded: {
+    expired: boolean
+    soon: boolean
+  }
 }
 
 export interface State {
@@ -175,7 +180,12 @@ const initial: State = {
 
   snoozed: {},
 
-  settings: { remindDays: 3, inApp: true, push: false },
+  settings: {
+    remindDays: 3,
+    inApp: true,
+    push: false,
+    homeAttentionExpanded: { expired: false, soon: false },
+  },
 }
 
 export type Action = {
@@ -334,6 +344,8 @@ export function reducer(s: State, a: Action): State {
 
       const inApp = loadUserInApp(a.userId || "")
 
+      const homeAttentionExpanded = loadUserHomeAttention(a.userId || "")
+
       return {
         ...initial,
 
@@ -351,7 +363,7 @@ export function reducer(s: State, a: Action): State {
 
         locations: userLocations,
 
-        settings: { ...initial.settings, inApp },
+        settings: { ...initial.settings, inApp, homeAttentionExpanded },
 
         readNotifs: userNotifs.readNotifs,
 
@@ -1019,6 +1031,15 @@ function parseState(raw: string | null): State | null {
 
   const s = { ...initial, ...JSON.parse(raw) } as State
 
+  s.settings = {
+    ...initial.settings,
+    ...s.settings,
+    homeAttentionExpanded: {
+      ...initial.settings.homeAttentionExpanded,
+      ...s.settings?.homeAttentionExpanded,
+    },
+  }
+
   if (!Array.isArray(s.foods) || !Array.isArray(s.history))
     throw new Error("invalid")
 
@@ -1122,6 +1143,7 @@ function readStored(): StoredResult {
 export const NOTIF_PREFIX = "expiry_notifs_"
 
 const IN_APP_PREFIX = "expiry_user_in_app_"
+const HOME_ATTENTION_PREFIX = "expiry_user_home_attention_"
 
 export function loadUserInApp(userId: string): boolean {
   try {
@@ -1135,6 +1157,30 @@ export function loadUserInApp(userId: string): boolean {
 
 export function saveUserInApp(userId: string, enabled: boolean): void {
   localStorage.setItem(`${IN_APP_PREFIX}${userId}`, JSON.stringify(enabled))
+}
+
+export function loadUserHomeAttention(userId: string) {
+  try {
+    const raw = localStorage.getItem(`${HOME_ATTENTION_PREFIX}${userId}`)
+    if (!raw) return initial.settings.homeAttentionExpanded
+    const value = JSON.parse(raw) as Partial<Settings["homeAttentionExpanded"]>
+    return {
+      expired: value.expired === true,
+      soon: value.soon === true,
+    }
+  } catch {
+    return initial.settings.homeAttentionExpanded
+  }
+}
+
+export function saveUserHomeAttention(
+  userId: string,
+  preferences: Settings["homeAttentionExpanded"],
+): void {
+  localStorage.setItem(
+    `${HOME_ATTENTION_PREFIX}${userId}`,
+    JSON.stringify(preferences),
+  )
 }
 
 export function getNotifKey(userId?: string): string {

@@ -16,7 +16,9 @@ import EmptyState from "../components/ui/EmptyState"
 
 import { ChevronDown, ChevronRight, CircleCheck, Plus } from "lucide-react"
 
-import PageHeader from "../components/ui/PageHeader"
+import PageHeader, {
+  type PageBreadcrumbItem,
+} from "../components/ui/PageHeader"
 
 import { getFoodIcon } from "./FoodCard"
 
@@ -50,7 +52,7 @@ export function AttentionFoodRow({
 
     reasonClass = "text-status-expired font-medium"
   } else if (reason === "soon") {
-    reasonText = d === 0 ? "Hết hạn hôm nay" : `Còn ${d} ngày`
+    reasonText = d === 0 ? "Đến hạn hôm nay" : `Còn ${d} ngày`
 
     reasonClass = "text-status-soon font-medium"
   } else {
@@ -74,7 +76,7 @@ export function AttentionFoodRow({
         aria-hidden="true"
         className="flex size-11 shrink-0 items-center justify-center rounded-corner-md bg-brand-tertiary text-brand-primary transition-transform group-hover:scale-105 shadow-xs"
       >
-        <IconComponent size={22} />
+        <IconComponent size={20} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -107,7 +109,7 @@ export function AttentionFoodRow({
           </span>
         )}
         <ChevronRight
-          size={18}
+          size={16}
           aria-hidden="true"
           className="transition-transform group-hover:translate-x-0.5"
         />
@@ -119,6 +121,10 @@ export function AttentionFoodRow({
 export function Attention({
   state,
 
+  onBack,
+
+  breadcrumbs,
+
   onOpenDetail,
 
   onNavigateInventory,
@@ -126,6 +132,10 @@ export function Attention({
   onAdd,
 }: {
   state: State
+
+  onBack?: () => void
+
+  breadcrumbs?: readonly PageBreadcrumbItem[]
 
   onOpenDetail: (id: string) => void
 
@@ -208,23 +218,22 @@ export function Attention({
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <PageHeader title="Nhắc nhở" />
-        {sections.length > 1 && (
-          <Button
-            size="small"
-            variant="neutral"
-            onClick={toggleAll}
-            className="self-start sm:self-auto"
-          >
-            {allCollapsed ? "Mở rộng tất cả" : "Thu gọn tất cả"}
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Cần chú ý"
+        onBack={onBack}
+        breadcrumbs={breadcrumbs}
+        actions={
+          sections.length > 1 ? (
+            <Button size="small" variant="subtle" onClick={toggleAll}>
+              {allCollapsed ? "Mở rộng tất cả" : "Thu gọn tất cả"}
+            </Button>
+          ) : undefined
+        }
+      />
 
       {totalCount === 0 ? (
         <EmptyState
-          icon={<CircleCheck size={36} className="text-status-ok" />}
+          icon={<CircleCheck size={32} className="text-status-ok" />}
           title="Không có món nào cần chú ý"
           action={
             <div className="flex flex-wrap justify-center gap-3">
@@ -233,7 +242,7 @@ export function Attention({
               </Button>
               <Button
                 variant="primary"
-                iconStart={<Plus size={18} />}
+                iconStart={<Plus size={16} />}
                 onClick={onAdd}
               >
                 Thêm thực phẩm
@@ -249,7 +258,7 @@ export function Attention({
             <section
               key={sec.id}
               aria-labelledby={`sec-${sec.id}`}
-              className="flex flex-col gap-2 transition-all"
+              className="flex flex-col gap-2"
             >
               <button
                 type="button"
@@ -276,7 +285,7 @@ export function Attention({
               </button>
 
               {!isCollapsed && (
-                <div className="flex flex-col divide-y divide-border-primary/40 overflow-hidden rounded-corner-lg border border-border-primary/50 bg-surface-bg shadow-xs transition-all">
+                <div className="flex flex-col divide-y divide-border-primary/40 overflow-hidden rounded-corner-lg border border-border-primary/50 bg-surface-bg shadow-xs">
                   {sec.items.map((f) => (
                     <AttentionFoodRow
                       key={f.id}

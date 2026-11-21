@@ -437,7 +437,7 @@ export default function StorageView({
             value={query}
             onChange={(val: string) => setQuery(val)}
             className="w-full"
-            prefix={<Search size={18} className="text-text-secondary" />}
+            prefix={<Search size={16} className="text-text-secondary" />}
           />
           {query && (
             <button
@@ -450,24 +450,25 @@ export default function StorageView({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
           {expiredFoods.length > 0 && onNavigateAttention && (
             <Button
               variant="danger"
               size="small"
               iconStart={<Bell size={16} />}
               onClick={onNavigateAttention}
-              aria-label={`Nhắc nhở, ${expiredFoods.length} món quá hạn`}
+              aria-label={`Cần chú ý, ${expiredFoods.length} món quá hạn`}
             >
-              Nhắc nhở ({expiredFoods.length})
+              Cần chú ý ({expiredFoods.length})
             </Button>
           )}
           <button
             type="button"
             role="switch"
             aria-checked={onlySoon}
+            aria-label="Chỉ hiện sắp hết hạn"
             onClick={toggleOnlySoon}
-            className={`inline-flex min-h-11 items-center gap-2 px-3.5 py-2.5 rounded-corner-md text-xs font-semibold border transition-all cursor-pointer shrink-0 ${
+            className={`inline-flex min-h-11 items-center gap-2 px-3 sm:px-3.5 py-2.5 rounded-corner-md text-xs font-semibold border transition-[color,background-color,border-color,box-shadow] cursor-pointer shrink-0 ${
               onlySoon
                 ? "bg-status-soon-bg border-status-soon text-status-soon shadow-xs ring-1 ring-status-soon/30"
                 : "bg-surface-bg border-border-primary text-text-secondary hover:bg-surface-hover hover:text-text-primary"
@@ -477,13 +478,14 @@ export default function StorageView({
               size={16}
               className={onlySoon ? "text-status-soon" : "text-text-secondary"}
             />
-            <span>Chỉ hiện sắp hết hạn</span>
+            <span className="sm:hidden">Sắp hết hạn</span>
+            <span className="hidden sm:inline">Chỉ hiện sắp hết hạn</span>
             {onlySoon && (
               <span className="size-1.5 rounded-full bg-status-soon" />
             )}
             {soonCount > 0 && (
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                className={`px-1.5 py-0.5 rounded-full text-[12px] font-semibold ${
                   onlySoon
                     ? "bg-status-soon text-white"
                     : "bg-status-soon-bg text-status-soon"
@@ -501,7 +503,7 @@ export default function StorageView({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2.5">
           <div>
             <h2 className="text-sm font-semibold text-text-heading flex items-center gap-2 tracking-normal">
-              <Boxes size={18} className="text-brand-primary" />
+              <Boxes size={16} className="text-brand-primary" />
               <span>Khu vực bảo quản</span>
             </h2>
           </div>
@@ -516,7 +518,7 @@ export default function StorageView({
             type="button"
             aria-pressed={selectedLocation === "all"}
             onClick={() => handleLocationChange("all")}
-            className={`storage-location-card flex flex-col justify-between p-3 rounded-corner-md border text-left transition-all cursor-pointer ${
+            className={`storage-location-card flex flex-col justify-between p-3 rounded-corner-md border text-left transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
               selectedLocation === "all"
                 ? "border-brand-primary bg-brand-primary/5 shadow-xs ring-2 ring-brand-primary/20"
                 : "border-border-primary/80 bg-surface-bg hover:border-brand-primary/40 hover:bg-surface-hover"
@@ -524,11 +526,11 @@ export default function StorageView({
           >
             <div className="flex items-center justify-between w-full mb-2">
               <div className="w-8 h-8 rounded-corner-md flex items-center justify-center bg-brand-primary/10 text-brand-primary">
-                <Boxes size={18} />
+                <Boxes size={16} />
               </div>
               <div className="flex items-center gap-1">
                 {soonCount > 0 && (
-                  <span className="shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-status-soon-bg text-status-soon">
+                  <span className="shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded-full text-[12px] font-semibold bg-status-soon-bg text-status-soon">
                     {soonCount} sắp HSD
                   </span>
                 )}
@@ -538,7 +540,7 @@ export default function StorageView({
               <p className="text-xs font-semibold text-text-heading truncate">
                 Tất cả kho
               </p>
-              <p className="text-[11px] text-text-secondary mt-0.5">
+              <p className="text-[12px] text-text-secondary mt-0.5">
                 {inventoryFoods.length} món
               </p>
             </div>
@@ -559,12 +561,12 @@ export default function StorageView({
             const iconTone =
               loc.toLowerCase().includes("mát") ||
               loc.toLowerCase().includes("tủ lạnh")
-                ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                ? "bg-category-beverage-bg text-category-beverage"
                 : loc.toLowerCase().includes("đông")
-                  ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                  ? "bg-category-prepared-bg text-category-prepared"
                   : loc.toLowerCase().includes("bếp") ||
                       loc.toLowerCase().includes("kệ")
-                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                    ? "bg-category-dairy-bg text-category-dairy"
                     : "bg-surface-subtle text-text-secondary"
 
             return (
@@ -573,7 +575,7 @@ export default function StorageView({
                 type="button"
                 aria-pressed={isSelected}
                 onClick={() => handleLocationChange(loc)}
-                className={`storage-location-card flex flex-col justify-between p-3 rounded-corner-md border text-left transition-all cursor-pointer ${
+                className={`storage-location-card flex flex-col justify-between p-3 rounded-corner-md border text-left transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
                   isSelected
                     ? "border-brand-primary bg-brand-primary/5 shadow-xs ring-2 ring-brand-primary/20"
                     : "border-border-primary/80 bg-surface-bg hover:border-brand-primary/40 hover:bg-surface-hover"
@@ -583,11 +585,11 @@ export default function StorageView({
                   <div
                     className={`w-8 h-8 rounded-corner-md flex items-center justify-center ${iconTone}`}
                   >
-                    <LocIcon size={18} />
+                    <LocIcon size={16} />
                   </div>
                   <div className="flex items-center gap-1">
                     {stats.attention > 0 && (
-                      <span className="shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded-full border border-status-soon/30 bg-status-soon-bg text-[10px] font-medium text-status-soon">
+                      <span className="shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded-full border border-status-soon/30 bg-status-soon-bg text-[12px] font-medium text-status-soon">
                         {stats.attention} sắp HSD
                       </span>
                     )}
@@ -597,7 +599,7 @@ export default function StorageView({
                   <p className="text-xs font-semibold text-text-heading truncate">
                     {loc}
                   </p>
-                  <p className="text-[11px] text-text-secondary mt-0.5">
+                  <p className="text-[12px] text-text-secondary mt-0.5">
                     {stats.total} món
                   </p>
                 </div>
@@ -605,15 +607,6 @@ export default function StorageView({
             )
           })}
         </div>
-      </div>
-
-      <div className="sm:hidden">
-        <FilterDropdown<Category | "all">
-          label="Danh mục"
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          options={categoryOptions}
-        />
       </div>
 
       {/* Horizontal Category Filter Chips */}
@@ -630,7 +623,7 @@ export default function StorageView({
                 key={cat.v}
                 type="button"
                 onClick={() => handleCategoryChange(cat.v)}
-                className={`min-h-11 md:min-h-8 shrink-0 rounded-corner-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
+                className={`min-h-11 md:min-h-8 shrink-0 rounded-corner-full px-3.5 py-1 text-xs font-semibold transition-[color,background-color,border-color,box-shadow] cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
                   isActive
                     ? "bg-brand-primary text-white shadow-xs"
                     : "bg-surface-bg border border-border-primary text-text-secondary hover:text-text-primary hover:bg-surface-hover"
@@ -645,14 +638,27 @@ export default function StorageView({
 
       {/* Food Items List */}
       <div>
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <h3 className="text-sm font-semibold text-text-heading tracking-normal">
-            Danh sách món (
-            {selectedLocation === "all" ? "Tất cả vị trí" : selectedLocation})
-            {selectedCategory !== "all" &&
-              ` · ${categoryOptions.find((c) => c.v === selectedCategory)?.label}`}
-          </h3>
-          <span className="shrink-0 pt-0.5 text-xs text-text-secondary">
+        <div className="flex items-center justify-between gap-3 mb-3 sm:items-start">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-text-heading tracking-normal">
+              Danh sách món (
+              {selectedLocation === "all" ? "Tất cả vị trí" : selectedLocation})
+              {selectedCategory !== "all" &&
+                ` · ${categoryOptions.find((c) => c.v === selectedCategory)?.label}`}
+            </h3>
+            <span className="mt-0.5 block text-xs text-text-secondary sm:hidden">
+              {filteredFoods.length} kết quả
+            </span>
+          </div>
+          <div className="min-w-0 shrink-0 sm:hidden">
+            <FilterDropdown<Category | "all">
+              label="Danh mục"
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              options={categoryOptions}
+            />
+          </div>
+          <span className="hidden shrink-0 pt-0.5 text-xs text-text-secondary sm:inline">
             {filteredFoods.length} kết quả
           </span>
         </div>
@@ -660,7 +666,7 @@ export default function StorageView({
         {filteredFoods.length === 0 ? (
           <EmptyState
             className="storage-empty-state"
-            icon={<SearchX size={36} />}
+            icon={<SearchX size={32} />}
             title={
               query || onlySoon || selectedCategory !== "all"
                 ? "Không tìm thấy thực phẩm"
@@ -679,7 +685,7 @@ export default function StorageView({
                   size="small"
                   onClick={onNavigateAttention}
                 >
-                  Mở nhắc nhở
+                  Mở món cần chú ý
                 </Button>
               ) : query || onlySoon || selectedCategory !== "all" ? (
                 <Button

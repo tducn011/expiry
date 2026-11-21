@@ -42,10 +42,10 @@ export function errorMessage(status: number, code: string) {
     AUTH_RATE_LIMITED: "Đã thử đăng nhập nhiều lần. Hãy chờ rồi thử lại.",
 
     VERSION_CONFLICT:
-      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+      "Dữ liệu vừa thay đổi. Xem lại số lượng và xác nhận một thao tác mới.",
 
     CONCURRENT_MODIFICATION:
-      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+      "Dữ liệu vừa thay đổi. Xem lại số lượng và xác nhận một thao tác mới.",
 
     INSUFFICIENT_QUANTITY:
       "Lượng hiện tại không đủ. Kiểm tra lại trước khi xác nhận.",
@@ -94,7 +94,7 @@ export function errorMessage(status: number, code: string) {
   if (status === 404) return "Bản ghi không còn khả dụng. Hãy quay lại kho."
 
   if (status === 422)
-    return "Thông tin chưa hợp lệ. Kiểm tra lượng, ngày và các trường đã nhập."
+    return "Thông tin chưa hợp lệ. Kiểm tra số lượng, ngày và các trường đã nhập."
 
   if (status === 413) return "Ảnh quá lớn. Chọn ảnh không quá 5 MB."
 

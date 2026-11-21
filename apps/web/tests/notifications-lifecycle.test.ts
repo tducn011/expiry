@@ -560,7 +560,21 @@ describe("Issue #213: UX Writing & In-Browser Notification Lifecycle", () => {
       "utf-8",
     )
     expect(appCode).toMatch(
-      /onNavigateAttention=\{\(\)\s*=>\s*tab\(\{\s*name:\s*"attention"\s*\}\)\}/,
+      /onNavigateAttention=\{\(\)\s*=>\s*go\(\{\s*name:\s*"attention"\s*\}\)\}/,
     )
+  })
+
+  it("uses the phone navigation contract: dock only on root routes, bottom-sheet notifications", async () => {
+    const fs = await import("fs")
+    const path = await import("path")
+    const read = (f: string) =>
+      fs.readFileSync(path.resolve(__dirname, "../src", f), "utf-8")
+    const app = read("App.tsx")
+    const sheet = read("features/Notifications.tsx")
+    expect(app).toMatch(/const showMobileDock = isRootRoute\(route\)/)
+    expect(app).toContain('return "Cần chú ý"')
+    expect(sheet).toContain("Xem tất cả món cần chú ý")
+    expect(sheet).not.toContain("stagger")
+    expect(sheet).toContain("max-h-[85dvh]")
   })
 })

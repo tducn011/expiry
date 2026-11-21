@@ -39,7 +39,7 @@ export function IconButton({
       : variant === "neutral"
         ? "bg-surface-bg border border-border-primary text-text-primary hover:bg-surface-hover active:bg-bg-subtle shadow-xs"
         : variant === "danger"
-          ? "bg-status-expired-bg text-status-expired hover:bg-red-100"
+          ? "bg-danger-bg text-danger hover:bg-danger/15 active:bg-danger/25"
           : "bg-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover active:bg-bg-subtle"
 
   return (

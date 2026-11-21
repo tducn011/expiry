@@ -198,7 +198,7 @@ export default function LocationManagerModal({
               onClick={() => setErrorMsg("")}
               className="p-3 -m-2 md:p-1 md:m-0 hover:bg-black/10 rounded-full"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           </div>
         )}
@@ -309,7 +309,7 @@ export default function LocationManagerModal({
                       title={`Đổi tên vị trí "${loc}"`}
                       className="p-3.5 -m-2 md:p-1.5 md:m-0 text-text-secondary hover:text-brand-primary hover:bg-surface-subtle rounded-corner-md transition-colors cursor-pointer"
                     >
-                      <Pencil size={15} />
+                      <Pencil size={16} />
                     </button>
                     <button
                       type="button"
@@ -324,7 +324,7 @@ export default function LocationManagerModal({
                       }
                       className="p-1.5 text-text-secondary hover:text-danger hover:bg-status-expired-bg rounded-corner-md transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 )}

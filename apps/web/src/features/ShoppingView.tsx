@@ -53,7 +53,7 @@ function readDemoList() {
 
 function describeQuantity(item: ShoppingItem) {
   if (item.quantity === null)
-    return item.unit ? `Chưa rõ lượng · ${item.unit}` : "Chưa rõ lượng"
+    return item.unit ? `Chưa rõ số lượng · ${item.unit}` : "Chưa rõ số lượng"
   return item.unit
     ? `${item.quantity} ${item.unit}`
     : `${item.quantity} · Chưa rõ đơn vị`
@@ -199,7 +199,7 @@ export function ShoppingView({
         )
       ) {
         setError(
-          "Món với lượng và đơn vị này đã có trong danh sách cần mua. Bạn có thể sửa mục hiện tại.",
+          "Món với số lượng và đơn vị này đã có trong danh sách cần mua. Bạn có thể sửa mục hiện tại.",
         )
         return false
       }
@@ -308,11 +308,11 @@ export function ShoppingView({
                   : "border-border-control"
               }`}
             >
-              {item.checked && <Check size={15} aria-hidden="true" />}
+              {item.checked && <Check size={16} aria-hidden="true" />}
             </span>
           </button>
           <Icon
-            size={18}
+            size={16}
             className="hidden shrink-0 text-text-secondary min-[360px]:block"
             aria-hidden="true"
           />
@@ -366,7 +366,7 @@ export function ShoppingView({
               <Button
                 variant="secondary"
                 onClick={() => setImportItemId(item.id)}
-                iconStart={<PackagePlus size={15} />}
+                iconStart={<PackagePlus size={16} />}
               >
                 Thêm vào kho
               </Button>
