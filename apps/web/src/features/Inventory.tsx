@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import type { Food, State } from "../store/appStore"
 
@@ -21,13 +21,12 @@ import {
 } from "../components/ui/FilterChips"
 
 import {
-  Bell,
+  ChevronDown,
   ChevronRight,
   PackageOpen,
   Plus,
   Search,
   SearchX,
-  Settings as SettingsIcon,
   X,
 } from "lucide-react"
 
@@ -81,65 +80,111 @@ export interface InventoryProps {
   onAdd: () => void
 
   onNavigateAttention: () => void
-
-  onOpenNotifications?: () => void
-
-  onOpenAccount?: () => void
-
-  unreadNotificationsCount?: number
 }
 
 function AttentionSummary({
-  expired,
-  soon,
+  expiredFoods,
+  soonFoods,
   reviewDue,
-  onFilter,
+  defaultExpanded,
+  remindDays,
+  onOpenDetail,
   onReview,
 }: {
-  expired: number
-  soon: number
+  expiredFoods: Food[]
+  soonFoods: Food[]
   reviewDue: number
-  onFilter: (filter: StatusFilter) => void
+  defaultExpanded: State["settings"]["homeAttentionExpanded"]
+  remindDays: number
+  onOpenDetail: (id: string) => void
   onReview: () => void
 }) {
+  const [expanded, setExpanded] = useState(defaultExpanded)
+  const expired = expiredFoods.length
+  const soon = soonFoods.length
   const total = expired + soon + reviewDue
   if (!total) return null
+
+  const renderGroup = (
+    key: "expired" | "soon",
+    label: string,
+    foods: Food[],
+    tone: string,
+  ) => {
+    if (!foods.length) return null
+    const expandedId = `home-attention-${key}-foods`
+    const isExpanded = expanded[key]
+
+    return (
+      <section className="home-attention-group" key={key}>
+        <h3 className="m-0">
+          <button
+            type="button"
+            aria-expanded={isExpanded}
+            aria-controls={expandedId}
+            onClick={() =>
+              setExpanded((current) => ({ ...current, [key]: !current[key] }))
+            }
+            className={`home-attention-group-toggle ${tone}`}
+          >
+            <span>
+              {label} <span className="font-normal">· {foods.length} món</span>
+            </span>
+            <ChevronDown
+              size={16}
+              aria-hidden="true"
+              className={`shrink-0 transition-transform ${
+                isExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </h3>
+        <div
+          id={expandedId}
+          role="region"
+          aria-label={`${label} (${foods.length} món)`}
+          hidden={!isExpanded}
+          className="home-attention-foods"
+        >
+          {foods.map((food) => (
+            <FoodCard
+              key={food.id}
+              food={food}
+              variant="grouped"
+              remindDays={remindDays}
+              onOpen={() => onOpenDetail(food.id)}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
   return (
-    <section aria-label="Cần xử lý" className="home-attention">
-      <h2 className="text-sm font-semibold text-text-heading">
+    <section
+      aria-labelledby="home-attention-heading"
+      className="home-attention"
+    >
+      <h2
+        id="home-attention-heading"
+        className="text-sm font-semibold text-text-heading"
+      >
         Cần xử lý{" "}
         <span className="ml-1 font-normal text-text-secondary">
           {total} món
         </span>
       </h2>
-      <div className="flex flex-wrap gap-x-5 gap-y-1">
-        {expired > 0 && (
-          <button
-            type="button"
-            onClick={() => onFilter("expired")}
-            className="home-attention-action text-status-expired"
-          >
-            Kiểm tra {expired} món quá hạn{" "}
-            <ChevronRight size={16} aria-hidden="true" />
-          </button>
-        )}
-        {soon > 0 && (
-          <button
-            type="button"
-            onClick={() => onFilter("soon")}
-            className="home-attention-action text-status-soon"
-          >
-            Xem {soon} món sắp hết hạn{" "}
-            <ChevronRight size={16} aria-hidden="true" />
-          </button>
-        )}
+      <div className="home-attention-groups">
+        {renderGroup("expired", "Quá hạn", expiredFoods, "text-status-expired")}
+        {renderGroup("soon", "Sắp hết hạn", soonFoods, "text-status-soon")}
         {reviewDue > 0 && (
           <button
             type="button"
+            aria-label={`Kiểm tra ${reviewDue} món đến hẹn`}
             onClick={onReview}
-            className="home-attention-action text-brand-primary"
+            className="home-attention-action home-attention-review text-brand-primary"
           >
-            Kiểm tra {reviewDue} món đến hẹn{" "}
+            Kiểm tra {reviewDue} món đến hẹn
             <ChevronRight size={16} aria-hidden="true" />
           </button>
         )}
@@ -158,12 +203,6 @@ export function Inventory({
   onAdd,
 
   onNavigateAttention,
-
-  onOpenNotifications,
-
-  onOpenAccount,
-
-  unreadNotificationsCount = 0,
 }: InventoryProps) {
   const {
     query: q,
@@ -211,11 +250,13 @@ export function Inventory({
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(new Date(`${t}T12:00:00+07:00`))
 
-  const expired = activeItems.filter(
-    (f) => statusOf(f, remind) === "expired",
-  ).length
+  const expired = activeItems
+    .filter((f) => statusOf(f, remind) === "expired")
+    .sort((a, b) => (a.expDate || "").localeCompare(b.expDate || ""))
 
-  const soon = activeItems.filter((f) => statusOf(f, remind) === "soon").length
+  const soon = activeItems
+    .filter((f) => statusOf(f, remind) === "soon")
+    .sort((a, b) => (a.expDate || "").localeCompare(b.expDate || ""))
 
   const reviewDue = activeItems.filter(
     (f) =>
@@ -294,41 +335,6 @@ export function Inventory({
             {todayLabel}
           </time>
         </div>
-        <div className="flex items-center gap-2 md:hidden">
-          {onOpenNotifications && (
-            <div className="relative">
-              <button
-                type="button"
-                aria-label={
-                  unreadNotificationsCount
-                    ? `Thông báo, ${unreadNotificationsCount} chưa đọc`
-                    : "Thông báo"
-                }
-                onClick={onOpenNotifications}
-                className="flex size-11 items-center justify-center rounded-[16px] text-text-primary hover:bg-surface-subtle transition-colors cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
-              >
-                <Bell size={20} strokeWidth={2} />
-              </button>
-              {unreadNotificationsCount > 0 && (
-                <span
-                  aria-hidden="true"
-                  className="absolute top-1 right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white shadow-xs"
-                >
-                  {unreadNotificationsCount}
-                </span>
-              )}
-            </div>
-          )}
-          <button
-            type="button"
-            aria-label="Cài đặt"
-            title="Cài đặt"
-            onClick={onOpenAccount}
-            className="flex size-11 items-center justify-center rounded-full bg-surface-soft border border-border-subtle text-text-primary hover:bg-surface-soft/80 transition-colors cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
-          >
-            <SettingsIcon size={20} strokeWidth={2} />
-          </button>
-        </div>
       </div>
 
       {activeItems.length === 0 ? (
@@ -338,7 +344,7 @@ export function Inventory({
           action={
             <Button
               variant="primary"
-              iconStart={<Plus size={18} />}
+              iconStart={<Plus size={16} />}
               onClick={onAdd}
             >
               Thêm thực phẩm
@@ -348,12 +354,12 @@ export function Inventory({
       ) : (
         <>
           <AttentionSummary
-            expired={expired}
-            soon={soon}
+            expiredFoods={expired}
+            soonFoods={soon}
             reviewDue={reviewDue}
-            onFilter={(status) =>
-              onFiltersChange({ ...initialHomeFilters, status })
-            }
+            defaultExpanded={state.settings.homeAttentionExpanded}
+            remindDays={remind}
+            onOpenDetail={onOpenDetail}
             onReview={onNavigateAttention}
           />
 
@@ -371,7 +377,7 @@ export function Inventory({
                   onFiltersChange({ ...filters, query: e.target.value })
                 }
                 placeholder="Tìm thực phẩm theo tên..."
-                className="h-12 w-full rounded-[12px] border border-border-control bg-surface-bg pl-10 pr-10 text-[14px] leading-[22px] text-text-primary placeholder:text-text-placeholder outline-none transition-all focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+                className="h-12 w-full rounded-[12px] border border-border-control bg-surface-bg pl-10 pr-10 text-[14px] leading-[22px] text-text-primary placeholder:text-text-placeholder outline-none transition-[border-color,box-shadow] focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
               />
               {q && (
                 <button
@@ -385,15 +391,17 @@ export function Inventory({
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid grid-cols-[auto_auto_auto] items-center gap-2 sm:flex sm:flex-wrap">
               <FilterDropdown<StatusFilter>
                 label="Hạn sử dụng"
+                className="min-w-0 sm:w-auto"
                 value={filterHsd}
                 onChange={(status) => onFiltersChange({ ...filters, status })}
                 options={inventoryHsdOptions}
               />
               <FilterDropdown
                 label="Danh mục"
+                className="min-w-0 sm:w-auto"
                 value={selectedCategory}
                 onChange={(category) =>
                   onFiltersChange({ ...filters, category })
@@ -402,6 +410,7 @@ export function Inventory({
               />
               <FilterDropdown
                 label="Lưu trữ"
+                className="min-w-0 sm:w-auto"
                 value={selectedLocation}
                 onChange={(location) =>
                   onFiltersChange({ ...filters, location })
@@ -497,7 +506,7 @@ export function Inventory({
                                   aria-hidden="true"
                                   className="flex size-9 shrink-0 items-center justify-center rounded-[12px] border border-border-primary bg-surface-subtle text-text-primary"
                                 >
-                                  <IconComp size={18} strokeWidth={2} />
+                                  <IconComp size={16} strokeWidth={2} />
                                 </span>
                                 <button
                                   type="button"

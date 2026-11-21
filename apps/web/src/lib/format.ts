@@ -95,7 +95,7 @@ export const attentionGuidance: Record<Attention, {
   today: {
     title: "Đến ngày bạn ghi",
 
-    body: "Xem lượng và vị trí; chỉ ghi nhận đã dùng sau khi thực sự sử dụng.",
+    body: "Xem số lượng và vị trí; chỉ ghi nhận đã dùng sau khi thực sự sử dụng.",
   },
 
   soon: {
@@ -113,7 +113,7 @@ export const attentionGuidance: Record<Attention, {
   later: {
     title: "Chưa đến ngày",
 
-    body: "Kiểm tra lượng thực tế và ghi nhận nếu đã dùng.",
+    body: "Kiểm tra số lượng thực tế và ghi nhận nếu đã dùng.",
   },
 }
 

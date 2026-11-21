@@ -29,7 +29,7 @@ const steps = [
   {
     label: "Cập nhật số lượng",
     icon: <Minus size={32} aria-hidden="true" />,
-    title: "Cập nhật lượng còn lại",
+    title: "Cập nhật số lượng còn lại",
     description:
       "Ghi phần đã dùng, đã bỏ hoặc kiểm đếm lại để số lượng trong tủ khớp với thực tế.",
   },
@@ -50,7 +50,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-surface-base">
+    <div className="flex min-h-dvh flex-col bg-surface-bg">
       <header className="mx-auto flex min-h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <BrandLockup markSize={32} wordmarkSize={20} />
         <Button variant="subtle" size="small" onClick={onDone}>
@@ -104,7 +104,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
               <div aria-live="polite" aria-atomic="true">
                 <h1
                   id="onboarding-title"
-                  className="mt-3 text-2xl font-semibold leading-tight tracking-normal text-text-heading sm:text-3xl"
+                  className="mt-3 text-2xl font-semibold leading-tight tracking-normal text-text-heading sm:text-3xl sm:leading-[38px]"
                 >
                   {step.title}
                 </h1>

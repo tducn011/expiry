@@ -150,7 +150,7 @@ function QuantityTime({ foodId, state }: QuantityTimeProps) {
     if (!live) label = "Đang tải…"
     else if (live.status === "error") label = "Không đọc được lịch sử"
   }
-  return <p>Đổi lượng gần nhất: {label}</p>
+  return <p>Đổi số lượng gần nhất: {label}</p>
 }
 
 export function ShoppingStockCheck({
@@ -288,8 +288,8 @@ export function ShoppingStockCheck({
               </p>
               {candidates.length > 0 && (
                 <p>
-                  Dựa trên kho đã ghi. Kiểm tra lượng thực tế và tình trạng thực
-                  phẩm trước khi quyết định mua.
+                  Dựa trên kho đã ghi. Kiểm tra số lượng thực tế và tình trạng
+                  thực phẩm trước khi quyết định mua.
                 </p>
               )}
               {item.matchedFoodId && !linked && (

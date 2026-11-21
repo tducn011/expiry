@@ -481,7 +481,7 @@ describe("Detail history descriptions", () => {
       { ...food, quantity: 0.5 },
     )
 
-    expect(description).toBe("Không có dữ liệu lượng lúc nhập")
+    expect(description).toBe("Không có dữ liệu số lượng lúc nhập")
   })
 
   it("keeps the recorded initial stock from an add event", () => {
@@ -513,7 +513,7 @@ describe("Status Badge Computations", () => {
 
     expect(computeStatusOf(t, 3)).toBe("soon")
 
-    expect(computeStatusText(t, 3)).toBe("Hết HSD hôm nay")
+    expect(computeStatusText(t, 3)).toBe("Đến hạn hôm nay")
 
     expect(computeStatusOf(addDays(t, 2), 3)).toBe("soon")
 

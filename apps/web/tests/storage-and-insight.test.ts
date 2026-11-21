@@ -504,7 +504,7 @@ describe("Storage & Insight Feature Integration", () => {
 
     expect(html).toContain("Trứng &amp; Sữa")
     expect(html).toContain("Còn 10 ngày")
-    expect(html).toContain("bg-amber-500/10")
+    expect(html).toContain("bg-category-dairy-bg")
   })
 
   it("shows a single populated trend period without adding a trend explanation", async () => {

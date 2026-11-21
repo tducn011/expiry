@@ -46,7 +46,7 @@ export function SidebarButton({
       aria-label={ariaLabel || title || label}
       aria-current={active ? "page" : undefined}
       onClick={onClick}
-      className={`group relative flex items-center rounded-corner-md transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
+      className={`group relative flex items-center rounded-corner-md transition-[color,background-color,box-shadow] cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
         isExpanded
           ? "min-h-11 w-full gap-3 px-3 py-2.5 justify-start text-left"
           : "size-12 justify-center"
@@ -71,8 +71,8 @@ export function SidebarButton({
           aria-hidden="true"
           className={`${
             isExpanded
-              ? "ml-auto flex min-w-5 h-5 items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white shadow-xs"
-              : "absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white shadow-xs"
+              ? "ml-auto flex min-w-5 h-5 items-center justify-center rounded-full bg-danger px-1.5 text-[12px] font-bold text-white shadow-xs"
+              : "absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[12px] font-bold text-white shadow-xs"
           }`}
         >
           {badge}
@@ -145,9 +145,9 @@ export function SidebarNavigation({
               className="flex size-11 shrink-0 items-center justify-center rounded-corner-md text-text-tertiary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
             >
               {isExpanded ? (
-                <ChevronsLeft size={18} />
+                <ChevronsLeft size={16} />
               ) : (
-                <ChevronsRight size={18} />
+                <ChevronsRight size={16} />
               )}
             </button>
           )}

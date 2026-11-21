@@ -51,7 +51,7 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-transparent border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover active:bg-bg-subtle",
 
   danger:
-    "bg-status-expired-bg border-transparent text-status-expired hover:bg-red-100 active:bg-red-200",
+    "bg-danger-bg border-transparent text-danger hover:bg-danger/15 active:bg-danger/25",
 
   cta: "bg-brand-primary text-white hover:bg-brand-hover active:bg-brand-dark shadow-sm border-transparent",
 }
@@ -114,7 +114,7 @@ export default function Button({
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center border transition-all cursor-pointer select-none text-center outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-50 disabled:cursor-not-allowed ${sizeCls} ${varCls} ${
+      className={`inline-flex items-center justify-center border transition-[color,background-color,border-color,box-shadow] cursor-pointer select-none text-center outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-50 disabled:cursor-not-allowed ${sizeCls} ${varCls} ${
         block ? "w-full" : ""
       } ${className}`.trim()}
       onClick={onClick}

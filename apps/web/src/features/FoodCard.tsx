@@ -66,17 +66,17 @@ const rowTone: Record<string, string> = {
 
 export const categoryTones: Record<Category, string> = {
   fresh_produce:
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+    "bg-category-fresh-bg text-category-fresh border border-category-fresh/20",
   meat_seafood:
-    "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
+    "bg-category-meat-bg text-category-meat border border-category-meat/20",
   dairy_eggs:
-    "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+    "bg-category-dairy-bg text-category-dairy border border-category-dairy/20",
   prepared_food:
-    "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20",
+    "bg-category-prepared-bg text-category-prepared border border-category-prepared/20",
   dry_pantry:
-    "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20",
+    "bg-category-pantry-bg text-category-pantry border border-category-pantry/20",
   beverage:
-    "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20",
+    "bg-category-beverage-bg text-category-beverage border border-category-beverage/20",
   other:
     "bg-surface-subtle text-text-secondary border border-border-primary/50",
 }
@@ -117,7 +117,7 @@ export function FoodCard({
   if (st === "expired") {
     statusLabel = `Quá hạn ${d !== null ? Math.abs(d) : 1} ngày`
   } else if (st === "soon") {
-    statusLabel = d === 0 ? "Hết hạn hôm nay" : `Còn ${d} ngày`
+    statusLabel = d === 0 ? "Đến hạn hôm nay" : `Còn ${d} ngày`
   } else if (st === "ok") {
     statusLabel = d !== null ? `Còn ${d} ngày` : "Còn hạn"
   } else {
@@ -132,10 +132,10 @@ export function FoodCard({
         className={`home-food-row group ${className}`}
       >
         <span aria-hidden="true" className="home-food-icon">
-          <IconComponent size={18} strokeWidth={2} />
+          <IconComponent size={16} strokeWidth={2} />
         </span>
         <span className="min-w-0">
-          <span className="block truncate text-[15px] leading-[22px] font-semibold text-text-heading">
+          <span className="block truncate text-[16px] leading-[22px] font-semibold text-text-heading">
             {food.name}
           </span>
           <span className="block truncate text-xs leading-5 text-text-secondary">
@@ -151,7 +151,7 @@ export function FoodCard({
             {statusLabel}
           </span>
           {food.expDate && (
-            <span className="block text-[11px] leading-4 text-text-secondary">
+            <span className="block text-[12px] leading-4 text-text-secondary">
               HSD {formatDate(food.expDate)}
             </span>
           )}
@@ -174,7 +174,7 @@ export function FoodCard({
         aria-hidden="true"
         className={`flex size-11 shrink-0 items-center justify-center rounded-corner-md transition-transform group-hover:scale-105 shadow-xs ${categoryTones[category]}`}
       >
-        <IconComponent size={22} />
+        <IconComponent size={24} />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-sm md:text-base font-semibold text-text-heading">
@@ -201,7 +201,7 @@ export function FoodCard({
       </div>
       <div className="flex shrink-0 items-center text-text-tertiary">
         <ChevronRight
-          size={18}
+          size={16}
           aria-hidden="true"
           className="transition-transform group-hover:translate-x-0.5"
         />

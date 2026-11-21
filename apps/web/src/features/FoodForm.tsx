@@ -4,6 +4,8 @@ import { api } from "../api/client"
 
 import { playBeep } from "../lib/barcode"
 
+import { popoverIn, useGSAP } from "../lib/motion"
+
 import type { Draft } from "../domain/foodDraft"
 
 export { draftFrom, emptyDraft } from "../domain/foodDraft"
@@ -39,6 +41,10 @@ import InputField from "../components/ui/InputField"
 import Modal from "../components/ui/Modal"
 
 import SectionTitle from "../components/ui/SectionTitle"
+
+import PageHeader, {
+  type PageBreadcrumbItem,
+} from "../components/ui/PageHeader"
 
 import SelectField from "../components/ui/SelectField"
 
@@ -131,6 +137,7 @@ export function FoodForm({
   onSubmit,
 
   onCancel,
+  breadcrumbs,
   onDirtyChange,
   restored,
 }: {
@@ -148,6 +155,8 @@ export function FoodForm({
 
   onCancel: (dirty: boolean) => void
 
+  breadcrumbs?: readonly PageBreadcrumbItem[]
+
   restored?: Draft
 
   onDirtyChange?: (dirty: boolean) => void
@@ -156,6 +165,17 @@ export function FoodForm({
 
   const [showReminderPicker, setShowReminderPicker] = useState<boolean>(
     () => !!initial.reviewAt,
+  )
+
+  const reminderRef = useRef<HTMLDivElement>(null)
+
+  useGSAP(
+    () => {
+      if (showReminderPicker && reminderRef.current) {
+        popoverIn(reminderRef.current)
+      }
+    },
+    { scope: reminderRef, dependencies: [showReminderPicker] },
   )
 
   // Track which fields originated from a scan (strictly read-only, editing is locked)
@@ -332,19 +352,21 @@ export function FoodForm({
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-semibold text-text-heading tracking-normal">
-          {titles[mode]}
-        </h1>
-        <button
-          type="button"
-          onClick={() => onCancel(dirty)}
-          aria-label="Hủy bỏ"
-          className="p-1 rounded-corner-md text-text-secondary hover:text-text-primary hover:bg-surface-hover"
-        >
-          <X size={22} aria-hidden="true" />
-        </button>
-      </div>
+      <PageHeader
+        title={titles[mode]}
+        onBack={() => onCancel(dirty)}
+        breadcrumbs={breadcrumbs}
+        actions={
+          <button
+            type="button"
+            onClick={() => onCancel(dirty)}
+            aria-label="Hủy bỏ"
+            className="flex size-11 items-center justify-center rounded-corner-md text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand-primary"
+          >
+            <X size={20} aria-hidden="true" />
+          </button>
+        }
+      />
 
       {mode === "ocr" && (
         <Card className="flex items-start gap-4 border border-brand-primary/30 bg-surface-bg shadow-xs">
@@ -362,10 +384,10 @@ export function FoodForm({
                       key={idx}
                       type="button"
                       onClick={() => setSelectedImgIdx(idx)}
-                      className={`h-1.5 rounded-full transition-all ${
+                      className={`h-1.5 rounded-full transition-[width,background-color] ${
                         idx === selectedImgIdx
                           ? "bg-brand-primary w-3.5"
-                          : "bg-border-secondary hover:bg-text-secondary w-1.5"
+                          : "bg-border-primary hover:bg-text-secondary w-1.5"
                       }`}
                       aria-label={`Xem ảnh ${idx + 1}`}
                     />
@@ -416,14 +438,14 @@ export function FoodForm({
                 title="Tên thực phẩm trích xuất tự động từ nhãn/mã vạch (chỉ đọc)"
                 className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
               >
-                <Lock size={13} aria-hidden="true" />
+                <Lock size={16} aria-hidden="true" />
                 <span>Chỉ đọc</span>
               </span>
             )}
           </div>
           {d.barcode && (
             <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-1">
-              <Barcode size={14} className="text-brand-primary shrink-0" />
+              <Barcode size={16} className="text-brand-primary shrink-0" />
               <span>
                 Mã vạch:{" "}
                 <strong className="font-mono text-text-primary">
@@ -548,7 +570,7 @@ export function FoodForm({
                   title="NSX trích xuất tự động từ nhãn (chỉ đọc)"
                   className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
                 >
-                  <Lock size={13} aria-hidden="true" />
+                  <Lock size={16} aria-hidden="true" />
                   <span>Chỉ đọc</span>
                 </span>
               )}
@@ -559,18 +581,18 @@ export function FoodForm({
               <button
                 type="button"
                 onClick={() => setShowReminderPicker((v) => !v)}
-                className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md transition-all cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
                   d.reviewAt
                     ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary/20 font-semibold"
                     : showReminderPicker
                       ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/40 shadow-xs"
-                      : "text-text-secondary hover:text-brand-primary hover:bg-surface-secondary border border-transparent hover:border-border-primary/40"
+                      : "text-text-secondary hover:text-brand-primary hover:bg-surface-hover border border-transparent hover:border-border-primary/40"
                 }`}
                 title="Tùy chỉnh nhắc nhở"
                 aria-expanded={showReminderPicker}
               >
                 <Bell
-                  size={14}
+                  size={16}
                   className={
                     d.reviewAt ? "text-brand-primary" : "text-text-secondary"
                   }
@@ -615,7 +637,7 @@ export function FoodForm({
                   title="HSD trích xuất tự động từ nhãn (chỉ đọc)"
                   className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
                 >
-                  <Lock size={13} aria-hidden="true" />
+                  <Lock size={16} aria-hidden="true" />
                   <span>Chỉ đọc</span>
                 </span>
               )}
@@ -626,7 +648,10 @@ export function FoodForm({
 
         {/* Khung Tùy chỉnh nhắc nhở (Google Calendar style) chỉ hiện ra khi ấn vào icon */}
         {showReminderPicker && (
-          <div className="mt-2 pt-4 border-t border-border-primary/60 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div
+            ref={reminderRef}
+            className="mt-2 pt-4 border-t border-border-primary/60 flex flex-col gap-3"
+          >
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <Bell size={16} className="text-brand-primary" />
@@ -681,10 +706,10 @@ export function FoodForm({
                         reviewAt: isSelected ? "" : targetDate,
                       }))
                     }
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
                       isSelected
                         ? "bg-brand-primary text-white shadow-xs"
-                        : "bg-surface-secondary text-text-secondary hover:text-text-primary hover:bg-surface-tertiary border border-border-primary/50"
+                        : "bg-surface-subtle text-text-secondary hover:text-text-primary hover:bg-surface-hover border border-border-primary/50"
                     }`}
                   >
                     +{num} ngày

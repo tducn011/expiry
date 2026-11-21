@@ -45,7 +45,9 @@ import InputField from "../components/ui/InputField"
 
 import Modal from "../components/ui/Modal"
 
-import PageHeader from "../components/ui/PageHeader"
+import PageHeader, {
+  type PageBreadcrumbItem,
+} from "../components/ui/PageHeader"
 
 import SectionTitle from "../components/ui/SectionTitle"
 
@@ -161,7 +163,7 @@ export function historyDescription(event: HistoryEvent, food: Food) {
   if (event.kind === "add") {
     return event.to !== undefined || event.amount !== undefined
       ? `Số lượng ban đầu: ${event.to ?? event.amount} ${unit}`
-      : "Không có dữ liệu lượng lúc nhập"
+      : "Không có dữ liệu số lượng lúc nhập"
   }
 
   if (event.kind === "trash") return "Bản ghi được chuyển vào Thùng rác"
@@ -181,6 +183,8 @@ export function Detail({
 
   onBack,
 
+  breadcrumbs,
+
   notify,
 }: {
   state: State
@@ -192,6 +196,8 @@ export function Detail({
   onEdit: (food: Food) => void
 
   onBack: () => void
+
+  breadcrumbs?: readonly PageBreadcrumbItem[]
 
   notify: (m: string, v?: "success" | "danger" | "warning") => void
 }) {
@@ -493,27 +499,21 @@ export function Detail({
     .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
     .slice(0, 4)
 
+  // The summary card already shows name, category, status, quantity, expiry
+  // and location; this list only carries the remaining metadata.
   const detailRows = [
-    { label: "Tên sản phẩm", value: f.name },
-    { label: "Danh mục", value: categoryLabel },
-    { label: "Số lượng", value: `${f.quantity} ${f.unit}` },
     { label: "Ngày thêm", value: formatLocalDate(f.createdAt) },
-    ...(f.mfgDate
-      ? [{ label: "Ngày sản xuất", value: formatDate(f.mfgDate) }]
+    {
+      label: "Ngày sản xuất",
+      value: f.mfgDate ? formatDate(f.mfgDate) : "Chưa ghi nhận",
+    },
+    ...(f.opened_on
+      ? [{ label: "Ngày mở bao bì", value: formatDate(f.opened_on) }]
       : []),
     {
-      label: "Hạn sử dụng",
-      value: (
-        <div className="flex flex-wrap items-center gap-2">
-          <span>{f.expDate ? formatDate(f.expDate) : "Chưa rõ HSD"}</span>
-          {f.expDate && <StatusBadge food={f} remindDays={rd} />}
-        </div>
-      ),
+      label: "Hẹn kiểm tra",
+      value: f.reviewAt ? formatDate(f.reviewAt) : "Chưa đặt lịch",
     },
-    { label: "Nơi bảo quản", value: f.location || "Chưa chọn kho" },
-    ...(f.reviewAt
-      ? [{ label: "Hẹn kiểm tra", value: formatDate(f.reviewAt) }]
-      : []),
     ...(f.barcode ? [{ label: "Mã vạch", value: f.barcode }] : []),
   ]
 
@@ -522,6 +522,7 @@ export function Detail({
       <PageHeader
         title={f.name}
         onBack={onBack}
+        breadcrumbs={breadcrumbs}
         actions={
           <Button
             variant="neutral"
@@ -555,61 +556,55 @@ export function Detail({
                 <StatusBadge food={f} remindDays={rd} />
                 {f.reviewAt && (
                   <span className="inline-flex items-center gap-1.5 rounded-corner-full bg-bg-subtle px-2.5 py-1 text-xs font-medium text-text-secondary">
-                    <CalendarClock size={14} aria-hidden="true" />
+                    <CalendarClock size={16} aria-hidden="true" />
                     Hẹn {formatDate(f.reviewAt)}
                   </span>
                 )}
               </div>
             </div>
 
-            <dl className="col-span-2 grid grid-cols-1 gap-2 border-t border-border-subtle pt-4 sm:grid-cols-3">
-              <div className="min-w-0 rounded-corner-md bg-bg-faint px-3 py-2.5">
-                <dt className="flex items-center gap-1.5 text-xs text-text-secondary">
-                  <Scale
-                    size={14}
-                    aria-hidden="true"
-                    className="text-brand-primary"
-                  />
+            <dl className="col-span-2 divide-y divide-border-subtle border-t border-border-subtle">
+              <div className="flex items-start justify-between gap-4 py-3">
+                <dt className="flex shrink-0 items-center gap-2 text-sm text-text-secondary">
+                  <Scale size={16} aria-hidden="true" />
                   Số lượng
                 </dt>
-                <dd className="mt-1 break-words text-sm font-semibold text-text-heading">
+                <dd className="min-w-0 break-words text-right text-sm font-semibold text-text-heading">
                   {f.quantity} {f.unit}
                 </dd>
               </div>
-              <div className="min-w-0 rounded-corner-md bg-bg-faint px-3 py-2.5">
-                <dt className="flex items-center gap-1.5 text-xs text-text-secondary">
-                  <CalendarDays
-                    size={14}
-                    aria-hidden="true"
-                    className="text-brand-primary"
-                  />
+              <div className="flex items-start justify-between gap-4 py-3">
+                <dt className="flex shrink-0 items-center gap-2 text-sm text-text-secondary">
+                  <CalendarDays size={16} aria-hidden="true" />
                   Hạn sử dụng
                 </dt>
-                <dd className="mt-1 break-words text-sm font-semibold text-text-heading">
+                <dd className="min-w-0 break-words text-right text-sm font-semibold text-text-heading">
                   {f.expDate ? formatDate(f.expDate) : "Chưa rõ HSD"}
-                  {f.expDate && (
-                    <span className="mt-0.5 block text-xs font-medium text-text-secondary">
-                      {d === null
-                        ? ""
-                        : d < 0
-                          ? `Quá hạn ${Math.abs(d)} ngày`
-                          : d === 0
-                            ? "Hết hạn hôm nay"
-                            : `Còn ${d} ngày`}
+                  {f.expDate && d !== null && (
+                    <span
+                      className={`block text-xs font-medium ${
+                        d < 0
+                          ? "text-status-expired"
+                          : d <= rd
+                            ? "text-status-soon"
+                            : "text-text-secondary"
+                      }`}
+                    >
+                      {d < 0
+                        ? `Quá hạn ${Math.abs(d)} ngày`
+                        : d === 0
+                          ? "Đến hạn hôm nay"
+                          : `Còn ${d} ngày`}
                     </span>
                   )}
                 </dd>
               </div>
-              <div className="min-w-0 rounded-corner-md bg-bg-faint px-3 py-2.5">
-                <dt className="flex items-center gap-1.5 text-xs text-text-secondary">
-                  <Boxes
-                    size={14}
-                    aria-hidden="true"
-                    className="text-brand-primary"
-                  />
+              <div className="flex items-start justify-between gap-4 py-3">
+                <dt className="flex shrink-0 items-center gap-2 text-sm text-text-secondary">
+                  <Boxes size={16} aria-hidden="true" />
                   Nơi bảo quản
                 </dt>
-                <dd className="mt-1 break-words text-sm font-semibold text-text-heading">
+                <dd className="min-w-0 break-words text-right text-sm font-semibold text-text-heading">
                   {f.location || "Chưa chọn kho"}
                 </dd>
               </div>
@@ -620,7 +615,7 @@ export function Detail({
         <Card className="min-w-0">
           <SectionTitle className="mb-4 flex items-center gap-2">
             <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-primary">
-              <Check size={17} aria-hidden="true" />
+              <Check size={16} aria-hidden="true" />
             </span>
             Thao tác nhanh
           </SectionTitle>
@@ -629,7 +624,7 @@ export function Detail({
               <Button
                 variant="primary"
                 className="min-h-12 w-full"
-                iconStart={<Check size={17} aria-hidden="true" />}
+                iconStart={<Check size={16} aria-hidden="true" />}
                 onClick={() => openQty("consume")}
               >
                 Đã dùng
@@ -647,7 +642,7 @@ export function Detail({
               variant="neutral"
               size="small"
               className="min-h-11 w-full px-2"
-              iconStart={<Scale size={15} aria-hidden="true" />}
+              iconStart={<Scale size={16} aria-hidden="true" />}
               onClick={() => openQty("adjust")}
             >
               Chỉnh số lượng
@@ -657,7 +652,7 @@ export function Detail({
                 variant="neutral"
                 size="small"
                 className="min-h-11 w-full px-2"
-                iconStart={<CalendarClock size={15} aria-hidden="true" />}
+                iconStart={<CalendarClock size={16} aria-hidden="true" />}
                 onClick={() => setLater(true)}
               >
                 Hẹn kiểm tra
@@ -669,7 +664,7 @@ export function Detail({
               variant="subtle"
               size="small"
               className="w-full text-text-secondary hover:text-status-expired"
-              iconStart={<Trash2 size={14} aria-hidden="true" />}
+              iconStart={<Trash2 size={16} aria-hidden="true" />}
               onClick={() => setConfirmTrash(true)}
             >
               Chuyển vào Thùng rác
@@ -683,7 +678,7 @@ export function Detail({
         <Card className="min-w-0">
           <SectionTitle className="mb-4 flex items-center gap-2">
             <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-primary">
-              <FileText size={17} aria-hidden="true" />
+              <FileText size={16} aria-hidden="true" />
             </span>
             Thông tin chi tiết
           </SectionTitle>
@@ -700,25 +695,22 @@ export function Detail({
               </div>
             ))}
           </dl>
+          <div className="border-t border-border-subtle pt-3">
+            <p className="flex items-center gap-2 text-sm text-text-secondary">
+              <StickyNote size={16} aria-hidden="true" />
+              Ghi chú
+            </p>
+            <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-text-primary">
+              {f.note || "Chưa có ghi chú cho sản phẩm này."}
+            </p>
+          </div>
         </Card>
 
         <aside className="grid min-w-0 content-start gap-4">
           <Card className="min-w-0">
             <SectionTitle className="mb-4 flex items-center gap-2">
               <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-primary">
-                <StickyNote size={17} aria-hidden="true" />
-              </span>
-              Ghi chú
-            </SectionTitle>
-            <p className="min-h-16 whitespace-pre-wrap break-words rounded-corner-md bg-bg-faint px-4 py-3 text-sm leading-relaxed text-text-secondary">
-              {f.note || "Chưa có ghi chú cho sản phẩm này."}
-            </p>
-          </Card>
-
-          <Card className="min-w-0">
-            <SectionTitle className="mb-4 flex items-center gap-2">
-              <span className="inline-flex size-8 items-center justify-center rounded-corner-full bg-brand-tertiary text-brand-primary">
-                <History size={17} aria-hidden="true" />
+                <History size={16} aria-hidden="true" />
               </span>
               Lịch sử
             </SectionTitle>

@@ -73,7 +73,7 @@ export function SelectField({
           ))}
         </select>
         <span className="pointer-events-none absolute right-3 flex items-center text-text-tertiary">
-          <ChevronDown size={18} aria-hidden />
+          <ChevronDown size={16} aria-hidden />
         </span>
       </div>
       {description && (

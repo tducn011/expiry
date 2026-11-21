@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import {
   Archive,
-  ArrowLeft,
   Bell,
   BellOff,
   CalendarClock,
@@ -26,6 +25,7 @@ import LocationManagerModal from "../components/ui/LocationManagerModal"
 import Modal from "../components/ui/Modal"
 import PageHeader from "../components/ui/PageHeader"
 import SwitchField from "../components/ui/SwitchField"
+import { isDesktopViewport } from "../lib/motion"
 
 const sectionLabels: Record<SettingsSection, string> = {
   account: "Tài khoản",
@@ -66,7 +66,7 @@ function SettingsRow({
         </span>
       )}
       <ChevronRight
-        size={17}
+        size={16}
         aria-hidden="true"
         className="shrink-0 text-text-tertiary"
       />
@@ -84,6 +84,7 @@ export function Settings({
   onSavingChange,
   onSave,
   onNavigateTrash,
+  onNavigateHome,
   onLogin,
   notify,
 }: {
@@ -101,6 +102,7 @@ export function Settings({
     savedToAccount: boolean
   }>
   onNavigateTrash: () => void
+  onNavigateHome?: () => void
   onLogin?: () => void
   notify: (message: string, variant?: "success" | "danger" | "warning") => void
 }) {
@@ -134,26 +136,32 @@ export function Settings({
           : current.remindDays,
       inApp:
         current.inApp === previous.inApp ? state.settings.inApp : current.inApp,
+      homeAttentionExpanded:
+        JSON.stringify(current.homeAttentionExpanded) ===
+        JSON.stringify(previous.homeAttentionExpanded)
+          ? state.settings.homeAttentionExpanded
+          : current.homeAttentionExpanded,
       push: false,
     }))
   }, [state.settings])
 
   const dirty =
     draft.remindDays !== state.settings.remindDays ||
-    draft.inApp !== state.settings.inApp
+    draft.inApp !== state.settings.inApp ||
+    JSON.stringify(draft.homeAttentionExpanded) !==
+      JSON.stringify(state.settings.homeAttentionExpanded)
   useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange])
   useEffect(() => () => onDirtyChange(false), [onDirtyChange])
   useEffect(() => onSavingChange(saving), [saving, onSavingChange])
   useEffect(() => () => onSavingChange(false), [onSavingChange])
-
   const sections: {
     key: SettingsSection
     icon: ReactNode
   }[] = [
-    { key: "account", icon: <UserRound size={19} /> },
-    { key: "notifications", icon: <Bell size={19} /> },
-    { key: "inventory", icon: <Archive size={19} /> },
-    { key: "data", icon: <Database size={19} /> },
+    { key: "account", icon: <UserRound size={20} /> },
+    { key: "notifications", icon: <Bell size={20} /> },
+    { key: "inventory", icon: <Archive size={20} /> },
+    { key: "data", icon: <Database size={20} /> },
   ]
 
   function selectSection(next: SettingsSection) {
@@ -240,7 +248,24 @@ export function Settings({
       }`}
     >
       <div className={section ? "hidden md:block" : "block"}>
-        <PageHeader title="Cài đặt" />
+        <PageHeader
+          title="Cài đặt"
+          onBack={onNavigateHome ?? onBack}
+          backLabel="Quay lại Hôm nay"
+          backClassName="md:hidden"
+          breadcrumbs={
+            section
+              ? [
+                  { label: "Hôm nay", onClick: onNavigateHome ?? onBack },
+                  { label: "Cài đặt", onClick: backToSections },
+                  { label: sectionLabels[activeSection] },
+                ]
+              : [
+                  { label: "Hôm nay", onClick: onNavigateHome ?? onBack },
+                  { label: "Cài đặt" },
+                ]
+          }
+        />
       </div>
       <div className="grid min-w-0 gap-6 md:grid-cols-[240px_minmax(0,640px)] md:justify-center">
         <nav
@@ -252,11 +277,16 @@ export function Settings({
               <button
                 key={key}
                 type="button"
-                aria-current={activeSection === key ? "page" : undefined}
-                onClick={() => selectSection(key)}
-                className={`flex min-h-14 w-full items-center gap-3 border-b border-border-subtle px-4 text-left text-sm font-medium last:border-b-0 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary ${
+                aria-current={
+                  (section !== undefined || isDesktopViewport()) &&
                   activeSection === key
-                    ? "md:bg-brand-secondary md:text-brand-primary"
+                    ? "page"
+                    : undefined
+                }
+                onClick={() => selectSection(key)}
+                className={`flex min-h-14 w-full items-center gap-3 border-b border-border-subtle px-4 text-left text-sm font-normal last:border-b-0 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary ${
+                  activeSection === key
+                    ? "md:bg-brand-secondary md:font-medium md:text-brand-primary"
                     : "text-text-primary hover:bg-surface-hover"
                 }`}
               >
@@ -268,7 +298,7 @@ export function Settings({
                 </span>
                 <span className="min-w-0 flex-1">{sectionLabels[key]}</span>
                 <ChevronRight
-                  size={17}
+                  size={16}
                   aria-hidden="true"
                   className="text-text-tertiary md:hidden"
                 />
@@ -281,18 +311,12 @@ export function Settings({
           className={`${section ? "block" : "hidden md:block"} min-w-0`}
           aria-label={sectionLabels[activeSection]}
         >
-          <div className="mb-4 flex items-center gap-2 md:hidden">
-            <button
-              type="button"
-              onClick={backToSections}
-              aria-label="Quay lại Cài đặt"
-              className="flex size-11 items-center justify-center rounded-corner-md text-brand-primary hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-brand-primary"
-            >
-              <ArrowLeft size={21} aria-hidden="true" />
-            </button>
-            <h1 className="text-xl font-semibold text-text-heading">
-              {sectionLabels[activeSection]}
-            </h1>
+          <div className="mb-4 md:hidden">
+            <PageHeader
+              title={sectionLabels[activeSection]}
+              onBack={backToSections}
+              backLabel="Quay lại Cài đặt"
+            />
           </div>
           <h2 className="mb-4 hidden text-lg font-semibold text-text-heading md:block">
             {sectionLabels[activeSection]}
@@ -302,7 +326,7 @@ export function Settings({
             <div className="flex flex-col gap-4">
               <div className="divide-y divide-border-subtle overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs">
                 <SwitchField
-                  icon={<Bell size={19} />}
+                  icon={<Bell size={20} />}
                   label="Thông báo trong ứng dụng"
                   description="Trên thiết bị này"
                   selected={draft.inApp}
@@ -313,7 +337,7 @@ export function Settings({
                   disabled={saving}
                 />
                 <SettingsRow
-                  icon={<CalendarClock size={19} />}
+                  icon={<CalendarClock size={20} />}
                   label="Bắt đầu cảnh báo trước hạn"
                   value={`${draft.remindDays} ngày`}
                   onClick={() => setPickDays(true)}
@@ -343,7 +367,7 @@ export function Settings({
                     className="mt-3 flex items-start gap-2 text-sm text-status-expired"
                   >
                     <BellOff
-                      size={17}
+                      size={16}
                       aria-hidden="true"
                       className="mt-0.5 shrink-0"
                     />
@@ -367,7 +391,7 @@ export function Settings({
                 </p>
               )}
               {dirty && (
-                <div className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 flex gap-3 border-t border-border-primary bg-surface-bg p-3 shadow-lg md:static md:justify-end md:rounded-corner-lg md:border md:shadow-xs">
+                <div className="fixed inset-x-0 bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex gap-3 border-t border-border-primary bg-surface-bg p-3 shadow-lg md:static md:justify-end md:rounded-corner-lg md:border md:shadow-xs">
                   <Button
                     variant="secondary"
                     onClick={() => {
@@ -393,13 +417,58 @@ export function Settings({
           )}
 
           {activeSection === "inventory" && (
-            <div className="divide-y divide-border-subtle overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs">
-              <SettingsRow
-                icon={<MapPin size={19} />}
-                label="Nơi bảo quản"
-                value={`${state.locations.length} vị trí`}
-                onClick={() => setShowLocations(true)}
-              />
+            <div className="flex flex-col gap-4">
+              <div className="divide-y divide-border-subtle overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs">
+                <SettingsRow
+                  icon={<MapPin size={20} />}
+                  label="Nơi bảo quản"
+                  value={`${state.locations.length} vị trí`}
+                  onClick={() => setShowLocations(true)}
+                />
+              </div>
+              <section
+                aria-labelledby="home-attention-settings-heading"
+                className="overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs"
+              >
+                <h3
+                  id="home-attention-settings-heading"
+                  className="px-4 pt-4 text-sm font-semibold text-text-heading"
+                >
+                  Nhóm mở sẵn trên Hôm nay
+                </h3>
+                <div className="divide-y divide-border-subtle">
+                  <SwitchField
+                    label="Quá hạn"
+                    selected={draft.homeAttentionExpanded.expired}
+                    onChange={(value) => {
+                      setSaveError(null)
+                      setDraft((current) => ({
+                        ...current,
+                        homeAttentionExpanded: {
+                          ...current.homeAttentionExpanded,
+                          expired: value,
+                        },
+                      }))
+                    }}
+                    disabled={saving}
+                  />
+                  <SwitchField
+                    label="Sắp hết hạn"
+                    selected={draft.homeAttentionExpanded.soon}
+                    onChange={(value) => {
+                      setSaveError(null)
+                      setDraft((current) => ({
+                        ...current,
+                        homeAttentionExpanded: {
+                          ...current.homeAttentionExpanded,
+                          soon: value,
+                        },
+                      }))
+                    }}
+                    disabled={saving}
+                  />
+                </div>
+              </section>
             </div>
           )}
 
@@ -418,7 +487,7 @@ export function Settings({
               {state.mode === "account" ? (
                 <Button
                   variant="secondary"
-                  iconStart={<LogOut size={17} />}
+                  iconStart={<LogOut size={16} />}
                   onClick={() => dispatch({ type: "logout" })}
                 >
                   Đăng xuất
@@ -426,7 +495,7 @@ export function Settings({
               ) : (
                 <Button
                   variant="primary"
-                  iconStart={<LogIn size={17} />}
+                  iconStart={<LogIn size={16} />}
                   onClick={onLogin}
                 >
                   Đăng nhập
@@ -439,7 +508,7 @@ export function Settings({
             <div className="flex flex-col gap-6">
               <div className="overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs">
                 <SettingsRow
-                  icon={<Trash2 size={19} />}
+                  icon={<Trash2 size={20} />}
                   label="Thùng rác"
                   onClick={onNavigateTrash}
                 />
@@ -452,14 +521,14 @@ export function Settings({
                   <div className="flex flex-wrap gap-3">
                     <Button
                       variant="secondary"
-                      iconStart={<RotateCcw size={17} />}
+                      iconStart={<RotateCcw size={16} />}
                       onClick={() => setPendingReset("full")}
                     >
                       Nạp lại dữ liệu mẫu
                     </Button>
                     <Button
                       variant="danger"
-                      iconStart={<Archive size={17} />}
+                      iconStart={<Archive size={16} />}
                       onClick={() => setPendingReset("empty")}
                     >
                       Chuyển sang kho trống
@@ -496,7 +565,7 @@ export function Settings({
                 {days} ngày {days === 3 ? "(mặc định)" : ""}
                 {draft.remindDays === days && (
                   <CircleCheck
-                    size={18}
+                    size={16}
                     aria-hidden="true"
                     className="text-brand-primary"
                   />

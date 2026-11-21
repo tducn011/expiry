@@ -21,6 +21,7 @@ import {
 import {
   attention,
   notifications,
+  saveUserHomeAttention,
   saveUserInApp,
   useAppStore,
   type Category,
@@ -62,25 +63,56 @@ import Modal from "./components/ui/Modal"
 
 import Toast, { type ToastProps } from "./components/ui/Toast"
 
+import { DUR, EASE, gsap, isDesktopViewport, reducedMotion } from "./lib/motion"
+
 import {
   SidebarButton,
   SidebarNavigation,
 } from "./components/ui/SidebarNavigation"
 
-// Feature screens are loaded only when their route is rendered.
-const Inventory = lazy(() => import("./features/Inventory"))
-const Attention = lazy(() => import("./features/Attention"))
-const StorageView = lazy(() => import("./features/StorageView"))
-const Scanner = lazy(() => import("./features/Scanner"))
-const FoodForm = lazy(() => import("./features/FoodForm"))
-const Detail = lazy(() => import("./features/Detail"))
-const InsightView = lazy(() => import("./features/InsightView"))
-const Trash = lazy(() => import("./features/Trash"))
-const Notifications = lazy(() => import("./features/Notifications"))
-const Settings = lazy(() => import("./features/Settings"))
-const AuthForm = lazy(() => import("./features/AuthForm"))
-const Onboarding = lazy(() => import("./features/Onboarding"))
-const ShoppingView = lazy(() => import("./features/ShoppingView"))
+// Feature screens are loaded only when their route is rendered. Each module has
+// one import factory shared by lazy() and the idle prefetch below.
+const loadInventory = () => import("./features/Inventory")
+const loadAttention = () => import("./features/Attention")
+const loadStorageView = () => import("./features/StorageView")
+const loadScanner = () => import("./features/Scanner")
+const loadFoodForm = () => import("./features/FoodForm")
+const loadDetail = () => import("./features/Detail")
+const loadInsightView = () => import("./features/InsightView")
+const loadTrash = () => import("./features/Trash")
+const loadNotifications = () => import("./features/Notifications")
+const loadSettings = () => import("./features/Settings")
+const loadAuthForm = () => import("./features/AuthForm")
+const loadOnboarding = () => import("./features/Onboarding")
+const loadShoppingView = () => import("./features/ShoppingView")
+
+const Inventory = lazy(loadInventory)
+const Attention = lazy(loadAttention)
+const StorageView = lazy(loadStorageView)
+const Scanner = lazy(loadScanner)
+const FoodForm = lazy(loadFoodForm)
+const Detail = lazy(loadDetail)
+const InsightView = lazy(loadInsightView)
+const Trash = lazy(loadTrash)
+const Notifications = lazy(loadNotifications)
+const Settings = lazy(loadSettings)
+const AuthForm = lazy(loadAuthForm)
+const Onboarding = lazy(loadOnboarding)
+const ShoppingView = lazy(loadShoppingView)
+
+const prefetchRouteChunks = [
+  loadInventory,
+  loadStorageView,
+  loadShoppingView,
+  loadInsightView,
+  loadAttention,
+  loadDetail,
+  loadScanner,
+  loadFoodForm,
+  loadNotifications,
+  loadSettings,
+  loadTrash,
+]
 
 export type SettingsSection = "account" | "notifications" | "inventory" | "data"
 
@@ -227,6 +259,28 @@ export function urlFromRoute(r: Route): string {
   }
 
   return `?${p.toString()}`
+}
+
+// Phone navigation contract: ROOT routes are the four dock tabs (plus the
+// notifications deep link, which renders Home under the sheet). Everything else
+// is a TASK route: no dock, one Back exit.
+const ROOT_ROUTE_NAMES: ReadonlySet<Route["name"]> = new Set([
+  "inventory",
+  "storage",
+  "shopping",
+  "insight",
+  "history",
+  "notifications",
+])
+
+function isRootRoute(r: Route | undefined) {
+  return !!r && ROOT_ROUTE_NAMES.has(r.name)
+}
+
+// Scroll position is remembered per screen and stack depth.
+function scrollKey(stack: Route[]) {
+  const top = stack[stack.length - 1] ?? { name: "inventory" as const }
+  return `${urlFromRoute(top)}#${stack.length}`
 }
 
 function RouteLoading() {
@@ -503,10 +557,10 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const [wideSidebar, setWideSidebar] = useState(
     () =>
       typeof window !== "undefined" &&
-      window.matchMedia("(min-width: 1024px)").matches,
+      window.matchMedia("(min-width: 1280px)").matches,
   )
   useEffect(() => {
-    const query = window.matchMedia("(min-width: 1024px)")
+    const query = window.matchMedia("(min-width: 1280px)")
     const update = () => setWideSidebar(query.matches)
     query.addEventListener("change", update)
     return () => query.removeEventListener("change", update)
@@ -529,6 +583,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   const [stack, setStack] = useState<Route[]>(() => routeFromUrl())
   const stackRef = useRef(stack)
   stackRef.current = stack
+  const rememberScrollRef = useRef<() => void>(() => {})
   const settingsDirtyRef = useRef(false)
   const settingsSavingRef = useRef(false)
   const handleSettingsDirty = useCallback((dirty: boolean) => {
@@ -627,6 +682,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       }
       allowedTraversal.current = false
       restoringTraversal.current = null
+      rememberScrollRef.current()
       const next: Route[] =
         owned && entry.stack.length ? entry.stack : routeFromUrl()
       position.current = target
@@ -651,7 +707,18 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     message: string
 
     variant?: ToastProps["variant"]
+
+    open: boolean
   } | null>(null)
+
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  )
+
+  const dismissToast = () => {
+    clearTimeout(toastTimer.current)
+    setToast((t) => (t ? { ...t, open: false } : t))
+  }
 
   const [discard, setDiscard] = useState<null | (() => void)>(null)
 
@@ -659,12 +726,19 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
 
+  // Keeps the lazy panel mounted until its exit animation finishes.
+  const [notificationsMounted, setNotificationsMounted] = useState(false)
+
   const mainRef = useRef<HTMLElement>(null)
 
   const route = stack[stack.length - 1] || { name: "inventory" }
 
   const showNotifications =
     isNotificationsOpen || route.name === "notifications"
+
+  if (showNotifications && !notificationsMounted) {
+    setNotificationsMounted(true)
+  }
 
   const closeNotifications = () => {
     setIsNotificationsOpen(false)
@@ -677,17 +751,98 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     }
   }
 
-  const scrollContext =
-    route.name === "inventory" || route.name === "notifications"
-      ? route.name
-      : route
+  // Idle prefetch of every route chunk so first navigation never waits on the
+  // network. The notifications chunk is also prefetched from the bell.
   useEffect(() => {
-    if (mainRef.current) {
-      mainRef.current.scrollTop = 0
+    const run = () => {
+      for (const load of prefetchRouteChunks) load().catch(() => {})
     }
-  }, [scrollContext])
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(run, { timeout: 3000 })
+      return () => window.cancelIdleCallback(id)
+    }
+    const id = window.setTimeout(run, 1500)
+    return () => window.clearTimeout(id)
+  }, [])
+
+  // Scroll restoration and the single phone route transition. Back (pop)
+  // restores the saved scroll of the screen below; push and tab switches start
+  // at the top.
+  const scrollPositions = useRef(new Map<string, number>())
+  const transitionRef = useRef<HTMLDivElement>(null)
+  const prevRouteInfo = useRef({
+    length: stack.length,
+    name: route.name,
+    key: scrollKey(stack),
+  })
+  const topKey = scrollKey(stack)
+  useLayoutEffect(() => {
+    const prev = prevRouteInfo.current
+    const next = { length: stack.length, name: route.name, key: topKey }
+    prevRouteInfo.current = next
+    if (prev.key === next.key && prev.length === next.length) return
+    const main = mainRef.current
+    const kind =
+      next.length > prev.length
+        ? "push"
+        : next.length < prev.length
+          ? "pop"
+          : next.name !== prev.name
+            ? "tab"
+            : "none"
+    // Same screen updated in place (filters): keep the scroll position.
+    if (kind === "none") return
+
+    let raf = 0
+    if (main) {
+      const saved =
+        kind === "pop" ? scrollPositions.current.get(next.key) : undefined
+      main.scrollTop = saved ?? 0
+      if (saved) {
+        // Lazy content may not be laid out yet: retry once on the next frame.
+        raf = requestAnimationFrame(() => {
+          if (Math.abs(main.scrollTop - saved) > 1) main.scrollTop = saved
+        })
+      }
+    }
+
+    const el = transitionRef.current
+    if (!el || isDesktopViewport() || reducedMotion()) {
+      return () => cancelAnimationFrame(raf)
+    }
+    const from =
+      kind === "push"
+        ? { x: 24, opacity: 0 }
+        : kind === "pop"
+          ? { x: -24, opacity: 0 }
+          : { opacity: 0 }
+    const tween = gsap.fromTo(el, from, {
+      x: 0,
+      opacity: 1,
+      duration: kind === "tab" ? DUR.fast : DUR.normal,
+      ease: EASE.enter,
+      overwrite: true,
+      clearProps: "transform,opacity",
+    })
+    return () => {
+      cancelAnimationFrame(raf)
+      tween.kill()
+      gsap.set(el, { clearProps: "transform,opacity" })
+    }
+  }, [topKey, stack.length, route.name])
+
+  const rememberScroll = () => {
+    if (mainRef.current) {
+      scrollPositions.current.set(
+        scrollKey(stackRef.current),
+        mainRef.current.scrollTop,
+      )
+    }
+  }
+  rememberScrollRef.current = rememberScroll
 
   const navigateStack = (next: Route[], replace = false) => {
+    rememberScroll()
     const current = next[next.length - 1]
     const entry = {
       owner,
@@ -750,6 +905,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   const handleNav = (targetName: Route["name"]) => {
     const navigate = () => {
+      setIsNotificationsOpen(false)
       if (targetName === "scan") {
         if (route.name === "scan") return
         go({ name: "scan" })
@@ -772,9 +928,11 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     variant: ToastProps["variant"] = "success",
   ) => {
-    setToast({ message, variant })
+    clearTimeout(toastTimer.current)
 
-    setTimeout(() => setToast(null), 3200)
+    setToast({ message, variant, open: true })
+
+    toastTimer.current = setTimeout(dismissToast, 3200)
   }
 
   const saveSettings = async (draft: AppSettings): Promise<{
@@ -823,10 +981,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     if (draft.inApp !== stateRef.current.settings.inApp) {
       saveUserInApp(ownerId, draft.inApp)
     }
+    saveUserHomeAttention(ownerId, draft.homeAttentionExpanded)
     const settings = {
       ...stateRef.current.settings,
       remindDays: draft.remindDays,
       inApp: draft.inApp,
+      homeAttentionExpanded: draft.homeAttentionExpanded,
       push: false,
     }
     dispatch({ type: "settings", settings })
@@ -843,7 +1003,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           role="alert"
         >
           <CircleAlert
-            size={36}
+            size={32}
             aria-hidden="true"
             className="text-status-expired"
           />
@@ -898,7 +1058,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
   if (isCheckingSession && !demoMode) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-base">
+      <div className="flex min-h-screen items-center justify-center bg-surface-bg">
         <div className="flex flex-col items-center gap-3 text-text-secondary">
           <Loader2
             size={32}
@@ -954,23 +1114,23 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
     badge?: number
   }[] = [
-    { r: "inventory", label: "Hôm nay", icon: <Home size={22} /> },
+    { r: "inventory", label: "Hôm nay", icon: <Home size={20} /> },
 
     {
       r: "storage",
 
       label: "Kho thực phẩm",
 
-      icon: <Archive size={22} />,
+      icon: <Archive size={20} />,
     },
 
     {
       r: "shopping",
       label: "Danh sách mua sắm",
-      icon: <ShoppingBag size={22} />,
+      icon: <ShoppingBag size={20} />,
     },
 
-    { r: "insight", label: "Thống kê", icon: <BarChart3 size={22} /> },
+    { r: "insight", label: "Thống kê", icon: <BarChart3 size={20} /> },
   ]
 
   const isAddFlow =
@@ -978,13 +1138,21 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     route.name === "add" ||
     (route.name === "form" && route.mode !== "edit")
 
-  const rootName = isAddFlow
-    ? "scan"
-    : route.name === "detail"
-      ? stack[0]?.name || "inventory"
-      : route.name === "attention"
-        ? "storage"
-        : route.name
+  // Active root for sidebar and dock. Task routes inherit the first root route
+  // in the stack; Settings and Trash belong to the Settings sidebar item. The
+  // notifications sheet never changes the active tab.
+  const normalizeRoot = (name: Route["name"]) =>
+    name === "history"
+      ? "insight"
+      : name === "notifications"
+        ? "inventory"
+        : name
+  const rootName: Route["name"] =
+    route.name === "settings" || route.name === "trash"
+      ? "settings"
+      : isRootRoute(route)
+        ? normalizeRoot(route.name)
+        : normalizeRoot(stack.find((r) => isRootRoute(r))?.name ?? "inventory")
 
   async function finishShoppingImport(
     shoppingItemId?: string,
@@ -1381,6 +1549,94 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
     await finishShoppingImport(shoppingItemId)
   }
 
+  const navigateGuarded = (action: () => void) => {
+    if (route.name === "form") {
+      if (pendingShoppingImports.current.size) return
+      if (formDirty.current) {
+        setDiscard(() => action)
+        return
+      }
+    }
+    if (route.name === "settings") {
+      requestSettingsLeave(action)
+      return
+    }
+    action()
+  }
+
+  const settingsSectionNames: Record<SettingsSection, string> = {
+    account: "Tài khoản",
+    notifications: "Thông báo & cảnh báo",
+    inventory: "Kho thực phẩm",
+    data: "Dữ liệu",
+  }
+
+  const labelForRoute = (r: Route): string => {
+    switch (r.name) {
+      case "inventory":
+      case "notifications":
+        return "Hôm nay"
+      case "storage":
+        return "Kho thực phẩm"
+      case "shopping":
+        return "Danh sách mua sắm"
+      case "insight":
+      case "history":
+        return "Thống kê"
+      case "attention":
+        return "Cần chú ý"
+      case "settings":
+        return r.section ? settingsSectionNames[r.section] : "Cài đặt"
+      case "trash":
+        return "Thùng rác"
+      case "detail":
+        return (
+          state.foods.find((x) => x.id === r.id)?.name || "Chi tiết thực phẩm"
+        )
+      case "form":
+        return r.mode === "edit" ? "Chỉnh sửa" : "Thêm thực phẩm"
+      case "scan":
+      case "add":
+        return "Quét thực phẩm"
+    }
+  }
+
+  const nestedBreadcrumbs = (() => {
+    const crumbs = stack.map((item, idx) => ({
+      label: labelForRoute(item),
+      onClick:
+        idx < stack.length - 1
+          ? () => navigateGuarded(() => navigateStack(stack.slice(0, idx + 1)))
+          : undefined,
+    }))
+    if (crumbs.length === 1) {
+      if (route.name === "trash") {
+        return [
+          {
+            label: "Hôm nay",
+            onClick: () => navigateGuarded(() => tab({ name: "inventory" })),
+          },
+          {
+            label: "Cài đặt",
+            onClick: () =>
+              navigateGuarded(() =>
+                navigateStack([{ name: "settings", section: "data" }]),
+              ),
+          },
+          crumbs[0],
+        ]
+      }
+      return [
+        {
+          label: "Hôm nay",
+          onClick: () => navigateGuarded(() => tab({ name: "inventory" })),
+        },
+        crumbs[0],
+      ]
+    }
+    return crumbs
+  })()
+
   let screenContent: ReactNode
 
   switch (route.name) {
@@ -1398,10 +1654,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           }
           onOpenDetail={(id) => go({ name: "detail", id })}
           onAdd={() => go({ name: "scan" })}
-          onNavigateAttention={() => tab({ name: "attention" })}
-          onOpenNotifications={() => setIsNotificationsOpen(true)}
-          onOpenAccount={() => go({ name: "settings" })}
-          unreadNotificationsCount={unreadCount}
+          onNavigateAttention={() => go({ name: "attention" })}
         />
       )
 
@@ -1415,7 +1668,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           isLive={state.mode === "account"}
           initialLocation={route.location}
           initialCategory={route.category as Category | "all" | undefined}
-          onNavigateAttention={() => tab({ name: "attention" })}
+          onNavigateAttention={() => go({ name: "attention" })}
           onFilterChange={(loc, cat) => {
             const nextRoute: Route = {
               name: "storage",
@@ -1540,6 +1793,8 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       screenContent = (
         <Attention
           state={state}
+          onBack={back}
+          breadcrumbs={nestedBreadcrumbs}
           onOpenDetail={(id) => go({ name: "detail", id })}
           onNavigateInventory={() => tab({ name: "storage" })}
           onAdd={() => go({ name: "scan" })}
@@ -1614,6 +1869,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           onAddLocation={(name) => dispatch({ type: "addLocation", name })}
           onSubmit={(d) => handleSaveDraft(d, route.mode, route.shoppingItemId)}
           onCancel={(dirty) => (dirty ? setDiscard(() => back) : back())}
+          breadcrumbs={nestedBreadcrumbs}
           onDirtyChange={onFormDirty}
           restored={window.history.state?.formDraft}
         />
@@ -1631,6 +1887,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             go({ name: "form", mode: "edit", draft: draftFrom(f) })
           }
           onBack={back}
+          breadcrumbs={nestedBreadcrumbs}
           notify={notify}
         />
       )
@@ -1651,7 +1908,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
 
             navigateStack([nextRoute], true)
           }}
-          onNavigateAttention={() => tab({ name: "attention" })}
+          onNavigateAttention={() => go({ name: "attention" })}
           onOpenDetail={(id) => go({ name: "detail", id })}
         />
       )
@@ -1663,7 +1920,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         <Trash
           state={state}
           dispatch={dispatch}
-          onBack={back}
+          onBack={
+            stack.length > 1
+              ? back
+              : () => navigateStack([{ name: "settings", section: "data" }])
+          }
+          breadcrumbs={nestedBreadcrumbs}
           notify={notify}
         />
       )
@@ -1679,6 +1941,21 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
           section={route.section}
           onNavigateSection={(section) => go({ name: "settings", section })}
           onBack={back}
+          onNavigateHome={() =>
+            requestSettingsLeave(() => {
+              const nonSettingsParent = [...stack]
+                .reverse()
+                .find((item) => item.name !== "settings")
+              if (nonSettingsParent && stack[0]?.name !== "settings") {
+                const idx = stack.findIndex((item) => item.name === "settings")
+                if (idx > 0) {
+                  navigateStack(stack.slice(0, idx))
+                  return
+                }
+              }
+              tab({ name: "inventory" })
+            })
+          }
           onDirtyChange={handleSettingsDirty}
           onSavingChange={handleSettingsSaving}
           onSave={saveSettings}
@@ -1731,7 +2008,12 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
   }
 
   const isFullBleed = route.name === "scan" || route.name === "add"
-  const showMobileDock = !isFullBleed && route.name !== "form"
+  const showMobileDock = isRootRoute(route)
+  const showPhoneAppBar = isRootRoute(route)
+  // The dock padding only exists while the dock is shown; safe area always.
+  const contentBottomPad = showMobileDock
+    ? "pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
+    : "pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-brand-tertiary text-text-primary antialiased">
@@ -1751,7 +2033,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 isSidebarExpanded ? "w-full gap-3 px-3 text-left" : "size-12"
               }`}
             >
-              <Plus size={21} strokeWidth={2.5} aria-hidden="true" />
+              <Plus size={20} strokeWidth={2.5} aria-hidden="true" />
               {isSidebarExpanded ? (
                 <span className="flex-1 truncate text-sm font-bold">
                   Thêm thực phẩm
@@ -1792,7 +2074,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                 title={n.label}
                 label={n.label}
                 isExpanded={isSidebarExpanded}
-                active={rootName === n.r}
+                active={!isAddFlow && rootName === n.r}
                 badge={n.badge}
                 onClick={() => handleNav(n.r)}
               />
@@ -1812,21 +2094,21 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               />
             )}
             <SidebarButton
-              icon={<Bell size={22} />}
+              icon={<Bell size={20} />}
               aria-label={
                 unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"
               }
               title="Thông báo"
               label="Thông báo"
               isExpanded={isSidebarExpanded}
-              active={isNotificationsOpen || rootName === "notifications"}
+              active={isNotificationsOpen || route.name === "notifications"}
               badge={unreadCount}
               onClick={() =>
                 requestSettingsLeave(() => setIsNotificationsOpen((v) => !v))
               }
             />
             <SidebarButton
-              icon={<SettingsIcon size={22} />}
+              icon={<SettingsIcon size={20} />}
               aria-label="Cài đặt"
               title="Cài đặt"
               label="Cài đặt"
@@ -1844,7 +2126,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
         className={`h-full w-full min-w-0 flex-1 overflow-y-auto ${
           showMobileDock
             ? "scroll-pb-[var(--dock-clearance)] md:scroll-pb-3"
-            : ""
+            : "scroll-pb-[env(safe-area-inset-bottom)] md:scroll-pb-3"
         }`}
       >
         <div
@@ -1854,16 +2136,14 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
               : route.name === "form"
                 ? "max-w-2xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-8 md:px-6 md:pt-6 md:pb-12"
                 : route.name === "shopping"
-                  ? "max-w-4xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-12"
+                  ? `max-w-4xl px-4 pt-[max(1rem,env(safe-area-inset-top))] ${contentBottomPad} md:px-6 md:pt-6 md:pb-12`
                   : route.name === "settings"
-                    ? "max-w-[960px] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
-                    : route.name === "notifications"
-                      ? "max-w-2xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-12"
-                      : route.name === "detail"
-                        ? "max-w-[1440px] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
-                        : route.name === "history"
-                          ? "max-w-3xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-12"
-                          : "max-w-6xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-6 md:pb-12"
+                    ? `max-w-[960px] px-4 pt-[max(1rem,env(safe-area-inset-top))] ${contentBottomPad} md:px-8 md:pt-6 md:pb-12`
+                    : route.name === "detail"
+                      ? `max-w-[1440px] px-4 pt-[max(1rem,env(safe-area-inset-top))] ${contentBottomPad} md:px-8 md:pt-6 md:pb-12`
+                      : route.name === "history"
+                        ? `max-w-3xl px-4 pt-[max(1rem,env(safe-area-inset-top))] ${contentBottomPad} md:px-6 md:pt-6 md:pb-12`
+                        : `max-w-6xl px-4 pt-[max(1rem,env(safe-area-inset-top))] ${contentBottomPad} md:px-8 md:pt-6 md:pb-12`
           }`}
         >
           {problem === "write" && !isFullBleed && (
@@ -1879,36 +2159,88 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             </div>
           )}
 
-          {state.mode === "demo" &&
-            (!isFullBleed || typeof window !== "undefined") &&
-            route.name !== "detail" &&
-            route.name !== "settings" && (
-              <div
-                className={`mb-3 w-full ${
-                  isFullBleed ? "hidden md:flex" : "flex"
-                } items-center justify-between gap-3 text-xs text-text-secondary`}
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-brand-accent/10 text-brand-primary">
-                    <Leaf size={14} aria-hidden="true" />
-                  </span>
-                  <span className="truncate font-medium text-text-secondary">
-                    Dữ liệu mẫu
-                    <span className="hidden sm:inline"> · Chế độ xem thử</span>
-                  </span>
+          {showPhoneAppBar && (
+            <div
+              className={`mb-3 flex w-full items-center justify-between gap-3 text-xs text-text-secondary ${
+                state.mode === "demo" ? "md:flex" : "md:hidden"
+              }`}
+            >
+              {state.mode === "demo" ? (
+                <>
+                  <div className="flex min-w-0 shrink-0 items-center gap-2">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-corner-full bg-brand-accent/10 text-brand-primary">
+                      <Leaf size={16} aria-hidden="true" />
+                    </span>
+                    <span className="shrink-0 whitespace-nowrap font-medium text-text-secondary">
+                      Dữ liệu mẫu
+                      <span className="hidden sm:inline">
+                        {" "}
+                        · Chế độ xem thử
+                      </span>
+                    </span>
+                  </div>
+                  <Button
+                    size="small"
+                    variant="subtle"
+                    className="min-w-0 shrink font-semibold text-brand-primary md:hidden"
+                    aria-label="Đăng nhập để đồng bộ"
+                    onClick={() => setPendingAuth({ name: "inventory" })}
+                  >
+                    Đăng nhập
+                  </Button>
+                </>
+              ) : (
+                <div />
+              )}
+              {/* Phone root App Bar actions: one cluster for every root route. */}
+              {showPhoneAppBar && (
+                <div className="ml-auto flex shrink-0 items-center gap-2 md:hidden">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      aria-label={
+                        unreadCount
+                          ? `Thông báo, ${unreadCount} chưa đọc`
+                          : "Thông báo"
+                      }
+                      onPointerDown={() => void loadNotifications()}
+                      onFocus={() => void loadNotifications()}
+                      onClick={() => setIsNotificationsOpen(true)}
+                      className="flex size-11 items-center justify-center rounded-[16px] text-text-primary hover:bg-surface-subtle transition-colors cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+                    >
+                      <Bell size={20} strokeWidth={2} />
+                    </button>
+                    {unreadCount > 0 && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute top-1 right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[12px] font-semibold text-white shadow-xs"
+                      >
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Cài đặt"
+                    title="Cài đặt"
+                    onClick={() => go({ name: "settings" })}
+                    className="flex size-11 items-center justify-center rounded-full bg-surface-soft border border-border-subtle text-text-primary hover:bg-surface-soft/80 transition-colors cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary"
+                  >
+                    <SettingsIcon size={20} strokeWidth={2} />
+                  </button>
                 </div>
-                <Button
-                  size="small"
-                  variant="subtle"
-                  className="shrink-0 font-semibold text-brand-primary md:hidden"
-                  onClick={() => setPendingAuth({ name: "inventory" })}
-                >
-                  Đăng nhập để đồng bộ
-                </Button>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-          <Suspense fallback={<RouteLoading />}>{screenContent}</Suspense>
+          <div
+            ref={transitionRef}
+            className={
+              isFullBleed ? "h-full w-full min-w-0 md:h-auto" : "w-full min-w-0"
+            }
+          >
+            <Suspense fallback={<RouteLoading />}>{screenContent}</Suspense>
+          </div>
         </div>
       </main>
 
@@ -1934,7 +2266,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
-                <Home size={20} strokeWidth={2} />
+                <Home size={24} strokeWidth={2} />
               </span>
               <span
                 className={`text-[12px] leading-[18px] ${
@@ -1962,7 +2294,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
-                <Archive size={20} strokeWidth={2} />
+                <Archive size={24} strokeWidth={2} />
               </span>
               <span
                 className={`text-[12px] leading-[18px] ${
@@ -2001,7 +2333,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
-                <ShoppingBag size={20} strokeWidth={2} />
+                <ShoppingBag size={24} strokeWidth={2} />
               </span>
               <span
                 className={`text-[12px] leading-[18px] ${
@@ -2029,7 +2361,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
-                <BarChart3 size={20} strokeWidth={2} />
+                <BarChart3 size={24} strokeWidth={2} />
               </span>
               <span
                 className={`text-[12px] leading-[18px] ${
@@ -2048,13 +2380,17 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       {/* Toast notifications */}
       {toast && (
         <div
-          className="fixed inset-x-4 bottom-20 z-50 mx-auto max-w-sm md:bottom-6"
+          className={`fixed inset-x-4 z-[70] mx-auto max-w-sm md:bottom-6 ${
+            showMobileDock ? "bottom-20" : "bottom-6"
+          }`}
           role="status"
         >
           <Toast
             message={toast.message}
             variant={toast.variant}
-            onDismiss={() => setToast(null)}
+            open={toast.open}
+            onDismiss={dismissToast}
+            onExited={() => setToast(null)}
           />
         </div>
       )}
@@ -2129,10 +2465,11 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
       </Modal>
 
       {/* Notification Pop-up Modal */}
-      {showNotifications && (
+      {notificationsMounted && (
         <Suspense fallback={null}>
           <Notifications
-            isOpen={true}
+            isOpen={showNotifications}
+            onExited={() => setNotificationsMounted(false)}
             onClose={closeNotifications}
             state={state}
             dispatch={dispatch}
@@ -2142,7 +2479,7 @@ export default function App({ demoMode = false }: { demoMode?: boolean } = {}) {
             }}
             onOpenReminder={() => {
               setIsNotificationsOpen(false)
-              tab({ name: "attention" })
+              go({ name: "attention" })
             }}
             notify={notify}
           />

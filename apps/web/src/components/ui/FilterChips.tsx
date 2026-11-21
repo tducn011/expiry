@@ -183,14 +183,14 @@ export function FilterDropdown<T extends string = string>({
           openAtEnd.current = false
           setIsOpen((prev) => !prev)
         }}
-        className={`inline-flex max-w-full items-center justify-between gap-1.5 h-11 min-h-[44px] rounded-[16px] px-3.5 text-sm transition-colors cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
+        className={`inline-flex w-full max-w-full items-center justify-between gap-1 sm:gap-1.5 h-11 min-h-[44px] rounded-[16px] px-2.5 sm:px-3.5 text-[13px] sm:text-sm transition-colors cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
           isFiltered
             ? "bg-surface-soft border-[1.5px] border-brand-primary text-brand-primary font-semibold shadow-xs"
             : "bg-surface-bg border-[1.5px] border-border-control text-text-primary font-medium hover:bg-surface-hover hover:border-brand-primary/60"
         }`}
       >
         {triggerIcon}
-        <span className="truncate">
+        <span className="min-w-0 truncate">
           {requiredSelection
             ? (activeOption?.label ?? label)
             : isFiltered
@@ -242,7 +242,7 @@ export function FilterDropdown<T extends string = string>({
                   <span className="break-words">{option.label}</span>
                 </span>
                 {isSelected && (
-                  <Check size={14} aria-hidden="true" className="shrink-0" />
+                  <Check size={16} aria-hidden="true" className="shrink-0" />
                 )}
               </button>
             )
@@ -256,7 +256,7 @@ export function FilterDropdown<T extends string = string>({
               onClick={() => select("all")}
               className="mt-1 flex w-full items-center gap-2 rounded-corner-sm border-t border-border-primary/40 px-3 py-2 text-xs text-text-secondary hover:bg-surface-hover cursor-pointer text-left"
             >
-              <X size={14} aria-hidden="true" />
+              <X size={16} aria-hidden="true" />
               <span>Bỏ lọc {label}</span>
             </button>
           )}

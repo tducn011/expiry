@@ -94,7 +94,7 @@ describe("Domain Error Message Translations", () => {
     const msg = errorMessage(409, "VERSION_CONFLICT")
 
     expect(msg).toBe(
-      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+      "Dữ liệu vừa thay đổi. Xem lại số lượng và xác nhận một thao tác mới.",
     )
   })
 
@@ -102,7 +102,7 @@ describe("Domain Error Message Translations", () => {
     const msg = errorMessage(409, "CONCURRENT_MODIFICATION")
 
     expect(msg).toBe(
-      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+      "Dữ liệu vừa thay đổi. Xem lại số lượng và xác nhận một thao tác mới.",
     )
   })
 

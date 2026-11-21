@@ -53,19 +53,19 @@ export function computeStatusText(
 
   if (st === "expired") return `Quá HSD ${Math.abs(d as number)} ngày`
 
-  if (d === 0) return "Hết HSD hôm nay"
+  if (d === 0) return "Đến hạn hôm nay"
 
   return st === "soon" ? `Sắp HSD · còn ${d} ngày` : "Còn hạn"
 }
 
 const statusIcon: Record<FoodStatus, ReactNode> = {
-  ok: <CircleCheck size={14} aria-hidden />,
+  ok: <CircleCheck size={16} aria-hidden />,
 
-  soon: <Clock size={14} aria-hidden />,
+  soon: <Clock size={16} aria-hidden />,
 
-  expired: <CircleAlert size={14} aria-hidden />,
+  expired: <CircleAlert size={16} aria-hidden />,
 
-  unknown: <HelpCircle size={14} aria-hidden />,
+  unknown: <HelpCircle size={16} aria-hidden />,
 }
 
 const statusTone: Record<FoodStatus, string> = {
@@ -75,7 +75,7 @@ const statusTone: Record<FoodStatus, string> = {
 
   expired: "bg-status-expired-bg text-status-expired border-status-expired/20",
 
-  unknown: "bg-bg-subtle text-text-secondary border-border-primary/50",
+  unknown: "bg-status-unknown-bg text-status-unknown border-status-unknown/20",
 }
 
 export function StatusBadge({

@@ -4,6 +4,8 @@ import Button from "./Button"
 
 import { X } from "lucide-react"
 
+import { DUR, EASE, gsap, reducedMotion, useGSAP } from "../../lib/motion"
+
 let foregroundModalCount = 0
 
 let previousBodyOverflow = ""
@@ -50,13 +52,22 @@ export interface ModalProps {
   dismissible?: boolean
 }
 
+// Stays mounted while the exit tween plays; OpenModal calls onExited when done.
 export function Modal(props: ModalProps) {
-  return props.isOpen === false ? null : <OpenModal {...props} />
+  const open = props.isOpen !== false
+  const [mounted, setMounted] = useState(open)
+  if (open && !mounted) setMounted(true)
+  if (!mounted) return null
+  return <OpenModal {...props} open={open} onExited={() => setMounted(false)} />
 }
 
 const openDialogs: HTMLElement[] = []
 
 function OpenModal({
+  open,
+
+  onExited,
+
   active = true,
 
   eyebrow,
@@ -76,9 +87,16 @@ function OpenModal({
   layout = "flow",
 
   dismissible = true,
-}: ModalProps) {
+}: ModalProps & {
+  open: boolean
+  onExited: () => void
+}) {
   const titleId = useId()
   const dialogRef = useRef<HTMLElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const onExitedRef = useRef(onExited)
+  onExitedRef.current = onExited
+  const entered = useRef(false)
 
   const [opener] = useState(() =>
     typeof document !== "undefined" &&
@@ -93,8 +111,57 @@ function OpenModal({
   const dismissibleRef = useRef(dismissible)
   dismissibleRef.current = dismissible
 
+  useGSAP(
+    () => {
+      const overlay = overlayRef.current
+      const dialog = dialogRef.current
+      if (!overlay || !dialog) return
+      if (open) {
+        entered.current = true
+        if (reducedMotion()) return
+        gsap.fromTo(overlay, { opacity: 0 }, {
+          opacity: 1,
+          duration: DUR.normal,
+          ease: EASE.enter,
+          overwrite: true,
+          clearProps: "opacity",
+        })
+        gsap.fromTo(dialog, { opacity: 0, y: 8, scale: 0.98 }, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: DUR.normal,
+          ease: EASE.enter,
+          overwrite: true,
+          clearProps: "opacity,transform",
+        })
+        return
+      }
+      if (!entered.current) return
+      if (reducedMotion()) {
+        onExitedRef.current()
+        return
+      }
+      gsap.to(dialog, {
+        opacity: 0,
+        scale: 0.96,
+        duration: DUR.normal,
+        ease: EASE.exit,
+        overwrite: true,
+      })
+      gsap.to(overlay, {
+        opacity: 0,
+        duration: DUR.normal,
+        ease: EASE.exit,
+        overwrite: true,
+        onComplete: () => onExitedRef.current(),
+      })
+    },
+    { scope: overlayRef, dependencies: [open] },
+  )
+
   useEffect(() => {
-    if (!active) return
+    if (!active || !open) return
 
     const dialog = dialogRef.current
 
@@ -145,7 +212,7 @@ function OpenModal({
 
       window.removeEventListener("keydown", onKeyDown)
     }
-  }, [active])
+  }, [active, open])
 
   // Return focus to opener ONLY when Modal unmounts
   useEffect(() => {
@@ -169,7 +236,9 @@ function OpenModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in"
+      ref={overlayRef}
+      inert={!open}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[var(--alpha-overlay-black-50)]"
       onClick={(e) => {
         if (e.target === e.currentTarget && dismissible) onClose()
       }}
@@ -180,7 +249,7 @@ function OpenModal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`modal relative flex flex-col w-full ${maxWClass} max-h-[calc(100dvh-2rem)] rounded-corner-lg bg-surface-bg shadow-xl border border-border-primary/50 overflow-hidden text-text-primary`}
+        className={`modal relative flex flex-col w-full outline-none ${maxWClass} max-h-[calc(100dvh-2rem)] rounded-corner-lg bg-surface-bg shadow-xl border border-border-primary/50 overflow-hidden text-text-primary`}
       >
         <header className="flex shrink-0 items-start justify-between gap-3 px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border-primary/40">
           <div className="min-w-0 flex-1">

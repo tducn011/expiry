@@ -16,6 +16,39 @@ ID không khớp thì dừng lại và hỏi.
 Tài nguyên được quản lý: Doc đặc tả `1p2hYcmkg8FTVLQ1sq4_dUSzZdiZYx87ZZKjzLrg5wJI`,
 FigJam `CFSvL7uuF2Qb4YdT7AvlZ9`, Figma low-fi/mid-fi `9dBcuGheRzLGLVxCuqBtT7`.
 
+## Nguồn đã xác minh (chốt 2026-11-20)
+
+Đây là nguồn duy nhất được dùng khi viết báo cáo và đặc tả. Mọi nguồn khác phải hỏi user review
+trước khi đưa vào bản chốt.
+
+- UC spec: https://docs.google.com/document/d/1p2hYcmkg8FTVLQ1sq4_dUSzZdiZYx87ZZKjzLrg5wJI/edit?tab=t.uiw4l3sjve81
+  (user xác nhận: sub-tab của link này là 1).
+- Use case diagram (trang UC): https://www.figma.com/board/CFSvL7uuF2Qb4YdT7AvlZ9/Untitled?node-id=169-3022
+- Sequence diagram: https://www.figma.com/board/CFSvL7uuF2Qb4YdT7AvlZ9/Untitled?node-id=0-1
+- Activity diagram: https://www.figma.com/board/CFSvL7uuF2Qb4YdT7AvlZ9/Untitled?node-id=174-3023
+- Bổ sung: https://docs.google.com/document/d/1p2hYcmkg8FTVLQ1sq4_dUSzZdiZYx87ZZKjzLrg5wJI/edit?tab=t.7ozav9iahu0g
+- Bổ sung: https://docs.google.com/document/d/1p2hYcmkg8FTVLQ1sq4_dUSzZdiZYx87ZZKjzLrg5wJI/edit?tab=t.5slv2c4egzbt
+
+Cách lấy ảnh cho báo cáo: dùng Figma skill (`get_screenshot` với `enableBase64Response: true`, hoặc
+export qua `use_figma`), không chụp màn hình bằng tay hay công cụ chụp của OS.
+
+BR-06: bảng Business Rules (BR-01–05, BR-07–21) không có BR-06. Đã đối chiếu 31 UC spec trong
+PDF xuất từ doc (21/11/2026): không UC nào tham chiếu BR-06, và các tham chiếu BR-xx còn lại khớp
+cột "UC tham chiếu" của bảng BR. Vậy không cần làm lại UC cho BR-06.
+Lệch thật nằm ở ba hệ mã BR: BR-01–21 (bảng Business Rules, báo cáo đang dùng), BR-C01–22 (baseline
+hiện hành trong tab NR và Business Goals), BR-V3-xx (tab SE-UR). Cần chốt một hệ mã trước khi sửa.
+
+Nếu nội dung nằm ngoài các nguồn trên, dừng và hỏi user review trước khi chốt.
+
+FigJam `CFSvL7uuF2Qb4YdT7AvlZ9` có 4 page: sequence (`0:1`, 31 section UC-xx_Sequence_Diagram_UML), UC diagram
+(`169:3022`, 7 section: Tài khoản + F01–F06), Activity Diagram (`116:2`, 31 section) và Component Diagram
+(`174:3023`, không phải activity). Xuất ảnh bằng `get_screenshot` (maxDimension đủ lớn) rồi chèn vào Google Doc
+bằng `insertInlineImage` với chính URL ảnh Figma (còn hiệu lực, không cần public Drive). Doc báo cáo có section
+break giữa các UC, chèn ở đoạn trống ngay trước section break (Title.start - 2).
+
+Mid-fi Phone/Web: mỗi dialog có rectangle `Scrim` bind `overlay/scrim`; node opacity phải là 0.48 (Light), để
+1 thì màn hình dialog đen kịt. Đã sửa 2026-11-21 (20 scrim mỗi page).
+
 ## Luật ngắn
 
 - Viết "số lượng", không "lượng" đứng một mình.
@@ -23,6 +56,13 @@ FigJam `CFSvL7uuF2Qb4YdT7AvlZ9`, Figma low-fi/mid-fi `9dBcuGheRzLGLVxCuqBtT7`.
 - Low-fi và mid-fi không cần UI Foundations đầy đủ, nhưng phải đủ trước khi implement màn
   hi-fi đầu tiên và trước khi implement full prototype.
 - Tái sử dụng: một component một nguồn, chỉ bind biến và style, không giá trị thô.
+
+## Low-fi và Mid-fi đã khoá — không sửa nữa
+
+Bốn page trong file `9dBcuGheRzLGLVxCuqBtT7` là baseline đã chốt, không được thay đổi nữa:
+`86:2` Low-fi Phone, `86:1043` Low-fi Web, `90:5` Mid-fi Phone, `90:1361` Mid-fi Web. Chỉ đọc
+để tham chiếu; mọi thay đổi thiết kế làm trên Foundations (01–08), 08-1/08-2, 09–11 và hi-fi
+trở đi. (Ghi nhận 2026-11-22, user chốt.)
 
 ## Sau mỗi thay đổi đặc tả
 
@@ -57,29 +97,52 @@ Ghi 2026-11-19. Các lỗi này đã xảy ra thật; làm theo cột "Cách là
 - Chưa làm nền đen/Dark. Logo reversed đặt trên nền Coral 700, không đặt trên nền đen.
   Dark mode chỉ làm sau khi xong toàn bộ màn sáng.
 
-## Trả lời sai: "so sánh với goals" (ghi 2026-11-19)
+## User flow: vì sao làm sai lần đầu và cách làm đúng
 
-Câu hỏi gốc: "so sánh code, feature, use case đã đạt goals chưa". Ý đúng của người dùng:
-kiểm tra ứng dụng hiện tại có chạy không, và các feature đã đặc tả có đạt business goals
-không. Đây là đánh giá kết quả, không phải đối chiếu tài liệu.
+Ghi 2026-11-19. Lần đầu user flow bị làm sai vì:
 
-Đã làm sai:
-
-- Đối chiếu tài liệu với tài liệu: Brief, UC catalog, ROADMAP và grep source. Cột "Code"
-  chỉ cho biết có file hay không, không cho biết ứng dụng có chạy.
-- Kết luận "chưa đạt" từ checkbox roadmap thay vì từ việc chạy app.
-- Không đi qua tác vụ của P01, P02, P03 (Brief mục 04) và không đo từng business goal.
-- Liệt kê lệch giữa spec và code (UC-17, UC-29, mặc định danh mục) rồi hỏi lại cuối câu,
-  dù việc chạy app chỉ đọc, không cần xin phép.
+- Làm sai loại file. Mình dựng 32 frame "màn hình trước / sau / lỗi" trong một page của file
+  Figma Design (`9dBcuGheRzLGLVxCuqBtT7`). User flow của dự án là sơ đồ FigJam dạng flowchart.
+- Không mở board mẫu trước khi vẽ. Board mẫu:
+  https://www.figma.com/board/jbHbJXBYi3DIR7FkiOc4IE/Untitled?node-id=2998-4962
+- Nội dung lấy từ bản cũ (27 UF, mã UC-V5) thay vì 31 UC hiện hành trong Doc đặc tả.
 
 Cách làm đúng:
 
-1. Lấy goals gốc: SE-BREQ-01…06, BG-MUA, BG-DUYTRI và tiêu chí "Thành công khi" của từng
-   persona. Không dùng ROADMAP làm goals.
-2. Chạy ứng dụng thật (demo web hoặc bản local) theo từng tác vụ persona, từng feature
-   F01…F06, kể cả nhánh lỗi, hủy và nhập sai.
-3. Trả bảng: goal → feature/UC → đã chạy thử chưa → kết quả (đạt, một phần, không đạt)
-   → bằng chứng (ảnh, log, bước tái hiện).
-4. Phân biệt ba mức: source có, chạy được, đạt goal. Mục nào chưa chạy thì ghi "chưa
-   chạy", không suy từ roadmap hay tên file.
+- Luôn mở board mẫu bằng `get_figjam` rồi đọc cả style bằng `use_figma` trước khi vẽ.
+- Một card trắng cho mỗi UC (2740 px rộng, bo 24, viền `#D9D9D9`), lưới 3 cột, tiêu đề
+  `UC-xx  |  Tên`, dòng phụ `UC-xx  /  Fxx`. Chỉ dùng keyword, không viết câu.
+- Hình và màu: Bắt đầu = bo tròn xanh `#C2E5FF`; bước = hình chữ nhật trắng; nhập liệu =
+  hình bình hành `#C6FAF6`; quyết định = hình thoi `#FFECBD`; thành công = bo tròn xanh lá
+  `#CDF4D3`; rẽ nhánh / sửa lại = cam `#FFE0C2`; lỗi và Hủy = đỏ `#FFCDC2`. Viền 4 px.
+- Đường nối elbow, mũi tên ở đầu, nhãn Có / Không / Lỗi / Hủy trên nhánh. "Hủy" đặt phía trên.
+- Nội dung lấy từ Doc đặc tả hiện hành (31 UC), không lấy từ board cũ.
+- File đang dùng: https://www.figma.com/board/XYmZbstR3sooA6f2d5z4qn (31 UC, folder 674257436).
+
+## Trả lời sai: "so sánh với goals" (ghi 2026-11-19)
+
+Câu hỏi gốc: "so sánh code, feature, use case đã đạt goals chưa". Ý đúng: mở ứng dụng web
+đang chạy, dùng thử, và xem nó có đáp ứng được người dùng, có thỏa các persona không. Chỉ
+cần xem có đạt hay không.
+
+Đã làm sai, hai lần liên tiếp:
+
+- Lần 1: đối chiếu tài liệu với tài liệu (Brief, UC catalog, ROADMAP, grep source). Cột
+  "Code" chỉ cho biết có file, không cho biết ứng dụng có chạy. Kết luận "chưa đạt" từ
+  checkbox roadmap.
+- Lần 2 (sau khi được sửa): vẫn định "lấy goals từ SE-BREQ, BG-MUA, BG-DUYTRI rồi mới chạy
+  app". Người dùng không yêu cầu bước lấy goals từ tài liệu đó.
+- Hỏi lại ở cuối câu dù việc mở web và thử chỉ đọc, không cần xin phép.
+
+Cách làm đúng:
+
+1. Mở bản web đang chạy bằng trình duyệt (`https://demoexpiry.vercel.app`), không đọc
+   roadmap hay spec để quyết định đạt hay không.
+2. Đóng vai từng persona (P01 hay quên, P02 hay đổi kế hoạch, P03 muốn số chính xác) và
+   thử việc họ cần: thêm món, thấy món cần chú ý, hoãn nhắc, ghi dùng/bỏ, nhập sai, xóa và
+   khôi phục, mua sắm.
+3. Trả kết luận ngắn theo persona: làm được hay không, chỗ nào vướng, kèm bước tái hiện.
+   Chỉ nêu cái đã thử thật; cái chưa thử ghi "chưa thử".
+4. Bản deploy có thể cũ hơn source local. Nếu thấy lệch (ví dụ source có đối chiếu kho mà
+   web thì không) thì ghi rõ là web đang chạy chưa có.
 5. Câu hỏi đủ rõ thì làm luôn, không hỏi lại ở cuối.

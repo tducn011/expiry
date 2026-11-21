@@ -464,11 +464,12 @@ export default function InsightView({
     }
 
     const palette = [
-      "var(--brand-primary)",
-      "var(--color-category-beverage)",
-      "var(--color-category-dairy)",
-      "var(--color-category-pantry)",
-      "var(--color-category-meat)",
+      "var(--color-viz-1)",
+      "var(--color-viz-2)",
+      "var(--color-viz-3)",
+      "var(--color-viz-4)",
+      "var(--color-viz-5)",
+      "var(--color-viz-6)",
     ]
     let colorIdx = 0
 
@@ -549,7 +550,7 @@ export default function InsightView({
                 className="inline-flex min-h-11 md:min-h-10 items-center gap-1.5 rounded-corner-md border border-border-primary/80 bg-surface-bg px-2.5 py-1.5 text-xs font-semibold text-text-primary shadow-xs hover:bg-surface-hover cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw
-                  size={13}
+                  size={16}
                   className={`text-text-secondary ${
                     loadingLive ? "animate-spin" : ""
                   }`}
@@ -562,7 +563,7 @@ export default function InsightView({
               label="Khoảng thời gian"
               ariaLabel="Khoảng thời gian thống kê"
               requiredSelection
-              triggerIcon={<CalendarClock size={15} aria-hidden="true" />}
+              triggerIcon={<CalendarClock size={16} aria-hidden="true" />}
               value={range}
               onChange={setRange}
               options={[
@@ -580,38 +581,38 @@ export default function InsightView({
         <button
           type="button"
           onClick={() => handleTabSelect("overview")}
-          className={`inline-flex min-h-11 md:min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
+          className={`inline-flex min-h-11 md:min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
             activeTab === "overview"
               ? "bg-brand-primary text-white shadow-xs"
               : "text-text-secondary hover:text-text-primary hover:bg-surface-bg"
           }`}
         >
-          <LayoutGridIcon size={14} />
+          <LayoutGridIcon size={16} />
           <span>Tổng quan</span>
         </button>
         <button
           type="button"
           onClick={() => handleTabSelect("categories")}
-          className={`inline-flex min-h-11 md:min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
+          className={`inline-flex min-h-11 md:min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
             activeTab === "categories"
               ? "bg-brand-primary text-white shadow-xs"
               : "text-text-secondary hover:text-text-primary hover:bg-surface-bg"
           }`}
         >
-          <TagIcon size={14} />
+          <TagIcon size={16} />
           <span className="hidden sm:inline">Theo danh mục</span>
           <span className="sm:hidden">Danh mục</span>
         </button>
         <button
           type="button"
           onClick={() => handleTabSelect("history")}
-          className={`inline-flex min-h-11 md:min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-all cursor-pointer ${
+          className={`inline-flex min-h-11 md:min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 rounded-corner-md text-xs font-semibold transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
             activeTab === "history"
               ? "bg-brand-primary text-white shadow-xs"
               : "text-text-secondary hover:text-text-primary hover:bg-surface-bg"
           }`}
         >
-          <Clock size={14} />
+          <Clock size={16} />
           <span>Lịch sử</span>
         </button>
       </div>
@@ -638,9 +639,9 @@ export default function InsightView({
                 <button
                   type="button"
                   disabled={!onNavigateAttention}
-                  aria-label={`Mở nhắc nhở, ${expiredFoods.length} món quá hạn`}
+                  aria-label={`Mở món cần chú ý, ${expiredFoods.length} món quá hạn`}
                   onClick={onNavigateAttention}
-                  className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-status-expired/20 bg-status-expired-bg/40 p-3 text-left transition-all hover:bg-status-expired-bg/60 cursor-pointer group disabled:cursor-default disabled:opacity-60"
+                  className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-status-expired/20 bg-status-expired-bg/40 p-3 text-left transition-[color,background-color,border-color,box-shadow] hover:bg-status-expired-bg/60 cursor-pointer group disabled:cursor-default disabled:opacity-60"
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="size-8 rounded-corner-sm bg-status-expired-bg flex items-center justify-center text-status-expired shrink-0">
@@ -656,7 +657,7 @@ export default function InsightView({
                     </div>
                   </div>
                   <ChevronRight
-                    size={14}
+                    size={16}
                     className="text-status-expired/60 group-hover:translate-x-0.5 transition-transform"
                   />
                 </button>
@@ -664,14 +665,10 @@ export default function InsightView({
                 {/* 2. Sắp hết hạn */}
                 <button
                   type="button"
-                  aria-label={
-                    "Mở món sắp hết hạn đầu tiên, " + soonFoods.length + " món"
-                  }
-                  disabled={!onOpenDetail || soonFoods.length === 0}
-                  onClick={() =>
-                    soonFoods[0] && onOpenDetail?.(soonFoods[0].id)
-                  }
-                  className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-status-soon/20 bg-status-soon-bg/40 p-3 text-left transition-all hover:bg-status-soon-bg/60 cursor-pointer group disabled:cursor-default disabled:opacity-60"
+                  aria-label={`Mở món cần chú ý, ${soonFoods.length} món sắp hết hạn`}
+                  disabled={!onNavigateAttention || soonFoods.length === 0}
+                  onClick={onNavigateAttention}
+                  className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-status-soon/20 bg-status-soon-bg/40 p-3 text-left transition-[color,background-color,border-color,box-shadow] hover:bg-status-soon-bg/60 cursor-pointer group disabled:cursor-default disabled:opacity-60"
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="size-8 rounded-corner-sm bg-status-soon-bg flex items-center justify-center text-status-soon shrink-0">
@@ -687,16 +684,16 @@ export default function InsightView({
                     </div>
                   </div>
                   <ChevronRight
-                    size={14}
+                    size={16}
                     className="text-status-soon/60 group-hover:translate-x-0.5 transition-transform"
                   />
                 </button>
 
-                {/* 3. Thiếu HSD */}
+                {/* 3. Chưa rõ HSD */}
                 <button
                   type="button"
                   aria-label={
-                    "Mở món chưa có hạn sử dụng đầu tiên, " +
+                    "Mở món chưa rõ hạn sử dụng đầu tiên, " +
                     unknownExpFoods.length +
                     " món"
                   }
@@ -704,15 +701,15 @@ export default function InsightView({
                   onClick={() =>
                     unknownExpFoods[0] && onOpenDetail?.(unknownExpFoods[0].id)
                   }
-                  className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-border-primary bg-surface-subtle p-3 text-left transition-all hover:bg-surface-hover cursor-pointer group disabled:cursor-default disabled:opacity-60"
+                  className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-border-primary bg-surface-subtle p-3 text-left transition-[color,background-color,border-color,box-shadow] hover:bg-surface-hover cursor-pointer group disabled:cursor-default disabled:opacity-60"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="size-8 rounded-corner-sm bg-border-primary/30 flex items-center justify-center text-text-secondary shrink-0">
+                    <div className="size-8 rounded-corner-sm bg-status-unknown-bg flex items-center justify-center text-status-unknown shrink-0">
                       <HelpCircle size={16} />
                     </div>
                     <div>
                       <span className="text-xs font-semibold text-text-secondary block leading-none">
-                        Thiếu HSD
+                        Chưa rõ HSD
                       </span>
                       <span className="text-sm font-extrabold text-text-primary mt-1 block leading-tight">
                         {unknownExpFoods.length} món
@@ -720,7 +717,7 @@ export default function InsightView({
                     </div>
                   </div>
                   <ChevronRight
-                    size={14}
+                    size={16}
                     className="text-text-secondary group-hover:translate-x-0.5 transition-transform"
                   />
                 </button>
@@ -730,9 +727,9 @@ export default function InsightView({
                 type="button"
                 disabled={!onNavigateAttention}
                 onClick={onNavigateAttention}
-                className="inline-flex min-h-11 items-center justify-center gap-1.5 shrink-0 rounded-corner-md bg-brand-primary px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary/90 transition-all cursor-pointer text-center disabled:cursor-default disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 shrink-0 rounded-corner-md bg-brand-primary px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary/90 transition-[color,background-color,border-color,box-shadow] cursor-pointer text-center disabled:cursor-default disabled:opacity-60"
               >
-                Xem danh sách <ArrowRight size={14} aria-hidden="true" />
+                Xem danh sách <ArrowRight size={16} aria-hidden="true" />
               </button>
             </div>
           </Card>
@@ -812,7 +809,7 @@ export default function InsightView({
                   {trendPeriods.map((period, index) => (
                     <div
                       key={index}
-                      className="min-w-0 text-[11px] leading-tight text-text-secondary sm:text-xs"
+                      className="min-w-0 text-[12px] leading-tight text-text-secondary sm:text-xs"
                     >
                       <div className="wrap-anywhere">{period.label}</div>
                       <div
@@ -899,8 +896,8 @@ export default function InsightView({
                           item.eventsWithoutUnit > 0) && (
                           <p className="text-xs text-text-secondary">
                             {item.unit === "Chưa rõ đơn vị"
-                              ? `${item.eventsWithoutUnit} lượt thiếu đơn vị; không cộng lượng.`
-                              : `Chưa ghi lượng: ${item.usedWithoutAmount} lượt dùng, ${item.discardedWithoutAmount} lượt bỏ.`}
+                              ? `${item.eventsWithoutUnit} lượt thiếu đơn vị; không cộng số lượng.`
+                              : `Chưa ghi số lượng: ${item.usedWithoutAmount} lượt dùng, ${item.discardedWithoutAmount} lượt bỏ.`}
                           </p>
                         )}
                       </div>
@@ -916,7 +913,7 @@ export default function InsightView({
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-semibold text-text-heading flex items-center gap-1.5 tracking-normal">
-                        <Package size={15} className="text-brand-primary" />
+                        <Package size={16} className="text-brand-primary" />
                         <span>Cơ cấu tồn kho hiện tại</span>
                       </h3>
                       <span className="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-bold bg-brand-primary/10 text-brand-primary">
@@ -936,7 +933,7 @@ export default function InsightView({
                           <span className="text-sm font-extrabold text-text-primary leading-none">
                             {totalActive}
                           </span>
-                          <span className="text-[9px] text-text-secondary font-medium mt-0.5 leading-none">
+                          <span className="text-[12px] text-text-secondary font-medium mt-0.5 leading-none">
                             món
                           </span>
                         </div>
@@ -972,7 +969,7 @@ export default function InsightView({
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-semibold text-text-heading flex items-center gap-1.5 tracking-normal">
                         <FileTextIcon
-                          size={15}
+                          size={16}
                           className="text-brand-primary"
                         />
                         <span>Chất lượng dữ liệu</span>
@@ -987,7 +984,7 @@ export default function InsightView({
                       <button
                         type="button"
                         aria-label={
-                          "Mở món chưa có hạn sử dụng đầu tiên, " +
+                          "Mở món chưa rõ hạn sử dụng đầu tiên, " +
                           unknownExpFoods.length +
                           " món"
                         }
@@ -999,17 +996,17 @@ export default function InsightView({
                         className="flex min-h-11 w-full items-center justify-between rounded-corner-md border border-border-primary/60 bg-surface-subtle p-3 text-left transition-colors hover:bg-surface-hover cursor-pointer group disabled:cursor-default disabled:opacity-60"
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className="size-7 rounded-corner-sm bg-border-primary/30 flex items-center justify-center text-text-secondary shrink-0">
-                            <HelpCircle size={15} />
+                          <div className="size-7 rounded-corner-sm bg-status-unknown-bg flex items-center justify-center text-status-unknown shrink-0">
+                            <HelpCircle size={16} />
                           </div>
                           <div>
                             <span className="text-xs font-semibold text-text-heading block leading-tight">
-                              {unknownExpFoods.length} món chưa có HSD
+                              {unknownExpFoods.length} món chưa rõ HSD
                             </span>
                           </div>
                         </div>
                         <ChevronRight
-                          size={14}
+                          size={16}
                           className="text-text-secondary group-hover:translate-x-0.5 transition-transform"
                         />
                       </button>
@@ -1019,21 +1016,21 @@ export default function InsightView({
                         className={
                           locationRate === null
                             ? "flex items-center justify-between rounded-corner-md border border-border-primary/60 bg-surface-subtle p-3"
-                            : "flex items-center justify-between rounded-corner-md border border-emerald-500/20 bg-emerald-500/5 p-3"
+                            : "flex items-center justify-between rounded-corner-md border border-status-ok/20 bg-status-ok-bg/50 p-3"
                         }
                       >
                         <div className="flex items-center gap-2.5">
                           <div
                             className={
                               locationRate === null
-                                ? "size-7 rounded-corner-sm bg-border-primary/30 flex items-center justify-center text-text-secondary shrink-0"
-                                : "size-7 rounded-corner-sm bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0"
+                                ? "size-7 rounded-corner-sm bg-status-unknown-bg flex items-center justify-center text-status-unknown shrink-0"
+                                : "size-7 rounded-corner-sm bg-status-ok-bg flex items-center justify-center text-status-ok shrink-0"
                             }
                           >
                             {locationRate === null ? (
-                              <HelpCircle size={15} />
+                              <HelpCircle size={16} />
                             ) : (
-                              <CircleCheck size={15} />
+                              <CircleCheck size={16} />
                             )}
                           </div>
                           <div>
@@ -1057,13 +1054,13 @@ export default function InsightView({
       {/* Tab 2: Detailed Category Breakdown */}
       {activeTab === "categories" && (
         <Card className="p-5 flex flex-col gap-4 border-border-primary/60 bg-surface-bg shadow-xs">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <div className="min-w-0">
               <h3 className="text-base font-semibold text-text-heading tracking-normal">
                 Tỷ lệ lượt ghi đã dùng theo danh mục
               </h3>
             </div>
-            <span className="text-xs font-semibold text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-full">
+            <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-full">
               {rangeLabel}
             </span>
           </div>
@@ -1081,9 +1078,9 @@ export default function InsightView({
               return (
                 <div
                   key={c.value}
-                  className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 py-3 sm:flex sm:items-center sm:justify-between sm:gap-3"
                 >
-                  <div className="min-w-44">
+                  <div className="min-w-0 sm:min-w-44">
                     <span className="font-semibold text-sm text-text-heading block">
                       {c.label}
                     </span>
@@ -1094,7 +1091,7 @@ export default function InsightView({
                     </span>
                   </div>
 
-                  <div className="flex-1 max-w-md">
+                  <div className="col-span-2 row-start-2 sm:flex-1 sm:max-w-md">
                     <div className="h-3 w-full rounded-full bg-border-primary/30 overflow-hidden flex shadow-inner">
                       {total === 0 ? (
                         <div
@@ -1108,23 +1105,27 @@ export default function InsightView({
                         <>
                           <div
                             style={{ width: `${rate}%` }}
-                            className="h-full bg-brand-primary transition-all duration-300"
+                            className="h-full bg-brand-primary transition-[width] duration-200"
                           />
                           <div
                             style={{ width: `${100 - (rate || 0)}%` }}
-                            className="h-full bg-border-primary transition-all duration-300"
+                            className="h-full bg-border-primary transition-[width] duration-200"
                           />
                         </>
                       )}
                     </div>
                   </div>
 
-                  <div className="text-right sm:w-28 shrink-0">
-                    <span className="text-sm font-extrabold text-brand-primary">
-                      {total === 0
-                        ? "Chưa có dữ liệu"
-                        : `${rate}% lượt ghi đã dùng`}
-                    </span>
+                  <div className="col-start-2 row-start-1 shrink-0 self-start whitespace-nowrap text-right sm:w-44">
+                    {total === 0 ? (
+                      <span className="text-xs font-medium text-text-tertiary">
+                        Chưa có dữ liệu
+                      </span>
+                    ) : (
+                      <span className="text-sm font-semibold text-brand-primary">
+                        {rate}% lượt ghi đã dùng
+                      </span>
+                    )}
                   </div>
                 </div>
               )
@@ -1136,13 +1137,13 @@ export default function InsightView({
       {/* Tab 3: Detailed History Log */}
       {activeTab === "history" && (
         <Card className="p-5 flex flex-col gap-4 border-border-primary/60 bg-surface-bg shadow-xs">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <div className="min-w-0">
               <h3 className="text-base font-semibold text-text-heading tracking-normal">
                 Nhật ký thao tác chi tiết
               </h3>
             </div>
-            <span className="text-xs font-semibold text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-full">
+            <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-full">
               {rangeLabel}
             </span>
           </div>
@@ -1169,7 +1170,7 @@ export default function InsightView({
                             ? "bg-status-ok"
                             : isDiscard
                               ? "bg-text-secondary"
-                              : "bg-warning"
+                              : "bg-status-soon"
                         }`}
                       />
                       <button
