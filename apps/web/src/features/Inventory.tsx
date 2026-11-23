@@ -391,7 +391,7 @@ export function Inventory({
               )}
             </div>
 
-            <div className="grid grid-cols-[auto_auto_auto] items-center gap-2 sm:flex sm:flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               <FilterDropdown<StatusFilter>
                 label="Hạn sử dụng"
                 className="min-w-0 sm:w-auto"
