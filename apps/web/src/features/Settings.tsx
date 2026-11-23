@@ -267,12 +267,14 @@ export function Settings({
           }
         />
       </div>
-      <div className="grid min-w-0 gap-6 md:grid-cols-[240px_minmax(0,640px)] md:justify-center">
+      <div className="flex min-w-0 flex-col gap-5 md:gap-6">
         <nav
           aria-label="Danh mục cài đặt"
-          className={`${section ? "hidden md:block" : "block"} min-w-0`}
+          className={`${
+            section ? "hidden md:block" : "block"
+          } min-w-0 md:overflow-x-auto md:border-b md:border-border-primary`}
         >
-          <div className="overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs">
+          <div className="flex flex-col overflow-hidden rounded-corner-lg border border-border-primary bg-surface-bg shadow-xs md:w-max md:min-w-full md:flex-row md:items-stretch md:gap-1 md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:shadow-none">
             {sections.map(({ key, icon }) => (
               <button
                 key={key}
@@ -284,15 +286,15 @@ export function Settings({
                     : undefined
                 }
                 onClick={() => selectSection(key)}
-                className={`flex min-h-14 w-full items-center gap-3 border-b border-border-subtle px-4 text-left text-sm font-normal last:border-b-0 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary ${
+                className={`flex min-h-14 w-full shrink-0 items-center gap-3 border-b border-border-subtle px-4 text-left text-sm font-normal last:border-b-0 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary md:min-h-12 md:w-auto md:gap-2 md:border-b-2 md:border-transparent md:px-4 md:font-medium ${
                   activeSection === key
-                    ? "md:bg-brand-secondary md:font-medium md:text-brand-primary"
-                    : "text-text-primary hover:bg-surface-hover"
+                    ? "md:border-brand-primary md:text-brand-primary"
+                    : "text-text-primary hover:bg-surface-hover md:text-text-secondary md:hover:bg-transparent md:hover:text-text-primary"
                 }`}
               >
                 <span
                   aria-hidden="true"
-                  className="shrink-0 text-brand-primary"
+                  className="shrink-0 text-brand-primary md:text-current"
                 >
                   {icon}
                 </span>
@@ -308,7 +310,9 @@ export function Settings({
         </nav>
 
         <section
-          className={`${section ? "block" : "hidden md:block"} min-w-0`}
+          className={`${
+            section ? "block" : "hidden md:block"
+          } mx-auto min-w-0 w-full md:max-w-5xl`}
           aria-label={sectionLabels[activeSection]}
         >
           <div className="mb-4 md:hidden">
