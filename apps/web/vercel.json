@@ -5,23 +5,23 @@
   "rewrites": [
     {
       "source": "/health/(.*)",
-      "destination": "https://homeserver.tailc535bb.ts.net/health/$1"
+      "destination": "https://con-launches-scsi-baskets.trycloudflare.com/health/$1"
     },
     {
       "source": "/health",
-      "destination": "https://homeserver.tailc535bb.ts.net/health"
+      "destination": "https://con-launches-scsi-baskets.trycloudflare.com/health"
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://homeserver.tailc535bb.ts.net/api/$1"
+      "destination": "https://con-launches-scsi-baskets.trycloudflare.com/api/$1"
     },
     {
       "source": "/scan/(.*)",
-      "destination": "https://homeserver.tailc535bb.ts.net/scan/$1"
+      "destination": "https://con-launches-scsi-baskets.trycloudflare.com/scan/$1"
     },
     {
       "source": "/scan",
-      "destination": "https://homeserver.tailc535bb.ts.net/scan"
+      "destination": "https://con-launches-scsi-baskets.trycloudflare.com/scan"
     },
     {
       "source": "/(.*)",

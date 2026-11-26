@@ -1,0 +1,507 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage{fontspec}
+\usepackage[margin=1.8cm,top=2.2cm,bottom=2.2cm]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{amsmath,amssymb}
+
+\definecolor{primary}{RGB}{18, 53, 91}
+\definecolor{secondary}{RGB}{43, 114, 186}
+\definecolor{darkgray}{RGB}{50, 50, 50}
+\definecolor{lightgray}{RGB}{245, 247, 250}
+\definecolor{bordercolor}{RGB}{200, 205, 215}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=secondary,
+    urlcolor=secondary,
+    citecolor=primary
+}
+
+\titleformat{\section}{\color{primary}\normalfont\Large\bfseries}{\thesection.}{0.8em}{}[{\color{primary}\titlerule[1.2pt]}]
+\titleformat{\subsection}{\color{secondary}\normalfont\large\bfseries}{\thesubsection.}{0.6em}{}
+\titleformat{\subsubsection}{\color{darkgray}\normalfont\normalsize\bfseries}{\thesubsubsection.}{0.5em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{darkgray}{Hệ thống Expiry --- Nghị quyết Phê duyệt Đặc tả Hệ thống và Quy tắc Nghiệp vụ}}
+\fancyhead[R]{\small\textcolor{darkgray}{17/11/2026}}
+\fancyfoot[L]{\small\textcolor{darkgray}{Văn bản lưu hành chính thức --- Ban hành bởi Chủ nhiệm Dự án / Kiến trúc sư Trưởng}}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.5pt}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+    \vspace*{0.8cm}
+    {\color{primary}\Huge\bfseries HỆ THỐNG QUẢN LÝ THỰC PHẨM (EXPIRY)}\\[0.3cm]
+    {\color{secondary}\LARGE\bfseries NGHỊ QUYẾT PHÊ DUYỆT ĐẶC TẢ YÊU CẦU HỆ THỐNG\\VÀ QUY TẮC NGHIỆP VỤ TOÀN DIỆN}\\[0.5cm]
+    {\large\textbf{VĂN BẢN QUYẾT ĐỊNH CHUẨN HÓA VÀ THỐNG NHẤT TRIỂN KHAI}}\\[1.0cm]
+
+    \begin{tabularx}{0.9\textwidth}{rX}
+    \textbf{Tên dự án:} & Hệ thống Quản lý Thực phẩm và Hạn sử dụng Hộ gia đình (Expiry) \\
+    \textbf{Ngày ban hành:} & 17 tháng 11 năm 2026 \\
+    \textbf{Thẩm quyền phê duyệt:} & Chủ nhiệm Dự án (Product Owner) / Kiến trúc sư Hệ thống \\
+    \textbf{Căn cứ kỹ thuật:} & Bộ đặc tả cơ sở được phê duyệt (14/11/2026) và Bản đồ bối cảnh .tmb \\
+    \textbf{Trạng thái hiệu lực:} & \textbf{\color{primary}CHÍNH THỨC BAN HÀNH VÀ ÁP DỤNG} \\
+    \end{tabularx}
+
+    \vspace{1.0cm}
+    \begin{minipage}{0.92\textwidth}
+    \colorbox{lightgray}{
+        \begin{minipage}{\dimexpr\textwidth-2\fboxsep\relax}
+        \vspace{0.25cm}
+        \textbf{\color{primary}TÓM TẮT CÁC NỘI DUNG QUYẾT ĐỊNH:}
+        \begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+            \item Xác lập \textbf{Mục tiêu Tác động Cốt lõi (Mục tiêu G0)}: Giảm thiểu tối đa lãng phí thực phẩm và tiết kiệm chi tiêu gia đình làm kim chỉ nam xuyên suốt.
+            \item Chốt phương án xử lý dứt điểm cho \textbf{5 vấn đề logic kiến trúc then chốt} (từ C01 đến C05).
+            \item Chuẩn hóa quy trình vận hành cho các trường hợp nhạy cảm: Trải nghiệm đăng nhập liền mạch (UC-02), Khóa ô sửa số lượng trên biểu mẫu (UC-09), Hướng dẫn phân biệt xóa mềm và ghi nhận lãng phí (UC-10/25), Khôi phục vị trí mồ côi và Cơ chế dọn rác tự động sau 30 ngày (UC-12/13), Công thức tính tỷ lệ lãng phí theo từng nhóm đơn vị (UC-27), Xóa trắng hạn dùng khi thêm lại từ lịch sử (UC-29).
+            \item Chuẩn hóa danh mục \textbf{33 trường hợp sử dụng} (CAT-UC-01 đến CAT-UC-33) với nhóm F06 hoàn thiện (tích hợp gợi ý thông minh và nhập kho hàng loạt) cùng hệ thống \textbf{22 quy tắc nghiệp vụ} (BR-C01 đến BR-C22).
+            \item Ban hành bộ \textbf{Tiêu chuẩn Nghiệm thu Công sức Duy trì} và 5 trụ cột bảo đảm chuỗi giá trị.
+            \item Văn bản này thay thế toàn bộ các dự thảo trước đó, có giá trị cao nhất để đối chiếu mã nguồn và nghiệm thu hệ thống.
+        \end{itemize}
+        \vspace{0.2cm}
+        \end{minipage}
+    }
+    \end{minipage}
+
+    \vfill
+    {\small\textcolor{darkgray}{Tài liệu kỹ thuật nội bộ --- Dự án Expiry --- Nhóm Phát triển và Vận hành Hệ thống}}
+\end{center}
+\end{titlepage}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{CĂN CỨ PHÁP LÝ VÀ NGUYÊN TẮC THIẾT KẾ}
+
+\subsection{Căn cứ xây dựng quyết định}
+Nghị quyết này được ban hành dựa trên các văn bản và kết quả kỹ thuật đã được xác lập:
+\begin{enumerate}[itemsep=1pt]
+    \item \textbf{Phạm vi tính năng đã duyệt (14/11/2026):} Bản thống nhất 6 nhóm chức năng do Chủ nhiệm Dự án phê duyệt.
+    \item \textbf{Danh mục 33 trường hợp sử dụng (Use Case Catalog):} Hồ sơ phân rã nhiệm vụ và mô tả luồng thao tác người dùng (bao gồm 4 trường hợp của nhóm F06).
+    \item \textbf{Tài liệu cơ sở về yêu cầu và quy tắc nghiệp vụ:} Hệ thống 22 quy tắc nghiệp vụ (BR-C01 đến BR-C22), 10 yêu cầu người dùng (UR-C01 đến UR-C10), 33 yêu cầu chức năng (FR-C01 đến FR-C33) và 15 yêu cầu chất lượng phi chức năng (NR-01 đến NR-15).
+    \item \textbf{Báo cáo rà soát logic chuyên sâu Impeccable (15/11/2026):} Nhận diện 5 điểm nghẽn kiến trúc (C01 đến C05) cần xử lý dứt điểm.
+    \item \textbf{Biên bản thẩm vấn chuyên sâu (17/11/2026):} Thống nhất các kịch bản ngoại lệ của các trường hợp sử dụng trọng điểm và xác lập mục tiêu tối thượng G0.
+    \item \textbf{Hiện trạng mã nguồn và kiến trúc kiểm thử (.tmb):} Bản đồ trách nhiệm module và tình trạng triển khai thực tế trong kho lưu trữ mã nguồn.
+\end{enumerate}
+
+\subsection{Các nguyên tắc thiết kế then chốt}
+\begin{itemize}[itemsep=2pt]
+    \item \textbf{Nguyên tắc Hướng tới Giá trị Thực tế:} Mọi chức năng và quy tắc nghiệp vụ phải phục vụ trực tiếp cho việc giảm lãng phí thực phẩm và tiết kiệm chi tiêu gia đình; loại bỏ triệt để các tính năng rườm rà không mang lại giá trị sử dụng.
+    \item \textbf{Nguyên tắc Bảo toàn Dữ liệu Tuyệt đối:} Mọi biến động số lượng thực phẩm trong kho phải có nguyên nhân rõ ràng (sử dụng, vứt bỏ, kiểm kê hoặc phân tách gói); không để xảy ra tình trạng số lượng tự sinh ra hoặc mất đi do lỗi hệ thống hay lỗi giao dịch trung gian.
+    \item \textbf{Nguyên tắc Phân lập Ranh giới Thao tác:} Phân biệt rõ giữa hành vi nhận diện, trích xuất dữ liệu tạm thời (quét ảnh, quét máy ảnh, tìm kiếm) và hành vi lưu trữ dữ liệu chính thức vào kho. Chỉ duy nhất một điểm kiểm soát có thẩm quyền ghi dữ liệu vào cơ sở dữ liệu.
+    \item \textbf{Nguyên tắc Tối giản Công sức Duy trì:} Đảm bảo mọi thao tác lặp lại hàng ngày (ghi nhận sử dụng, báo hỏng, dọn dẹp, kiểm tra) phải hoàn thành trong vòng dưới 3 giây; không tạo rào cản phức tạp khiến người dùng nản lòng và từ bỏ ứng dụng.
+    \item \textbf{Nguyên tắc Bảo mật và Phạm vi Cá nhân:} Toàn bộ dữ liệu thực phẩm, danh mục, thông báo và lịch sử thuộc quyền sở hữu riêng biệt của tài khoản đang đăng nhập hợp lệ; không chia sẻ chéo trái phép giữa các người dùng.
+\end{itemize}
+
+\section{QUYẾT ĐỊNH CHỐT DỨT ĐIỂM CÁC VẤN ĐỀ LOGIC VÀ QUY CHẾ VẬN HÀNH}
+
+\subsection{Quyết định C01: Cơ chế Giao dịch Tách nhóm Bảo toàn Số lượng}
+\textbf{Bối cảnh phát sinh vấn đề:} Khi một bản ghi trong kho đại diện cho một nhóm gồm nhiều đơn vị (ví dụ một lốc 4 hộp sữa) nhưng người dùng mở trước 1 hộp hoặc các hộp có hạn sử dụng khác nhau, việc ghi nhận bằng 2 thao tác rời rạc (sửa bản ghi cũ và tạo bản ghi mới) rất dễ dẫn đến mất đồng bộ: giảm lượng cũ thành công nhưng tạo mới thất bại (làm mất thực phẩm trên sổ sách), hoặc tạo mới thành công nhưng giảm cũ thất bại (làm tăng khống thực phẩm).
+
+\textbf{Quy chế phê duyệt chính thức:}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Áp dụng Giao dịch Tách gói Nguyên tử:} Thao tác tách nhóm hoặc mở lẻ một phần trong nhóm nhiều gói bắt buộc phải được thực hiện trong cùng một giao dịch cơ sở dữ liệu duy nhất với mã định danh thao tác chung (\texttt{operation\_id}).
+    \item \textbf{Công thức Bảo toàn Lượng Tuyệt đối:} Tổng lượng thực phẩm trước và sau giao dịch phải luôn bằng nhau:
+    \[
+    Q_{\text{ban đầu}} = Q_{\text{nguồn mới}} + Q_{\text{đích mới}}
+    \]
+    \item \textbf{Màn hình Xem trước và Xác nhận:} Trước khi áp dụng thay đổi, hệ thống hiển thị bảng đối chiếu xác nhận: số lượng còn lại của phần chưa mở và thông tin chi tiết của phần mới được tách ra (kèm hạn sử dụng hoặc ngày mở riêng).
+    \item \textbf{Hoàn nguyên Toàn phần và Kháng lặp:} Nếu xảy ra lỗi kết nối, lỗi kiểm tra dữ liệu hoặc người dùng chủ động nhấn 'Hủy', toàn bộ trạng thái sẽ được hoàn nguyên về ban đầu, không lưu lại dữ liệu dở dang. Nếu người dùng gửi lại cùng một yêu cầu với cùng mã \texttt{operation\_id}, hệ thống trả về kết quả đã xử lý mà không tách lặp lần thứ hai.
+\end{enumerate}
+
+\subsection{Quyết định C02: Phân định Ranh giới Thao tác và Quản lý Phiên Người dùng}
+
+\subsubsection{C02.1: Ranh giới giữa Nhận diện dữ liệu và Lưu trữ vào kho}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Phân định Thẩm quyền Lưu trữ:} Trường hợp sử dụng chọn ảnh (\texttt{CAT-UC-03}) và quét qua máy ảnh (\texttt{CAT-UC-04}) chỉ thuần túy làm nhiệm vụ nhận diện ký tự và trích xuất thông tin. Dữ liệu quét được chỉ là bản nháp tạm thời nằm trên bộ nhớ tạm của ứng dụng; \textbf{tuyệt đối không được ghi trực tiếp vào cơ sở dữ liệu}.
+    \item \textbf{Cổng Lưu trữ Duy nhất:} Chỉ duy nhất trường hợp sử dụng Nhập, kiểm tra và lưu kho (\texttt{CAT-UC-05}) mới có thẩm quyền tạo bản ghi thực phẩm chính thức trong kho.
+    \item \textbf{Chuyển hướng Dự phòng khi Gặp lỗi:}
+    \begin{itemize}
+        \item Hệ thống kiểm tra quyền truy cập máy ảnh trước khi mở \texttt{UC-04}. Nếu người dùng từ chối cấp quyền hoặc thiết bị không có máy ảnh, hệ thống tự động chuyển sang luồng chọn ảnh có sẵn (\texttt{UC-03}).
+        \item Sau tối đa 3 lần nhận diện liên tiếp thất bại, hệ thống tự động gợi ý người dùng chuyển sang nhập liệu thủ công trên biểu mẫu (\texttt{UC-05}).
+    \end{itemize}
+    \item \textbf{Hủy bỏ Thao tác Dứt điểm:} Khi người dùng nhấn nút 'Hủy' trong giao diện quét hoặc máy ảnh, hệ thống dừng tiến trình, tắt máy ảnh và quay trở lại màn hình trước đó; không chuyển sang \texttt{UC-05} và không để lại rác dữ liệu.
+\end{enumerate}
+
+\subsubsection{C02.2: Chính sách Phiên sau Đăng ký và Vị trí Ghi nhận Ngày mở}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Tự động Đăng nhập sau khi Đăng ký:} Sau khi đăng ký tài khoản thành công (\texttt{CAT-UC-01}), hệ thống tự động thiết lập phiên làm việc và đưa người dùng vào màn hình hướng dẫn ban đầu. Người dùng có thể xem nhanh hoặc nhấn 'Bỏ qua' để vào thẳng Kho thực phẩm; không bắt buộc phải đăng nhập lại qua \texttt{UC-02}.
+    \item \textbf{Vị trí Nhập Ngày mở Thực tế:} Trường hợp thực phẩm đã được mở sẵn từ trước khi đưa vào kho, người dùng nhập ngày mở trực tiếp trên biểu mẫu thêm món \texttt{UC-05}. Trường hợp sử dụng ghi ngày mở (\texttt{CAT-UC-19}) chỉ phục vụ cho việc cập nhật ngày mở của một món đang sẵn có trong kho.
+\end{enumerate}
+
+\subsubsection{C02.3: Trải nghiệm Đăng nhập Liền mạch và Hợp lệ (UC-02)}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Khi Tài khoản Chưa tồn tại:} Khi người dùng nhập một địa chỉ thư điện tử chưa từng được đăng ký trong hệ thống, giao diện thông báo rõ: \textit{'Tài khoản chưa tồn tại'} và hiển thị nút \textbf{'Đăng ký ngay'}. Khi bấm nút này, hệ thống chuyển sang giao diện Đăng ký (\texttt{UC-01}) và \textbf{tự động điền sẵn địa chỉ thư điện tử đã gõ}, giúp người dùng không phải nhập lại từ đầu.
+    \item \textbf{Khi Xác thực Hợp lệ:}
+    \begin{itemize}
+        \item Thiết lập phiên làm việc an toàn ngay lập tức.
+        \item Mở thẳng màn hình Kho thực phẩm của chính chủ tài khoản.
+        \item Tự động khôi phục bản nháp đang nhập dở của tài khoản này (nếu có).
+        \item \textbf{Không bao giờ hiển thị lại màn hình hướng dẫn ban đầu} (màn hình này chỉ dành riêng cho người dùng mới đăng ký lần đầu).
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Quyết định C03: Vòng đời Thông báo Nhắc hạn, Hoãn nhắc và Hẹn kiểm tra}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Phân định Hai Loại Lịch Nhắc Riêng biệt:}
+    \begin{itemize}
+        \item \textbf{Chuỗi Nhắc Tự động theo Hạn dùng:} Tự động kích hoạt dựa vào hạn sử dụng của thực phẩm (mặc định vào 09:00 theo múi giờ của người dùng tại các mốc: Sắp hết hạn, Đến hạn hôm nay, Quá hạn).
+        \item \textbf{Lịch Hẹn Kiểm tra Thủ công (\texttt{CAT-UC-20}):} Lịch kiểm tra độc lập do người dùng chủ động đặt riêng cho từng món thực phẩm cụ thể.
+    \end{itemize}
+    \item \textbf{Hủy Chuỗi Nhắc Tự động khi Trạng thái Thay đổi:} Khi thực phẩm có số lượng bằng 0, hoặc bị chuyển vào Thùng rác (\texttt{UC-10}), hoặc khi người dùng chủ động tắt thông báo cho món đó, toàn bộ chuỗi nhắc tự động và các mốc hoãn liên quan sẽ bị hủy bỏ ngay lập tức.
+    \item \textbf{Duy trì Lịch Hẹn Thủ công Độc lập:} Lịch hẹn kiểm tra do người dùng tự đặt (\texttt{UC-20}) không bị hủy theo chuỗi nhắc tự động, mà được duy trì độc lập và có chức năng Chỉnh sửa hoặc Xóa riêng trong phần chi tiết món.
+    \item \textbf{Cơ chế Hoãn Nhắc (\texttt{CAT-UC-22}):} Người dùng chọn hoãn thông báo sẽ thiết lập một mốc thời gian cụ thể (1 giờ, 09:00 sáng mai, hoặc tự chọn). Mốc hoãn này sẽ ghi đè lịch tự động của ngày đó và hiển thị rõ thời gian sẽ nhắc lại. Hệ thống tuyệt đối không phát thông báo trước thời điểm đã hoãn.
+    \item \textbf{Xử lý Múi giờ Hoạt động:} Lịch quét thông báo hàng ngày (09:00) chạy theo múi giờ hiển thị được cài đặt trong tài khoản (\texttt{UC-23}). Lịch hẹn kiểm tra giờ cụ thể được lưu trữ theo giờ chuẩn quốc tế và hiển thị quy đổi theo giờ địa phương của người dùng.
+\end{enumerate}
+
+\subsection{Quyết định C04: Tiêu chuẩn Nghiệm thu Công sức Duy trì Thói quen}
+Để bảo đảm mục tiêu người dùng gắn bó lâu dài (\textbf{BG-DUYTRI}) và không bỏ cuộc giữa chừng vì ứng dụng quá tốn công sức thao tác, hệ thống quy định các cổng tiêu chuẩn nghiệm thu định lượng như sau:
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|r|r|}
+\hline
+\textbf{Mã tiêu chuẩn} & \textbf{Nội dung thao tác kiểm nghiệm} & \textbf{Thời gian tối đa} & \textbf{Tỷ lệ đạt chuẩn} \\
+\hline
+\textbf{CỔNG-01} & Thao tác ghi nhận Đã dùng (UC-24) hoặc Đã bỏ (UC-25) & $\le 3.0$ giây & $\ge 95\%$ \\
+\textbf{CỔNG-02} & Thao tác Thêm món thủ công hoàn chỉnh (UC-05) & $\le 15.0$ giây & $\ge 90\%$ \\
+\textbf{CỔNG-03} & Thao tác Thêm món qua quét máy ảnh/nhận diện (UC-04 $\to$ UC-05) & $\le 30.0$ giây & $\ge 85\%$ \\
+\textbf{CỔNG-04} & Thời gian xử lý nhận diện ảnh và mã vạch của dịch vụ quét & $\le 4.0$ giây & $\ge 98\%$ \\
+\textbf{CỔNG-05} & Thời gian hiển thị cảnh báo đối chiếu danh sách mua (UC-31) & $\le 1.0$ giây & $\ge 99\%$ \\
+\textbf{CỔNG-06} & Tỷ lệ người dùng hoàn thành tác vụ lần đầu không gặp trở ngại & --- & $\ge 85\%$ \\
+\textbf{CỔNG-07} & Tỷ lệ người dùng tiếp tục duy trì cập nhật sau 14 ngày & --- & $\ge 60\%$ \\
+\hline
+\end{tabularx}
+\caption{Bảng Tiêu chuẩn Nghiệm thu Công sức Duy trì và Khả năng Sử dụng}
+\end{table}
+
+\subsection{Quyết định C05: Tính Toàn vẹn Dữ liệu Kiểm kê và Xóa vĩnh viễn}
+
+\subsubsection{C05.1: Mốc neo Kiểm kê và Quy tắc Tái tính toán Số lượng (BR-C11)}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Xác lập Mốc neo Kiểm kê:} Thao tác kiểm kê thực tế (\texttt{CAT-UC-26}) ghi nhận một số lượng vật lý có thực tại một thời điểm xác định. Giá trị này được hệ thống coi là một \textbf{Mốc neo}.
+    \item \textbf{Quy tắc Tính toán Lại khi Sửa Lịch sử (\texttt{CAT-UC-28}):} Khi người dùng phát hiện sai sót và chỉnh sửa lại một sự kiện biến động trong quá khứ:
+    \begin{itemize}
+        \item Nếu sự kiện được sửa xảy ra \textbf{trước} một mốc kiểm kê hợp lệ, việc tính toán lại số lượng \textbf{chỉ diễn ra trong phạm vi từ sự kiện đó đến mốc kiểm kê kế tiếp}.
+        \item \textbf{Số lượng tồn kho hiện tại tuyệt đối không thay đổi}, bởi vì mốc kiểm kê đứng sau đã xác nhận số lượng thực tế có mặt trong tủ lạnh tại thời điểm sau đó.
+        \item \textit{Ví dụ minh họa:} Ban đầu có 10 $\to$ dùng 2 $\to$ kiểm kê đếm được 5 $\to$ dùng 1 $\to$ kiểm kê đếm được 7. Người dùng sửa sự kiện 'dùng 2' thành 'dùng 1'. Số lượng tồn kho hiện tại vẫn giữ nguyên là 7; chỉ có số liệu tổng hợp trong giai đoạn trước mốc 5 được tính toán lại.
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{C05.2: Xóa vĩnh viễn và Mã đánh dấu Triệt tiêu chống Phục hồi Sao lưu}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Xóa Bỏ Toàn bộ Định danh Món:} Khi thực hiện xóa vĩnh viễn một món trong thùng rác (\texttt{CAT-UC-13}), toàn bộ tên thực phẩm, hình ảnh, mã vạch và thông tin cá nhân liên quan sẽ bị xóa sạch khỏi hệ thống.
+    \item \textbf{Lưu vết Vô danh Phục vụ Thống kê:} Hệ thống chỉ giữ lại bản ghi tối thiểu không chứa thông tin định danh (loại biến động, số lượng, đơn vị tính, thời điểm) để bảo đảm độ chính xác của biểu đồ thống kê (\texttt{UC-27}). Bản ghi này mang nhãn \textit{'Bản ghi đã xóa'} và ở trạng thái chỉ đọc.
+    \item \textbf{Mã Đánh dấu Triệt tiêu (Tombstone):} Mỗi bản ghi bị xóa vĩnh viễn được cấp một mã đánh dấu lưu trong sổ theo dõi triệt tiêu (\texttt{purge\_manifest}). Khi hệ thống phải khôi phục dữ liệu từ bản sao lưu định kỳ, quy trình phục hồi bắt buộc đối chiếu sổ này để \textbf{ngăn chặn triệt để hiện tượng dữ liệu đã bị xóa vĩnh viễn xuất hiện trở lại}.
+\end{enumerate}
+
+\subsection{Quyết định về Sửa Thông tin Thực phẩm (UC-09: Khóa ô số lượng)}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Khóa Ô Nhập Số lượng Trực tiếp:} Biểu mẫu chỉnh sửa thông tin thực phẩm (\texttt{CAT-UC-09}) chỉ cho phép sửa: Tên món, Nơi lưu trữ, Danh mục, Ngày sản xuất, Ngày mở, Hạn sử dụng. Ô số lượng bị khóa cứng ở trạng thái chỉ đọc.
+    \item \textbf{Phân luồng Nghiệp vụ Biến động Lượng:} Để điều chỉnh số lượng, biểu mẫu cung cấp các nút thao tác nhanh dẫn sang đúng nghiệp vụ tương ứng:
+    \begin{itemize}
+        \item Nút \textbf{'Đã dùng'} $\to$ Mở hộp thoại \texttt{CAT-UC-24};
+        \item Nút \textbf{'Đã bỏ'} $\to$ Mở hộp thoại \texttt{CAT-UC-25};
+        \item Nút \textbf{'Kiểm kê lại'} $\to$ Mở hộp thoại \texttt{CAT-UC-26};
+        \item Nút \textbf{'Sửa nhầm số liệu'} $\to$ Mở danh sách lịch sử \texttt{CAT-UC-28}.
+    \end{itemize}
+    Quy định này bảo đảm mọi biến động số lượng đều có loại sự kiện rõ ràng, phục vụ chính xác cho báo cáo thống kê.
+\end{enumerate}
+
+\subsection{Quyết định về Phân luồng Xóa Thực phẩm (UC-10 Chuyển thùng rác vs UC-25 Đã bỏ)}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Hộp thoại Hướng dẫn khi Xóa Món còn Số lượng:} Khi người dùng nhấn nút 'Xóa' một món mà số lượng trong kho vẫn lớn hơn 0, hệ thống không xóa ngay mà bắt buộc hiển thị hộp thoại hướng dẫn gồm 2 tùy chọn rõ ràng:
+    \begin{itemize}
+        \item \textbf{Tùy chọn 1 --- 'Thức ăn bị hỏng / vứt bỏ ngoài đời':} Hệ thống chuyển sang \texttt{CAT-UC-25} (Ghi nhận Đã bỏ). Thao tác này trừ tồn kho và ghi nhận vào số lượng lãng phí thực phẩm trong báo cáo thống kê.
+        \item \textbf{Tùy chọn 2 --- 'Nhập nhầm / Không muốn theo dõi nữa':} Hệ thống thực hiện \texttt{CAT-UC-10} (Chuyển vào thùng rác). Món được xóa mềm, lưu trữ 30 ngày để khôi phục khi cần và \textbf{tuyệt đối không bị tính vào tỷ lệ lãng phí thức ăn}.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Quyết định về Khôi phục Vị trí Mồ côi và Tác vụ Dọn rác Ngầm (UC-12, UC-13)}
+\begin{enumerate}[itemsep=1pt]
+    \item \textbf{Chuyển hướng An toàn khi Khôi phục Vị trí Mồ côi (\texttt{CAT-UC-12}):} Nếu trong thời gian món nằm trong thùng rác, nơi lưu trữ cũ hoặc danh mục cũ đã bị người dùng xóa, khi nhấn 'Khôi phục', hệ thống tự động đưa món về trạng thái \textit{'Chưa chọn nơi'} (và danh mục thành \textit{'Chưa phân loại'}) kèm thông báo nhẹ; không chặn đứng hoặc gây lỗi thao tác.
+    \item \textbf{Tác vụ Quét và Dọn dẹp Ngầm Tự động (\texttt{CAT-UC-13}):} Hệ thống duy trì một tiến trình chạy ngầm định kỳ hàng ngày (lúc 02:00 sáng). Tiến trình này tự động quét và Xóa vĩnh viễn toàn bộ các bản ghi đã nằm trong thùng rác quá 30 ngày, đồng thời sinh mã đánh dấu triệt tiêu tương ứng mà không cần người dùng phải thao tác thủ công.
+\end{enumerate}
+
+\subsection{Quyết định về Công thức Thống kê Lãng phí (UC-27) và Thêm lại từ Lịch sử (UC-29)}
+\begin{enumerate}[itemsep=1pt]
+    \item \textbf{Công thức Tính Tỷ lệ Lãng phí Thực phẩm (\texttt{CAT-UC-27}):} Tỷ lệ lãng phí thực phẩm được tính toán theo công thức chuẩn:
+    \[
+    \text{Tỷ lệ lãng phí (\%)} = \frac{\sum Q_{\text{đã bỏ}}}{\sum Q_{\text{đã dùng}} + \sum Q_{\text{đã bỏ}}} \times 100\%
+    \]
+    Chỉ số này được tính toán và hiển thị phân tách độc lập theo từng nhóm đơn vị đo lường (nhóm đếm cái/hộp, nhóm khối lượng kg/g, nhóm thể tích l/ml); tuyệt đối không cộng gộp số lượng giữa các đơn vị đo khác loại.
+    \item \textbf{Quy tắc Bắt buộc Xóa trắng Hạn dùng khi Thêm lại từ Lịch sử (\texttt{CAT-UC-29}):} Khi người dùng chọn 'Thêm lại' từ một bản ghi cũ trong lịch sử, hệ thống sao chép tên món, vị trí lưu trữ và danh mục sang biểu mẫu \texttt{UC-05}; nhưng \textbf{BẮT BUỘC XÓA TRẮNG ô Hạn sử dụng và Ngày mở}. Người dùng bắt buộc phải điền hạn sử dụng mới của lần mua này, ngăn chặn việc dùng lại hạn cũ đã quá hạn từ trước.
+\end{enumerate}
+
+\newpage
+\subsection{Quyết định F06: Quy chế Mua sắm, Đối chiếu Kho và Tái bổ sung Hàng loạt (CAT-UC-30 đến CAT-UC-33)}
+Nhằm khắc phục tình trạng danh mục mua sắm sơ sài và giải quyết triệt để rào cản thao tác khi mua nhiều thực phẩm, nhóm tính năng F06 được chuẩn hóa thành chu trình 4 bước khép kín:
+\begin{enumerate}[itemsep=1pt]
+    \item \textbf{Quản lý Danh sách Mua sắm Độc lập (\texttt{CAT-UC-30}):} Người dùng thêm thủ công món cần mua, điều chỉnh số lượng dự kiến, gắn ghi chú, xóa mục mua hoặc đánh dấu trạng thái 'Đã mua' / 'Chưa mua'. Danh sách mua sắm tồn tại độc lập hoàn toàn với kho thực phẩm; việc đánh dấu 'Đã mua' chỉ cập nhật cờ trạng thái tại danh sách mua, tuyệt đối \textbf{KHÔNG tự động cộng dồn ngầm vào kho lưu trữ}.
+    \item \textbf{Đối chiếu Kho Ngăn Mua Trùng Tức thì (\texttt{CAT-UC-31}):} Khi người dùng mở, tìm kiếm hoặc thêm món vào danh sách mua sắm, hệ thống tự động chuẩn hóa tên và so khớp ngầm với toàn bộ thực phẩm đang hoạt động trong kho (có lượng tồn $>0$). Nếu phát hiện trùng tên hoặc cùng nhóm mặt hàng, hệ thống hiển thị cảnh báo nổi bật tức thì ($\le 1.0$ giây): \textit{'Trong kho hiện đang có [Số lượng] [Đơn vị] - HSD: [Ngày] tại [Vị trí]'}. Cơ chế này giúp người dùng loại bỏ các món đã có sẵn trước khi đi chợ, triệt tiêu nguy cơ mua dư thừa gây lãng phí.
+    \item \textbf{Gợi ý Mua sắm Thông minh từ Kho (\texttt{CAT-UC-32}):} Hệ thống chủ động phân tích các món thực phẩm đã tiêu thụ hết (lượng tồn $=0$ trong vòng 30 ngày gần nhất) hoặc các món gia vị/thực phẩm thiết yếu thường xuyên xuất hiện trong lịch sử tiêu dùng. Giao diện hiển thị danh sách đề xuất trực quan: người dùng có thể chọn từng món hoặc bấm 'Thêm toàn bộ vào danh sách mua' chỉ với 1 chạm, biến nhu cầu bù đắp tồn kho thực tế thành danh sách mua sắm mà không cần gõ lại thủ công.
+    \item \textbf{Nhập kho Hàng loạt sau Mua sắm (\texttt{CAT-UC-33}):} Giải quyết triệt để rào cản thao tác khi người dùng mua về nhiều món (10--20 mặt hàng) và ngại nhập kho từng món qua biểu mẫu đơn chiếc. Hệ thống cung cấp cơ chế Bảng xem xét hàng loạt (Batch Review):
+    \begin{itemize}[itemsep=1pt]
+        \item Gom toàn bộ các mục được đánh dấu 'Đã mua' vào một bảng danh sách tập trung.
+        \item Tên món và số lượng đã mua được điền sẵn; vị trí lưu trữ được tự động đề xuất dựa trên lịch sử mua lần trước (hoặc gán vị trí mặc định do người dùng cấu hình).
+        \item Các ô Hạn sử dụng được để trống bắt buộc người dùng chọn nhanh; hỗ trợ công cụ áp dụng ngày chung cho nhiều món cùng lúc (Batch Date Picker).
+        \item Người dùng chỉ cần lướt qua kiểm tra và bấm duy nhất một nút \textbf{'Xác nhận nhập kho toàn bộ'}. Giao dịch thực hiện lưu đồng loạt các bản ghi thực phẩm hợp lệ vào kho và tự động dọn sạch/lưu trữ các mục đã mua trong danh sách sắm.
+    \end{itemize}
+\end{enumerate}
+
+\newpage
+\section{MA TRẬN ĐẶC TẢ 33 TRƯỜNG HỢP SỬ DỤNG CHUẨN HÓA (CAT-UC-01 ĐẾN CAT-UC-33)}
+
+Toàn bộ 33 trường hợp sử dụng được chuẩn hóa dưới đây tuân thủ đúng phạm vi 6 nhóm tính năng và tích hợp đầy đủ các quyết định giải quyết điểm nghẽn logic C01 đến C05:
+
+\begingroup
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{longtable}{|p{2.1cm}|p{2.3cm}|p{3.5cm}|p{3.8cm}|p{3.0cm}|}
+\hline
+\textbf{Mã và Tên UC} & \textbf{Điều kiện tiên quyết} & \textbf{Luồng thực hiện chính} & \textbf{Nhánh rẽ và Xử lý ngoại lệ} & \textbf{Kết quả và Quy tắc áp dụng} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Mã và Tên UC} & \textbf{Điều kiện tiên quyết} & \textbf{Luồng thực hiện chính} & \textbf{Nhánh rẽ và Xử lý ngoại lệ} & \textbf{Kết quả và Quy tắc áp dụng} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+
+\multicolumn{5}{|l|}{\textbf{\color{primary}NHÓM NỀN TẢNG VÀ F01: THÊM THỰC PHẨM VÀO KHO}} \\
+\hline
+\textbf{CAT-UC-01}\newline Đăng ký tài khoản & Chưa có phiên đăng nhập; mở giao diện đăng ký. & Nhập email và mật khẩu hợp lệ $\to$ Tạo tài khoản mới $\to$ Tự động cấp phiên đăng nhập và mở màn hình hướng dẫn ban đầu. & Trùng email hoặc mật khẩu không đạt yêu cầu $\to$ Báo lỗi tại chỗ, giữ lại dữ liệu form. Hủy $\to$ Về màn đăng nhập. & Tạo tài khoản thành công; phiên hoạt động ngay lập tức.\newline BR-C01, C02.2 \\
+\hline
+\textbf{CAT-UC-02}\newline Đăng nhập hệ thống & Đã có tài khoản; chưa có phiên đăng nhập. & Nhập thông tin xác thực $\to$ Kiểm tra khớp dữ liệu $\to$ Mở màn hình Kho thực phẩm; khôi phục đúng bản nháp của người dùng. & Email chưa có $\to$ Báo 'Tài khoản chưa tồn tại' kèm nút 'Đăng ký ngay' (chuyển UC-01 giữ email). Sai mật khẩu $\to$ Báo lỗi. & Phiên xác thực hợp lệ; tải đúng kho cá nhân; không hiện lại hướng dẫn.\newline BR-C01, C02.3 \\
+\hline
+\textbf{CAT-UC-03}\newline Đọc ảnh có sẵn & Đang trong luồng Thêm món; chọn tệp ảnh từ máy. & Chọn tệp ảnh hợp lệ $\to$ Dịch vụ nhận diện trích xuất tên, HSD, mã vạch $\to$ Bàn giao bản nháp sang UC-05; không lưu kho. & Tệp hỏng hoặc sai định dạng $\to$ Báo lỗi; cho chọn lại tệp hoặc chuyển sang nhập tay (UC-05). Hủy $\to$ Dừng luồng. & Có dữ liệu nháp gợi ý; tuyệt đối không tạo bản ghi trong kho.\newline BR-C02, C02.1 \\
+\hline
+\textbf{CAT-UC-04}\newline Đọc qua máy ảnh & Thiết bị có máy ảnh và đã được cấp quyền truy cập. & Hướng máy ảnh vào bao bì $\to$ Nhận diện mã vạch và ngày $\to$ Bàn giao bản nháp sang UC-05; không lưu kho. & Từ chối cấp quyền $\to$ Tự chuyển sang chọn ảnh (UC-03). Nhận diện lỗi 3 lần $\to$ Chuyển nhập tay (UC-05). Hủy $\to$ Thoát. & Có dữ liệu nháp gợi ý; không ghi dữ liệu; giải phóng máy ảnh.\newline BR-C02, C02.1 \\
+\hline
+\textbf{CAT-UC-05}\newline Nhập, kiểm tra và lưu kho & Có dữ liệu nháp (từ UC-03/04/29/30) hoặc form nhập tay. & Kiểm tra tên, số lượng, đơn vị, vị trí, hạn dùng $\to$ Nhấn Lưu $\to$ Tạo đúng 1 bản ghi trong kho $\to$ Thông báo thành công. & Thiếu tên hoặc lượng $\le 0$ $\to$ Báo lỗi trường nhập. Hạn đã quá $\to$ Cảnh báo xác nhận. Lỗi mạng $\to$ Giữ nguyên dữ liệu form. & Lưu thành công đúng 1 bản ghi thực phẩm mới vào kho cá nhân.\newline BR-C03, BR-C04, BR-C09 \\
+\hline
+
+\multicolumn{5}{|l|}{\textbf{\color{primary}NHÓM F02: QUẢN LÝ KHO THỰC PHẨM VÀ THÙNG RÁC}} \\
+\hline
+\textbf{CAT-UC-06}\newline Xem danh sách kho & Có phiên đăng nhập hợp lệ. & Tải danh sách thực phẩm đang hoạt động $\to$ Phân nhóm, lọc theo vị trí/danh mục, sắp xếp theo hạn dùng tăng dần. & Kho trống $\to$ Hiển thị trạng thái dữ liệu trống kèm nút Thêm món. Lỗi tải $\to$ Hiển thị nút Thử lại. & Người dùng nắm rõ toàn bộ thực phẩm hiện có trong gia đình.\newline BR-C05, BR-C21 \\
+\hline
+\textbf{CAT-UC-07}\newline Tìm kiếm thực phẩm & Đang ở màn hình kho thực phẩm. & Nhập từ khóa tìm kiếm hoặc quét mã vạch $\to$ Lọc nhanh danh sách món khớp tên, vị trí hoặc mã vạch. & Không tìm thấy $\to$ Hiển thị thông báo không có kết quả kèm gợi ý thêm mới món này. & Kết quả tìm kiếm hiển thị tức thì dưới 1 giây.\newline BR-C18, BR-C21 \\
+\hline
+\textbf{CAT-UC-08}\newline Xem chi tiết món & Chọn một món cụ thể từ danh sách. & Hiển thị đầy đủ thông tin: tên, ảnh, số lượng, đơn vị, nơi bảo quản, danh mục, 3 ngày (NSX, mở, HSD), trạng thái nhắc. & Bản ghi đã bị xóa ở phiên khác $\to$ Cảnh báo không tìm thấy món và tải lại danh sách kho. & Cung cấp cái nhìn toàn diện để người dùng đưa ra quyết định.\newline BR-C03, BR-C08 \\
+\hline
+\textbf{CAT-UC-09}\newline Sửa thông tin món & Chọn 'Chỉnh sửa' tại bản ghi thực phẩm hoạt động. & Sửa tên, nơi cất, danh mục, ngày $\to$ Nhấn Lưu $\to$ Cập nhật thông tin; ô lượng bị khóa, có nút tắt sang UC-24..26. & Hủy $\to$ Giữ nguyên thông tin cũ. Đổi HSD $\to$ Tự động tính toán lại lịch nhắc nhở. & Thông tin món được cập nhật chuẩn; số lượng được bảo toàn.\newline BR-C08, BR-C20, Mục 2.6 \\
+\hline
+\textbf{CAT-UC-10}\newline Chuyển vào thùng rác & Chọn thực phẩm hoạt động; bấm xóa món. & Món còn lượng $\to$ Hộp thoại hỏi rõ: Hỏng ngoài đời (sang UC-25) hay Nhập nhầm/bỏ theo dõi (vào thùng rác lưu 30 ngày). & Hủy xác nhận $\to$ Giữ nguyên trạng thái món. Món đã hết lượng (=0) $\to$ Chuyển thẳng vào thùng rác. & Món vào thùng rác an toàn; không làm sai lệch số liệu lãng phí.\newline BR-C08, BR-C15, Mục 2.7 \\
+\hline
+\textbf{CAT-UC-11}\newline Xem thùng rác & Có phiên đăng nhập hợp lệ. & Mở giao diện Thùng rác $\to$ Hiển thị danh sách các món đã xóa mềm kèm số ngày còn lại trước khi xóa vĩnh viễn (0..30 ngày). & Thùng rác trống $\to$ Hiển thị trạng thái dữ liệu trống 'Thùng rác rỗng'. & Người dùng kiểm tra được các món đang chờ xử lý xóa.\newline BR-C15, BR-C21 \\
+\hline
+\textbf{CAT-UC-12}\newline Khôi phục thực phẩm & Bản ghi trong thùng rác còn trong thời hạn 30 ngày. & Chọn 'Khôi phục' $\to$ Đưa món về kho với mã ID cũ; nếu nơi cất cũ bị xóa thì tự chuyển về 'Chưa chọn nơi' kèm thông báo. & Quá hạn 30 ngày $\to$ Báo món đã bị dọn sạch. Món quá hạn $\to$ Khôi phục bình thường nhưng xếp vào nhóm Quá hạn. & Món tái xuất hiện trong kho hoạt động với đầy đủ dữ liệu.\newline BR-C08, BR-C15, Mục 2.8 \\
+\hline
+\textbf{CAT-UC-13}\newline Xóa vĩnh viễn & Bản ghi trong thùng rác; hoặc tiến trình ngầm chạy sau 30 ngày. & Xóa sạch tên, ảnh, mã vạch khỏi hệ thống; ghi mã đánh dấu vào sổ triệt tiêu; giữ vết lượng ẩn danh cho thống kê. & Hủy $\to$ Giữ nguyên món trong thùng rác. Lỗi hệ thống $\to$ Hoàn nguyên, thông báo thử lại sau. & Danh tính món bị xóa vĩnh viễn; không tái xuất khi phục hồi sao lưu.\newline BR-C15, C05.2, Mục 2.8 \\
+\hline
+
+\multicolumn{5}{|l|}{\textbf{\color{primary}NHÓM F03: TỔ CHỨC NƠI LƯU TRỮ VÀ DANH MỤC PHÂN LOẠI}} \\
+\hline
+\textbf{CAT-UC-14}\newline Tạo nơi lưu trữ & Mở giao diện quản lý vị trí bảo quản. & Nhập tên nơi cất mới (không rỗng, không trùng) $\to$ Hệ thống tạo vị trí mới thuộc tài khoản. & Tên rỗng hoặc trùng lặp $\to$ Báo lỗi tại chỗ. Hủy $\to$ Không tạo vị trí mới. & Vị trí mới sẵn sàng để gán cho các thực phẩm trong nhà.\newline BR-C13, BR-C21 \\
+\hline
+\textbf{CAT-UC-15}\newline Đổi tên nơi lưu trữ & Vị trí thuộc quyền sở hữu của tài khoản. & Nhập tên mới hợp lệ $\to$ Hệ thống cập nhật tên nơi cất; giữ nguyên toàn bộ liên kết của các món trong vị trí này. & Tên mới trùng với nơi cất khác $\to$ Báo lỗi trùng lặp tên. & Tên vị trí được cập nhật đồng bộ cho toàn bộ món liên quan.\newline BR-C13 \\
+\hline
+\textbf{CAT-UC-16}\newline Xóa nơi lưu trữ & Chọn xóa một vị trí lưu trữ đang có. & Hiển thị số món bị ảnh hưởng $\to$ Người dùng xác nhận $\to$ Xóa vị trí, chuyển toàn bộ món liên quan về 'Chưa chọn nơi'. & Người dùng hủy $\to$ Giữ nguyên vị trí và liên kết cũ. & Vị trí bị xóa an toàn; không có bất kỳ thực phẩm nào bị mất.\newline BR-C13 \\
+\hline
+\textbf{CAT-UC-17}\newline Tạo danh mục phân loại & Mở tính năng tạo danh mục từ cài đặt hoặc biểu mẫu thêm món. & Nhập tên danh mục mới $\to$ Chuẩn hóa chuỗi ký tự và lưu danh mục thuộc tài khoản. & Tên trùng sau khi chuẩn hóa khoảng trắng/chữ hoa $\to$ Báo lỗi trùng lặp. & Danh mục mới sẵn sàng để phân loại thực phẩm theo thói quen.\newline BR-C14 \\
+\hline
+
+\multicolumn{5}{|l|}{\textbf{\color{primary}NHÓM F04: THEO DÕI HẠN DÙNG VÀ NHẮC NHỞ}} \\
+\hline
+\textbf{CAT-UC-18}\newline Xem món cần chú ý & Có phiên đăng nhập hợp lệ. & Lọc các món còn số lượng $>0$, sắp xếp theo thứ tự: Quá ngày ghi $\to$ Đến hạn hôm nay $\to$ Sắp đến hạn (1..N ngày). & Không có món nào đến hạn $\to$ Hiển thị thông báo an toàn 'Không có món cần chú ý'. & Người dùng nhận diện tức thì các món có nguy cơ lãng phí.\newline BR-C05, BR-C06 \\
+\hline
+\textbf{CAT-UC-19}\newline Ghi nhận ngày mở & Bản ghi thực phẩm đang hoạt động trong kho. & Chọn món $\to$ Nhập ngày mở thực tế (không ở tương lai) $\to$ Lưu ngày mở độc lập; không tự rút ngắn hạn sử dụng gốc. & Ngày mở $>$ hôm nay hoặc $<$ ngày sản xuất $\to$ Báo lỗi ngày phi lý. Nếu là nhóm nhiều gói $\to$ Kích hoạt tách nhóm (C01). & Bản ghi có ngày mở chính xác; hỗ trợ theo dõi thực phẩm đã mở.\newline BR-C03, C01, C02.2 \\
+\hline
+\textbf{CAT-UC-20}\newline Hẹn kiểm tra thủ công & Bản ghi hoạt động, còn số lượng $>0$. & Thiết lập ngày giờ kiểm tra cụ thể kèm ghi chú $\to$ Lưu lịch hẹn riêng biệt; không can thiệp vào hạn dùng hay mốc hoãn. & Hủy $\to$ Không tạo lịch. Sửa/xóa lịch hẹn cũ $\to$ Cập nhật trực tiếp trên màn hình chi tiết món. & Lịch hẹn kiểm tra độc lập được thiết lập thành công.\newline BR-C07, C03 \\
+\hline
+\textbf{CAT-UC-21}\newline Xem và đọc thông báo & Mở danh sách thông báo hoặc nhận tin nhắn đẩy. & Hiển thị danh sách thông báo nhắc hạn $\to$ Bấm vào thông báo sẽ đánh dấu Đã đọc và mở chi tiết món tương ứng. & Thông báo của món đã bị xóa $\to$ Cảnh báo món không còn tồn tại và dọn thông báo lỗi thời. & Người dùng tiếp cận trực tiếp món thực phẩm cần xử lý ngay.\newline BR-C07, BR-C08 \\
+\hline
+\textbf{CAT-UC-22}\newline Hoãn thông báo nhắc & Có thông báo nhắc hạn của món thực phẩm hợp lệ. & Chọn mốc hoãn (1 giờ, 09:00 sáng mai, tùy chọn) $\to$ Thiết lập mốc hoãn mới ghi đè lịch tự động của chuỗi ngày đó. & Mốc hoãn $\le$ thời điểm hiện tại $\to$ Báo lỗi thời gian không hợp lệ. Hủy $\to$ Giữ nguyên lịch nhắc. & Chuỗi nhắc tạm dừng cho đến khi chạm mốc hoãn mới.\newline BR-C07, C03 \\
+\hline
+\textbf{CAT-UC-23}\newline Cài đặt nhắc nhở & Người dùng vào phần cài đặt thông báo của tài khoản. & Cấu hình số ngày báo trước $N$ (0..30), giờ nhận tin (mặc định 09:00), bật/tắt lặp hàng ngày, chọn kênh nhận tin. & Giá trị $N$ nằm ngoài khoảng $0..30$ $\to$ Báo lỗi giới hạn. Đổi múi giờ $\to$ Tự động tính lại giờ phát nhắc định kỳ. & Cấu hình nhắc nhở của tài khoản được cập nhật chuẩn xác.\newline BR-C06, BR-C08, C03 \\
+\hline
+
+\multicolumn{5}{|l|}{\textbf{\color{primary}NHÓM F05: QUẢN LÝ SỐ LƯỢNG VÀ THỐNG KÊ TIÊU DÙNG}} \\
+\hline
+\textbf{CAT-UC-24}\newline Ghi nhận đã dùng & Món đang hoạt động; lượng tồn kho $>0$. & Nhập lượng đã dùng $\le$ tồn kho $\to$ Trừ lượng tồn và ghi nhận đồng thời sự kiện 'Đã dùng'. & Lượng nhập $>$ tồn kho hoặc $\le 0$ $\to$ Báo lỗi số lượng. Lượng về 0 $\to$ Giữ bản ghi, hủy nhắc tự động. & Tồn kho giảm chính xác; sự kiện dùng được lưu vào lịch sử.\newline BR-C08, BR-C09, BR-C10 \\
+\hline
+\textbf{CAT-UC-25}\newline Ghi nhận đã bỏ & Món đang hoạt động; lượng tồn kho $>0$. & Nhập lượng bị hỏng/vứt bỏ $\to$ Trừ lượng tồn và ghi nhận đồng thời sự kiện 'Đã bỏ' (không vào thùng rác). & Lượng nhập $>$ tồn kho hoặc $\le 0$ $\to$ Báo lỗi số lượng. Lỗi mạng $\to$ Hoàn nguyên, không trừ lượng. & Tồn kho giảm; sự kiện lãng phí được ghi nhận cho báo cáo.\newline BR-C09, BR-C10, Mục 2.7 \\
+\hline
+\textbf{CAT-UC-26}\newline Kiểm kê thực tế & Món đang hoạt động thuộc tài khoản. & Nhập số lượng thực tế đếm được $\to$ Gán trực tiếp tồn kho mới và tạo sự kiện 'Điều chỉnh kiểm kê' làm mốc neo. & Lượng kiểm kê âm $\to$ Báo lỗi. Kiểm kê bằng 0 $\to$ Chấp nhận, cập nhật tồn về 0 và hủy nhắc tự động. & Thiết lập mốc neo kiểm kê mới; chốt số lượng thực tế.\newline BR-C10, BR-C11, C05.1 \\
+\hline
+\textbf{CAT-UC-27}\newline Xem thống kê tiêu dùng & Có phiên đăng nhập hợp lệ. & Hiển thị tỷ lệ lãng phí theo công thức [Bỏ / (Dùng + Bỏ)] phân tách độc lập theo từng nhóm đơn vị; hỗ trợ truy vết. & Dữ liệu rỗng $\to$ Hiển thị biểu đồ trống kèm lời hướng dẫn bắt đầu ghi nhận thực phẩm. & Cung cấp bức tranh toàn diện về thói quen tiêu dùng gia đình.\newline BR-C15, BR-C22, Mục 2.9 \\
+\hline
+\textbf{CAT-UC-28}\newline Lịch sử và sửa sai & Món đang hoạt động; phát hiện ghi sai số lượng cũ. & Chọn sự kiện cũ $\to$ Sửa loại hoặc lượng $\to$ Tính lại đến mốc kiểm kê kế tiếp; giữ bản ghi gốc và bản sửa. & Món trong thùng rác $\to$ Bắt buộc khôi phục trước. Bản ghi đã xóa vĩnh viễn $\to$ Chỉ cho phép đọc, không sửa. & Lịch sử minh bạch; số lượng được hiệu chỉnh an toàn.\newline BR-C11, C05.1 \\
+\hline
+\textbf{CAT-UC-29}\newline Thêm lại từ lịch sử & Bản ghi cũ trong lịch sử còn được phép đọc. & Chọn 'Thêm lại' $\to$ Sao chép tên, nơi cất, danh mục sang UC-05; BẮT BUỘC xóa trắng hạn dùng và ngày mở để nhập mới. & Bản ghi đã bị xóa vĩnh viễn $\to$ Từ chối thao tác. Hủy trên form UC-05 $\to$ Không tạo bản ghi mới. & Tạo nháp nhanh cho lần mua mới, ngăn ngừa dùng lại hạn cũ.\newline BR-C16, Mục 2.9 \\
+\hline
+
+\multicolumn{5}{|l|}{\textbf{\color{primary}NHÓM F06: MUA SẮM VÀ ĐỐI CHIẾU KHO}} \\
+\hline
+\textbf{CAT-UC-30}\newline Quản lý danh sách mua & Có phiên đăng nhập hợp lệ. & Thêm món cần mua, sửa số lượng dự kiến, xóa món hoặc đánh dấu trạng thái 'Đã mua'; danh sách độc lập với kho. & Trùng tên món mua $\to$ Cho phép thêm mới hoặc gộp số lượng tùy chọn. Hủy $\to$ Không lưu thay đổi. & Danh sách mua sắm được cập nhật đầy đủ, rõ ràng.\newline BR-C17 \\
+\hline
+\textbf{CAT-UC-31}\newline Đối chiếu kho khi mua & Có danh sách mua và dữ liệu kho cùng tài khoản. & Đọc danh sách kho hiện tại $\to$ So khớp tên chuẩn hóa $\to$ Hiển thị cảnh báo hàng đã có trong kho kèm lượng và HSD. & Kho trống hoặc lỗi đọc dữ liệu $\to$ Báo trạng thái 'Không kiểm tra được', không tự suy đoán ngoài đời. & Ngăn ngừa mua trùng thực phẩm, tiết kiệm chi tiêu gia đình.\newline BR-C18, BR-C19, Mục 2.10 \\
+\hline
+\textbf{CAT-UC-32}\newline Gợi ý mua từ kho & Có dữ liệu lịch sử tiêu dùng hoặc món hết hàng. & Quét các món có tồn kho $=0$ trong 30 ngày gần nhất $\to$ Đề xuất danh sách cần bổ sung $\to$ Chọn món đẩy vào UC-30 bằng 1 chạm. & Không có món nào hết hạn/hết hàng trong 30 ngày $\to$ Hiển thị trạng thái trống và hướng dẫn quản lý kho. & Tự động hóa việc lập danh sách mua sắm dựa trên nhu cầu thực tế.\newline BR-C17, Mục 2.10 \\
+\hline
+\textbf{CAT-UC-33}\newline Nhập kho hàng loạt & Có các món được đánh dấu 'Đã mua' trong danh sách. & Gom món 'Đã mua' vào bảng xem xét hàng loạt $\to$ Điền nhanh vị trí và HSD $\to$ Bấm 'Xác nhận nhập kho toàn bộ' lưu đồng loạt vào DB. & Món thiếu HSD $\to$ Cảnh báo bắt buộc chọn HSD trước khi lưu. Hủy $\to$ Giữ nguyên trạng thái danh sách mua sắm. & Giảm thiểu tối đa thao tác nhập kho sau mua sắm, bảo toàn dữ liệu.\newline BR-C02, BR-C17, Mục 2.10 \\
+\hline
+\end{longtable}
+\endgroup
+
+\newpage
+\section{HỆ THỐNG 22 QUY TẮC NGHIỆP VỤ CHUẨN HÓA (BR-C01 ĐẾN BR-C22)}
+
+\begin{enumerate}[leftmargin=2em,itemsep=6pt]
+    \item \textbf{BR-C01 (Dữ liệu Cá nhân và Phiên làm việc):} Mọi thao tác đọc hoặc ghi dữ liệu kho, nơi lưu trữ, danh mục riêng, lịch sử biến động, thông báo nhắc nhở và danh sách mua sắm bắt buộc phải thuộc về tài khoản có phiên xác thực hợp lệ. Khi phiên làm việc hết hạn, hệ thống lưu giữ biểu mẫu đang nhập dở theo từng tài khoản để khôi phục sau khi đăng nhập lại; đăng nhập tài khoản khác tuyệt đối không hiển thị dữ liệu dở dang của tài khoản trước.
+    \item \textbf{BR-C02 (Ba Trường hợp Thêm món và Giới hạn Nhận diện):} \texttt{UC-03} đọc ảnh có sẵn; \texttt{UC-04} sử dụng máy ảnh được cấp quyền; cả hai đều kết thúc bằng việc bàn giao dữ liệu gợi ý sang biểu mẫu \texttt{UC-05}. Từ chối máy ảnh hoặc lỗi thiết bị sẽ tự động chuyển sang \texttt{UC-03}. Một lần quét được tính trên một lần người dùng chụp hoặc yêu cầu nhận diện. Sau tối đa 3 lần liên tiếp không nhận diện được thông tin hợp lệ, hệ thống tự động chuyển sang \texttt{UC-05}. Duy nhất \texttt{UC-05} có quyền tạo bản ghi thực phẩm chính thức.
+    \item \textbf{BR-C03 (Ba Loại Ngày và Quy tắc Kiểm tra Hợp lệ):} Ngày sản xuất (NSX), Ngày mở thực tế và Hạn sử dụng (HSD) là 3 ngày lịch hoàn toàn độc lập. NSX và Ngày mở không được nằm ở tương lai; NSX không được đứng sau HSD hoặc Ngày mở. Hệ thống cho phép ghi nhận món đã quá hạn hoặc ngày mở sau HSD như một sự kiện thực tế có thật nhưng bắt buộc phải hiển thị cảnh báo. Hệ thống không tự ý suy diễn tuổi thọ hay độ an toàn của thực phẩm; việc ghi nhận ngày mở không làm thay đổi hạn sử dụng gốc.
+    \item \textbf{BR-C04 (Đơn vị Bản ghi và Chuẩn hóa Mã vạch):} Mỗi bản ghi đại diện cho một gói hoặc một lượng thực phẩm đồng nhất về cả 3 loại ngày và trạng thái mở. Khác hạn sử dụng hoặc khác ngày mở bắt buộc phải là các bản ghi riêng biệt, kể cả khi có cùng mã vạch. Mã vạch được lưu trữ dưới dạng chuỗi ký tự giữ nguyên các số 0 ở đầu. Khi một nhóm thực phẩm không còn đồng nhất, người dùng phải thực hiện tách nhóm nguyên tử (theo Quyết định C01) trước khi ghi ngày mở.
+    \item \textbf{BR-C05 (Phân loại Trạng thái và Thứ tự Ưu tiên Hạn dùng):} So sánh hạn sử dụng với ngày hiện tại theo múi giờ hiển thị của tài khoản:
+    \begin{itemize}
+        \item HSD $<$ hôm nay: \textbf{Quá ngày ghi};
+        \item HSD $=$ hôm nay: \textbf{Đến hạn hôm nay};
+        \item Còn từ $1 \dots N$ ngày: \textbf{Sắp đến hạn} (ngưỡng $N$ mặc định là 3 ngày, tùy chỉnh từ $0 \dots 30$ ngày);
+        \item HSD xa hơn $N$ ngày: \textbf{Chưa đến ngưỡng cảnh báo};
+        \item Thiếu HSD hoặc ngày chưa rõ ràng: \textbf{Chưa rõ hạn}.
+    \end{itemize}
+    Chỉ những món đang hoạt động và còn số lượng lớn hơn 0 mới được đưa vào danh sách cần xử lý. Thứ tự ưu tiên hiển thị: Quá ngày ghi $\to$ Đến hạn hôm nay $\to$ Sắp đến hạn (sắp xếp tăng dần theo hạn sử dụng). Món chưa rõ hạn được gom vào nhóm hiển thị riêng.
+    \item \textbf{BR-C06 (Mốc Nhắc nhở và Chu kỳ Tự động):} Mặc định phát thông báo nhắc hạn lúc 09:00 theo múi giờ tài khoản, phát một lần khi thực phẩm bước vào từng trạng thái: Sắp đến hạn, Đến hạn hôm nay, Quá ngày ghi. Nhịp nhắc tự động tối đa 1 lần cho mỗi món trong một ngày. Mỗi lần phát có khóa duy nhất gồm: \texttt{mã món + mã chuỗi + thế hệ lịch + kỳ hẹn} để chống phát lặp. Khi đặt $N=0$, hệ thống không có nhóm Sắp đến hạn.
+    \item \textbf{BR-C07 (Trạng thái Đã đọc, Hoãn nhắc và Hẹn kiểm tra Thủ công):} Đánh dấu 'Đã đọc' chỉ thay đổi trạng thái hiển thị của thông báo. \texttt{UC-22} đặt mốc hoãn mới vượt thời điểm hiện tại cho chuỗi nhắc hạn của món (gợi ý: 1 giờ, 09:00 sáng mai, hoặc tự chọn). Chuỗi nhắc tự động bị tạm dừng và không phát trước mốc hoãn; đến đúng mốc hoãn sẽ phát 1 lần nếu món còn hợp lệ. \texttt{UC-20} là lịch hẹn kiểm tra riêng biệt, không can thiệp vào hạn dùng hay mốc hoãn tự động.
+    \item \textbf{BR-C08 (Vòng đời Lịch nhắc và Kênh Nhận tin):} Khi thực phẩm có số lượng bằng 0, hoặc chuyển vào thùng rác, hoặc bị xóa vĩnh viễn, toàn bộ lịch nhắc chờ sẽ bị hủy và thông báo cũ được đánh dấu hết hiệu lực. Thay đổi hạn sử dụng sẽ kích hoạt tính toán lại toàn bộ lịch nhắc. Nếu người dùng từ chối quyền nhận thông báo trình duyệt, thông báo trong ứng dụng vẫn hoạt động bình thường và không lặp lại yêu cầu cấp quyền gây phiền hà.
+    \item \textbf{BR-C09 (Quản lý Số lượng và Đơn vị Tính):} Mỗi bản ghi thực phẩm chỉ gắn với duy nhất một đơn vị tính. Đơn vị đếm chỉ chấp nhận số nguyên dương; đơn vị khối lượng và thể tích chấp nhận tối đa 3 chữ số thập phân (từ chối phần dư thay vì tự ý làm tròn). Số lượng không được âm. Ghi nhận dùng hoặc bỏ mới phải có số lượng lớn hơn 0 và không vượt quá tồn kho hiện tại. Không tự ý gộp hoặc chuyển đổi đơn vị ngầm (như từ kg sang g).
+    \item \textbf{BR-C10 (Ba Loại Sự kiện Biến động Số lượng):} \textbf{Đã dùng}, \textbf{Đã bỏ} và \textbf{Điều chỉnh kiểm kê} là 3 loại sự kiện hoàn toàn riêng biệt. Số lượng tồn kho và bản ghi sự kiện biến động được cập nhật đồng thời trong một giao dịch cơ sở dữ liệu; lỗi hoặc hủy thao tác sẽ không ghi nhận dở dang. Kiểm kê giảm không tự biến thành 'Đã bỏ'; kiểm kê tăng không tự biến thành 'Mua sắm'. Khi số lượng về 0, bản ghi vẫn được lưu giữ trong kho và không tự động chuyển vào thùng rác.
+    \item \textbf{BR-C11 (Hiệu chỉnh Sự kiện Ghi sai và Mốc neo Kiểm kê):} Người dùng chỉ được sửa loại sự kiện hoặc số lượng, giữ nguyên mốc thời gian của sự kiện gốc. Thao tác sửa qua \texttt{UC-28} có màn hình xem trước và xác nhận. Mốc kiểm kê là giá trị neo thực tế: sửa sự kiện trước mốc kiểm kê chỉ cập nhật tổng hợp lịch sử, tuyệt đối không làm đổi tồn kho hiện tại nếu phía sau đã có mốc kiểm kê chốt số lượng thực tế.
+    \item \textbf{BR-C12 (Khôi phục và Cập nhật Tổng hợp):} Khi khôi phục bản ghi từ thùng rác hoặc đảo ngược một sự kiện ghi nhầm, số lượng tồn kho được tái tính toán chính xác và cập nhật ngay vào số liệu thống kê tiêu dùng, bảo đảm tính nhất quán trên toàn hệ thống.
+    \item \textbf{BR-C13 (Nơi Bảo quản Thực phẩm):} Mỗi món thực phẩm thuộc về một nơi lưu trữ hoặc mang trạng thái \textit{'Chưa chọn nơi'}. Tên nơi lưu trữ không được rỗng và không trùng lặp trong cùng tài khoản. Khi xóa một nơi lưu trữ đang chứa thực phẩm, hệ thống bắt buộc hiển thị cảnh báo số lượng món bị ảnh hưởng; sau khi người dùng xác nhận, vị trí của các món này tự động chuyển thành \textit{'Chưa chọn nơi'} và không có món nào bị xóa.
+    \item \textbf{BR-C14 (Danh mục Phân loại Tùy chỉnh):} Thực phẩm có thể để trống danh mục với trạng thái \textit{'Chưa phân loại'}. Tên danh mục mới không được rỗng và không trùng lặp sau khi đã chuẩn hóa chữ hoa/thường và khoảng trắng. Việc tạo danh mục mới và hủy thêm món không làm mất danh mục vừa tạo.
+    \item \textbf{BR-C15 (Thùng rác, Thời hạn Lưu trữ và Xóa vĩnh viễn):} Chuyển vào thùng rác là thao tác xóa mềm, không đồng nghĩa với việc vứt bỏ thực phẩm. Bản ghi trong thùng rác được phép khôi phục nguyên vẹn với đúng mã ID cũ trong vòng 30 ngày. Hết 30 ngày, hệ thống tự động dọn sạch. Khi người dùng chọn Xóa vĩnh viễn (\texttt{UC-13}), toàn bộ thông tin định danh bị xóa triệt để, chỉ lưu lại bản ghi lượng tối thiểu ẩn danh phục vụ thống kê và ghi nhận mã đánh dấu triệt tiêu chống phục hồi dữ liệu khi khôi phục bản sao lưu.
+    \item \textbf{BR-C16 (Thêm lại Thực phẩm từ Lịch sử):} \texttt{UC-29} chỉ đóng vai trò tạo bản nháp gợi ý cho \texttt{UC-05}. Tên món, danh mục và nơi cất được tự động điền sẵn; nhưng số lượng, trạng thái mở và 3 loại ngày bắt buộc phải được người dùng kiểm tra và xác nhận lại. Lưu thành công sẽ sinh một mã ID mới hoàn toàn, giữ nguyên bản ghi lịch sử cũ.
+    \item \textbf{BR-C17 (Danh sách Mua sắm, Gợi ý Thông minh và Nhập kho Hàng loạt):} Mục mua sắm bao gồm: tên món, số lượng mong muốn (tùy chọn) và trạng thái (Dự định mua / Đã mua). Thao tác thêm, sửa, xóa hoặc đánh dấu 'Đã mua' trên \texttt{UC-30} chỉ làm thay đổi danh sách mua sắm, hoàn toàn độc lập với kho thực phẩm. Hệ thống cung cấp cơ chế gợi ý mua sắm thông minh (\texttt{UC-32}) từ các món tồn kho bằng 0 trong 30 ngày để đưa nhanh vào danh sách mua. Để ghi nhận hàng đã mua vào kho thực tế, người dùng có thể bàn giao đơn lẻ sang biểu mẫu \texttt{UC-05} hoặc sử dụng cơ chế Nhập kho hàng loạt (\texttt{UC-33}) thông qua bảng xem xét (Batch Review) với kiểm tra hợp lệ đầy đủ trước khi lưu; tuyệt đối không tự động tăng tồn kho ngầm mà không có xác nhận của người dùng.
+    \item \textbf{BR-C18 (Cơ chế Đối chiếu và So khớp Tồn kho):} Tên thực phẩm trùng sau khi chuẩn hóa chỉ tạo trạng thái ứng viên \textit{'Có thể khớp'}. Khớp dữ liệu chỉ được công nhận khi người dùng chủ động xác nhận liên kết với đúng bản ghi đang hoạt động trong kho có lượng lớn hơn 0. Trùng mã vạch là bằng chứng xác thực danh tính nội bộ. Khi đối chiếu không tìm thấy, hệ thống chỉ thông báo trong phạm vi dữ liệu đã kiểm tra, không khẳng định ngoài đời thực tế không có hàng.
+    \item \textbf{BR-C19 (Độ mới của Dữ liệu Đối chiếu Kho):} Mỗi lần mở danh sách mua sắm hoặc yêu cầu kiểm tra đối chiếu, hệ thống phải đọc trạng thái kho mới nhất thuộc tài khoản. Mọi thay đổi trong kho sẽ làm kết quả đối chiếu cũ lập tức hết hiệu lực và yêu cầu kiểm tra lại. Nếu gặp lỗi kết nối hoặc phiên bản kho không xác định, hệ thống thông báo trạng thái \textit{'Không kiểm tra được'}.
+    \item \textbf{BR-C20 (Chống Ghi lặp và Xung đột Dữ liệu):} Mọi hành động ghi nhận hoặc xác nhận quan trọng phải có mã thao tác (\texttt{operation\_id}). Khi người dùng gửi lại cùng một hành động do nghẽn mạng hoặc thao tác đúp, hệ thống trả về kết quả đã xử lý trước đó mà không cộng/trừ lặp dữ liệu. Nếu dữ liệu trên máy chủ đã bị thay đổi bởi phiên khác, hệ thống hiển thị thông tin cập nhật mới nhất và yêu cầu xác nhận lại trước khi lưu.
+    \item \textbf{BR-C21 (Xem, Hủy và Trạng thái Dữ liệu Trống):} Các thao tác xem, tìm kiếm, lọc, sắp xếp, đọc đối chiếu và nhấn nút Hủy tuyệt đối không làm thay đổi dữ liệu nghiệp vụ đã lưu. Khi kho trống, thùng rác rỗng hoặc không có kết quả tìm kiếm, giao diện phải hiển thị thông điệp trạng thái trống rõ ràng kèm theo hướng dẫn hành động tiếp theo thích hợp.
+    \item \textbf{BR-C22 (Phạm vi và Giới hạn Trách nhiệm Diễn giải):} Hệ thống Expiry là công cụ hỗ trợ người dùng theo dõi và ghi nhận thông tin thực phẩm hộ gia đình. Hệ thống \textbf{tuyệt đối không đưa ra kết luận pháp lý hay y tế về an toàn thực phẩm, không tự động đặt hàng ngoài đời thực, và không tự quy đổi số tiền tiết kiệm giả định} nếu chưa có số liệu đo đạc thực tế độc lập từ người dùng.
+\end{enumerate}
+
+\newpage
+\section{CHUỖI GIÁ TRỊ MỤC TIÊU VÀ KHUNG KIỂM CHỨNG NGHIỆM THU}
+
+\subsection{Xác lập Mục tiêu Tác động Cốt lõi G0}
+Bản nghị quyết này chính thức xác lập Mục tiêu Chiến lược Cấp cao nhất (G0) đóng vai trò kim chỉ nam định hướng cho toàn bộ kiến trúc sản phẩm Expiry:
+
+\begin{quote}
+\textbf{\color{primary}MỤC TIÊU TÁC ĐỘNG CỐT LÕI (MỤC TIÊU G0):}\\
+\textit{''Giảm thiểu tối đa lãng phí thực phẩm hộ gia đình và tiết kiệm chi tiêu mua sắm thông qua quản lý vòng đời thực phẩm chủ động.''}
+\end{quote}
+
+\textbf{Các chỉ số đo lường hiệu quả cốt lõi:}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Tỷ lệ Thực phẩm Tiêu thụ Trước hạn:} Đạt tối thiểu \textbf{$\ge 85\%$} trên tổng lượng thực phẩm nhập kho.
+    \item \textbf{Mức độ Giảm Lãng phí Thực phẩm Hộ gia đình:} Giảm ít nhất \textbf{$25\% \dots 30\%$} khối lượng và chi phí thực phẩm bị vứt bỏ hàng tháng sau 30 ngày sử dụng hệ thống.
+\end{enumerate}
+
+\textbf{Năm trụ cột triển khai giá trị phục vụ trực tiếp cho Mục tiêu G0:}
+\begin{enumerate}[itemsep=2pt]
+    \item \textbf{Trụ cột 1 --- Phòng ngừa Mua thừa từ Đầu nguồn:} Thúc đẩy bởi \textbf{F06 (Mua sắm) + BG-MUA}. Khi lập danh sách mua sắm (\texttt{UC-30}), hệ thống đối chiếu với kho (\texttt{UC-31}) để cảnh báo hàng đã có sẵn, tự động gợi ý tái mua các món đã tiêu thụ hết (\texttt{UC-32}) và hỗ trợ nhập kho hàng loạt nhanh (\texttt{UC-33}), triệt tiêu $50\%$ các ca mua trùng do người dùng không nhớ rõ.
+    \item \textbf{Trụ cột 2 --- Minh bạch Hiện trạng Thực phẩm trong Kho:} Thúc đẩy bởi \textbf{F01 + F02 + F03 + G1 + G3}. Người dùng nắm rõ chính xác đang có gì, cất ở đâu, số lượng bao nhiêu thông qua biểu mẫu nhập nhanh $\le 15$s và cơ chế bảo toàn số lượng C01.
+    \item \textbf{Trụ cột 3 --- Xử lý Kịp thời Trước khi Thực phẩm Hỏng:} Thúc đẩy bởi \textbf{F04 + G2}. Cảnh báo chủ động các món sắp hết hạn ($1\dots N$ ngày) và quá hạn $\to$ Thúc đẩy người dùng sử dụng ngay (\texttt{UC-24}), chế biến hoặc hoãn nhắc có chủ đích (\texttt{UC-22}), ngăn chặn việc thức ăn bị lãng quên trong góc tủ lạnh.
+    \item \textbf{Trụ cột 4 --- Hình thành Thói quen Lâu dài với Công sức Tối thiểu:} Thúc đẩy bởi \textbf{BG-DUYTRI + G4 + Tiêu chuẩn Nghiệm thu C04}. Thao tác ghi nhận dùng hoặc bỏ cực nhanh $\le 3$s. Nếu công sức duy trì quá lớn, người dùng sẽ bỏ ứng dụng $\to$ Số liệu trên máy lệch với thực tế $\to$ Hệ thống mất tác dụng. Do đó, duy trì thói quen với thao tác nhẹ nhàng là điều kiện sống còn của Mục tiêu G0.
+    \item \textbf{Trụ cột 5 --- Phản hồi Định lượng và Tối ưu Hành vi Tiêu dùng:} Thúc đẩy bởi \textbf{F05 (Thống kê) + G5 + C05}. Biểu đồ định lượng trực quan tỷ lệ dùng/bỏ giúp người dùng nhìn thấy rõ tiến bộ tiết kiệm chi tiêu hàng tháng, tạo động lực duy trì nếp sống văn minh.
+\end{enumerate}
+
+\subsection{Bảng Ma trận Chuỗi Giá trị Mục tiêu Nghiệp vụ}
+Hệ thống được thiết kế để phục vụ trực tiếp 2 nhóm nhân vật đại diện giả thuyết:
+\begin{itemize}[itemsep=2pt]
+    \item \textbf{Nhân vật P02 (Người quản lý khi kế hoạch sinh hoạt thay đổi):} Cần biết nhanh trong nhà đang có gì, cất ở đâu, số lượng còn bao nhiêu và lý do cần chú ý để kịp thời điều chỉnh thực đơn, hẹn kiểm tra lại hoặc hoãn nhắc, hạn chế tối đa việc mua thừa thức ăn.
+    \item \textbf{Nhân vật P03 (Người cần số lượng tin cậy với công duy trì hợp lý):} Cần một công cụ kiểm soát lượng thực phẩm chính xác nhưng thao tác cực kỳ nhanh chóng; cho phép kiểm kê, sửa chữa sai sót dễ dàng trước mỗi đợt đi mua sắm mới.
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|l|p{3.0cm}|X|p{2.8cm}|}
+\hline
+\textbf{Mục tiêu} & \textbf{Tên mục tiêu} & \textbf{Cơ chế đóng góp của hệ thống} & \textbf{Tiêu chí đánh giá} \\
+\hline
+\textbf{G0} & \textbf{Mục tiêu Tác động Cốt lõi} & \textbf{Giảm lãng phí thực phẩm hộ gia đình và tiết kiệm chi tiêu thông qua quản lý vòng đời chủ động.} & \textbf{Tiêu thụ trước hạn $\ge 85\%$; Giảm bỏ $25-30\%$.} \\
+\hline
+\textbf{G1} & Nhận biết thực phẩm đang có & F01 giúp thêm món dễ dàng; F02/F03 tổ chức kho theo vị trí; F06 hỗ trợ tra cứu khi mua sắm. & M01: Tìm đúng món và biết nơi cất $<5$s. \\
+\hline
+\textbf{G2} & Chọn món cần chú ý & F04 phân loại mức độ hạn dùng, cảnh báo món quá hạn/sắp hạn; cho phép hoãn hoặc hẹn kiểm tra. & M02: Nhận diện lý do cần xử lý món trong 3s. \\
+\hline
+\textbf{G3} & Số lượng sát thực tế & F05 ghi nhận riêng biệt Dùng/Bỏ/Kiểm kê; cơ chế C01 bảo toàn lượng khi tách nhóm. & M03: Chênh lệch tồn kho hệ thống và thực tế $<10\%$. \\
+\hline
+\textbf{G4} & Dữ liệu kiểm tra được & Toàn bộ thao tác có xác nhận, kháng lặp (C01), lịch sử minh bạch (C05), khôi phục thùng rác 30 ngày. & M04: $100\%$ sự kiện có thể giải trình và truy nguồn. \\
+\hline
+\textbf{G5} & Hiểu tổng quan tiêu dùng & F05 Thống kê tổng hợp lượng đã dùng và lãng phí theo thời gian và danh mục sản phẩm. & M05: Người dùng đọc hiểu báo cáo thống kê dễ dàng. \\
+\hline
+\textbf{BG-MUA} & Giảm mua trùng thực phẩm & F06 đối chiếu danh sách mua với kho thực tế; cảnh báo trùng tức thì ($<1$s) trước khi quyết định mua. & M06, M08: Giảm tỷ lệ mua trùng thức ăn ngoài đời thực. \\
+\hline
+\textbf{BG-DUYTRI} & Hoàn thành tác vụ lặp với công hợp lý & Tối ưu hóa giao diện, thao tác dùng/bỏ $<3$s, thêm món $<15$s; quy định rõ ràng các cổng nghiệm thu. & M07, M10: Tỷ lệ hoàn thành tác vụ $\ge 90\%$; duy trì thói quen. \\
+\hline
+\end{tabularx}
+\caption{Chuỗi Giá trị Mục tiêu Nghiệp vụ Toàn diện}
+\end{table}
+
+\subsection{Khung 15 Ca kiểm chứng Kỹ thuật (V01 đến V15)}
+Các ca kiểm thử bắt buộc phải đạt trước khi bàn giao sản phẩm:
+\begin{itemize}[itemsep=2pt]
+    \item \textbf{V01:} Kiểm tra phân quyền và bảo mật dữ liệu theo tài khoản; không rò rỉ phiên làm việc.
+    \item \textbf{V02:} Kiểm tra trích xuất nhận diện từ ảnh và máy ảnh; đo đạc độ trễ và tỷ lệ nhận diện.
+    \item \textbf{V03:} Kiểm tra giao dịch nguyên tử khi tách nhóm (C01); kiểm thử ca thành công, lỗi mạng giữa chừng và hoàn nguyên.
+    \item \textbf{V04:} Kiểm tra luồng tìm kiếm và lọc danh sách kho dưới tải dữ liệu lớn.
+    \item \textbf{V05:} Kiểm tra xóa vị trí lưu trữ đang chứa thực phẩm; bảo đảm chuyển vị trí an toàn về 'Chưa chọn nơi'.
+    \item \textbf{V06:} Kiểm tra xóa vĩnh viễn và cơ chế mã đánh dấu triệt tiêu đối chiếu bản sao lưu cơ sở dữ liệu (C05.2).
+    \item \textbf{V07:} Kiểm tra tính toán ngày hạn dùng và phân loại trạng thái theo múi giờ tài khoản.
+    \item \textbf{V08:} Kiểm tra vòng đời chuỗi thông báo, mốc hoãn và lịch hẹn kiểm tra thủ công (C03).
+    \item \textbf{V09:} Kiểm tra cơ chế tự động hủy lịch nhắc khi thực phẩm hết lượng hoặc vào thùng rác.
+    \item \textbf{V10:} Kiểm tra ghi nhận 3 sự kiện biến động lượng (Dùng, Bỏ, Kiểm kê); kiểm thử không cho số lượng âm.
+    \item \textbf{V11:} Kiểm tra hiệu chỉnh sự kiện sai trong quá khứ và mốc neo kiểm kê (C05.1).
+    \item \textbf{V12:} Kiểm tra độ chính xác của biểu đồ và thống kê tiêu dùng; truy vết nguồn gốc sự kiện.
+    \item \textbf{V13:} Kiểm tra đối chiếu danh sách mua sắm với kho thực phẩm; kiểm tra cảnh báo trùng và gợi ý tái bổ sung món hết hàng (F06, UC-31, UC-32).
+    \item \textbf{V14:} Kiểm tra luồng bàn giao có kiểm soát từ hàng đã mua sang biểu mẫu thêm món đơn lẻ UC-05 hoặc nhập kho hàng loạt UC-33.
+    \item \textbf{V15:} Kiểm tra khả năng phục hồi dữ liệu từ bản sao lưu định kỳ mà không tái xuất các bản ghi đã xóa.
+\end{itemize}
+
+\section{QUYẾT ĐỊNH BAN HÀNH VÀ KÝ DUYỆT}
+
+\subsection{Điều khoản thi hành}
+\begin{enumerate}[itemsep=2pt]
+    \item Toàn bộ các bộ phận kỹ thuật (Giao diện, Dịch vụ máy chủ, Cơ sở dữ liệu, Kiểm thử) có trách nhiệm thực hiện nghiêm túc các đặc tả, quy tắc nghiệp vụ và tiêu chuẩn chấp nhận đã nêu trong Nghị quyết này.
+    \item Nghiêm cấm việc tự ý thay đổi số lượng trường hợp sử dụng, tự ý gộp hoặc tách các luồng nghiệp vụ đã được chốt mà không có văn bản phê duyệt bổ sung từ Chủ nhiệm Dự án.
+    \item Tài liệu này có hiệu lực thi hành kể từ ngày ký.
+\end{enumerate}
+
+\vspace{1.5cm}
+\noindent
+\begin{tabularx}{\textwidth}{X r}
+\textbf{ĐẠI DIỆN ĐỘI NGŨ PHÁT TRIỂN} & \textbf{CHỦ NHIỆM DỰ ÁN / KIẾN TRÚC SƯ TRƯỞNG} \\[0.3cm]
+\textit{(Đã rà soát và đối chiếu kỹ thuật)} & \textit{(Đã ký và phê duyệt ban hành)} \\[2.5cm]
+\textbf{Kỹ sư Trưởng Hệ thống} & \textbf{Nguyễn Tâm Đức} \\
+Ngày: 17/11/2026 & Ngày: 17/11/2026 \\
+\end{tabularx}
+
+\end{document}

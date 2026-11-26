@@ -18,6 +18,7 @@ import {
 import { getFoodIcon } from "../src/features/FoodCard"
 
 import { validate, emptyDraft, type Draft } from "../src/features/FoodForm"
+import { historyDescription } from "../src/features/Detail"
 
 import {
   CupSoda,
@@ -31,7 +32,7 @@ import {
   Croissant,
   Wheat,
   Package,
-} from "../src/components/ui/Icon"
+} from "lucide-react"
 
 import {
   computeStatusOf,
@@ -287,14 +288,14 @@ describe("Food Category Icon Detection", () => {
 })
 
 describe("Food Form Validation", () => {
-  it("creates empty draft with valid defaults", () => {
+  it("creates a manual draft without guessing the measurement unit", () => {
     const draft = emptyDraft()
 
     expect(draft.name).toBe("")
 
     expect(draft.quantity).toBe("1")
 
-    expect(draft.unit).toBe("cái")
+    expect(draft.unit).toBe("")
 
     expect(draft.mfgDate).toBe("")
 
@@ -416,6 +417,90 @@ describe("Food Form Validation", () => {
 
     expect(Object.keys(errors)).toHaveLength(0)
   })
+
+  it.each(["mfgDate", "opened_on", "expDate"] as const)(
+    "rejects impossible calendar dates in %s",
+    (field) => {
+      const errors = validate({
+        name: "Sữa tươi",
+        quantity: "1",
+        unit: "hộp",
+        category: "other",
+        mfgDate: "",
+        opened_on: "",
+        expDate: "",
+        location: "Ngăn mát",
+        [field]: "2026-02-31",
+      })
+
+      expect(errors[field]).toBe("Ngày không hợp lệ.")
+    },
+  )
+
+  it.each([
+    ["name", 200, "Tên thực phẩm tối đa 200 ký tự."],
+    ["location", 100, "Vị trí tối đa 100 ký tự."],
+    ["note", 1000, "Ghi chú tối đa 1000 ký tự."],
+  ] as const)(
+    "enforces the API length limit for %s",
+    (field, limit, message) => {
+      const draft = { ...emptyDraft(), name: "Sữa", unit: "hộp" as const }
+
+      expect(validate({ ...draft, [field]: "a".repeat(limit) })).toEqual({})
+      expect(validate({ ...draft, [field]: "a".repeat(limit + 1) })).toEqual({
+        [field]: message,
+      })
+    },
+  )
+
+  it("counts Unicode characters and trims values the same way as the save adapter", () => {
+    expect(
+      validate({
+        ...emptyDraft(),
+        name: `  ${"🥛".repeat(200)}  `,
+        unit: "hộp",
+        location: `  ${"🧊".repeat(100)}  `,
+        note: `  ${"📝".repeat(1000)}  `,
+      }),
+    ).toEqual({})
+  })
+})
+
+describe("Detail history descriptions", () => {
+  it("does not report current stock as the initial stock when creation history is missing", () => {
+    const food = seedFoods().find((item) => item.id === "demo-sua-tuoi")!
+    const description = historyDescription(
+      {
+        id: `created:${food.id}`,
+        foodId: food.id,
+        foodName: food.name,
+        kind: "add",
+        at: food.createdAt,
+        unit: food.unit,
+      },
+      { ...food, quantity: 0.5 },
+    )
+
+    expect(description).toBe("Không có dữ liệu số lượng lúc nhập")
+  })
+
+  it("keeps the recorded initial stock from an add event", () => {
+    const food = seedFoods().find((item) => item.id === "demo-sua-tuoi")!
+    expect(
+      historyDescription(
+        {
+          id: `created:${food.id}`,
+          foodId: food.id,
+          foodName: food.name,
+          kind: "add",
+          at: food.createdAt,
+          to: 1,
+          unit: food.unit,
+        },
+        { ...food, quantity: 0.5 },
+      ),
+    ).toBe("Số lượng ban đầu: 1 hộp")
+  })
 })
 
 describe("Status Badge Computations", () => {
@@ -428,7 +513,7 @@ describe("Status Badge Computations", () => {
 
     expect(computeStatusOf(t, 3)).toBe("soon")
 
-    expect(computeStatusText(t, 3)).toBe("Hết HSD hôm nay")
+    expect(computeStatusText(t, 3)).toBe("Đến hạn hôm nay")
 
     expect(computeStatusOf(addDays(t, 2), 3)).toBe("soon")
 

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   MAX_OPTIMIZED_IMAGE_BYTES,
   optimizeScanImage,
+  prepareScanImage,
 } from "../src/features/image-optimization"
 
 function makeFile(
@@ -192,4 +193,51 @@ describe("optimizeScanImage", () => {
       optimizeScanImage(makeFile("document.pdf", "application/pdf")),
     ).rejects.toThrow("Chọn ảnh JPEG, PNG hoặc WebP")
   })
+})
+
+describe("prepareScanImage", () => {
+  it("previews the optimized upload rather than the original large photo", async () => {
+    mockImageTools({ width: 4000, height: 3000, outputSize: () => 450_000 })
+    const read = vi.fn()
+    vi.stubGlobal(
+      "FileReader",
+      class {
+        result = "data:image/jpeg;base64,optimized"
+        onload?: () => void
+        readAsDataURL(file: File) {
+          read(file)
+          this.onload?.()
+        }
+      },
+    )
+
+    const original = makeFile("phone.png", "image/png", 6_000_000)
+    const prepared = await prepareScanImage(original)
+
+    expect(prepared.file).not.toBe(original)
+    expect(prepared.file.size).toBeLessThan(MAX_OPTIMIZED_IMAGE_BYTES)
+    expect(read).toHaveBeenCalledWith(prepared.file)
+    expect(prepared.image).toBe("data:image/jpeg;base64,optimized")
+  })
+
+  it.each(["onerror", "onabort"] as const)(
+    "rejects preview %s instead of hanging",
+    async (event) => {
+      mockImageTools({ width: 800, height: 600, outputSize: () => 100_000 })
+      vi.stubGlobal(
+        "FileReader",
+        class {
+          onerror?: () => void
+          onabort?: () => void
+          readAsDataURL() {
+            this[event]?.()
+          }
+        },
+      )
+
+      await expect(
+        prepareScanImage(makeFile("small.png", "image/png", 500_000)),
+      ).rejects.toThrow("Không đọc được ảnh")
+    },
+  )
 })

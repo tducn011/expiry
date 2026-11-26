@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest"
+import { createElement } from "react"
+import { renderToString } from "react-dom/server"
 
 import {
   CATEGORIES,
@@ -8,8 +10,69 @@ import {
   statusOf,
   type Category,
 } from "../src/store/appStore"
+import { FoodCard, categoryTones } from "../src/features/FoodCard"
 
 describe("Storage & Insight Feature Integration", () => {
+  it("does not invent quantities when movement events omit amounts or units", async () => {
+    const { summarizeRecordedQuantities } = await import(
+      "../src/features/InsightView"
+    )
+    const stats = summarizeRecordedQuantities([
+      {
+        id: "known-amount",
+        foodId: "food-a",
+        foodName: "Sữa",
+        kind: "consume",
+        at: "2026-11-18T10:00:00.000Z",
+        amount: 0.5,
+        unit: "hộp",
+      },
+      {
+        id: "missing-amount",
+        foodId: "food-b",
+        foodName: "Bánh",
+        kind: "discard",
+        at: "2026-11-18T11:00:00.000Z",
+        unit: "gói",
+      },
+      {
+        id: "missing-unit",
+        foodId: "food-c",
+        foodName: "Rau",
+        kind: "discard",
+        at: "2026-11-18T12:00:00.000Z",
+        amount: 250,
+      },
+    ])
+
+    expect(stats).toEqual([
+      {
+        unit: "hộp",
+        used: 0.5,
+        discarded: 0,
+        usedWithoutAmount: 0,
+        discardedWithoutAmount: 0,
+        eventsWithoutUnit: 0,
+      },
+      {
+        unit: "gói",
+        used: 0,
+        discarded: 0,
+        usedWithoutAmount: 0,
+        discardedWithoutAmount: 1,
+        eventsWithoutUnit: 0,
+      },
+      {
+        unit: "Chưa rõ đơn vị",
+        used: 0,
+        discarded: 0,
+        usedWithoutAmount: 0,
+        discardedWithoutAmount: 0,
+        eventsWithoutUnit: 1,
+      },
+    ])
+  })
+
   it("defines 7 business categories with valid Vietnamese labels", () => {
     expect(CATEGORIES.length).toBe(7)
 
@@ -211,6 +274,19 @@ describe("Storage & Insight Feature Integration", () => {
 
     expect(consumeEv.category).toBe("dairy_eggs")
 
+    expect(consumeEv.unit).toBe("hộp")
+
+    const movementWithoutUnit = fromQuantityMovement({
+      id: "mov-no-unit",
+      entry_id: "food-unknown-unit",
+      kind: "consume",
+      quantity_before: 3,
+      quantity_after: 2,
+      reason: "",
+      recorded_at: "2026-10-21T08:00:00.000Z",
+    })
+    expect(movementWithoutUnit.unit).toBeUndefined()
+
     // 2. Discard movement
 
     const discardEv = fromQuantityMovement(
@@ -388,5 +464,145 @@ describe("Storage & Insight Feature Integration", () => {
     mockStorage.removeItem(testKey)
 
     expect(mockStorage.getItem(testKey)).toBeNull()
+  })
+
+  it("applies semantic color tones and uniform HSD formatting across food categories", () => {
+    // 1. Verify all categories have defined tones
+    const categories: Category[] = [
+      "fresh_produce",
+      "meat_seafood",
+      "dairy_eggs",
+      "prepared_food",
+      "dry_pantry",
+      "beverage",
+      "other",
+    ]
+    for (const cat of categories) {
+      expect(categoryTones[cat]).toBeDefined()
+      expect(categoryTones[cat].length).toBeGreaterThan(0)
+    }
+
+    // 2. Render FoodCard with a future expiration date and verify uniform day count & category badge
+    const d = new Date()
+    d.setDate(d.getDate() + 10)
+    const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+    const html = renderToString(
+      FoodCard({
+        food: {
+          id: "test-food-1",
+          name: "Sữa tươi hữu cơ",
+          quantity: 2,
+          unit: "hộp",
+          category: "dairy_eggs",
+          location: "Ngăn mát",
+          days: 10,
+          expDate: targetDate,
+        },
+        onOpen: () => {},
+      }),
+    )
+
+    expect(html).toContain("Trứng &amp; Sữa")
+    expect(html).toContain("Còn 10 ngày")
+    expect(html).toContain("bg-category-dairy-bg")
+  })
+
+  it("shows a single populated trend period without adding a trend explanation", async () => {
+    const { default: InsightView } = await import("../src/features/InsightView")
+    const state = {
+      mode: "demo" as const,
+      onboarded: true,
+      foods: seedFoods(),
+      history: seedHistory(),
+      locations: ["Ngăn mát", "Ngăn đông", "Tủ bếp"],
+      readNotifs: [],
+      snoozed: {},
+      settings: { remindDays: 3, inApp: true, push: false },
+    }
+
+    const html = renderToString(
+      createElement(InsightView, { state, isLive: false }),
+    )
+
+    expect(html).toContain("0 lượt")
+    expect(html).toContain("75% · 4 lượt")
+    expect(html).not.toContain("cần dữ liệu ở khoảng khác để thể hiện xu hướng")
+    expect(html).not.toContain("Căn cứ:")
+    expect(html).not.toContain("Bổ sung để theo dõi chính xác hơn.")
+    expect(html).not.toContain("Đã phân loại vị trí lưu trữ.")
+    expect(html).not.toContain('stroke="#0f5959" stroke-width="2.5"')
+  })
+
+  it("keeps the trend line broken when observed periods have an empty gap", async () => {
+    const { default: InsightView } = await import("../src/features/InsightView")
+    const history = seedHistory()
+    history[0].at = new Date(Date.now() - 29 * 24 * 3600_000).toISOString()
+    history[2].at = new Date(Date.now() - 24 * 3600_000).toISOString()
+    const state = {
+      mode: "demo" as const,
+      onboarded: true,
+      foods: seedFoods(),
+      history,
+      locations: ["Ngăn mát", "Ngăn đông", "Tủ bếp"],
+      readNotifs: [],
+      snoozed: {},
+      settings: { remindDays: 3, inApp: true, push: false },
+    }
+
+    const html = renderToString(
+      createElement(InsightView, { state, isLive: false }),
+    )
+
+    expect(html).toContain("0 lượt")
+    expect(html).not.toContain("các khoảng này không liền nhau")
+    expect(html).not.toContain('stroke="#0f5959" stroke-width="2.5"')
+  })
+
+  it("shows a clear empty state instead of a blank trend grid", async () => {
+    const { default: InsightView } = await import("../src/features/InsightView")
+    const state = {
+      mode: "demo" as const,
+      onboarded: true,
+      foods: [],
+      history: [],
+      locations: ["Ngăn mát", "Ngăn đông", "Tủ bếp"],
+      readNotifs: [],
+      snoozed: {},
+      settings: { remindDays: 3, inApp: true, push: false },
+    }
+
+    const html = renderToString(
+      createElement(InsightView, { state, isLive: false }),
+    )
+
+    expect(html).toContain("Chưa có lượt dùng hoặc bỏ")
+    expect(html).not.toContain("Chưa thể tính tỷ lệ trong 30 ngày gần nhất.")
+    expect(html).not.toContain("dùng hết theo thời gian")
+  })
+
+  it("handles OCR scan navigation routes and maintains URL synchronization", async () => {
+    const { routeFromUrl, urlFromRoute } = await import("../src/App")
+
+    // 1. Deep linking to scan view returns scan route
+    const scanRoutes = routeFromUrl("?view=scan")
+    expect(scanRoutes).toEqual([{ name: "scan" }])
+
+    // 2. URL roundtrip for scan route
+    expect(urlFromRoute({ name: "scan" })).toBe("?view=scan")
+
+    // 3. Form mode OCR route maintains valid view parameter
+    expect(
+      urlFromRoute({
+        name: "form",
+        mode: "ocr",
+        draft: {
+          name: "Sữa",
+          quantity: "1",
+          unit: "hộp",
+          category: "dairy_eggs",
+          location: "Ngăn mát",
+        },
+      }),
+    ).toBe("?view=form")
   })
 })

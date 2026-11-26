@@ -12,11 +12,13 @@ import Card from "../components/ui/Card"
 
 import EmptyState from "../components/ui/EmptyState"
 
-import { Trash2, Undo2 } from "../components/ui/Icon"
+import { Trash2, Undo2 } from "lucide-react"
 
 import Modal from "../components/ui/Modal"
 
-import PageHeader from "../components/ui/PageHeader"
+import PageHeader, {
+  type PageBreadcrumbItem,
+} from "../components/ui/PageHeader"
 
 export function Trash({
   state,
@@ -25,6 +27,8 @@ export function Trash({
 
   onBack,
 
+  breadcrumbs,
+
   notify,
 }: {
   state: State
@@ -32,6 +36,8 @@ export function Trash({
   dispatch: Dispatch
 
   onBack?: () => void
+
+  breadcrumbs?: readonly PageBreadcrumbItem[]
 
   notify: (m: string) => void
 }) {
@@ -109,31 +115,23 @@ export function Trash({
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto">
-      <PageHeader
-        title="Thùng rác"
-        onBack={onBack}
-        subtitle="Bản ghi tự động xóa vĩnh viễn 30 ngày sau khi chuyển vào đây (kiểm tra mỗi lần mở ứng dụng)."
-      />
+    <div className="flex flex-col gap-6 w-full">
+      <PageHeader title="Thùng rác" onBack={onBack} breadcrumbs={breadcrumbs} />
 
       {list.length === 0 ? (
-        <EmptyState
-          icon={<Trash2 size={32} />}
-          title="Thùng rác trống"
-          text="Những thực phẩm bạn xóa sẽ nằm ở đây trong 30 ngày trước khi bị xóa vĩnh viễn khỏi thiết bị."
-        />
+        <EmptyState icon={<Trash2 size={32} />} title="Thùng rác trống" />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((f) => (
-            <Card key={f.id} className="flex flex-col justify-between gap-4">
+          {list.map((food) => (
+            <Card key={food.id} className="flex flex-col justify-between gap-4">
               <div>
-                <p className="text-base font-semibold text-text-primary">
-                  {f.name}
+                <p className="text-base font-semibold text-text-heading">
+                  {food.name}
                 </p>
                 <p className="mt-1 text-xs text-text-secondary">
-                  {f.quantity} {f.unit} · còn{" "}
+                  {food.quantity} {food.unit} · còn{" "}
                   <strong className="text-brand-primary">
-                    {trashDaysLeft(f)} ngày
+                    {trashDaysLeft(food)} ngày
                   </strong>{" "}
                   trước khi xóa vĩnh viễn
                 </p>
@@ -143,15 +141,15 @@ export function Trash({
                   size="small"
                   variant="neutral"
                   iconStart={<Undo2 size={16} />}
-                  onClick={() => setConfirm({ f, kind: "restore" })}
+                  onClick={() => setConfirm({ f: food, kind: "restore" })}
                 >
                   Khôi phục
                 </Button>
                 <Button
                   size="small"
                   variant="subtle"
-                  className="text-status-expired hover:bg-red-50"
-                  onClick={() => setConfirm({ f, kind: "purge" })}
+                  className="text-status-expired hover:bg-status-expired-bg/30"
+                  onClick={() => setConfirm({ f: food, kind: "purge" })}
                 >
                   Xóa vĩnh viễn
                 </Button>

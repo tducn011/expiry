@@ -1,3 +1,5 @@
+export * from "./BrandLockup"
+
 export * from "./Button"
 
 export { default as Button } from "./Button"
@@ -58,6 +60,8 @@ export * from "./SidebarNavigation"
 
 export { default as SidebarNavigation } from "./SidebarNavigation"
 
-export * from "./Icon"
+export * from "./Notice"
+
+export { default as Notice } from "./Notice"
 
 export { default as Icon } from "./Icon"

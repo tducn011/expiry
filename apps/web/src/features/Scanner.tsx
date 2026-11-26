@@ -6,6 +6,8 @@ import type { Category, Food } from "../store/appStore"
 
 import type { Draft } from "./FoodForm"
 
+import { prepareScanImage } from "./image-optimization"
+
 import {
   decodeBarcodeFromImage,
   lookupBarcode,
@@ -19,7 +21,7 @@ import Button from "../components/ui/Button"
 
 import ManualBarcodeModal from "./ManualBarcodeModal"
 
-import { Barcode } from "../components/ui/Icon"
+import { Barcode } from "lucide-react"
 
 import {
   ArrowLeft,
@@ -34,7 +36,7 @@ import {
   ScanText,
   ShieldAlert,
   Sparkles,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 import IconButton from "../components/ui/IconButton"
 
@@ -101,11 +103,13 @@ export function Scanner({
 
   const [showManualBarcode, setShowManualBarcode] = useState(false)
 
+  const [fileError, setFileError] = useState("")
+
+  const scanGeneration = useRef(0)
+
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const streamRef = useRef<MediaStream | null>(null)
-
-  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const libraryInputRef = useRef<HTMLInputElement>(null)
 
@@ -123,6 +127,8 @@ export function Scanner({
 
   useEffect(() => {
     return () => {
+      scanGeneration.current++
+
       stop()
 
       window.clearTimeout(timer.current)
@@ -243,6 +249,9 @@ export function Scanner({
   }, [state, step, step1Data])
 
   async function start() {
+    scanGeneration.current++
+    setFileError("")
+
     if (!navigator.mediaDevices?.getUserMedia) return setState("unavailable")
 
     setImage(undefined)
@@ -277,6 +286,9 @@ export function Scanner({
   }
 
   const resetToStep1 = () => {
+    scanGeneration.current++
+    setFileError("")
+
     isLiveScanningRef.current = false
 
     setStep(1)
@@ -299,6 +311,8 @@ export function Scanner({
   }
 
   const skipStep2 = () => {
+    scanGeneration.current++
+
     stop()
 
     if (step1Data) {
@@ -312,7 +326,11 @@ export function Scanner({
     file?: File | Blob,
 
     preDetectedBarcode?: string,
+
+    generation = ++scanGeneration.current,
   ) {
+    if (generation !== scanGeneration.current) return
+
     setImage(img)
 
     setState("processing")
@@ -348,6 +366,8 @@ export function Scanner({
       } catch {}
     }
 
+    if (generation !== scanGeneration.current) return
+
     if (detectedBarcode) {
       // Check if barcode is GS1 encoding expiry/manufactured date directly
 
@@ -371,6 +391,8 @@ export function Scanner({
         uploadFile = new File([blob], "capture.jpg", { type: "image/jpeg" })
       }
 
+      if (generation !== scanGeneration.current) return
+
       // Parallelize product metadata lookup & backend OCR scanning for maximum speed
 
       const lookupPromise: Promise<ProductLookupResult | null> = detectedBarcode
@@ -390,6 +412,8 @@ export function Scanner({
 
         scanPromise,
       ])
+
+      if (generation !== scanGeneration.current) return
 
       if (lookupRes?.found && lookupRes.product?.name) {
         barcodeProductName = lookupRes.product.name
@@ -424,6 +448,8 @@ export function Scanner({
           }
         }
       }
+
+      if (generation !== scanGeneration.current) return
 
       const expDate = cand.expiry_date?.value || barcodeExpDate || ""
 
@@ -462,7 +488,7 @@ export function Scanner({
 
         quantity: "1",
 
-        unit: "cái",
+        unit: "",
 
         category,
 
@@ -590,7 +616,7 @@ export function Scanner({
 
           quantity: "1",
 
-          unit: "cái",
+          unit: "",
 
           category: finalCategory,
 
@@ -612,6 +638,8 @@ export function Scanner({
         onReview([step1Data.image, img], mergedDraft)
       }
     } catch {
+      if (generation !== scanGeneration.current) return
+
       if (step === 1 && (barcodeProductName || detectedBarcode)) {
         playBeep()
 
@@ -622,7 +650,7 @@ export function Scanner({
 
           quantity: "1",
 
-          unit: "cái",
+          unit: "",
 
           category: "other",
 
@@ -673,6 +701,8 @@ export function Scanner({
 
     if (!v || !v.videoWidth) return
 
+    const generation = ++scanGeneration.current
+
     setState("capturing")
 
     // Optimize frame resolution: max 1200px dimension preserves full OCR precision while reducing upload payload
@@ -701,14 +731,16 @@ export function Scanner({
 
     c.toBlob(
       (blob) => {
+        if (generation !== scanGeneration.current) return
+
         if (blob) {
           const f = new File([blob], `scan-step${step}.jpg`, {
             type: "image/jpeg",
           })
 
-          recognize(dataUrl, f, preDetectedBarcode)
+          recognize(dataUrl, f, preDetectedBarcode, generation)
         } else {
-          recognize(dataUrl, undefined, preDetectedBarcode)
+          recognize(dataUrl, undefined, preDetectedBarcode, generation)
         }
       },
 
@@ -719,19 +751,36 @@ export function Scanner({
   }
 
   async function onSingleFile(file: File) {
-    const dataUrl = await new Promise<string>((resolve) => {
-      const r = new FileReader()
+    const generation = ++scanGeneration.current
+    stop()
+    setState("processing")
+    setFileError("")
+    setImage(undefined)
+    setImages([])
 
-      r.onload = () => resolve(String(r.result))
-
-      r.readAsDataURL(file)
-    })
-
-    recognize(dataUrl, file)
+    try {
+      const prepared = await prepareScanImage(file)
+      if (generation !== scanGeneration.current) return
+      await recognize(prepared.image, prepared.file, undefined, generation)
+    } catch (error) {
+      if (generation !== scanGeneration.current) return
+      setFileError(
+        error instanceof Error
+          ? error.message
+          : "Không xử lý được ảnh. Hãy thử chọn ảnh khác.",
+      )
+      setState("unrecognized")
+    }
   }
 
   async function recognizeBatch(files: File[]) {
     if (!files || files.length === 0) return
+
+    const generation = ++scanGeneration.current
+
+    setFileError("")
+    setImage(undefined)
+    setImages([])
 
     setState("processing")
 
@@ -752,17 +801,27 @@ export function Scanner({
     const loadedImages: string[] = []
 
     for (let i = 0; i < files.length; i++) {
+      if (generation !== scanGeneration.current) return
+
       setBatchProgress({ current: i + 1, total: files.length })
 
-      const file = files[i]
+      let prepared: Awaited<ReturnType<typeof prepareScanImage>>
+      try {
+        prepared = await prepareScanImage(files[i])
+      } catch (error) {
+        if (generation !== scanGeneration.current) return
+        setBatchProgress(null)
+        setFileError(
+          error instanceof Error
+            ? error.message
+            : "Không xử lý được ảnh. Hãy thử chọn ảnh khác.",
+        )
+        setState("unrecognized")
+        return
+      }
 
-      const dataUrl = await new Promise<string>((resolve) => {
-        const r = new FileReader()
-
-        r.onload = () => resolve(String(r.result))
-
-        r.readAsDataURL(file)
-      })
+      if (generation !== scanGeneration.current) return
+      const { file, image: dataUrl } = prepared
 
       loadedImages.push(dataUrl)
 
@@ -819,6 +878,8 @@ export function Scanner({
           scanPromise,
         ])
 
+        if (generation !== scanGeneration.current) return
+
         if (lookupRes?.found && lookupRes.product?.name) {
           barcodeProductName = lookupRes.product.name
         }
@@ -870,6 +931,8 @@ export function Scanner({
         console.warn(`Scan error on image ${i + 1}:`, err)
       }
 
+      if (generation !== scanGeneration.current) return
+
       if (!finalBarcode && detectedBarcode) finalBarcode = detectedBarcode
 
       if (!finalExpDate && barcodeExpDate) finalExpDate = barcodeExpDate
@@ -915,7 +978,7 @@ export function Scanner({
 
       quantity: "1",
 
-      unit: "cái",
+      unit: "",
 
       category: finalCategory,
 
@@ -956,6 +1019,8 @@ export function Scanner({
   }
 
   const leave = (fn: () => void) => () => {
+    scanGeneration.current++
+
     stop()
 
     fn()
@@ -967,78 +1032,72 @@ export function Scanner({
     (state === "step2_ready" && Boolean(streamRef.current))
 
   return (
-    <div className="flex min-h-[85vh] flex-col rounded-corner-lg bg-surface-darkest text-white shadow-xl overflow-hidden">
-      {/* Header */}
-      <header className="flex items-center gap-3 px-6 pt-5 pb-3">
-        <IconButton
-          variant="neutral"
-          aria-label="Quay lại"
-          icon={<ArrowLeft size={22} />}
+    <div className="flex h-full w-full max-w-[560px] mx-auto flex-col rounded-none md:rounded-[18px] bg-white border-0 md:border md:border-border-primary p-4 sm:p-6 shadow-none md:shadow-[0px_2px_8px_0px_rgba(0,0,0,0.04)] text-text-primary overflow-y-auto md:overflow-hidden justify-between gap-3 sm:gap-4 md:h-[680px]">
+      {/* Header (Figma Node 711:399) */}
+      <div className="flex items-center gap-3 w-full shrink-0">
+        <button
+          type="button"
           onClick={leave(onBack)}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold truncate">
-              Quét nhãn thực phẩm
-            </h1>
-            <span className="rounded-full bg-brand-primary/25 border border-brand-primary/40 px-2.5 py-0.5 text-xs font-semibold text-brand-secondary">
-              {step === 1 ? "Bước 1/2" : "Bước 2/2"}
-            </span>
-          </div>
-          <p className="text-xs text-text-tertiary truncate">
-            {step === 1
-              ? "Bước 1: Hướng vào Mã vạch hoặc Mặt trước sản phẩm"
-              : step1Data?.detectedType === "product_only"
-                ? "Bước 2: Hướng vào Đáy lon, Nắp hộp hoặc Cổ chai để quét HSD"
-                : "Bước 2: Hướng vào Mã vạch hoặc Mặt trước để nhận diện tên"}
-          </p>
-        </div>
-      </header>
+          aria-label="Quay lại"
+          className="font-semibold text-text-heading text-[20px] p-3 -ml-3 rounded-[8px] hover:bg-surface-subtle transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="text-[22px] font-semibold text-text-heading truncate">
+          Chụp nhãn
+        </h1>
+      </div>
 
-      {/* 2-Step Sequential Scan Stepper Progress */}
-      <div className="flex items-center justify-between px-6 py-2.5 border-y border-white/10 bg-white/5 text-xs">
+      {/* 2-Step Sequential Scan Stepper (Figma Node 711:402) */}
+      <div className="border-b border-border-subtle pb-3 flex items-center justify-between text-[13px] w-full shrink-0">
         <div
           className={`flex items-center gap-1.5 ${
             step1Data
-              ? "text-status-good font-medium"
+              ? "text-status-ok font-semibold"
               : step === 1
-                ? "text-brand-secondary font-semibold"
-                : "text-text-tertiary"
+                ? "text-brand-primary font-semibold"
+                : "text-text-tertiary font-medium"
           }`}
         >
           {step1Data ? (
-            <CircleCheck size={15} className="text-status-good shrink-0" />
+            <CircleCheck size={16} className="text-status-ok shrink-0" />
           ) : (
-            <span className="size-2 rounded-full bg-brand-secondary shrink-0" />
+            <span
+              className={`size-2 rounded-full shrink-0 ${
+                step === 1 ? "bg-brand-primary" : "bg-text-tertiary/40"
+              }`}
+            />
           )}
-          <span className="truncate">1. Mã vạch / Tên</span>
+          <span>1. Mã vạch / Tên</span>
           {step1Data?.draft?.name && (
-            <span className="max-w-[110px] truncate text-status-good/90 font-normal">
+            <span className="max-w-[120px] truncate text-status-ok font-normal">
               ({step1Data.draft.name})
             </span>
           )}
         </div>
 
-        <ChevronRight size={14} className="text-text-tertiary shrink-0" />
+        <span className="text-text-tertiary font-normal">&gt;</span>
 
         <div
           className={`flex items-center gap-1.5 ${
             step === 2
-              ? "text-brand-secondary font-semibold"
-              : "text-text-tertiary"
+              ? "text-brand-primary font-semibold"
+              : "text-text-tertiary font-medium"
           }`}
         >
           <span
             className={`size-2 rounded-full shrink-0 ${
-              step === 2 ? "bg-brand-secondary animate-pulse" : "bg-white/20"
+              step === 2
+                ? "bg-brand-primary animate-pulse"
+                : "bg-text-tertiary/40"
             }`}
           />
-          <span className="truncate">2. Hạn sử dụng</span>
+          <span>2. Hạn sử dụng</span>
         </div>
       </div>
 
-      {/* Viewfinder Preview */}
-      <div className="relative mx-6 my-4 flex min-h-80 flex-1 items-center justify-center overflow-hidden rounded-corner-lg bg-surface-dark">
+      {/* Viewfinder Area (Responsive flex-1 on mobile and desktop) */}
+      <div className="bg-brand-tertiary flex flex-1 min-h-[260px] md:min-h-[340px] flex-col items-center justify-center relative rounded-[16px] overflow-hidden w-full">
         <video
           ref={videoRef}
           playsInline
@@ -1052,37 +1111,39 @@ export function Scanner({
           <img
             src={image}
             alt="Ảnh nhãn đã chụp"
-            className="absolute inset-0 size-full object-cover opacity-50"
+            className="absolute inset-0 size-full object-cover opacity-60"
           />
         )}
 
-        {/* Reticle Focus Area */}
-        <div
-          className="pointer-events-none absolute inset-x-[10%] top-1/2 h-2/5 -translate-y-1/2"
-          aria-hidden="true"
-        >
-          {corners.map((c) => (
-            <span
-              key={c}
-              className={`absolute size-10 border-brand-secondary ${c}`}
-            />
-          ))}
-          {live && (
-            <span className="absolute inset-x-4 top-1/2 h-0.5 animate-pulse bg-brand-secondary shadow-sm" />
-          )}
-        </div>
+        {/* Reticle Focus Area (only when live) */}
+        {live && (
+          <>
+            <div
+              className="pointer-events-none absolute inset-x-[12%] top-1/2 h-[55%] -translate-y-1/2"
+              aria-hidden="true"
+            >
+              {corners.map((c) => (
+                <span
+                  key={c}
+                  className={`absolute size-8 border-brand-primary ${c}`}
+                />
+              ))}
+              <span className="absolute inset-x-3 top-1/2 h-0.5 animate-pulse bg-brand-primary/80 shadow-xs" />
+            </div>
 
-        {live && state === "ready" && (
-          <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-xs px-3 py-1 text-[11px] font-medium text-brand-secondary shadow-sm">
-            <Sparkles
-              size={12}
-              className="animate-pulse text-brand-secondary"
-            />
-            <span>Tự động nhận diện tức thì</span>
-          </div>
+            {state === "ready" && (
+              <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-white/95 border border-border-primary/40 backdrop-blur-sm px-3 py-1 text-[12px] font-medium text-brand-primary shadow-xs">
+                <Sparkles
+                  size={16}
+                  className="animate-pulse text-brand-primary"
+                />
+                <span>Tự động nhận diện tức thì</span>
+              </div>
+            )}
+          </>
         )}
 
-        {/* Status Messages & Overlay */}
+        {/* Floating Status Card inside Viewfinder (Figma Node 711:407) */}
         {(state === "idle" ||
           state === "requesting" ||
           state === "capturing" ||
@@ -1092,7 +1153,7 @@ export function Scanner({
           state === "denied" ||
           state === "unavailable") && (
           <div
-            className="relative z-10 flex max-w-sm flex-col items-center gap-3 rounded-corner-lg p-5 text-center bg-black/60 backdrop-blur-xs shadow-lg mx-4 transition-all duration-300"
+            className="bg-white border border-border-primary flex flex-col gap-2 items-center justify-center px-5 py-4 relative rounded-[14px] shadow-[0px_3px_8px_0px_rgba(0,0,0,0.06)] shrink-0 w-[280px] text-center z-10 transition-opacity duration-200"
             aria-live="polite"
             onClick={() => {
               if (state === "step2_ready") setShowStep2Notice(false)
@@ -1101,13 +1162,12 @@ export function Scanner({
             {state === "idle" && (
               <>
                 <Camera
-                  size={32}
+                  size={24}
                   aria-hidden="true"
-                  className="text-brand-secondary"
+                  className="text-text-heading shrink-0"
                 />
-                <p className="text-sm font-medium">Camera chưa bật</p>
-                <p className="text-xs text-text-tertiary">
-                  Bấm bật camera hoặc dùng nút chụp ảnh điện thoại bên dưới.
+                <p className="text-[16px] font-semibold text-text-heading leading-normal whitespace-nowrap">
+                  Camera chưa bật
                 </p>
               </>
             )}
@@ -1115,26 +1175,37 @@ export function Scanner({
             {state === "requesting" && (
               <>
                 <Loader2
-                  size={32}
-                  className="animate-spin text-brand-secondary"
+                  size={24}
+                  className="animate-spin text-brand-primary shrink-0"
                   aria-hidden="true"
                 />
-                <p className="text-sm font-medium">Đang mở camera…</p>
+                <p className="text-[16px] font-semibold text-text-heading">
+                  Đang mở camera…
+                </p>
               </>
             )}
 
             {state === "capturing" && (
-              <p className="text-sm font-medium">Đang chụp…</p>
+              <>
+                <Loader2
+                  size={24}
+                  className="animate-spin text-brand-primary shrink-0"
+                  aria-hidden="true"
+                />
+                <p className="text-[16px] font-semibold text-text-heading">
+                  Đang chụp…
+                </p>
+              </>
             )}
 
             {state === "processing" && (
               <>
                 <Loader2
-                  size={32}
-                  className="animate-spin text-brand-secondary"
+                  size={24}
+                  className="animate-spin text-brand-primary shrink-0"
                   aria-hidden="true"
                 />
-                <p className="text-sm font-medium">
+                <p className="text-[16px] font-semibold text-text-heading">
                   {batchProgress && batchProgress.total > 1
                     ? `Đang đọc ảnh ${batchProgress.current}/${batchProgress.total}…`
                     : step === 2
@@ -1145,9 +1216,9 @@ export function Scanner({
             )}
 
             {state === "step2_ready" && step1Data && (
-              <div className="flex flex-col items-center gap-2 text-center">
-                <div className="flex items-center gap-1.5 text-status-good font-semibold text-sm">
-                  <CircleCheck size={18} />
+              <div className="flex flex-col items-center gap-1.5 text-center">
+                <div className="flex items-center gap-1.5 text-status-ok font-semibold text-sm">
+                  <CircleCheck size={16} />
                   <span>
                     {step1Data.detectedType === "product_only"
                       ? "Đã nhận diện sản phẩm!"
@@ -1156,33 +1227,31 @@ export function Scanner({
                 </div>
 
                 {step1Data.detectedType === "product_only" ? (
-                  <div className="text-xs space-y-1">
-                    <p className="font-bold text-sm text-brand-secondary truncate max-w-[240px]">
+                  <div className="text-xs space-y-0.5">
+                    <p className="font-semibold text-sm text-text-heading truncate max-w-[240px]">
                       {step1Data.draft.name}
                     </p>
                     {step1Data.draft.barcode && (
-                      <p className="text-text-tertiary text-[11px]">
+                      <p className="text-text-tertiary text-[12px]">
                         Mã: {step1Data.draft.barcode}
                       </p>
                     )}
-                    <p className="mt-2 text-amber-300 font-medium leading-relaxed flex items-center gap-1.5">
-                      <ChevronRight size={14} className="shrink-0" /> Lật đáy
-                      lon hoặc nắp hộp để quét ngày HSD
+                    <p className="mt-1 text-brand-primary font-medium text-[12px] leading-normal">
+                      Lật đáy lon hoặc nắp hộp để quét ngày HSD
                     </p>
                   </div>
                 ) : (
-                  <div className="text-xs space-y-1">
-                    <p className="font-bold text-sm text-brand-secondary">
+                  <div className="text-xs space-y-0.5">
+                    <p className="font-semibold text-sm text-text-heading">
                       HSD: {step1Data.draft.expDate}
                     </p>
                     {step1Data.draft.mfgDate && (
-                      <p className="text-text-tertiary text-[11px]">
+                      <p className="text-text-tertiary text-[12px]">
                         NSX: {step1Data.draft.mfgDate}
                       </p>
                     )}
-                    <p className="mt-2 text-amber-300 font-medium leading-relaxed flex items-center gap-1.5">
-                      <ChevronRight size={14} className="shrink-0" /> Hướng vào
-                      Mã vạch / Mặt trước để lấy tên sản phẩm
+                    <p className="mt-1 text-brand-primary font-medium text-[12px] leading-normal">
+                      Hướng vào mã vạch hoặc mặt trước để lấy tên sản phẩm
                     </p>
                   </div>
                 )}
@@ -1192,21 +1261,16 @@ export function Scanner({
             {state === "unrecognized" && (
               <>
                 <ScanText
-                  size={32}
+                  size={24}
                   aria-hidden="true"
-                  className="text-brand-secondary"
+                  className="text-brand-primary shrink-0"
                 />
-                <p className="text-sm font-semibold">
-                  Chưa thấy ngày HSD trên góc chụp này
+                <p className="text-[16px] font-semibold text-text-heading">
+                  Chưa thấy ngày HSD
                 </p>
-                <p className="text-xs text-text-tertiary">
+                <p className="text-[12px] text-text-tertiary leading-normal">
                   Hạn sử dụng trên lon/hộp thường in riêng ở{" "}
                   <strong>đáy lon</strong> hoặc <strong>nắp hộp</strong>.
-                </p>
-                <p className="text-xs text-amber-300 font-medium flex items-center gap-1.5">
-                  <ChevronRight size={14} className="shrink-0" /> Bấm &quot;Chụp
-                  thêm góc HSD&quot; bên dưới để quét tiếp đáy lon mà không mất
-                  ảnh này!
                 </p>
               </>
             )}
@@ -1214,14 +1278,16 @@ export function Scanner({
             {state === "denied" && (
               <>
                 <ShieldAlert
-                  size={32}
+                  size={24}
                   aria-hidden="true"
-                  className="text-status-expired"
+                  className="text-status-soon shrink-0"
                 />
-                <p className="text-sm font-medium">Chưa có quyền dùng camera</p>
-                <p className="text-xs text-text-tertiary">
-                  Cho phép camera trong cài đặt trình duyệt, hoặc dùng nút chụp
-                  ảnh bên dưới.
+                <p className="text-[16px] font-semibold text-text-heading">
+                  Chưa có quyền dùng camera
+                </p>
+                <p className="text-[12px] text-text-tertiary leading-normal">
+                  Cho phép camera trong cài đặt trình duyệt hoặc chọn ảnh từ
+                  máy.
                 </p>
               </>
             )}
@@ -1229,15 +1295,16 @@ export function Scanner({
             {state === "unavailable" && (
               <>
                 <CameraOff
-                  size={32}
+                  size={24}
                   aria-hidden="true"
-                  className="text-status-expired"
+                  className="text-status-soon shrink-0"
                 />
-                <p className="text-sm font-medium">
-                  Camera trực tiếp chưa khả dụng
+                <p className="text-[16px] font-semibold text-text-heading">
+                  Không mở được camera
                 </p>
-                <p className="text-xs text-text-tertiary">
-                  Hãy dùng nút &quot;Chụp từ máy ảnh điện thoại&quot; bên dưới.
+                <p className="text-[12px] text-text-tertiary leading-normal">
+                  Camera chưa khả dụng trên thiết bị. Bạn có thể chọn ảnh từ máy
+                  hoặc nhập tay.
                 </p>
               </>
             )}
@@ -1245,204 +1312,260 @@ export function Scanner({
         )}
       </div>
 
-      {/* Mobile-Friendly Control Panel */}
-      <div className="flex flex-col items-center gap-3 px-6 py-2">
+      {/* Control Panel (Figma Node 711:410, 711:413, 711:416) */}
+      <div className="flex flex-col gap-2.5 sm:gap-3 w-full shrink-0 mt-auto md:mt-0 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        {fileError && (
+          <p
+            role="alert"
+            className="text-sm text-center text-status-expired font-medium"
+          >
+            {fileError}
+          </p>
+        )}
+
         {/* STEP 2 ACTIONS */}
         {step === 2 && step1Data && state !== "processing" && (
-          <div className="flex flex-col gap-2 w-full max-w-sm">
+          <>
             {live ? (
-              <Button
-                variant="primary"
-                iconStart={<Camera size={20} />}
+              <button
+                type="button"
+                className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs disabled:opacity-50"
                 onClick={() => capture()}
                 disabled={state === "capturing"}
               >
-                {step1Data.detectedType === "product_only"
-                  ? "Chụp ngày HSD (Đáy lon)"
-                  : "Chụp mã vạch / Mặt trước"}
-              </Button>
+                <Camera size={20} />
+                <span>
+                  {step1Data.detectedType === "product_only"
+                    ? "Chụp ngày HSD (Đáy lon)"
+                    : "Chụp mã vạch / Mặt trước"}
+                </span>
+              </button>
             ) : (
-              <Button
-                variant="primary"
-                iconStart={<Camera size={20} />}
-                onClick={() => cameraInputRef.current?.click()}
+              <button
+                type="button"
+                className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+                onClick={() => libraryInputRef.current?.click()}
               >
-                {step1Data.detectedType === "product_only"
-                  ? "Chụp ngày HSD (Đáy lon)"
-                  : "Chụp mã vạch / Mặt trước"}
-              </Button>
+                <ImageUp size={20} />
+                <span>
+                  {step1Data.detectedType === "product_only"
+                    ? "Chọn ảnh HSD (Đáy lon)"
+                    : "Chọn ảnh mã vạch / Mặt trước"}
+                </span>
+              </button>
             )}
 
-            <div className="flex gap-2">
-              <Button
-                variant="neutral"
-                className="flex-1 text-xs"
-                iconStart={<ScanText size={16} />}
-                onClick={skipStep2}
-              >
-                Bỏ qua HSD & Điền tay
-              </Button>
-              <Button
-                variant="neutral"
-                className="flex-1 text-xs"
-                iconStart={<RefreshCw size={16} />}
+            <button
+              type="button"
+              className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-primary rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+              onClick={skipStep2}
+            >
+              <Keyboard size={20} />
+              <span>Bỏ qua HSD & Nhập tay</span>
+            </button>
+
+            <div className="flex gap-2.5 sm:gap-3 w-full">
+              <button
+                type="button"
+                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                 onClick={resetToStep1}
               >
-                Quét lại từ đầu
-              </Button>
+                <RefreshCw size={16} />
+                <span>Quét lại từ đầu</span>
+              </button>
+              <button
+                type="button"
+                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                onClick={() => libraryInputRef.current?.click()}
+              >
+                <ImageUp size={16} />
+                <span>Chọn ảnh khác</span>
+              </button>
             </div>
-          </div>
+          </>
         )}
 
         {/* STEP 1 ACTIONS */}
         {step === 1 && state !== "processing" && (
-          <div className="flex flex-wrap items-center justify-center gap-2 w-full max-w-sm">
+          <>
             {live ? (
               <>
-                <Button
-                  variant="primary"
-                  iconStart={<Camera size={18} />}
+                <button
+                  type="button"
+                  className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs disabled:opacity-50"
                   onClick={() => capture()}
                   disabled={state === "capturing"}
                 >
-                  Chụp ảnh Bước 1
-                </Button>
-                <Button
-                  variant="neutral"
-                  onClick={() => {
-                    stop()
+                  <Camera size={20} />
+                  <span>Chụp nhãn</span>
+                </button>
 
-                    setState("idle")
-                  }}
+                <button
+                  type="button"
+                  className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-primary rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+                  onClick={leave(() => {
+                    const currentDraft = step1Data?.draft || detectedDraft
+                    const currentImg = step1Data?.image || image
+                    onManual(currentDraft, currentImg)
+                  })}
                 >
-                  Tắt camera
-                </Button>
+                  <Keyboard size={20} />
+                  <span>Nhập tay</span>
+                </button>
+
+                <div className="flex gap-2.5 sm:gap-3 w-full">
+                  <button
+                    type="button"
+                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                    onClick={() => {
+                      stop()
+                      setState("idle")
+                    }}
+                  >
+                    <span>Tắt camera</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                    onClick={() => setShowManualBarcode(true)}
+                  >
+                    <Barcode size={16} />
+                    <span>Nhập mã vạch</span>
+                  </button>
+                </div>
               </>
             ) : (
               <>
-                {(state === "idle" || state === "denied") && (
-                  <Button
-                    variant="primary"
-                    iconStart={<Camera size={18} />}
-                    onClick={start}
+                {state === "unavailable" ? (
+                  <button
+                    type="button"
+                    className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+                    onClick={() => libraryInputRef.current?.click()}
                   >
-                    Bật camera trực tiếp
-                  </Button>
+                    <ImageUp size={20} />
+                    <span>Chọn ảnh từ máy</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                    onClick={start}
+                    disabled={state === "requesting"}
+                  >
+                    <Camera size={20} />
+                    <span>Bật camera</span>
+                  </button>
                 )}
-                <Button
-                  variant="neutral"
-                  iconStart={<Camera size={18} />}
-                  onClick={() => cameraInputRef.current?.click()}
+
+                <button
+                  type="button"
+                  className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-primary rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+                  onClick={leave(() => {
+                    const currentDraft = step1Data?.draft || detectedDraft
+                    const currentImg = step1Data?.image || image
+                    onManual(currentDraft, currentImg)
+                  })}
                 >
-                  Chụp từ máy ảnh
-                </Button>
-                <Button
-                  variant="neutral"
-                  iconStart={<ImageUp size={18} />}
-                  onClick={() => libraryInputRef.current?.click()}
-                >
-                  Thư viện ảnh
-                </Button>
-                <Button
-                  variant="neutral"
-                  iconStart={<Barcode size={18} />}
-                  onClick={() => setShowManualBarcode(true)}
-                >
-                  Nhập số vạch
-                </Button>
+                  <Keyboard size={20} />
+                  <span>Nhập tay</span>
+                </button>
+
+                <div className="flex gap-2.5 sm:gap-3 w-full">
+                  <button
+                    type="button"
+                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                    onClick={() => libraryInputRef.current?.click()}
+                  >
+                    <ImageUp size={16} />
+                    <span>Thư viện ảnh</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                    onClick={() => setShowManualBarcode(true)}
+                  >
+                    <Barcode size={16} />
+                    <span>Nhập mã vạch</span>
+                  </button>
+                </div>
               </>
             )}
-          </div>
+          </>
         )}
 
         {/* Unrecognized Actions */}
         {state === "unrecognized" && (
-          <div className="flex flex-col gap-2.5 w-full max-w-sm">
+          <>
             {image && (
-              <Button
-                variant="primary"
-                iconStart={<Camera size={20} />}
+              <button
+                type="button"
+                className="h-[52px] bg-brand-primary hover:bg-brand-hover active:bg-brand-dark text-white rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
                 onClick={() => {
                   setStep1Data({
                     draft: detectedDraft || {
                       name: "",
-
                       quantity: "1",
-
-                      unit: "cái",
-
+                      unit: "",
                       category: "other",
-
                       mfgDate: "",
-
                       expDate: "",
-
                       location: "",
                     },
-
                     image,
-
                     detectedType: "product_only",
                   })
-
                   setStep(2)
-
                   setState("step2_ready")
-
                   if (!live) {
-                    cameraInputRef.current?.click()
+                    libraryInputRef.current?.click()
                   }
                 }}
               >
-                Chụp thêm góc HSD (Đáy lon / Nắp hộp)
-              </Button>
+                <ImageUp size={20} />
+                <span>Chụp thêm góc HSD (Đáy lon / Nắp hộp)</span>
+              </button>
             )}
-            <div className="flex gap-2">
-              <Button
-                variant="neutral"
-                className="flex-1 text-xs"
-                iconStart={<ScanText size={16} />}
-                onClick={() =>
-                  onReview(
-                    images.length > 1 ? images : image || "",
 
-                    detectedDraft,
-                  )
-                }
-              >
-                Kiểm tra thông tin
-              </Button>
-              <Button
-                variant="neutral"
-                className="flex-1 text-xs"
-                iconStart={<RefreshCw size={16} />}
+            <button
+              type="button"
+              className="h-[52px] bg-white border border-brand-primary hover:bg-brand-primary/5 active:bg-brand-primary/10 text-brand-primary rounded-[16px] text-[16px] font-medium flex items-center justify-center gap-2 w-full transition-colors cursor-pointer shadow-xs"
+              onClick={() =>
+                onReview(
+                  images.length > 1 ? images : image || "",
+                  detectedDraft,
+                )
+              }
+            >
+              <ScanText size={20} />
+              <span>Kiểm tra thông tin đã nhận</span>
+            </button>
+
+            <div className="flex gap-2.5 sm:gap-3 w-full">
+              <button
+                type="button"
+                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                 onClick={resetToStep1}
               >
-                Quét lại từ đầu
-              </Button>
+                <RefreshCw size={16} />
+                <span>Quét lại từ đầu</span>
+              </button>
+              <button
+                type="button"
+                className="h-[48px] sm:h-[52px] flex-1 bg-white border border-border-primary hover:border-brand-primary/60 hover:bg-surface-hover active:bg-brand-primary/10 rounded-[16px] text-text-primary text-[16px] sm:text-[16px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                onClick={leave(() => {
+                  const currentDraft = step1Data?.draft || detectedDraft
+                  const currentImg = step1Data?.image || image
+                  onManual(currentDraft, currentImg)
+                })}
+              >
+                <Keyboard size={16} />
+                <span>Nhập tay</span>
+              </button>
             </div>
-          </div>
+          </>
         )}
 
-        {/* Native Mobile Camera File Input (triggers device camera app directly) */}
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="sr-only"
-          tabIndex={-1}
-          aria-hidden="true"
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-
-            if (f) onSingleFile(f)
-
-            e.target.value = ""
-          }}
-        />
-
-        {/* Gallery / Multi-photo file input */}
+        {/* Gallery / File input (triggers device picker / library) */}
         <input
           ref={libraryInputRef}
           type="file"
@@ -1453,7 +1576,6 @@ export function Scanner({
           aria-hidden="true"
           onChange={(e) => {
             onFiles(e.target.files)
-
             e.target.value = ""
           }}
         />
@@ -1469,59 +1591,30 @@ export function Scanner({
 
             const draft: Draft = {
               name: barcodeDraft.name,
-
               barcode: barcodeDraft.barcode,
-
               quantity: "1",
-
-              unit: "cái",
-
+              unit: "",
               category: "other",
-
               mfgDate: "",
-
               expDate: "",
-
               location: "",
             }
 
             setStep1Data({
               image: "",
-
               draft,
-
               detectedType: "product_only",
             })
 
             setStep(2)
-
             setShowStep2Notice(true)
           }}
           onSkip={() => {
             setShowManualBarcode(false)
-
             onManual?.()
           }}
         />
       )}
-
-      {/* Manual Input Fallback */}
-      <div className="px-6 pt-2 pb-5">
-        <Button
-          variant="neutral"
-          block
-          iconStart={<Keyboard size={18} />}
-          onClick={leave(() => {
-            const currentDraft = step1Data?.draft || detectedDraft
-
-            const currentImg = step1Data?.image || image
-
-            onManual(currentDraft, currentImg)
-          })}
-        >
-          Nhập bằng tay
-        </Button>
-      </div>
     </div>
   )
 }

@@ -1,10 +1,15 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { api } from "../api/client"
 
 import { playBeep } from "../lib/barcode"
 
-import type { Category, Food, Unit } from "../store/appStore"
+import { popoverIn, useGSAP } from "../lib/motion"
+
+import type { Draft } from "../domain/foodDraft"
+
+export { draftFrom, emptyDraft } from "../domain/foodDraft"
+export type { Draft } from "../domain/foodDraft"
 
 import {
   CATEGORIES,
@@ -23,12 +28,13 @@ import FieldError from "../components/ui/FieldError"
 import {
   Barcode,
   Camera,
+  Lock,
   Plus,
   ScanText,
   X,
   Bell,
   CalendarClock,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 import InputField from "../components/ui/InputField"
 
@@ -36,88 +42,38 @@ import Modal from "../components/ui/Modal"
 
 import SectionTitle from "../components/ui/SectionTitle"
 
+import PageHeader, {
+  type PageBreadcrumbItem,
+} from "../components/ui/PageHeader"
+
 import SelectField from "../components/ui/SelectField"
 
 import GoogleReminderPicker, { formatGoogleDate } from "./GoogleReminderPicker"
 
-export interface Draft {
-  id?: string
+import { prepareScanImage } from "./image-optimization"
 
-  name: string
+export type Errors = Partial<Record<"name" | "quantity" | "unit" | "location" | "note" | "mfgDate" | "opened_on" | "expDate" | "save", string>>
 
-  quantity: string
+const validDate = (v: string) => {
+  if (!v) return true
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false
 
-  unit: Unit | ""
-
-  category: Category | ""
-
-  mfgDate: string
-
-  opened_on?: string
-
-  expDate: string
-
-  location: string
-
-  barcode?: string
-
-  reviewAt?: string
+  const date = new Date(`${v}T00:00:00.000Z`)
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === v
 }
-
-export const emptyDraft = (): Draft => ({
-  name: "",
-
-  quantity: "1",
-
-  unit: "cái",
-
-  category: "other",
-
-  mfgDate: "",
-
-  opened_on: "",
-
-  expDate: "",
-
-  location: "",
-
-  reviewAt: "",
-})
-
-export const draftFrom = (f: Food, keepQty = true): Draft => ({
-  id: f.id,
-
-  name: f.name,
-
-  quantity: keepQty ? String(f.quantity) : "",
-
-  unit: f.unit,
-
-  category: f.category ?? "other",
-
-  mfgDate: f.mfgDate ?? "",
-
-  opened_on: f.opened_on ?? "",
-
-  expDate: f.expDate ?? "",
-
-  location: f.location ?? "",
-
-  barcode: f.barcode ?? undefined,
-
-  reviewAt: f.reviewAt ?? "",
-})
-
-export type Errors = Partial<Record<"name" | "quantity" | "unit" | "mfgDate" | "opened_on" | "expDate" | "save", string>>
-
-const validDate = (v: string) =>
-  !v ||
-  (/^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(new Date(v + "T00:00:00").getTime()))
 
 export function validate(d: Draft): Errors {
   const e: Errors = {}
 
   if (!d.name.trim()) e.name = "Vui lòng nhập tên thực phẩm."
+  else if ([...d.name.trim()].length > 200)
+    e.name = "Tên thực phẩm tối đa 200 ký tự."
+
+  if ([...d.location.trim()].length > 100)
+    e.location = "Vị trí tối đa 100 ký tự."
+
+  if ([...(d.note?.trim() ?? "")].length > 1000)
+    e.note = "Ghi chú tối đa 1000 ký tự."
 
   const q = d.quantity.trim().replace(",", ".")
 
@@ -181,6 +137,9 @@ export function FoodForm({
   onSubmit,
 
   onCancel,
+  breadcrumbs,
+  onDirtyChange,
+  restored,
 }: {
   mode: FormMode
 
@@ -195,12 +154,43 @@ export function FoodForm({
   onSubmit: (d: Draft) => Promise<void>
 
   onCancel: (dirty: boolean) => void
+
+  breadcrumbs?: readonly PageBreadcrumbItem[]
+
+  restored?: Draft
+
+  onDirtyChange?: (dirty: boolean) => void
 }) {
-  const [d, setD] = useState<Draft>(initial)
+  const [d, setD] = useState<Draft>(restored ?? initial)
 
   const [showReminderPicker, setShowReminderPicker] = useState<boolean>(
     () => !!initial.reviewAt,
   )
+
+  const reminderRef = useRef<HTMLDivElement>(null)
+
+  useGSAP(
+    () => {
+      if (showReminderPicker && reminderRef.current) {
+        popoverIn(reminderRef.current)
+      }
+    },
+    { scope: reminderRef, dependencies: [showReminderPicker] },
+  )
+
+  // Track which fields originated from a scan (strictly read-only, editing is locked)
+  const [scannedFields, setScannedFields] =
+    useState<Set<"name" | "expDate" | "mfgDate">>(() => {
+      if (mode !== "ocr") return new Set()
+      const s = new Set<"name" | "expDate" | "mfgDate">()
+      if (initial.name) s.add("name")
+      if (initial.expDate) s.add("expDate")
+      if (initial.mfgDate) s.add("mfgDate")
+      return s
+    })
+
+  const isScanned = (field: "name" | "expDate" | "mfgDate") =>
+    scannedFields.has(field)
 
   const [capturedImages, setCapturedImages] = useState<string[]>(() =>
     Array.isArray(capturedImage)
@@ -218,6 +208,15 @@ export function FoodForm({
 
   const scanHsdInputRef = useRef<HTMLInputElement>(null)
 
+  const scanGeneration = useRef(0)
+
+  useEffect(
+    () => () => {
+      scanGeneration.current++
+    },
+    [],
+  )
+
   const handleScanHsdPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
 
@@ -225,18 +224,18 @@ export function FoodForm({
 
     e.target.value = ""
 
+    const generation = ++scanGeneration.current
+
     setScanningHsd(true)
 
     try {
-      const dataUrl = await new Promise<string>((resolve) => {
-        const r = new FileReader()
+      const prepared = await prepareScanImage(file)
 
-        r.onload = () => resolve(String(r.result))
+      if (generation !== scanGeneration.current) return
 
-        r.readAsDataURL(file)
-      })
+      const result = await api.scan(prepared.file)
 
-      const result = await api.scan(file)
+      if (generation !== scanGeneration.current) return
 
       const cand = result.candidates
 
@@ -247,19 +246,30 @@ export function FoodForm({
       if (exp) {
         setD((p) => ({ ...p, expDate: exp, mfgDate: mfg || p.mfgDate }))
 
+        setScannedFields((prev) => {
+          const next = new Set(prev)
+          next.add("expDate")
+          if (mfg) next.add("mfgDate")
+          return next
+        })
+
         setErrors((p) => ({ ...p, expDate: undefined, mfgDate: undefined }))
       } else if (mfg) {
         setD((p) => ({ ...p, mfgDate: mfg }))
 
+        setScannedFields((prev) => new Set(prev).add("mfgDate"))
+
         setErrors((p) => ({ ...p, mfgDate: undefined }))
       }
 
-      setCapturedImages((prev) => [...prev, dataUrl])
+      setCapturedImages((prev) => [...prev, prepared.image])
 
       setSelectedImgIdx(capturedImages.length)
 
       playBeep()
     } catch {
+      if (generation !== scanGeneration.current) return
+
       setErrors((p) => ({
         ...p,
 
@@ -267,7 +277,7 @@ export function FoodForm({
           "Chưa đọc được ngày từ ảnh này, vui lòng nhập tay hoặc chụp lại gần hơn.",
       }))
     } finally {
-      setScanningHsd(false)
+      if (generation === scanGeneration.current) setScanningHsd(false)
     }
   }
 
@@ -282,8 +292,31 @@ export function FoodForm({
   const submitting = useRef(false)
 
   const dirty = JSON.stringify(d) !== JSON.stringify(initial)
+  useEffect(() => {
+    onDirtyChange?.(dirty)
+    return () => onDirtyChange?.(false)
+  }, [dirty, onDirtyChange])
+
+  useEffect(() => {
+    // Keep an interrupted browser reload in the same form and history entry.
+    const persistDraft = () => {
+      const entry = window.history.state
+      if (entry?.stack?.at(-1)?.name === "form") {
+        window.history.replaceState(
+          { ...entry, formDraft: dirty ? d : undefined },
+          "",
+        )
+      }
+    }
+    window.addEventListener("pagehide", persistDraft)
+    return () => window.removeEventListener("pagehide", persistDraft)
+  }, [dirty, d])
 
   const set = (k: keyof Draft) => (v: string) => {
+    // Strictly prevent changes to machine-scanned fields
+    if ((k === "name" || k === "expDate" || k === "mfgDate") && isScanned(k))
+      return
+
     setD((p) => ({ ...p, [k]: v }))
 
     setErrors((p) => ({ ...p, [k]: undefined, save: undefined }))
@@ -318,23 +351,25 @@ export function FoodForm({
   const expPast = d.expDate && !errors.expDate && d.expDate < today()
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto pt-2">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-bold text-text-primary tracking-tight">
-          {titles[mode]}
-        </h1>
-        <button
-          type="button"
-          onClick={() => onCancel(dirty)}
-          aria-label="Hủy bỏ"
-          className="p-1 rounded-corner-md text-text-secondary hover:text-text-primary hover:bg-surface-hover"
-        >
-          <X size={22} aria-hidden="true" />
-        </button>
-      </div>
+    <div className="flex flex-col gap-6 w-full">
+      <PageHeader
+        title={titles[mode]}
+        onBack={() => onCancel(dirty)}
+        breadcrumbs={breadcrumbs}
+        actions={
+          <button
+            type="button"
+            onClick={() => onCancel(dirty)}
+            aria-label="Hủy bỏ"
+            className="flex size-11 items-center justify-center rounded-corner-md text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand-primary"
+          >
+            <X size={20} aria-hidden="true" />
+          </button>
+        }
+      />
 
       {mode === "ocr" && (
-        <Card className="flex items-start gap-4 border-brand-primary/30 bg-brand-tertiary/60">
+        <Card className="flex items-start gap-4 border border-brand-primary/30 bg-surface-bg shadow-xs">
           {currentImg ? (
             <div className="flex flex-col gap-1.5 shrink-0 items-center">
               <img
@@ -349,10 +384,10 @@ export function FoodForm({
                       key={idx}
                       type="button"
                       onClick={() => setSelectedImgIdx(idx)}
-                      className={`h-1.5 rounded-full transition-all ${
+                      className={`h-1.5 rounded-full transition-[width,background-color] ${
                         idx === selectedImgIdx
                           ? "bg-brand-primary w-3.5"
-                          : "bg-border-secondary hover:bg-text-secondary w-1.5"
+                          : "bg-border-primary hover:bg-text-secondary w-1.5"
                       }`}
                       aria-label={`Xem ảnh ${idx + 1}`}
                     />
@@ -378,26 +413,39 @@ export function FoodForm({
         </Card>
       )}
 
-      {mode === "readd" && (
-        <p className="text-xs md:text-sm text-text-secondary">
-          Hãy xác nhận lại số lượng và hạn sử dụng của lần mua mới này.
-        </p>
-      )}
-
       <Card className="flex flex-col gap-4">
         <div>
-          <InputField
-            label="Tên thực phẩm *"
-            placeholder="Ví dụ: Sữa tươi, Trứng gà, Rau cải..."
-            value={d.name}
-            onChange={set("name")}
-            aria-invalid={!!errors.name}
-            aria-describedby="e-name"
-            autoFocus
-          />
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <InputField
+                label="Tên thực phẩm *"
+                placeholder="Ví dụ: Sữa tươi, Trứng gà, Rau cải..."
+                value={d.name}
+                onChange={set("name")}
+                aria-invalid={!!errors.name}
+                aria-describedby="e-name"
+                autoFocus={!isScanned("name")}
+                readOnly={isScanned("name")}
+                className={
+                  isScanned("name")
+                    ? "bg-surface-hover/80 text-text-primary font-medium border-border-primary/80 cursor-default select-text"
+                    : ""
+                }
+              />
+            </div>
+            {isScanned("name") && (
+              <span
+                title="Tên thực phẩm trích xuất tự động từ nhãn/mã vạch (chỉ đọc)"
+                className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
+              >
+                <Lock size={16} aria-hidden="true" />
+                <span>Chỉ đọc</span>
+              </span>
+            )}
+          </div>
           {d.barcode && (
             <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-1">
-              <Barcode size={14} className="text-brand-primary shrink-0" />
+              <Barcode size={16} className="text-brand-primary shrink-0" />
               <span>
                 Mã vạch:{" "}
                 <strong className="font-mono text-text-primary">
@@ -424,7 +472,10 @@ export function FoodForm({
           <div>
             <SelectField
               label="Đơn vị *"
-              options={UNITS.map((u) => ({ value: u, label: u }))}
+              options={[
+                { value: "", label: "Chọn đơn vị" },
+                ...UNITS.map((u) => ({ value: u, label: u })),
+              ]}
               value={d.unit}
               onChange={set("unit")}
             />
@@ -464,7 +515,10 @@ export function FoodForm({
               ]}
               value={d.location}
               onChange={set("location")}
+              aria-invalid={!!errors.location}
+              aria-describedby="e-location"
             />
+            <FieldError id="e-location" msg={errors.location} />
           </div>
         </div>
       </Card>
@@ -495,35 +549,52 @@ export function FoodForm({
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <InputField
-              label="Ngày sản xuất (NSX)"
-              type="date"
-              value={d.mfgDate}
-              onChange={set("mfgDate")}
-              aria-describedby="e-mfg"
-            />
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <InputField
+                  label="Ngày sản xuất (NSX)"
+                  type="date"
+                  value={d.mfgDate}
+                  onChange={set("mfgDate")}
+                  aria-describedby="e-mfg"
+                  readOnly={isScanned("mfgDate")}
+                  className={
+                    isScanned("mfgDate")
+                      ? "bg-surface-hover/80 text-text-primary font-medium border-border-primary/80 cursor-default select-text"
+                      : ""
+                  }
+                />
+              </div>
+              {isScanned("mfgDate") && (
+                <span
+                  title="NSX trích xuất tự động từ nhãn (chỉ đọc)"
+                  className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
+                >
+                  <Lock size={16} aria-hidden="true" />
+                  <span>Chỉ đọc</span>
+                </span>
+              )}
+            </div>
             <FieldError id="e-mfg" msg={errors.mfgDate} />
             {/* Icon tùy chỉnh nhắc nhở ngay dưới NSX */}
             <div className="mt-1.5 flex items-center">
               <button
                 type="button"
                 onClick={() => setShowReminderPicker((v) => !v)}
-                className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md transition-all cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
                   d.reviewAt
-                    ? "bg-[#0b57d0]/10 text-[#0b57d0] dark:text-blue-400 border border-[#0b57d0]/30 hover:bg-[#0b57d0]/20 font-semibold"
+                    ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary/20 font-semibold"
                     : showReminderPicker
                       ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/40 shadow-xs"
-                      : "text-text-secondary hover:text-brand-primary hover:bg-surface-secondary border border-transparent hover:border-border-primary/40"
+                      : "text-text-secondary hover:text-brand-primary hover:bg-surface-hover border border-transparent hover:border-border-primary/40"
                 }`}
                 title="Tùy chỉnh nhắc nhở"
                 aria-expanded={showReminderPicker}
               >
                 <Bell
-                  size={14}
+                  size={16}
                   className={
-                    d.reviewAt
-                      ? "text-[#0b57d0] dark:text-blue-400"
-                      : "text-text-secondary"
+                    d.reviewAt ? "text-brand-primary" : "text-text-secondary"
                   }
                 />
                 <span>
@@ -545,28 +616,50 @@ export function FoodForm({
             <FieldError id="e-opened" msg={errors.opened_on} />
           </div>
           <div>
-            <InputField
-              label="Hạn sử dụng (HSD)"
-              type="date"
-              value={d.expDate}
-              onChange={set("expDate")}
-              aria-describedby="e-exp"
-            />
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <InputField
+                  label="Hạn sử dụng (HSD)"
+                  type="date"
+                  value={d.expDate}
+                  onChange={set("expDate")}
+                  aria-describedby="e-exp"
+                  readOnly={isScanned("expDate")}
+                  className={
+                    isScanned("expDate")
+                      ? "bg-surface-hover/80 text-text-primary font-medium border-border-primary/80 cursor-default select-text"
+                      : ""
+                  }
+                />
+              </div>
+              {isScanned("expDate") && (
+                <span
+                  title="HSD trích xuất tự động từ nhãn (chỉ đọc)"
+                  className="h-11 shrink-0 inline-flex items-center gap-1.5 px-3 rounded-corner-md text-xs font-semibold text-brand-primary bg-brand-primary/10 border border-brand-primary/25 shadow-2xs"
+                >
+                  <Lock size={16} aria-hidden="true" />
+                  <span>Chỉ đọc</span>
+                </span>
+              )}
+            </div>
             <FieldError id="e-exp" msg={errors.expDate} />
           </div>
         </div>
 
         {/* Khung Tùy chỉnh nhắc nhở (Google Calendar style) chỉ hiện ra khi ấn vào icon */}
         {showReminderPicker && (
-          <div className="mt-2 pt-4 border-t border-border-primary/60 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div
+            ref={reminderRef}
+            className="mt-2 pt-4 border-t border-border-primary/60 flex flex-col gap-3"
+          >
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
-                <Bell size={16} className="text-[#0b57d0] dark:text-blue-400" />
-                <span className="text-sm font-semibold text-text-primary">
+                <Bell size={16} className="text-brand-primary" />
+                <span className="text-sm font-semibold text-text-heading">
                   Tùy chỉnh nhắc nhở
                 </span>
                 {d.reviewAt && (
-                  <span className="text-xs font-medium text-[#0b57d0] dark:text-blue-400 bg-[#0b57d0]/10 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full border border-brand-primary/30">
                     Đã bật lịch nhắc
                   </span>
                 )}
@@ -613,10 +706,10 @@ export function FoodForm({
                         reviewAt: isSelected ? "" : targetDate,
                       }))
                     }
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
                       isSelected
-                        ? "bg-[#0b57d0] text-white shadow-xs"
-                        : "bg-surface-secondary text-text-secondary hover:text-text-primary hover:bg-surface-tertiary border border-border-primary/50"
+                        ? "bg-brand-primary text-white shadow-xs"
+                        : "bg-surface-subtle text-text-secondary hover:text-text-primary hover:bg-surface-hover border border-border-primary/50"
                     }`}
                   >
                     +{num} ngày
@@ -626,6 +719,21 @@ export function FoodForm({
             </div>
           </div>
         )}
+
+        {/* Ghi chú thêm */}
+        <div>
+          <InputField
+            label="Ghi chú thêm"
+            type="text"
+            placeholder="Ví dụ: Để ở ngăn đông, nắp đã mở..."
+            value={d.note || ""}
+            onChange={set("note")}
+            maxLength={1000}
+            aria-invalid={!!errors.note}
+            aria-describedby="e-note"
+          />
+          <FieldError id="e-note" msg={errors.note} />
+        </div>
 
         {expPast && (
           <p className="text-xs text-status-soon font-medium">
@@ -666,7 +774,7 @@ export function FoodForm({
                 if (name) {
                   onAddLocation(name)
 
-                  setD((p) => ({ ...p, location: name }))
+                  set("location")(name)
 
                   setNewLocName("")
 
@@ -684,6 +792,23 @@ export function FoodForm({
           placeholder="Ví dụ: Tủ lạnh mini, Kệ gia vị..."
           value={newLocName}
           onChange={setNewLocName}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault()
+
+              const name = newLocName.trim()
+
+              if (name) {
+                onAddLocation(name)
+
+                set("location")(name)
+
+                setNewLocName("")
+
+                setNewLocModal(false)
+              }
+            }
+          }}
           autoFocus
         />
       </Modal>

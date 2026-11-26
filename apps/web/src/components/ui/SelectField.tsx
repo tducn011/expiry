@@ -1,6 +1,6 @@
 import { type ChangeEvent, type SelectHTMLAttributes, useId } from "react"
 
-import { ChevronDown } from "./Icon"
+import { ChevronDown } from "lucide-react"
 
 export interface SelectOption {
   value: string
@@ -54,7 +54,7 @@ export function SelectField({
         </label>
       )}
       <div
-        className={`relative flex items-center min-h-11 w-full rounded-corner-md border border-border-primary bg-surface-bg shadow-xs transition-colors focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 ${
+        className={`relative flex items-center min-h-11 w-full rounded-corner-md border border-border-control bg-surface-bg shadow-xs transition-colors focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 ${
           disabled ? "opacity-60 bg-bg-subtle cursor-not-allowed" : ""
         } ${className}`}
       >
@@ -73,7 +73,7 @@ export function SelectField({
           ))}
         </select>
         <span className="pointer-events-none absolute right-3 flex items-center text-text-tertiary">
-          <ChevronDown size={18} aria-hidden />
+          <ChevronDown size={16} aria-hidden />
         </span>
       </div>
       {description && (

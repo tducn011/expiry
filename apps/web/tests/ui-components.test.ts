@@ -580,7 +580,7 @@ describe("Barcode GS1 & Lookup Service", () => {
   it("configures ZXing multi-format reader with TRY_HARDER hints", async () => {
     const { createConfiguredReader } = await import("../src/lib/barcode")
 
-    const reader = createConfiguredReader()
+    const reader = await createConfiguredReader()
 
     expect(reader).toBeDefined()
   })
@@ -710,5 +710,45 @@ describe("Manual Capture Form & Outcome Boundary (CAP-01)", () => {
   it("exports FilterDropdown and supports Danh mục and Lưu trữ options", async () => {
     const { FilterDropdown } = await import("../src/components/ui/FilterChips")
     expect(typeof FilterDropdown).toBe("function")
+  })
+
+  it("renders ShoppingView with auto-suggestions, input form, and uncluttered headers", async () => {
+    const React = await import("react")
+    const { renderToString } = await import("react-dom/server")
+    const { ShoppingView } = await import("../src/features/ShoppingView")
+
+    const mockState = {
+      foods: [
+        {
+          id: "f_depleted",
+          name: "Rau muống",
+          quantity: 0,
+          unit: "bó",
+          category: "fresh_produce",
+          finishedAt: "2026-11-15T00:00:00.000Z",
+          createdAt: "2026-11-10T00:00:00.000Z",
+        },
+      ],
+      locations: ["Ngăn mát"],
+      history: [],
+      readNotifs: [],
+      snoozed: {},
+      settings: { remindDays: 3, inApp: true, push: false },
+      mode: "demo" as const,
+    }
+
+    const html = renderToString(
+      React.createElement(ShoppingView, {
+        state: mockState,
+        dispatch: () => {},
+        notify: () => {},
+      }),
+    )
+
+    expect(html).toContain("Mua sắm")
+    expect(html).toContain("Gợi ý từ kho")
+    expect(html).toContain("Rau muống")
+    expect(html).toContain("Tên món cần mua")
+    expect(html).toContain("Thêm")
   })
 })

@@ -11,6 +11,7 @@ import type {
   Preferences,
   QuantityMovement,
   Session,
+  ShoppingItem,
   Unit,
 } from "../domain/types.ts"
 
@@ -41,13 +42,19 @@ export function errorMessage(status: number, code: string) {
     AUTH_RATE_LIMITED: "Đã thử đăng nhập nhiều lần. Hãy chờ rồi thử lại.",
 
     VERSION_CONFLICT:
-      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+      "Dữ liệu vừa thay đổi. Xem lại số lượng và xác nhận một thao tác mới.",
 
     CONCURRENT_MODIFICATION:
-      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+      "Dữ liệu vừa thay đổi. Xem lại số lượng và xác nhận một thao tác mới.",
 
     INSUFFICIENT_QUANTITY:
       "Lượng hiện tại không đủ. Kiểm tra lại trước khi xác nhận.",
+
+    SHOPPING_NOT_CHECKED:
+      "Mục mua chưa được đánh dấu đã mua. Quay lại danh sách để cập nhật.",
+
+    SHOPPING_ALREADY_IMPORTED:
+      "Mục mua này đã được nhập vào kho. Tải lại danh sách để xem trạng thái mới.",
 
     IDEMPOTENCY_KEY_REUSED:
       "Nội dung yêu cầu đã thay đổi. Kiểm tra dữ liệu trước khi thao tác lại.",
@@ -87,7 +94,7 @@ export function errorMessage(status: number, code: string) {
   if (status === 404) return "Bản ghi không còn khả dụng. Hãy quay lại kho."
 
   if (status === 422)
-    return "Thông tin chưa hợp lệ. Kiểm tra lượng, ngày và các trường đã nhập."
+    return "Thông tin chưa hợp lệ. Kiểm tra số lượng, ngày và các trường đã nhập."
 
   if (status === 413) return "Ảnh quá lớn. Chọn ảnh không quá 5 MB."
 
@@ -165,6 +172,8 @@ export type EntryDraftDTO = {
 
   manufactured_on?: string | null
 
+  review_at?: string | null
+
   note: string | null
 
   barcode?: string | null
@@ -176,6 +185,16 @@ export type CreateEntryDTO = EntryDraftDTO & {
   quantity: string
 
   unit: Unit
+}
+
+export type ShoppingInventoryImportDTO = {
+  expected_version: number
+  entry: CreateEntryDTO
+}
+
+export type ShoppingInventoryImportResult = {
+  item: ShoppingItem
+  entry: FoodEntry
 }
 
 export type MovementDTO = {
@@ -380,6 +399,9 @@ export function fromEntry(dto: EntryDTO): FoodEntry {
     storage_location:
       dto.storage_location === "unspecified" ? null : dto.storage_location,
 
+    category:
+      (dto as Record<string, unknown>).category as string | null ?? null,
+
     remaining_quantity: quantity,
 
     unit: dto.unit,
@@ -398,6 +420,9 @@ export function fromEntry(dto: EntryDTO): FoodEntry {
 
     manufactured_on:
       (dto as Record<string, unknown>).manufactured_on as string | null ?? null,
+
+    review_at:
+      (dto as Record<string, unknown>).review_at as string | null ?? null,
 
     note: dto.note,
 
@@ -456,7 +481,15 @@ export function draftDTO(draft: EntryDraft): EntryDraftDTO {
       (draft as Record<string, unknown>).manufactured_on as string | null ??
       null,
 
+    review_at:
+      ((draft as Record<string, unknown>).review_at ||
+        (draft as Record<string, unknown>).reviewAt) as string | null ?? null,
+
     note: draft.note,
+  }
+
+  if (typeof draft.category === "string" && draft.category.trim()) {
+    dto.category = draft.category
   }
 
   if (draft.barcode) {
@@ -1108,13 +1141,108 @@ export class ApiClient {
     )
   }
 
-  async entries(query: Record<string, string | number> = {}, trash = false) {
-    const search = new URLSearchParams(
-      Object.entries(query).map(([key, value]) => [key, String(value)]),
+  async shoppingItems() {
+    const result = await this.request<{ items: ShoppingItem[] }>(
+      "/shopping-items",
     )
+    if (!result || !Array.isArray(result.items)) throw contractError()
+    return result.items
+  }
+
+  async shoppingItem(id: string) {
+    return this.request<ShoppingItem>(
+      `/shopping-items/${encodeURIComponent(id)}`,
+    )
+  }
+
+  async importShoppingItemToInventory(
+    id: string,
+    command: ShoppingInventoryImportDTO,
+    commandKey?: string,
+  ): Promise<ShoppingInventoryImportResult> {
+    const result = await this.mutation<{
+      item: ShoppingItem
+      entry: EntryDTO
+    }>(
+      "POST",
+      `/shopping-items/${encodeURIComponent(id)}/import-to-inventory`,
+      command,
+      commandKey,
+    )
+    return { item: result.item, entry: fromEntry(result.entry) }
+  }
+
+  createShoppingItem(
+    item: Omit<ShoppingItem, "id" | "createdAt" | "version">,
+    commandKey?: string,
+  ) {
+    return this.mutation<ShoppingItem>(
+      "POST",
+      "/shopping-items",
+      item,
+      commandKey,
+    )
+  }
+
+  updateShoppingItem(
+    item: ShoppingItem,
+    patch: Partial<ShoppingItem>,
+    commandKey?: string,
+  ) {
+    return this.mutation<ShoppingItem>(
+      "PATCH",
+      `/shopping-items/${encodeURIComponent(item.id)}`,
+      { ...patch, expected_version: item.version ?? 1 },
+      commandKey,
+    )
+  }
+
+  async deleteShoppingItem(item: ShoppingItem, commandKey?: string) {
+    await this.mutation<void>(
+      "DELETE",
+      `/shopping-items/${encodeURIComponent(item.id)}`,
+      undefined,
+      commandKey,
+    )
+  }
+
+  async importShoppingItems(items: ShoppingItem[], commandKey?: string) {
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(JSON.stringify(items)),
+    )
+    const contentKey = `shopping_import_${Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("")}`
+    return this.mutation<{
+      imported: boolean
+      existing: boolean
+    }>("POST", "/shopping-items/import", { items }, commandKey ?? contentKey)
+  }
+
+  async entries(query: Record<string, string | number> = {}, trash = false) {
+    const normalized: Record<string, string> = {}
+    for (const [key, value] of Object.entries(query)) {
+      if (
+        value === undefined ||
+        value === null ||
+        value === "all" ||
+        value === ""
+      )
+        continue
+      let val = String(value)
+      if (key === "attention") {
+        if (val === "past" || val === "expired") val = "past_date"
+        else if (val === "today") val = "due_today"
+        else if (val === "expiring_soon" || val === "expiring") val = "soon"
+      }
+      normalized[key] = val
+    }
+    const search = new URLSearchParams(normalized)
+    const queryString = search.toString() ? `?${search.toString()}` : ""
 
     const page = await this.request<EntryPage<EntryDTO>>(
-      `${trash ? "/trash/food-entries" : "/food-entries"}?${search}`,
+      `${trash ? "/trash/food-entries" : "/food-entries"}${queryString}`,
     )
 
     if (
@@ -1125,6 +1253,37 @@ export class ApiClient {
       throw contractError()
 
     return { ...page, items: page.items.map(fromEntry) }
+  }
+
+  getAttentionSummary(entries: FoodEntry[], asOfDate?: string) {
+    const todayStr = asOfDate || new Date().toISOString().slice(0, 10)
+    let expired = 0
+    let soon = 0
+    let reviewDue = 0
+    for (const item of entries) {
+      if (item.deleted_at) continue
+      if (item.remaining_quantity <= 0) continue
+      if (item.attention === "past") {
+        expired++
+      } else if (item.attention === "today" || item.attention === "soon") {
+        soon++
+      }
+      if (
+        item.review_at &&
+        item.review_at <= todayStr &&
+        item.attention !== "past" &&
+        item.attention !== "today" &&
+        item.attention !== "soon"
+      ) {
+        reviewDue++
+      }
+    }
+    return {
+      expired,
+      soon,
+      reviewDue,
+      total: expired + soon + reviewDue,
+    }
   }
 
   async entry(id: string) {

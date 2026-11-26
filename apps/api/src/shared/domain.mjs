@@ -3,6 +3,8 @@ export class DomainError extends Error {
   constructor(status, code) { super(code); this.status=status; this.code=code; }
 }
 export const invalid = () => { throw new DomainError(422,'VALIDATION_ERROR'); };
+export const units = ['piece','cái','hộp','gói','chai','quả','bó','kg','g','lít','ml'];
+export const wholeQuantityUnits = new Set(['piece']);
 export const uuid = value => {
   if (typeof value !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)) invalid();
   return value;
@@ -11,7 +13,7 @@ export function milli(value, unit, positive=false) {
   if (typeof value !== 'string' || !/^(0|[1-9]\d{0,8})(\.\d{1,3})?$/.test(value)) invalid();
   const [whole,fraction=''] = value.split('.');
   const amount = BigInt(whole)*1000n + BigInt(fraction.padEnd(3,'0'));
-  if (positive && amount===0n || unit==='piece' && amount%1000n!==0n) invalid();
+  if (positive && amount===0n || unit && wholeQuantityUnits.has(unit) && amount%1000n!==0n) invalid();
   return amount;
 }
 export function decimal(value) {
@@ -34,12 +36,12 @@ function text(value, max, nullable=false) {
 }
 export const categories=['fresh_produce','meat_seafood','dairy_eggs','prepared_food','dry_pantry','beverage','other'];
 export const barcodeFormats=['EAN_13','EAN_8','CODE_128','CODE_39','ITF','QR_CODE','DATA_MATRIX','PDF_417','AZTEC','other'];
-export const metadataFields=['name','storage_location','category','expiry_date','date_certainty','date_source','date_label_type','opened_on','manufactured_on','note','barcode','barcode_format'];
+export const metadataFields=['name','storage_location','category','expiry_date','date_certainty','date_source','date_label_type','opened_on','manufactured_on','review_at','note','barcode','barcode_format'];
 export function metadata(value) {
-  const m={name:value.name,storage_location:value.storage_location===undefined?'unspecified':value.storage_location,category:value.category===undefined?'other':value.category,expiry_date:value.expiry_date??null,date_certainty:value.date_certainty===undefined?'unknown':value.date_certainty,date_source:value.date_source===undefined?'unknown':value.date_source,date_label_type:value.date_label_type===undefined?'unspecified':value.date_label_type,opened_on:value.opened_on??null,manufactured_on:value.manufactured_on??null,note:value.note??null,barcode:value.barcode??null,barcode_format:value.barcode_format??null};
+  const m={name:value.name,storage_location:value.storage_location===undefined?'unspecified':value.storage_location,category:value.category===undefined?'other':value.category,expiry_date:value.expiry_date??null,date_certainty:value.date_certainty===undefined?'unknown':value.date_certainty,date_source:value.date_source===undefined?'unknown':value.date_source,date_label_type:value.date_label_type===undefined?'unspecified':value.date_label_type,opened_on:value.opened_on??null,manufactured_on:value.manufactured_on??null,review_at:value.review_at??null,note:value.note??null,barcode:value.barcode??null,barcode_format:value.barcode_format??null};
   m.name=text(m.name,200).trim(); m.storage_location=text(m.storage_location,100).trim();
   if (typeof m.category !== 'string' || !categories.includes(m.category)) invalid();
-  text(m.note,1000,true); date(m.expiry_date); date(m.opened_on); date(m.manufactured_on);
+  text(m.note,1000,true); date(m.expiry_date); date(m.opened_on); date(m.manufactured_on); date(m.review_at);
   if (m.barcode !== null) {
     if (typeof m.barcode !== 'string' || m.barcode.trim().length === 0 || [...m.barcode].length > 64) invalid();
     if (m.barcode_format !== null && !barcodeFormats.includes(m.barcode_format)) invalid();

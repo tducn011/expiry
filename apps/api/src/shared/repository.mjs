@@ -1,6 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {connect} from './connection.mjs';
-import {DomainError,uuid,milli,decimal,metadata,metadataFields,reason,allow,expected,preferences,invalid,localDay,attention,fingerprint} from './domain.mjs';
+import {DomainError,uuid,milli,decimal,metadata,metadataFields,reason,allow,expected,preferences,invalid,localDay,attention,fingerprint,units} from './domain.mjs';
 
 // Sandbox integration repository. HTTP authentication/provider and UI adapters are external.
 export class InventoryRepository {
@@ -52,17 +52,24 @@ export class InventoryRepository {
   async entry(c,id) { const [[entry]]=await c.execute('SELECT * FROM food_entries WHERE id=?',[id]); return entry; }
   async create(owner,key,input) {
     allow(input,[...metadataFields,'quantity','unit']);
-    if (!['piece','g','ml'].includes(input.unit)) invalid();
+    if (!units.includes(input.unit)) invalid();
     const meta=metadata(input), quantity=decimal(milli(input.quantity,input.unit,true));
     const payload={...meta,quantity,unit:input.unit};
-    return this.execute(owner,key,'create:food-entry',payload,async c=>{
-      const id=randomUUID();
-      await c.execute(`INSERT INTO food_entries(id,user_id,${metadataFields.join(',')},remaining_quantity,unit) VALUES (${Array(metadataFields.length + 4).fill('?').join(',')})`,[id,owner,...metadataFields.map(k=>meta[k]),quantity,input.unit]);
-      await this.hook('after_entry',{c,id});
-      await c.execute("INSERT INTO stock_movements(id,entry_id,kind,quantity_before,quantity_after) VALUES (?,?,'initial',0,?)",[randomUUID(),id,quantity]);
-      await this.hook('after_movement',{c,id});
-      return {status:201,body:await this.entry(c,id)};
-    });
+    return this.execute(owner,key,'create:food-entry',payload,async c=>({
+      status:201,
+      body:await this.createEntryInTransaction(c,owner,{...meta,quantity:input.quantity,unit:input.unit})
+    }));
+  }
+  async createEntryInTransaction(c,owner,input) {
+    allow(input,[...metadataFields,'quantity','unit']);
+    if (!units.includes(input.unit)) invalid();
+    const meta=metadata(input), quantity=decimal(milli(input.quantity,input.unit,true));
+    const id=randomUUID();
+    await c.execute(`INSERT INTO food_entries(id,user_id,${metadataFields.join(',')},remaining_quantity,unit) VALUES (${Array(metadataFields.length + 4).fill('?').join(',')})`,[id,owner,...metadataFields.map(k=>meta[k]),quantity,input.unit]);
+    await this.hook('after_entry',{c,id});
+    await c.execute("INSERT INTO stock_movements(id,entry_id,kind,quantity_before,quantity_after) VALUES (?,?,'initial',0,?)",[randomUUID(),id,quantity]);
+    await this.hook('after_movement',{c,id});
+    return this.entry(c,id);
   }
   async mutate(owner,key,id,input,mode) {
     uuid(id); expected(input?.expected_version);

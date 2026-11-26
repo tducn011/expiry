@@ -1,6 +1,8 @@
 import type { ReactNode } from "react"
 
-import { ChevronsLeft, ChevronsRight, Leaf } from "./Icon"
+import { ChevronsLeft, ChevronsRight } from "lucide-react"
+
+import { BrandLockup } from "./BrandLockup"
 
 export function SidebarButton({
   icon,
@@ -44,13 +46,13 @@ export function SidebarButton({
       aria-label={ariaLabel || title || label}
       aria-current={active ? "page" : undefined}
       onClick={onClick}
-      className={`group relative flex items-center rounded-corner-md transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
+      className={`group relative flex items-center rounded-corner-md transition-[color,background-color,box-shadow] cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
         isExpanded
-          ? "w-full gap-3 px-3 py-2.5 justify-start text-left"
+          ? "min-h-11 w-full gap-3 px-3 py-2.5 justify-start text-left"
           : "size-12 justify-center"
       } ${
         active
-          ? "bg-brand-primary text-white shadow-xs"
+          ? "bg-brand-secondary text-brand-primary shadow-xs"
           : "text-text-secondary hover:text-text-primary hover:bg-surface-hover active:bg-bg-subtle"
       }`}
     >
@@ -69,8 +71,8 @@ export function SidebarButton({
           aria-hidden="true"
           className={`${
             isExpanded
-              ? "ml-auto flex min-w-5 h-5 items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white shadow-xs"
-              : "absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white shadow-xs"
+              ? "ml-auto flex min-w-5 h-5 items-center justify-center rounded-full bg-danger px-1.5 text-[12px] font-bold text-white shadow-xs"
+              : "absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[12px] font-bold text-white shadow-xs"
           }`}
         >
           {badge}
@@ -83,6 +85,8 @@ export function SidebarButton({
 export function SidebarNavigation({
   children,
 
+  primaryAction,
+
   footer,
 
   isExpanded = false,
@@ -90,6 +94,8 @@ export function SidebarNavigation({
   onToggleExpanded,
 }: {
   children: ReactNode
+
+  primaryAction?: ReactNode
 
   footer?: ReactNode
 
@@ -100,8 +106,8 @@ export function SidebarNavigation({
   return (
     <aside
       aria-label="Điều hướng chính"
-      className={`flex flex-col justify-between h-dvh shrink-0 py-5 border-r border-border-primary/60 bg-surface-bg shadow-xs transition-all duration-200 ease-in-out ${
-        isExpanded ? "w-60 px-3 items-stretch" : "w-[72px] px-2 items-center"
+      className={`flex flex-col justify-between h-full overflow-y-auto shrink-0 py-5 border-r border-border-primary/60 bg-surface-bg shadow-xs transition-[width,padding] duration-200 ease-in-out ${
+        isExpanded ? "w-64 px-4 items-stretch" : "w-[72px] px-2 items-center"
       }`}
     >
       <div className="flex flex-col gap-6 w-full">
@@ -114,24 +120,17 @@ export function SidebarNavigation({
           }`}
         >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-corner-md bg-brand-primary text-white shadow-xs">
-              <Leaf size={22} aria-hidden />
-            </div>
-            {isExpanded && (
-              <div className="min-w-0 flex flex-col">
-                <span className="font-bold text-base tracking-tight text-text-primary leading-tight">
-                  Expiry
-                </span>
-                <span className="text-[11px] text-text-tertiary truncate">
-                  Quản lý kho bếp
-                </span>
-              </div>
-            )}
+            <BrandLockup
+              markSize={40}
+              wordmarkSize={24}
+              markOnly={!isExpanded}
+            />
           </div>
 
           {onToggleExpanded && (
             <button
               type="button"
+              aria-expanded={isExpanded}
               onClick={onToggleExpanded}
               title={
                 isExpanded
@@ -143,12 +142,12 @@ export function SidebarNavigation({
                   ? "Thu gọn thanh điều hướng"
                   : "Mở rộng thanh điều hướng"
               }
-              className="flex size-8 shrink-0 items-center justify-center rounded-corner-md text-text-tertiary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
+              className="flex size-11 shrink-0 items-center justify-center rounded-corner-md text-text-tertiary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
             >
               {isExpanded ? (
-                <ChevronsLeft size={18} />
+                <ChevronsLeft size={16} />
               ) : (
-                <ChevronsRight size={18} />
+                <ChevronsRight size={16} />
               )}
             </button>
           )}
@@ -156,10 +155,12 @@ export function SidebarNavigation({
 
         {/* Navigation Items */}
         <nav
-          className={`flex flex-col gap-1.5 w-full ${
+          className={`flex flex-col gap-2 w-full ${
             isExpanded ? "items-stretch" : "items-center"
           }`}
         >
+          {primaryAction && <div className="mb-1 w-full">{primaryAction}</div>}
+
           {children}
         </nav>
       </div>
@@ -167,7 +168,7 @@ export function SidebarNavigation({
       {/* Footer Area (Login/Logout/Profile) */}
       {footer && (
         <div
-          className={`w-full ${
+          className={`mt-4 w-full shrink-0 border-t border-border-primary/60 pt-3 ${
             isExpanded ? "items-stretch" : "items-center flex flex-col"
           }`}
         >

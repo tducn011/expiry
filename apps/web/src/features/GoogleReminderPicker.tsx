@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState } from "react"
 
-import {
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-} from "../components/ui/Icon"
+import { Clock, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
 
 import { addDays, today } from "../store/appStore"
+
+import { popoverIn, useGSAP } from "../lib/motion"
 
 export interface GoogleReminderPickerProps {
   value?: string // ISO date string YYYY-MM-DD
@@ -125,6 +122,15 @@ export function GoogleReminderPicker({
   const [viewMonth, setViewMonth] = useState(initialDate.getMonth()) // 0-indexed
 
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const calendarRef = useRef<HTMLDivElement>(null)
+
+  useGSAP(
+    () => {
+      if (isCalendarOpen && calendarRef.current) popoverIn(calendarRef.current)
+    },
+    { scope: containerRef, dependencies: [isCalendarOpen] },
+  )
 
   // Close popovers on click outside
 
@@ -330,7 +336,7 @@ export function GoogleReminderPicker({
   return (
     <div
       ref={containerRef}
-      className="relative flex items-start gap-4 p-4 rounded-xl border border-border-primary/80 bg-surface-bg/70 hover:border-border-primary transition-all shadow-xs"
+      className="relative flex items-start gap-4 p-4 rounded-xl border border-border-primary/80 bg-surface-bg/70 hover:border-border-primary transition-[border-color,box-shadow] shadow-xs"
     >
       {/* Clock Icon on the left */}
       <div className="pt-1.5 text-text-secondary shrink-0">
@@ -354,7 +360,7 @@ export function GoogleReminderPicker({
               className={`px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer text-text-primary ${
                 isCalendarOpen
                   ? "bg-brand-primary/15 text-brand-primary ring-2 ring-brand-primary"
-                  : "bg-surface-secondary hover:bg-surface-tertiary border border-border-primary/60"
+                  : "bg-surface-subtle hover:bg-surface-hover border border-border-primary/60"
               }`}
             >
               {formatGoogleDate(selectedDate)}
@@ -362,7 +368,10 @@ export function GoogleReminderPicker({
 
             {/* Google Calendar Popup Dropdown */}
             {isCalendarOpen && (
-              <div className="absolute top-full left-0 z-50 mt-1.5 w-72 rounded-2xl bg-surface-bg border border-border-primary shadow-2xl p-4 animate-in fade-in zoom-in-95 duration-150">
+              <div
+                ref={calendarRef}
+                className="absolute top-full left-0 z-50 mt-1.5 w-72 max-w-[calc(100vw-2rem)] rounded-2xl bg-surface-bg border border-border-primary/60 shadow-md p-4"
+              >
                 {/* Calendar Header */}
                 <div className="flex items-center justify-between mb-3 px-1">
                   <span className="font-semibold text-sm text-text-primary">
@@ -372,7 +381,7 @@ export function GoogleReminderPicker({
                     <button
                       type="button"
                       onClick={handlePrevMonth}
-                      className="p-1 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-secondary transition-colors cursor-pointer"
+                      className="p-1 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
                       title="Tháng trước"
                     >
                       <ChevronLeft size={16} />
@@ -380,7 +389,7 @@ export function GoogleReminderPicker({
                     <button
                       type="button"
                       onClick={handleNextMonth}
-                      className="p-1 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-secondary transition-colors cursor-pointer"
+                      className="p-1 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
                       title="Tháng sau"
                     >
                       <ChevronRight size={16} />
@@ -413,14 +422,14 @@ export function GoogleReminderPicker({
                         onClick={() =>
                           handleSelectDay(item.year, item.month, item.day)
                         }
-                        className={`size-8 mx-auto flex items-center justify-center rounded-full transition-all cursor-pointer ${
+                        className={`size-11 md:size-8 mx-auto flex items-center justify-center rounded-full transition-colors cursor-pointer ${
                           isSelected
-                            ? "bg-[#0b57d0] text-white font-bold shadow-sm"
+                            ? "bg-brand-primary text-white font-semibold shadow-xs"
                             : item.isCurrent
                               ? isToday
-                                ? "border border-[#0b57d0] text-brand-primary font-semibold hover:bg-surface-secondary"
-                                : "text-text-primary hover:bg-surface-secondary font-medium"
-                              : "text-text-secondary/40 hover:bg-surface-secondary"
+                                ? "border border-brand-primary text-brand-primary font-semibold hover:bg-surface-hover"
+                                : "text-text-primary hover:bg-surface-hover font-medium"
+                              : "text-text-secondary/40 hover:bg-surface-hover"
                         }`}
                       >
                         {item.day}
@@ -482,12 +491,12 @@ export function GoogleReminderPicker({
 
                   setIsCalendarOpen(false)
                 }}
-                className="px-2.5 py-1.5 rounded-md font-medium text-text-primary bg-surface-secondary hover:bg-surface-tertiary border border-border-primary/60 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-md font-medium text-text-primary bg-surface-subtle hover:bg-surface-hover border border-border-primary/60 transition-colors cursor-pointer"
               >
                 {formatTime12(startTime)}
               </button>
               {isStartTimeOpen && (
-                <div className="absolute top-full left-0 z-50 mt-1 w-28 max-h-48 overflow-y-auto rounded-lg bg-surface-bg border border-border-primary shadow-xl p-1 text-xs">
+                <div className="absolute top-full left-0 z-50 mt-1 w-28 max-h-48 overflow-y-auto rounded-lg bg-surface-bg border border-border-primary/60 shadow-md p-1 text-xs">
                   {COMMON_TIMES.map((t) => (
                     <button
                       key={t}
@@ -500,7 +509,7 @@ export function GoogleReminderPicker({
                       className={`w-full text-left px-2 py-1.5 rounded transition-colors cursor-pointer ${
                         startTime === t
                           ? "bg-brand-primary text-white font-medium"
-                          : "hover:bg-surface-secondary text-text-primary"
+                          : "hover:bg-surface-hover text-text-primary"
                       }`}
                     >
                       {formatTime12(t)}
@@ -523,12 +532,12 @@ export function GoogleReminderPicker({
 
                   setIsCalendarOpen(false)
                 }}
-                className="px-2.5 py-1.5 rounded-md font-medium text-text-primary bg-surface-secondary hover:bg-surface-tertiary border border-border-primary/60 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-md font-medium text-text-primary bg-surface-subtle hover:bg-surface-hover border border-border-primary/60 transition-colors cursor-pointer"
               >
                 {formatTime12(endTime)}
               </button>
               {isEndTimeOpen && (
-                <div className="absolute top-full left-0 z-50 mt-1 w-28 max-h-48 overflow-y-auto rounded-lg bg-surface-bg border border-border-primary shadow-xl p-1 text-xs">
+                <div className="absolute top-full left-0 z-50 mt-1 w-28 max-h-48 overflow-y-auto rounded-lg bg-surface-bg border border-border-primary/60 shadow-md p-1 text-xs">
                   {COMMON_TIMES.map((t) => (
                     <button
                       key={t}
@@ -541,7 +550,7 @@ export function GoogleReminderPicker({
                       className={`w-full text-left px-2 py-1.5 rounded transition-colors cursor-pointer ${
                         endTime === t
                           ? "bg-brand-primary text-white font-medium"
-                          : "hover:bg-surface-secondary text-text-primary"
+                          : "hover:bg-surface-hover text-text-primary"
                       }`}
                     >
                       {formatTime12(t)}
@@ -559,7 +568,7 @@ export function GoogleReminderPicker({
             <select
               value={repeat}
               onChange={(e) => handleRepeatChange(e.target.value)}
-              className="appearance-none bg-surface-secondary hover:bg-surface-tertiary border border-border-primary/60 text-text-primary font-medium text-xs sm:text-sm rounded-md pl-3 pr-8 py-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary transition-colors"
+              className="appearance-none bg-surface-subtle hover:bg-surface-hover border border-border-primary/60 text-text-primary font-medium text-xs sm:text-sm rounded-md pl-3 pr-8 py-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary transition-colors"
             >
               <option value="none">Không lặp lại</option>
               <option value="daily">Hằng ngày</option>
@@ -568,7 +577,7 @@ export function GoogleReminderPicker({
               <option value="weekly">Mỗi tuần vào {currentWeekday}</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
-              <ChevronDown size={14} />
+              <ChevronDown size={16} />
             </div>
           </div>
 

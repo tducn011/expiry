@@ -26,6 +26,8 @@ export type User = {
 
 // ponytail: reuse shared domain types to eliminate 50+ lines of duplicate definitions
 
+import { inferCategory } from "./store/appStore"
+
 import type {
   Attention,
   CreatePayload,
@@ -36,6 +38,7 @@ import type {
   FoodEntry,
   MovementKind,
   QuantityMovement,
+  ShoppingItem,
   Unit,
 } from "./domain/types"
 
@@ -49,6 +52,7 @@ export type {
   FoodEntry,
   MovementKind,
   QuantityMovement,
+  ShoppingItem,
   Unit,
 }
 
@@ -444,7 +448,45 @@ class MockApiAdapter {
 
   private requests: ApiRequest[] = []
 
+  private shopping: ShoppingItem[] = []
+
   constructor() {
+    this.shopping = [
+      {
+        id: "shop_1",
+        name: "Trứng gà ta",
+        quantity: 10,
+        unit: "piece",
+        category: "dairy_eggs",
+        checked: false,
+        addedFromInventory: false,
+        createdAt: iso("2026-10-10T08:00"),
+        note: "Hộp 10 quả",
+      },
+      {
+        id: "shop_2",
+        name: "Sữa chua không đường",
+        quantity: 4,
+        unit: "piece",
+        category: "dairy_eggs",
+        checked: false,
+        addedFromInventory: false,
+        createdAt: iso("2026-10-10T08:15"),
+        note: null,
+      },
+      {
+        id: "shop_3",
+        name: "Cà chua bi",
+        quantity: 300,
+        unit: "g",
+        category: "fresh_produce",
+        checked: true,
+        addedFromInventory: true,
+        createdAt: iso("2026-10-09T14:30"),
+        note: null,
+      },
+    ]
+
     seed.forEach(
       (
         [
@@ -503,6 +545,8 @@ class MockApiAdapter {
           name,
 
           storage_location: location,
+
+          category: inferCategory(name),
 
           remaining_quantity: before,
 
@@ -622,8 +666,114 @@ class MockApiAdapter {
 
   // GET /food-entries
 
-  listEntries() {
-    return this.entries.filter((e) => !e.deleted_at).map((e) => ({ ...e }))
+  listEntries(query?: {
+    view?: string
+    q?: string
+    category?: string
+    location?: string
+    attention?: string
+  }) {
+    let list = this.entries.filter((e) => !e.deleted_at)
+    if (query?.view === "attention") {
+      list = list.filter((e) => {
+        const att = attentionFor(e, this.user.attention_lead_days, DEMO_DATE)
+        return att === "past" || att === "today" || att === "soon"
+      })
+    }
+    if (query?.q) {
+      const q = query.q.trim().toLowerCase()
+      list = list.filter((e) => e.name.toLowerCase().includes(q))
+    }
+    if (query?.category && query.category !== "all") {
+      list = list.filter((e) => e.category === query.category)
+    }
+    if (query?.location && query.location !== "all") {
+      list = list.filter((e) => e.storage_location === query.location)
+    }
+    if (query?.attention && query.attention !== "all") {
+      const target =
+        query.attention === "past_date" || query.attention === "expired"
+          ? "past"
+          : query.attention === "due_today" || query.attention === "today"
+            ? "today"
+            : query.attention === "expiring_soon" ||
+                query.attention === "expiring"
+              ? "soon"
+              : query.attention
+      list = list.filter(
+        (e) =>
+          attentionFor(e, this.user.attention_lead_days, DEMO_DATE) === target,
+      )
+    }
+    return list.map((e) => ({ ...e }))
+  }
+
+  getAttentionSummary(asOfDate: string = DEMO_DATE) {
+    const list = this.listEntries()
+    const leadDays = this.user.attention_lead_days
+    let expired = 0
+    let soon = 0
+    let reviewDue = 0
+    for (const item of list) {
+      if (item.remaining_quantity <= 0) continue
+      const att = attentionFor(item, leadDays, asOfDate)
+      if (att === "past") expired++
+      else if (att === "today" || att === "soon") soon++
+      if (
+        item.review_at &&
+        item.review_at <= asOfDate &&
+        att !== "past" &&
+        att !== "today" &&
+        att !== "soon"
+      ) {
+        reviewDue++
+      }
+    }
+    return {
+      expired,
+      soon,
+      reviewDue,
+      total: expired + soon + reviewDue,
+    }
+  }
+
+  // Shopping List methods
+
+  listShoppingItems(): ShoppingItem[] {
+    return this.shopping.map((item) => ({ ...item }))
+  }
+
+  addShoppingItem(item: Omit<ShoppingItem, "id" | "createdAt">): ShoppingItem {
+    const newItem: ShoppingItem = {
+      ...item,
+      id: `shop_${this.ids++}`,
+      createdAt: now(),
+    }
+    this.shopping.unshift(newItem)
+    return { ...newItem }
+  }
+
+  toggleShoppingItem(id: string): ShoppingItem {
+    const item = this.shopping.find((s) => s.id === id)
+    if (!item) throw new ApiError(404, "ITEM_NOT_FOUND")
+    item.checked = !item.checked
+    return { ...item }
+  }
+
+  updateShoppingItem(id: string, patch: Partial<ShoppingItem>): ShoppingItem {
+    const item = this.shopping.find((s) => s.id === id)
+    if (!item) throw new ApiError(404, "ITEM_NOT_FOUND")
+    Object.assign(item, patch)
+    return { ...item }
+  }
+
+  deleteShoppingItem(id: string): void {
+    const idx = this.shopping.findIndex((s) => s.id === id)
+    if (idx >= 0) this.shopping.splice(idx, 1)
+  }
+
+  clearCheckedShoppingItems(): void {
+    this.shopping = this.shopping.filter((s) => !s.checked)
   }
 
   // GET /trash/food-entries
@@ -662,6 +812,8 @@ class MockApiAdapter {
         id: `ent_${this.ids++}`,
 
         user_id: this.user.id,
+
+        category: payload.category ?? inferCategory(payload.name),
 
         remaining_quantity: initial_quantity,
 

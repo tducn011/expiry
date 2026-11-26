@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react"
 
 import Icon from "./Icon"
+import { LoaderCircle } from "lucide-react"
 
 export type ButtonVariant = "primary" | "neutral" | "subtle" | "danger" | "cta" | "outline" | "ghost" | "secondary"
 
@@ -50,15 +51,16 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-transparent border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover active:bg-bg-subtle",
 
   danger:
-    "bg-status-expired-bg border-transparent text-status-expired hover:bg-red-100 active:bg-red-200",
+    "bg-danger-bg border-transparent text-danger hover:bg-danger/15 active:bg-danger/25",
 
   cta: "bg-brand-primary text-white hover:bg-brand-hover active:bg-brand-dark shadow-sm border-transparent",
 }
 
 const sizeStyles: Record<string, string> = {
-  small: "min-h-8 px-3 py-1 text-xs gap-1.5 rounded-corner-md font-medium",
+  small:
+    "min-h-11 md:min-h-8 px-3 py-1 text-xs gap-1.5 rounded-corner-md font-medium",
 
-  sm: "min-h-8 px-3 py-1 text-xs gap-1.5 rounded-corner-md font-medium",
+  sm: "min-h-11 md:min-h-8 px-3 py-1 text-xs gap-1.5 rounded-corner-md font-medium",
 
   md: "min-h-11 px-4 py-2 text-sm gap-2 rounded-corner-md font-semibold",
 
@@ -112,7 +114,7 @@ export default function Button({
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center border transition-all cursor-pointer select-none text-center outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-50 disabled:cursor-not-allowed ${sizeCls} ${varCls} ${
+      className={`inline-flex items-center justify-center border transition-[color,background-color,border-color,box-shadow] cursor-pointer select-none text-center outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-50 disabled:cursor-not-allowed ${sizeCls} ${varCls} ${
         block ? "w-full" : ""
       } ${className}`.trim()}
       onClick={onClick}
@@ -122,8 +124,9 @@ export default function Button({
       {...props}
     >
       {loading ? (
-        <span
-          className="inline-block size-4 border-2 border-current border-r-transparent rounded-full animate-spin"
+        <LoaderCircle
+          size={16}
+          className="shrink-0 animate-spin"
           aria-hidden="true"
         />
       ) : iconStart ? (

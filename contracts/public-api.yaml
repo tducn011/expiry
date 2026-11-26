@@ -161,6 +161,19 @@ paths:
           - due_today
           - soon
           - later
+      - in: query
+        name: category
+        description: Category of the food entry
+        schema:
+          type: string
+          enum:
+          - fresh_produce
+          - meat_seafood
+          - dairy_eggs
+          - prepared_food
+          - dry_pantry
+          - beverage
+          - other
       responses:
         '200':
           description: Success
@@ -790,7 +803,7 @@ paths:
         schema:
           type: string
           maxLength: 200
-          default: ""
+          default: ''
         description: Tìm kiếm theo tên thực phẩm trong thùng rác
       - in: query
         name: location
@@ -1163,8 +1176,13 @@ paths:
                     - food_name
                     - expiry_date
                     - manufactured_date
+                    - barcode
                     properties:
                       food_name:
+                        type:
+                        - string
+                        - 'null'
+                      barcode:
                         type:
                         - string
                         - 'null'
@@ -1428,6 +1446,165 @@ paths:
         '401': *id004
         '403': *id005
         '503': *id009
+  /shopping-items:
+    get:
+      operationId: SHOP-01
+      summary: List authenticated Shopping items
+      responses:
+        '200':
+          description: Shopping item list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingItemList'
+        '401': &id010
+          description: Problem details
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    post:
+      operationId: SHOP-02
+      summary: Create a Shopping item
+      parameters:
+      - &id011
+        in: header
+        name: Idempotency-Key
+        required: true
+        schema:
+          type: string
+          minLength: 8
+          maxLength: 100
+          pattern: ^[A-Za-z0-9_-]+$
+      - &id012
+        in: header
+        name: X-CSRF-Token
+        required: true
+        schema:
+          type: string
+          minLength: 32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShoppingItemCreate'
+      responses:
+        '201':
+          description: Created Shopping item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingItem'
+        '422': *id010
+  /shopping-items/{id}:
+    get:
+      operationId: SHOP-06
+      summary: Read one Shopping item owned by the authenticated user
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Shopping item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingItem'
+        '404': *id010
+    patch:
+      operationId: SHOP-03
+      summary: Update a Shopping item
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      - *id011
+      - *id012
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShoppingItemUpdate'
+      responses:
+        '200':
+          description: Updated Shopping item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingItem'
+        '409': *id010
+        '404': *id010
+    delete:
+      operationId: SHOP-04
+      summary: Delete a Shopping item
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      - *id011
+      - *id012
+      responses:
+        '204':
+          description: Deleted
+        '404': *id010
+  /shopping-items/{id}/import-to-inventory:
+    post:
+      operationId: SHOP-07
+      summary: Atomically import a purchased Shopping item into inventory
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      - *id011
+      - *id012
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShoppingInventoryImportRequest'
+      responses:
+        '201':
+          description: Inventory entry created and Shopping item marked imported
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingInventoryImportResult'
+        '404': *id010
+        '409': *id010
+        '422': *id010
+  /shopping-items/import:
+    post:
+      operationId: SHOP-05
+      summary: Import the legacy Shopping list once
+      parameters:
+      - *id011
+      - *id012
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShoppingItemImport'
+      responses:
+        '200':
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingImportResult'
+        '422': *id010
 components:
   securitySchemes:
     SessionCookie:
@@ -1453,17 +1630,31 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+          default: unspecified
+        category:
+          type: string
+          enum:
+          - fresh_produce
+          - meat_seafood
+          - dairy_eggs
+          - prepared_food
+          - dry_pantry
+          - beverage
+          - other
+          default: other
         expiry_date:
           type:
           - string
           - 'null'
           format: date
+          default: null
         date_certainty:
           type: string
           enum:
           - known
           - estimated
           - unknown
+          default: unknown
         date_source:
           type: string
           enum:
@@ -1471,40 +1662,88 @@ components:
           - user_entered
           - user_estimate
           - unknown
+          default: unknown
         date_label_type:
           type: string
           enum:
           - use_by
           - best_before
           - unspecified
+          default: unspecified
         opened_on:
           type:
           - string
           - 'null'
           format: date
+          default: null
+        manufactured_on:
+          type:
+          - string
+          - 'null'
+          format: date
+          default: null
+        review_at:
+          type:
+          - string
+          - 'null'
+          format: date
+          default: null
+        barcode:
+          type:
+          - string
+          - 'null'
+          maxLength: 64
+          default: null
+        barcode_format:
+          type:
+          - string
+          - 'null'
+          enum:
+          - EAN_13
+          - EAN_8
+          - CODE_128
+          - CODE_39
+          - ITF
+          - QR_CODE
+          - DATA_MATRIX
+          - PDF_417
+          - AZTEC
+          - other
+          - null
+          default: null
         note:
           type:
           - string
           - 'null'
           maxLength: 1000
+          default: null
         quantity:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
-            zero for create/consume/discard.
+          description: Decimal amount string, max 999999999.999. Legacy piece must be integral; other supported units
+            retain the selected unit and allow up to three decimal places. Create rejects zero.
         unit:
           type: string
           enum:
           - piece
+          - cái
+          - hộp
+          - gói
+          - chai
+          - quả
+          - bó
+          - kg
           - g
+          - lít
           - ml
       required:
       - name
       - quantity
       - unit
       additionalProperties: false
-      description: 'Defaults: location unspecified, date null, certainty/source unknown, label unspecified. Validate
-        normalized full object. quantity>0; piece whole. Date certainty/source coherence is enforced by RULE-09/10.'
+      description: 'Defaults: location unspecified, category other, date null, certainty/source unknown, label unspecified;
+        optional metadata null. Validate normalized full object. quantity>0; legacy piece is whole; selected unit is
+        persisted without conversion. Date certainty/source coherence is enforced by RULE-09/10.'
     EntryPatch:
       type: object
       properties:
@@ -1516,6 +1755,16 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+        category:
+          type: string
+          enum:
+          - fresh_produce
+          - meat_seafood
+          - dairy_eggs
+          - prepared_food
+          - dry_pantry
+          - beverage
+          - other
         expiry_date:
           type:
           - string
@@ -1545,6 +1794,37 @@ components:
           - string
           - 'null'
           format: date
+        manufactured_on:
+          type:
+          - string
+          - 'null'
+          format: date
+        review_at:
+          type:
+          - string
+          - 'null'
+          format: date
+        barcode:
+          type:
+          - string
+          - 'null'
+          maxLength: 64
+        barcode_format:
+          type:
+          - string
+          - 'null'
+          enum:
+          - EAN_13
+          - EAN_8
+          - CODE_128
+          - CODE_39
+          - ITF
+          - QR_CODE
+          - DATA_MATRIX
+          - PDF_417
+          - AZTEC
+          - other
+          - null
         note:
           type:
           - string
@@ -1563,6 +1843,8 @@ components:
       - required:
         - storage_location
       - required:
+        - category
+      - required:
         - expiry_date
       - required:
         - date_certainty
@@ -1572,6 +1854,14 @@ components:
         - date_label_type
       - required:
         - opened_on
+      - required:
+        - manufactured_on
+      - required:
+        - review_at
+      - required:
+        - barcode
+      - required:
+        - barcode_format
       - required:
         - note
     Attention:
@@ -1607,6 +1897,16 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+        category:
+          type: string
+          enum:
+          - fresh_produce
+          - meat_seafood
+          - dairy_eggs
+          - prepared_food
+          - dry_pantry
+          - beverage
+          - other
         expiry_date:
           type:
           - string
@@ -1636,6 +1936,37 @@ components:
           - string
           - 'null'
           format: date
+        manufactured_on:
+          type:
+          - string
+          - 'null'
+          format: date
+        review_at:
+          type:
+          - string
+          - 'null'
+          format: date
+        barcode:
+          type:
+          - string
+          - 'null'
+          maxLength: 64
+        barcode_format:
+          type:
+          - string
+          - 'null'
+          enum:
+          - EAN_13
+          - EAN_8
+          - CODE_128
+          - CODE_39
+          - ITF
+          - QR_CODE
+          - DATA_MATRIX
+          - PDF_417
+          - AZTEC
+          - other
+          - null
         note:
           type:
           - string
@@ -1647,13 +1978,20 @@ components:
         remaining_quantity:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
-            zero for create/consume/discard.
+          description: Nonnegative decimal amount string in the entry's unit, max 999999999.999; legacy piece is integral.
         unit:
           type: string
           enum:
           - piece
+          - cái
+          - hộp
+          - gói
+          - chai
+          - quả
+          - bó
+          - kg
           - g
+          - lít
           - ml
         version:
           type: integer
@@ -1679,6 +2017,7 @@ components:
       required:
       - name
       - storage_location
+      - category
       - expiry_date
       - date_certainty
       - date_source
@@ -1694,6 +2033,9 @@ components:
       - deleted_at
       - created_at
       - updated_at
+      - manufactured_on
+      - barcode
+      - barcode_format
       additionalProperties: false
     MovementCommand:
       type: object
@@ -1706,8 +2048,7 @@ components:
         amount:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
-            zero for create/consume/discard.
+          description: Positive decimal amount string in the entry's unit, max 999999999.999; legacy piece is integral.
         expected_version:
           type: integer
           minimum: 1
@@ -1728,8 +2069,7 @@ components:
         actual_quantity:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
-            zero for create/consume/discard.
+          description: Nonnegative decimal amount string in the entry's unit, max 999999999.999; legacy piece is integral.
         reason:
           type: string
           minLength: 1
@@ -1772,13 +2112,11 @@ components:
         quantity_before:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
-            zero for create/consume/discard.
+          description: Nonnegative decimal amount string in the entry's unit, max 999999999.999; legacy piece is integral.
         quantity_after:
           type: string
           pattern: ^(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
-          description: Decimal amount string, max 999999999.999. piece must be integral; business validation rejects
-            zero for create/consume/discard.
+          description: Nonnegative decimal amount string in the entry's unit, max 999999999.999; legacy piece is integral.
         delta:
           type: string
           pattern: ^-?(0|[1-9][0-9]{0,8})(\.[0-9]{1,3})?$
@@ -2016,3 +2354,183 @@ components:
       - user
       - csrf_token
       - expires_at
+    ShoppingItem:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        quantity:
+          type:
+          - number
+          - 'null'
+          exclusiveMinimum: 0
+        unit:
+          type:
+          - string
+          - 'null'
+        category:
+          type:
+          - string
+          - 'null'
+        checked:
+          type: boolean
+        addedFromInventory:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        note:
+          type:
+          - string
+          - 'null'
+        inventoryAddedAt:
+          type: string
+        matchedFoodId:
+          type: string
+      required:
+      - id
+      - version
+      - name
+      - quantity
+      - unit
+      - category
+      - checked
+      - addedFromInventory
+      - createdAt
+    ShoppingItemCreate:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        quantity:
+          type:
+          - number
+          - 'null'
+          exclusiveMinimum: 0
+        unit:
+          type:
+          - string
+          - 'null'
+        category:
+          type:
+          - string
+          - 'null'
+        checked:
+          type: boolean
+        addedFromInventory:
+          type: boolean
+        note:
+          type:
+          - string
+          - 'null'
+        inventoryAddedAt:
+          type: string
+        matchedFoodId:
+          type: string
+      required:
+      - name
+    ShoppingItemUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        quantity:
+          type:
+          - number
+          - 'null'
+          exclusiveMinimum: 0
+        unit:
+          type:
+          - string
+          - 'null'
+        category:
+          type:
+          - string
+          - 'null'
+        checked:
+          type: boolean
+        addedFromInventory:
+          type: boolean
+        note:
+          type:
+          - string
+          - 'null'
+        inventoryAddedAt:
+          type: string
+        matchedFoodId:
+          type: string
+      required:
+      - expected_version
+    ShoppingItemImport:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          maxItems: 500
+          items:
+            type: object
+      required:
+      - items
+    ShoppingItemList:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShoppingItem'
+      required:
+      - items
+    ShoppingImportResult:
+      type: object
+      additionalProperties: false
+      properties:
+        imported:
+          type: boolean
+        existing:
+          type: boolean
+      required:
+      - imported
+      - existing
+    ShoppingInventoryImportRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        entry:
+          $ref: '#/components/schemas/EntryCreate'
+      required:
+      - expected_version
+      - entry
+    ShoppingInventoryImportResult:
+      type: object
+      additionalProperties: false
+      properties:
+        item:
+          $ref: '#/components/schemas/ShoppingItem'
+        entry:
+          $ref: '#/components/schemas/Entry'
+      required:
+      - item
+      - entry

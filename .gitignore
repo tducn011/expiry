@@ -60,3 +60,7 @@ venv/
 
 # Local task orchestration ledgers
 /.unlazy/
+
+# Database backups
+backups/
+*.sql.gz

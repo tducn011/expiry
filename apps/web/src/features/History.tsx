@@ -8,11 +8,7 @@ import Button from "../components/ui/Button"
 
 import EmptyState from "../components/ui/EmptyState"
 
-import {
-  ChevronRight,
-  History as HistoryIcon,
-  RotateCcw,
-} from "../components/ui/Icon"
+import { ChevronRight, History as HistoryIcon, RotateCcw } from "lucide-react"
 
 import Modal from "../components/ui/Modal"
 
@@ -125,11 +121,8 @@ export function History({
     : undefined
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <PageHeader
-        title="Lịch sử"
-        subtitle="Các lần dùng, bỏ và điều chỉnh số lượng thực phẩm"
-      />
+    <div className="flex flex-col gap-6 w-full">
+      <PageHeader title="Lịch sử" />
 
       {events.length === 0 && finished.length === 0 ? (
         <EmptyState
@@ -144,7 +137,7 @@ export function History({
               <div
                 role="heading"
                 aria-level={2}
-                className="px-2 text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary"
+                className="px-2 text-xs md:text-sm font-semibold tracking-normal text-text-secondary"
               >
                 {g.day}
               </div>
@@ -157,7 +150,7 @@ export function History({
                     className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-hover active:bg-bg-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-primary cursor-pointer"
                   >
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <p className="truncate text-sm md:text-base font-semibold text-text-primary">
+                      <p className="truncate text-sm md:text-base font-semibold text-text-heading">
                         {e.foodName}
                       </p>
                       <p className="flex flex-wrap items-center gap-2 text-xs">
@@ -187,7 +180,7 @@ export function History({
                       )}
                     </div>
                     <ChevronRight
-                      size={18}
+                      size={16}
                       aria-hidden="true"
                       className="shrink-0 text-text-tertiary"
                     />
@@ -202,7 +195,7 @@ export function History({
               <div
                 role="heading"
                 aria-level={2}
-                className="px-2 text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary"
+                className="px-2 text-xs md:text-sm font-semibold tracking-normal text-text-secondary"
               >
                 Đã hết ({finished.length})
               </div>
@@ -213,7 +206,7 @@ export function History({
                     className="flex min-h-16 items-center gap-3 px-4 py-3"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm md:text-base font-semibold text-text-primary">
+                      <p className="truncate text-sm md:text-base font-semibold text-text-heading">
                         {f.name}
                       </p>
                       <p className="text-xs text-text-secondary">

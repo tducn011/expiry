@@ -12,8 +12,6 @@ import {
 
 import Button from "../components/ui/Button"
 
-import Card from "../components/ui/Card"
-
 import EmptyState from "../components/ui/EmptyState"
 
 import {
@@ -23,21 +21,14 @@ import {
 } from "../components/ui/FilterChips"
 
 import {
-  Bell,
-  CircleAlert,
-  Clock,
+  ChevronDown,
+  ChevronRight,
   PackageOpen,
   Plus,
   Search,
   SearchX,
   X,
-} from "../components/ui/Icon"
-
-import IconButton from "../components/ui/IconButton"
-
-import InputField from "../components/ui/InputField"
-
-import PageHeader from "../components/ui/PageHeader"
+} from "lucide-react"
 
 import StatusBadge from "../components/ui/StatusBadge"
 
@@ -63,100 +54,162 @@ export const defaultFilters: InventoryFilters = {
   attentionFilter: "all",
 }
 
+const inventoryHsdOptions = defaultHsdOptions
+
+export type HomeFilters = {
+  query: string
+  status: StatusFilter
+  category: string
+  location: string
+}
+
+const initialHomeFilters: HomeFilters = {
+  query: "",
+  status: "all",
+  category: "all",
+  location: "all",
+}
+
 export interface InventoryProps {
   state: State
+  filters?: HomeFilters
+  onFiltersChange: (filters: HomeFilters) => void
 
   onOpenDetail: (id: string) => void
 
   onAdd: () => void
 
-  onNavigateAttention?: () => void
-
-  onOpenNotifications?: () => void
-
-  unreadNotificationsCount?: number
+  onNavigateAttention: () => void
 }
 
 function AttentionSummary({
-  expired,
-
-  soon,
-
+  expiredFoods,
+  soonFoods,
   reviewDue,
-
-  onOpen,
+  defaultExpanded,
+  remindDays,
+  onOpenDetail,
+  onReview,
 }: {
-  expired: number
-
-  soon: number
-
+  expiredFoods: Food[]
+  soonFoods: Food[]
   reviewDue: number
-
-  onOpen: () => void
+  defaultExpanded: State["settings"]["homeAttentionExpanded"]
+  remindDays: number
+  onOpenDetail: (id: string) => void
+  onReview: () => void
 }) {
+  const [expanded, setExpanded] = useState(defaultExpanded)
+  const expired = expiredFoods.length
+  const soon = soonFoods.length
   const total = expired + soon + reviewDue
+  if (!total) return null
 
-  if (total === 0) return null
+  const renderGroup = (
+    key: "expired" | "soon",
+    label: string,
+    foods: Food[],
+    tone: string,
+  ) => {
+    if (!foods.length) return null
+    const expandedId = `home-attention-${key}-foods`
+    const isExpanded = expanded[key]
+
+    return (
+      <section className="home-attention-group" key={key}>
+        <h3 className="m-0">
+          <button
+            type="button"
+            aria-expanded={isExpanded}
+            aria-controls={expandedId}
+            onClick={() =>
+              setExpanded((current) => ({ ...current, [key]: !current[key] }))
+            }
+            className={`home-attention-group-toggle ${tone}`}
+          >
+            <span>
+              {label} <span className="font-normal">· {foods.length} món</span>
+            </span>
+            <ChevronDown
+              size={16}
+              aria-hidden="true"
+              className={`shrink-0 transition-transform ${
+                isExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </h3>
+        <div
+          id={expandedId}
+          role="region"
+          aria-label={`${label} (${foods.length} món)`}
+          hidden={!isExpanded}
+          className="home-attention-foods"
+        >
+          {foods.map((food) => (
+            <FoodCard
+              key={food.id}
+              food={food}
+              variant="grouped"
+              remindDays={remindDays}
+              onOpen={() => onOpenDetail(food.id)}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   return (
-    <Card
-      role="region"
-      aria-label="Tóm tắt món cần chú ý"
-      onClick={onOpen}
-      className="flex cursor-pointer flex-col gap-2 border-brand-primary/20 bg-brand-tertiary/70 transition-all hover:bg-brand-tertiary shadow-xs"
+    <section
+      aria-labelledby="home-attention-heading"
+      className="home-attention"
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-brand-primary font-semibold text-sm">
-          <CircleAlert size={18} aria-hidden="true" />
-          <span>Cần chú ý ({total} món)</span>
-        </div>
-        <span className="text-xs font-semibold text-brand-primary hover:underline">
-          Xem tất cả →
+      <h2
+        id="home-attention-heading"
+        className="text-sm font-semibold text-text-heading"
+      >
+        Cần xử lý{" "}
+        <span className="ml-1 font-normal text-text-secondary">
+          {total} món
         </span>
-      </div>
-      <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-        {expired > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-corner-full bg-status-expired-bg px-2.5 py-0.5 font-semibold text-status-expired border border-status-expired/20">
-            <CircleAlert size={12} aria-hidden="true" />
-            {expired} quá hạn
-          </span>
-        )}
-        {soon > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-corner-full bg-status-soon-bg px-2.5 py-0.5 font-semibold text-status-soon border border-status-soon/20">
-            <Clock size={12} aria-hidden="true" />
-            {soon} sắp hết hạn
-          </span>
-        )}
+      </h2>
+      <div className="home-attention-groups">
+        {renderGroup("expired", "Quá hạn", expiredFoods, "text-status-expired")}
+        {renderGroup("soon", "Sắp hết hạn", soonFoods, "text-status-soon")}
         {reviewDue > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-corner-full bg-surface-bg px-2.5 py-0.5 font-semibold text-brand-primary border border-brand-primary/20">
-            {reviewDue} đến hẹn kiểm tra
-          </span>
+          <button
+            type="button"
+            aria-label={`Kiểm tra ${reviewDue} món đến hẹn`}
+            onClick={onReview}
+            className="home-attention-action home-attention-review text-brand-primary"
+          >
+            Kiểm tra {reviewDue} món đến hẹn
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>
         )}
       </div>
-    </Card>
+    </section>
   )
 }
 
 export function Inventory({
   state,
+  filters = initialHomeFilters,
+  onFiltersChange,
 
   onOpenDetail,
 
   onAdd,
 
   onNavigateAttention,
-
-  onOpenNotifications,
-
-  unreadNotificationsCount = 0,
 }: InventoryProps) {
-  const [q, setQ] = useState("")
-
-  const [filterHsd, setFilterHsd] = useState<StatusFilter>("all")
-
-  const [selectedCategory, setSelectedCategory] = useState<string>("all")
-
-  const [selectedLocation, setSelectedLocation] = useState<string>("all")
+  const {
+    query: q,
+    status: filterHsd,
+    category: selectedCategory,
+    location: selectedLocation,
+  } = filters
 
   const categoryOptions = useMemo(
     () =>
@@ -183,15 +236,29 @@ export function Inventory({
 
   const remind = state.settings.remindDays
 
-  const items = active(state)
+  const activeItems = active(state)
+
+  const items = activeItems
 
   const t = today()
 
-  const expired = items.filter((f) => statusOf(f, remind) === "expired").length
+  const todayLabel = new Intl.DateTimeFormat("vi-VN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(new Date(`${t}T12:00:00+07:00`))
 
-  const soon = items.filter((f) => statusOf(f, remind) === "soon").length
+  const expired = activeItems
+    .filter((f) => statusOf(f, remind) === "expired")
+    .sort((a, b) => (a.expDate || "").localeCompare(b.expDate || ""))
 
-  const reviewDue = items.filter(
+  const soon = activeItems
+    .filter((f) => statusOf(f, remind) === "soon")
+    .sort((a, b) => (a.expDate || "").localeCompare(b.expDate || ""))
+
+  const reviewDue = activeItems.filter(
     (f) =>
       statusOf(f, remind) !== "expired" &&
       statusOf(f, remind) !== "soon" &&
@@ -224,7 +291,23 @@ export function Inventory({
         return f.location === selectedLocation
       })
 
-      .sort((a, b) => (a.expDate ?? "9999").localeCompare(b.expDate ?? "9999"))
+      .sort((a, b) => {
+        const priority = (food: Food) => {
+          const status = statusOf(food, remind)
+          return status === "expired"
+            ? 0
+            : status === "soon"
+              ? 1
+              : status === "ok"
+                ? 2
+                : 3
+        }
+
+        return (
+          priority(a) - priority(b) ||
+          (a.expDate ?? "9999").localeCompare(b.expDate ?? "9999")
+        )
+      })
   }, [
     items,
     q,
@@ -235,81 +318,33 @@ export function Inventory({
     state.locations,
   ])
 
-  const clear = () => {
-    setQ("")
-
-    setFilterHsd("all")
-
-    setSelectedCategory("all")
-
-    setSelectedLocation("all")
-  }
+  const clear = () => onFiltersChange(initialHomeFilters)
 
   return (
-    <div className="flex flex-col gap-5 w-full">
-      {/* Mobile App Header */}
-      <div className="flex items-center justify-between gap-3 pt-0 pb-1 md:hidden">
-        <div className="flex items-center gap-2">
-          <div className="flex size-9 items-center justify-center rounded-corner-md bg-brand-primary text-white shadow-xs font-bold text-sm">
-            Ex
-          </div>
-          <span className="text-lg font-bold text-brand-primary">Expiry</span>
+    <div className="home-dashboard flex flex-col gap-4 w-full">
+      {/* Page Header matching Figma node 312:50 (414:110) */}
+      <div className="flex items-start justify-between gap-3 min-h-11 w-full">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="text-[24px] leading-8 font-semibold text-text-heading tracking-normal">
+            Hôm nay
+          </h1>
+          <time
+            dateTime={t}
+            className="text-[13px] leading-[18px] font-normal text-text-secondary"
+          >
+            {todayLabel}
+          </time>
         </div>
-        {onOpenNotifications && (
-          <div className="relative">
-            <IconButton
-              variant="subtle"
-              aria-label={
-                unreadNotificationsCount
-                  ? `Thông báo, ${unreadNotificationsCount} chưa đọc`
-                  : "Thông báo"
-              }
-              icon={<Bell size={22} />}
-              onClick={onOpenNotifications}
-            />
-            {unreadNotificationsCount > 0 && (
-              <span
-                aria-hidden="true"
-                className="absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white shadow-xs"
-              >
-                {unreadNotificationsCount}
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
-      <PageHeader
-        title="Thực phẩm"
-        subtitle={
-          items.length
-            ? `${items.length} món đang lưu trữ`
-            : "Những thực phẩm bạn đang lưu trữ"
-        }
-        actions={
-          items.length > 0 ? (
-            <div className="hidden md:block">
-              <Button
-                variant="primary"
-                iconStart={<Plus size={18} />}
-                onClick={onAdd}
-              >
-                Thêm thực phẩm
-              </Button>
-            </div>
-          ) : undefined
-        }
-      />
-
-      {items.length === 0 ? (
+      {activeItems.length === 0 ? (
         <EmptyState
           icon={<PackageOpen size={32} />}
           title="Chưa có thực phẩm nào"
-          text="Thêm thực phẩm đầu tiên để bắt đầu theo dõi hạn sử dụng và chống lãng phí."
           action={
             <Button
               variant="primary"
-              iconStart={<Plus size={18} />}
+              iconStart={<Plus size={16} />}
               onClick={onAdd}
             >
               Thêm thực phẩm
@@ -319,65 +354,84 @@ export function Inventory({
       ) : (
         <>
           <AttentionSummary
-            expired={expired}
-            soon={soon}
+            expiredFoods={expired}
+            soonFoods={soon}
             reviewDue={reviewDue}
-            onOpen={onNavigateAttention ?? onOpenNotifications ?? (() => {})}
+            defaultExpanded={state.settings.homeAttentionExpanded}
+            remindDays={remind}
+            onOpenDetail={onOpenDetail}
+            onReview={onNavigateAttention}
           />
 
-          <div className="flex flex-col gap-3">
-            <InputField
-              aria-label="Tìm thực phẩm"
-              type="search"
-              value={q}
-              onChange={setQ}
-              placeholder="Tìm thực phẩm theo tên..."
-              prefix={<Search size={18} aria-hidden="true" />}
-              suffix={
-                q ? (
-                  <IconButton
-                    size="small"
-                    variant="subtle"
-                    aria-label="Xóa tìm kiếm"
-                    icon={<X size={16} />}
-                    onClick={() => setQ("")}
-                  />
-                ) : undefined
-              }
-            />
+          {/* Section 2: Search and Filters (414:127) */}
+          <div className="home-toolbar flex flex-col gap-3">
+            <div className="relative flex items-center w-full">
+              <div className="pointer-events-none absolute left-3 flex items-center text-text-tertiary">
+                <Search size={20} strokeWidth={2} aria-hidden="true" />
+              </div>
+              <input
+                type="search"
+                aria-label="Tìm thực phẩm theo tên"
+                value={q}
+                onChange={(e) =>
+                  onFiltersChange({ ...filters, query: e.target.value })
+                }
+                placeholder="Tìm thực phẩm theo tên..."
+                className="h-12 w-full rounded-[12px] border border-border-control bg-surface-bg pl-10 pr-10 text-[14px] leading-[22px] text-text-primary placeholder:text-text-placeholder outline-none transition-[border-color,box-shadow] focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+              />
+              {q && (
+                <button
+                  type="button"
+                  aria-label="Xóa tìm kiếm"
+                  onClick={() => onFiltersChange({ ...filters, query: "" })}
+                  className="absolute right-3 flex size-6 items-center justify-center rounded-full text-text-tertiary hover:text-text-primary cursor-pointer"
+                >
+                  <X size={16} strokeWidth={2} />
+                </button>
+              )}
+            </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <FilterDropdown<StatusFilter>
-                label="HSD"
+                label="Hạn sử dụng"
+                className="min-w-0 sm:w-auto"
                 value={filterHsd}
-                onChange={setFilterHsd}
-                options={defaultHsdOptions}
+                onChange={(status) => onFiltersChange({ ...filters, status })}
+                options={inventoryHsdOptions}
               />
               <FilterDropdown
                 label="Danh mục"
+                className="min-w-0 sm:w-auto"
                 value={selectedCategory}
-                onChange={setSelectedCategory}
+                onChange={(category) =>
+                  onFiltersChange({ ...filters, category })
+                }
                 options={categoryOptions}
               />
               <FilterDropdown
                 label="Lưu trữ"
+                className="min-w-0 sm:w-auto"
                 value={selectedLocation}
-                onChange={setSelectedLocation}
+                onChange={(location) =>
+                  onFiltersChange({ ...filters, location })
+                }
                 options={locationOptions}
               />
             </div>
           </div>
 
+          {/* Section 3: Inventory List (414:149) */}
           <section
             aria-labelledby="inv-heading"
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-2"
           >
             <div className="flex min-h-8 items-center justify-between gap-4">
               <h2
                 id="inv-heading"
-                className="text-sm font-semibold text-text-primary uppercase tracking-wide"
+                aria-live="polite"
+                className="text-[18px] leading-[26px] font-semibold text-text-heading tracking-normal"
               >
-                Danh sách ({list.length})
+                Thực phẩm trong kho ({list.length})
               </h2>
               {(q ||
                 filterHsd !== "all" ||
@@ -393,7 +447,6 @@ export function Inventory({
               <EmptyState
                 icon={<SearchX size={32} />}
                 title="Không tìm thấy thực phẩm"
-                text="Thử từ khóa hoặc bộ lọc khác để tìm kiếm."
                 action={
                   <Button variant="neutral" onClick={clear}>
                     Xóa bộ lọc
@@ -401,13 +454,14 @@ export function Inventory({
                 }
               />
             ) : (
-              <div>
-                {/* Mobile & Tablet: Card list */}
-                <div className="flex flex-col divide-y divide-border-primary/40 overflow-hidden rounded-corner-lg border border-border-primary/50 bg-surface-bg shadow-xs lg:hidden">
+              <div id="inventory-list">
+                {/* Grouped Rows Card Container matching node 312:50 (414:156) */}
+                <div className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-[16px] border border-border-primary bg-surface-bg shadow-none lg:hidden">
                   {list.map((f) => (
                     <FoodCard
                       key={f.id}
                       food={f}
+                      variant="grouped"
                       remindDays={remind}
                       onOpen={() => onOpenDetail(f.id)}
                     />
@@ -415,28 +469,28 @@ export function Inventory({
                 </div>
 
                 {/* Desktop: Data Table */}
-                <div className="hidden lg:block overflow-x-auto rounded-corner-lg border border-border-primary/50 bg-surface-bg shadow-xs">
+                <div className="hidden lg:block overflow-x-auto rounded-[16px] border border-border-primary bg-surface-bg shadow-none">
                   <table className="w-full border-separate border-spacing-0 text-left text-sm">
                     <thead className="bg-bg-subtle/80 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                       <tr>
-                        <th scope="col" className="px-5 py-3.5">
+                        <th scope="col" className="px-5 py-2">
                           Thực phẩm
                         </th>
-                        <th scope="col" className="px-5 py-3.5">
+                        <th scope="col" className="px-5 py-2">
                           Số lượng
                         </th>
-                        <th scope="col" className="px-5 py-3.5">
+                        <th scope="col" className="px-5 py-2">
                           Nơi bảo quản
                         </th>
-                        <th scope="col" className="px-5 py-3.5">
+                        <th scope="col" className="px-5 py-2">
                           Hạn sử dụng
                         </th>
-                        <th scope="col" className="px-5 py-3.5 text-right">
+                        <th scope="col" className="px-5 py-2 text-right">
                           Trạng thái
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border-primary/40">
+                    <tbody className="divide-y divide-border-subtle">
                       {list.map((f) => {
                         const IconComp = getFoodIcon(f.name)
 
@@ -446,31 +500,38 @@ export function Inventory({
                             onClick={() => onOpenDetail(f.id)}
                             className="cursor-pointer transition-colors hover:bg-surface-hover"
                           >
-                            <td className="px-5 py-3.5">
+                            <td className="px-5 py-2">
                               <div className="flex items-center gap-3">
                                 <span
                                   aria-hidden="true"
-                                  className="flex size-8 shrink-0 items-center justify-center rounded-corner-md bg-brand-tertiary text-brand-primary"
+                                  className="flex size-9 shrink-0 items-center justify-center rounded-[12px] border border-border-primary bg-surface-subtle text-text-primary"
                                 >
-                                  <IconComp size={18} />
+                                  <IconComp size={16} strokeWidth={2} />
                                 </span>
-                                <span className="font-semibold text-text-primary hover:text-brand-primary transition-colors">
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    onOpenDetail(f.id)
+                                  }}
+                                  className="min-h-11 text-left font-semibold text-text-primary hover:text-brand-primary focus-visible:outline-2 focus-visible:outline-brand-primary"
+                                >
                                   {f.name}
-                                </span>
+                                </button>
                               </div>
                             </td>
-                            <td className="px-5 py-3.5 font-medium text-text-primary">
+                            <td className="px-5 py-2 font-medium text-text-primary">
                               {f.quantity} {f.unit}
                             </td>
-                            <td className="px-5 py-3.5 text-text-secondary">
+                            <td className="px-5 py-2 text-text-secondary">
                               {f.location || "—"}
                             </td>
-                            <td className="px-5 py-3.5 text-text-primary font-medium">
+                            <td className="px-5 py-2 text-text-primary font-medium">
                               {f.expDate
                                 ? formatDate(f.expDate)
                                 : "Chưa rõ HSD"}
                             </td>
-                            <td className="px-5 py-3.5 text-right">
+                            <td className="px-5 py-2 text-right">
                               <StatusBadge food={f} remindDays={remind} />
                             </td>
                           </tr>

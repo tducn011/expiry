@@ -5,7 +5,7 @@
 .breadcrumb { min-width: 0; }
 .breadcrumb ol { display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .breadcrumb li { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-.breadcrumb button { display: inline-flex; align-items: center; gap: 4px; height: 32px; max-width: 192px; padding: 0; border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.breadcrumb button { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; height: auto; max-width: 192px; padding: 0; border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
 .breadcrumb button:hover { color: var(--ink); }
 .breadcrumb button:focus-visible { text-decoration: underline; }
 .breadcrumb-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -13,7 +13,7 @@
 .breadcrumb-mobile-back { display: none; }
 @media (max-width: 639px) {
   .breadcrumb li:not(:last-child), .breadcrumb-separator { display: none; }
-  .breadcrumb button { height: 40px; }
+  .breadcrumb button { min-height: 44px; }
   .breadcrumb-mobile-back { display: inline-flex; }
 }
 
@@ -21,63 +21,147 @@
 :root {
   color-scheme: light;
   --app-font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, system-ui, sans-serif;
-  --brand-primary: #015d67; /* Forest Green */
-  --brand-hover: #014a52;
-  --brand-dark: #013d44;
-  --brand-secondary: #87e4db; /* Mint */
-  --brand-muted: #00acb1; /* Kelly Green */
-  --brand-tertiary: #f1f8f7;
-  --expiry-accent: #caf0c1; /* Pistachio */
+  /* Core palette: Coral — Figma Coral Tea primitives (EXP-COLOR-001) */
+  --coral-50: #fff8f7;
+  --coral-100: #ffe6e2;
+  --coral-200: #ffe0dc;
+  --coral-300: #ffc4bc;
+  --coral-400: #ff896c;
+  --coral-500: #f6546a;
+  --coral-600: #d43a52;
+  --coral-700: #b72f45;
+  --coral-800: #92243b;
+  --coral-900: #6b1e31;
+  /* Core palette: Teal */
+  --teal-50: #f1fcfa;
+  --teal-100: #d8f5f0;
+  --teal-200: #b5ede4;
+  --teal-300: #84e1d4;
+  --teal-400: #4dcdbd;
+  --teal-500: #14b8a6;
+  --teal-600: #0f9b8d;
+  --teal-700: #0f766e;
+  --teal-800: #115e59;
+  --teal-900: #134e4a;
+  /* Core palette: Neutral — Coral Tea warm neutrals */
+  --neutral-white: #ffffff;
+  --neutral-50: #fff3f0;
+  --neutral-100: #f1e8e5;
+  --neutral-200: #e7d8d4;
+  --neutral-300: #bdaeaa;
+  --neutral-500: #6b5f5c;
+  --neutral-700: #625653;
+  --neutral-900: #2d2524;
+  --overlay-black: #000000;
+  /* Brand semantics */
+  --brand-primary: var(--coral-700);
+  --brand-hover: var(--coral-800);
+  --brand-dark: var(--coral-900);
+  --brand-secondary: var(--coral-100);
+  --brand-muted: var(--coral-500);
+  --brand-tertiary: #fff8f7;
+  --expiry-accent: var(--coral-600);
+  --corner-xs: 6px;
   --corner-sm: 8px;
   --corner-md: 12px;
   --corner-lg: 16px;
+  --corner-xl: 20px;
   --corner-full: 9999px;
-  --surface-bg: #ffffff;
-  --surface-dark: #1e293b;
-  --surface-darkest: #0f172a;
-  --surface-hover: #f8fafc;
-  --bg-subtle: #f1f5f9;
-  --bg-faint: #f8fafc;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #94a3b8;
-  --border-primary: #e2e8f0;
-  --on-brand: #ffffff;
-  --status-ok: #047857;
-  --status-ok-bg: #ecfdf5;
-  --status-soon: #9a3412;
-  --status-soon-bg: #fffbeb;
-  --status-expired: #b91c1c;
-  --status-expired-bg: #fef2f2;
+  --surface-bg: var(--neutral-white);
+  --surface-subtle: var(--coral-100);
+  --surface-soft: var(--brand-secondary);
+  --surface-dark: var(--neutral-900);
+  --surface-darkest: var(--neutral-900);
+  --surface-hover: var(--neutral-100);
+  --bg-subtle: var(--coral-100);
+  --bg-faint: var(--neutral-50);
+  --text-heading: var(--neutral-900);
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-700);
+  --text-tertiary: var(--neutral-500);
+  --text-placeholder: var(--neutral-500);
+  --color-text-brand: var(--coral-700);
+  --border-primary: var(--neutral-200);
+  --border-subtle: var(--neutral-100);
+  --border-strong: var(--neutral-500);
+  /* Spec border/control #A66B7B — 4.19:1 on white, meets 3:1 non-text. */
+  --border-control: #a66b7b;
+  --on-brand: var(--neutral-white);
+  --status-ok: #236b45;
+  --status-ok-bg: #e7f5ec;
+  --status-soon: #80500b;
+  --status-soon-bg: #fff1d6;
+  --status-expired: #853426;
+  --status-expired-bg: #f2d4cb;
+  --status-info: #1d4ed8;
+  --status-info-bg: #eff6ff;
+  --status-unknown: #595959;
+  --status-unknown-bg: #f1f1f1;
 
-  --ink: #18212b;
-  --ink-2: #2c3641;
+  --ink: var(--neutral-900);
+  --ink-2: var(--neutral-700);
   --foreground: var(--ink);
-  --muted: #586572;
+  --muted: var(--neutral-700);
   --canvas: var(--brand-tertiary);
-  --surface: #fff;
-  --fill: #eef1f4;
-  --fill-2: #e4e9ee;
-  --line: #d0d8e0;
-  --line-2: #eef0f3;
+  --surface: var(--neutral-white);
+  --fill: var(--neutral-50);
+  --fill-2: var(--brand-secondary);
+  --line: var(--border-primary);
+  --line-2: var(--border-subtle);
   --danger: #b42318;
-  --danger-bg: #fef0ee;
-  --danger-sub: #fef0ee;
-  --warn: #9a6700;
-  --warn-bg: #fff7df;
-  --warn-sub: #fff7df;
-  --ok: #18794e;
-  --ok-bg: #ebf8f1;
-  --neutral: #586572;
-  --neutral-bg: #eef1f4;
-  /* Brand: Forest Green */
-  --accent: #015d67;
-  --accent-hover: #014a52;
-  --accent-soft: #e8f5f4;
-  --link: var(--accent);
-  --ring-focus: rgb(1 93 103 / .18);
-  --elevation-popover: 0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1);
-  --elevation-modal: 0 20px 25px -5px rgb(0 0 0 / .1), 0 8px 10px -6px rgb(0 0 0 / .1);
+  --danger-bg: #fce8ea;
+  --danger-sub: #fce8ea;
+  --warn: #80500b;
+  --warn-bg: #fff1d6;
+  --warn-sub: #fff1d6;
+  --ok: #236b45;
+  --ok-bg: #e7f5ec;
+  --neutral: var(--neutral-700);
+  --neutral-bg: var(--neutral-50);
+  --accent: var(--coral-600);
+  --accent-hover: var(--coral-700);
+  --accent-soft: var(--brand-secondary);
+  --link: var(--coral-700);
+  --ring-focus: rgb(183 47 69 / .2);
+  /* Alpha palette supplied for CSS consumers and state overlays. */
+  --alpha-brand-primary-10: rgb(183 47 69 / .1);
+  --alpha-brand-primary-20: rgb(183 47 69 / .2);
+  --alpha-brand-secondary-40: rgb(255 230 226 / .4);
+  --alpha-brand-muted-20: rgb(246 84 106 / .2);
+  --alpha-brand-accent-10: rgb(212 58 82 / .1);
+  --alpha-border-default-40: rgb(231 216 212 / .4);
+  --alpha-border-default-50: rgb(231 216 212 / .5);
+  --alpha-border-default-60: rgb(231 216 212 / .6);
+  --alpha-border-default-70: rgb(231 216 212 / .7);
+  --alpha-surface-sunken-50: rgb(255 230 226 / .5);
+  --alpha-surface-sunken-80: rgb(255 230 226 / .8);
+  --alpha-status-soon-20: rgb(128 80 11 / .2);
+  --alpha-status-soon-30: rgb(128 80 11 / .3);
+  --alpha-status-soon-bg-40: rgb(255 241 214 / .4);
+  --alpha-status-expired-20: rgb(133 52 38 / .2);
+  --alpha-status-expired-30: rgb(133 52 38 / .3);
+  --alpha-status-expired-bg-40: rgb(242 212 203 / .4);
+  --alpha-category-fresh-10: rgb(35 107 69 / .1);
+  --alpha-category-fresh-20: rgb(35 107 69 / .2);
+  --alpha-category-meat-10: rgb(190 18 60 / .1);
+  --alpha-category-meat-20: rgb(190 18 60 / .2);
+  --alpha-category-dairy-10: rgb(128 80 11 / .1);
+  --alpha-category-dairy-20: rgb(128 80 11 / .2);
+  --alpha-category-prepared-10: rgb(15 118 110 / .1);
+  --alpha-category-prepared-20: rgb(15 118 110 / .2);
+  --alpha-category-pantry-10: rgb(124 58 237 / .1);
+  --alpha-category-pantry-20: rgb(124 58 237 / .2);
+  --alpha-category-beverage-10: rgb(29 78 216 / .1);
+  --alpha-category-beverage-20: rgb(29 78 216 / .2);
+  --alpha-feedback-warning-border-60: rgb(128 80 11 / .6);
+  --alpha-overlay-black-35: rgb(0 0 0 / .35);
+  --alpha-overlay-black-50: rgb(0 0 0 / .48);
+  --alpha-text-on-brand-85: rgb(255 255 255 / .85);
+  /* Figma Shadow/XS–LG — warm-ink #2D2524 tinted */
+  --elevation-xs: 0 1px 3px rgb(45 37 36 / .04);
+  --elevation-sm: 0 3px 10px rgb(45 37 36 / .06);
+  --elevation-popover: 0 8px 24px rgb(45 37 36 / .09);
+  --elevation-modal: 0 16px 48px rgb(45 37 36 / .13);
   --shadow-segment-track: inset 0 0 0 1px rgb(0 0 0 / .05), inset 0 1px 2px rgb(0 0 0 / .04);
   --shadow-segment-thumb: 0 0 0 1px rgb(0 0 0 / .04), 0 1px 2px rgb(0 0 0 / .06);
   --sp-1: 4px;
@@ -94,6 +178,11 @@
   --r-xl: 16px;
   --r-card: 16px;
   --r-pill: 999px;
+  --radius-control-input: 12px;
+  --radius-control-button: 16px;
+  --radius-surface-card: 16px;
+  --radius-surface-card-large: 20px;
+  --radius-scale-full: 999px;
   /* Relative text scale also honors the browser's enlarged default font. */
   --t-xs: .75rem;
   --t-sm: .875rem;
@@ -102,7 +191,7 @@
   --t-lg: 1.25rem;
   --t-xl: 1.875rem;
   --control-h: 44px;
-  --sidebar-w: 228px;
+  --sidebar-w: 240px;
   --content-max: 1180px;
   --grid-cols: 4;
   --gutter: 18px;
@@ -118,6 +207,10 @@
 
 @theme {
   --font-sans: var(--app-font);
+  /* Motion contract: fast 120ms for hover/press/color feedback (Tailwind default is 150ms) */
+  --default-transition-duration: 120ms;
+  /* Spec expanded breakpoint ≥1280px (medium 768–1279) */
+  --breakpoint-lg: 80rem;
 
   /* Brand Tokens */
   --color-brand-primary: var(--brand-primary);
@@ -127,16 +220,80 @@
   --color-brand-muted: var(--brand-muted);
   --color-brand-tertiary: var(--brand-tertiary);
   --color-brand-accent: var(--expiry-accent);
+  --color-coral-50: var(--coral-50);
+  --color-coral-100: var(--coral-100);
+  --color-coral-200: var(--coral-200);
+  --color-coral-300: var(--coral-300);
+  --color-coral-400: var(--coral-400);
+  --color-coral-500: var(--coral-500);
+  --color-coral-600: var(--coral-600);
+  --color-coral-700: var(--coral-700);
+  --color-coral-800: var(--coral-800);
+  --color-coral-900: var(--coral-900);
+  --color-teal-50: var(--teal-50);
+  --color-teal-100: var(--teal-100);
+  --color-teal-200: var(--teal-200);
+  --color-teal-300: var(--teal-300);
+  --color-teal-400: var(--teal-400);
+  --color-teal-500: var(--teal-500);
+  --color-teal-600: var(--teal-600);
+  --color-teal-700: var(--teal-700);
+  --color-teal-800: var(--teal-800);
+  --color-teal-900: var(--teal-900);
+  --color-neutral-white: var(--neutral-white);
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-900: var(--neutral-900);
+  --color-border-control: var(--border-control);
+  --color-overlay-black: var(--overlay-black);
+  --color-feedback-danger-strong: #b42318;
+  --color-feedback-success: #236b45;
+  --color-feedback-success-bg: #e7f5ec;
+  --color-feedback-warning-bg: #fff1d6;
+  --color-feedback-warning-border: rgb(128 80 11 / .6);
+  --color-feedback-warning-icon: #80500b;
+  --color-feedback-warning-text: #80500b;
+  /* Category = dataset colors, not status (COL-012): mapped to spec primitives */
+  --color-category-fresh: #236b45;
+  --color-category-meat: #be123c;
+  --color-category-dairy: #80500b;
+  --color-category-prepared: #0f766e;
+  --color-category-pantry: #7c3aed;
+  --color-category-beverage: #1d4ed8;
+  --color-category-fresh-bg: rgb(35 107 69 / .1);
+  --color-category-meat-bg: rgb(190 18 60 / .1);
+  --color-category-dairy-bg: rgb(128 80 11 / .1);
+  --color-category-prepared-bg: rgb(15 118 110 / .1);
+  --color-category-pantry-bg: rgb(124 58 237 / .1);
+  --color-category-beverage-bg: rgb(29 78 216 / .1);
+  /* Chart series (spec data-viz/series-1..6, light theme) */
+  --color-viz-1: #d43a52;
+  --color-viz-2: #0f766e;
+  --color-viz-3: #1d4ed8;
+  --color-viz-4: #80500b;
+  --color-viz-5: #236b45;
+  --color-viz-6: #7c3aed;
   --color-surface-bg: var(--surface-bg);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-soft: var(--surface-soft);
   --color-surface-dark: var(--surface-dark);
   --color-surface-darkest: var(--surface-darkest);
   --color-surface-hover: var(--surface-hover);
   --color-bg-subtle: var(--bg-subtle);
   --color-bg-faint: var(--bg-faint);
+  --color-text-heading: var(--text-heading);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
+  --color-text-placeholder: var(--text-placeholder);
+  --color-text-brand: var(--color-text-brand);
   --color-border-primary: var(--border-primary);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
   --color-on-brand: var(--on-brand);
   --color-status-ok: var(--status-ok);
   --color-status-ok-bg: var(--status-ok-bg);
@@ -144,10 +301,18 @@
   --color-status-soon-bg: var(--status-soon-bg);
   --color-status-expired: var(--status-expired);
   --color-status-expired-bg: var(--status-expired-bg);
+  --color-status-info: var(--status-info);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-unknown: var(--status-unknown);
+  --color-status-unknown-bg: var(--status-unknown-bg);
 
+  --radius-corner-xs: var(--corner-xs);
   --radius-corner-sm: var(--corner-sm);
   --radius-corner-md: var(--corner-md);
   --radius-corner-lg: var(--corner-lg);
+  --radius-corner-xl: var(--corner-xl);
+  --radius-corner-card: 16px;
+  --radius-corner-card-lg: 20px;
   --radius-corner-full: var(--corner-full);
 
   /* Containers & Max Width Scale */
@@ -222,7 +387,11 @@
   --radius-card: var(--r-card);
   --radius-pill: var(--r-pill);
 
-  /* Elevation / Shadows */
+  /* Elevation / Shadows — Figma Shadow/XS–LG */
+  --shadow-xs: var(--elevation-xs);
+  --shadow-sm: var(--elevation-sm);
+  --shadow-md: var(--elevation-popover);
+  --shadow-lg: var(--elevation-modal);
   --shadow-popover: var(--elevation-popover);
   --shadow-modal: var(--elevation-modal);
   --shadow-segment-track: var(--shadow-segment-track);
@@ -252,7 +421,7 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   :root {
     --grid-cols: 12;
     --margin: clamp(22px, 4vw, 58px);
@@ -270,6 +439,11 @@
   html,
   body {
     min-width: 0;
+    scrollbar-gutter: stable;
+  }
+
+  main {
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -294,7 +468,9 @@
   h2,
   h3,
   h4 {
+    color: var(--text-heading);
     font-weight: 600;
+    letter-spacing: normal;
     line-height: 1.25;
     margin: 0;
     text-wrap: balance;
@@ -317,7 +493,7 @@
     border: 1px solid var(--line);
     border-radius: var(--r-md);
     font: inherit;
-    transition: border-color .15s, box-shadow .15s;
+    transition: border-color 120ms, box-shadow 120ms;
   }
 
   input::placeholder,
@@ -353,11 +529,12 @@
 /* ponytail: native overlay scrollbars without JS event listeners */
 * {
   scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--foreground) 28%, transparent) transparent;
 }
 
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -365,12 +542,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--foreground) 16%, transparent);
+  background: color-mix(in srgb, var(--foreground) 28%, transparent);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--foreground) 40%, transparent);
+  background: color-mix(in srgb, var(--foreground) 60%, transparent);
 }
 
 .scrollbar-clean,
@@ -446,7 +623,7 @@
   cursor: pointer;
   user-select: none;
   position: relative;
-  transition: all .15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .button:active:not(:disabled) {
@@ -477,35 +654,35 @@
 /* Call To Action (CTA): Hero primary action */
 .button.cta {
   background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-  color: #fff;
+  color: var(--neutral-white);
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 14px -2px rgba(7, 95, 173, 0.4), 0 2px 4px -2px rgba(7, 95, 173, 0.25);
+  box-shadow: 0 4px 14px -2px color-mix(in srgb, var(--brand-primary) 40%, transparent), 0 2px 4px -2px color-mix(in srgb, var(--brand-primary) 25%, transparent);
 }
 
 .button.cta:hover:not(:disabled) {
   background: linear-gradient(135deg, var(--accent-hover), var(--accent));
-  box-shadow: 0 6px 18px -2px rgba(7, 95, 173, 0.5), 0 3px 6px -2px rgba(7, 95, 173, 0.3);
+  box-shadow: 0 6px 18px -2px color-mix(in srgb, var(--brand-primary) 50%, transparent), 0 3px 6px -2px color-mix(in srgb, var(--brand-primary) 30%, transparent);
   transform: translateY(-1px);
 }
 
 .button.cta:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 0 2px 6px -1px rgba(7, 95, 173, 0.3);
+  box-shadow: 0 2px 6px -1px color-mix(in srgb, var(--brand-primary) 30%, transparent);
 }
 
 /* Primary Button: Solid standard highlighted action */
 .button.primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--neutral-white);
   border: 1px solid var(--accent);
-  box-shadow: 0 2px 5px -1px rgba(7, 95, 173, 0.28);
+  box-shadow: 0 2px 5px -1px color-mix(in srgb, var(--brand-primary) 28%, transparent);
 }
 
 .button.primary:hover:not(:disabled) {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
-  box-shadow: 0 4px 10px -1px rgba(7, 95, 173, 0.38);
+  box-shadow: 0 4px 10px -1px color-mix(in srgb, var(--brand-primary) 38%, transparent);
   transform: translateY(-1px);
 }
 
@@ -546,7 +723,7 @@
 }
 
 .button.ghost:hover:not(:disabled) {
-  background: rgb(24 33 43 / .06);
+  background: color-mix(in srgb, var(--neutral-900) 6%, transparent);
   color: var(--ink);
 }
 
@@ -561,8 +738,8 @@
 .button.danger:hover:not(:disabled) {
   background: var(--danger);
   border-color: var(--danger);
-  color: #fff;
-  box-shadow: 0 3px 10px -1px rgba(180, 35, 24, 0.35);
+  color: var(--neutral-white);
+  box-shadow: 0 3px 10px -1px color-mix(in srgb, var(--danger) 35%, transparent);
   transform: translateY(-1px);
 }
 
@@ -587,23 +764,6 @@
 .button.danger:focus-visible {
   outline: 2px solid var(--danger);
   outline-offset: 2px;
-}
-
-/* Spinner indicator */
-.button-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  animation: button-spin .7s linear infinite;
-  flex: none;
-}
-
-@keyframes button-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .text-link,
@@ -636,7 +796,7 @@
   border-radius: var(--r-md);
   background: var(--surface);
   color: var(--muted);
-  transition: background-color .15s, color .15s;
+  transition: background-color 120ms, color 120ms;
 }
 
 .icon-button:hover {
@@ -796,7 +956,7 @@
   background: transparent;
   color: var(--muted);
   font-size: var(--t-sm);
-  transition: color .15s;
+  transition: color 120ms;
 }
 
 .segmented button:hover {
@@ -829,7 +989,7 @@
   background: var(--surface);
   color: var(--muted);
   font-size: var(--t-xs);
-  transition: background-color .15s;
+  transition: background-color 120ms;
 }
 
 .chips button:hover {
@@ -870,7 +1030,7 @@
   appearance: none;
   -webkit-appearance: none;
   cursor: pointer;
-  transition: border-color .15s, box-shadow .15s;
+  transition: border-color 120ms, box-shadow 120ms;
 }
 
 .select-native:focus-visible {
@@ -914,7 +1074,7 @@
   color: var(--ink);
   text-align: left;
   font-size: var(--t-sm);
-  transition: border-color .15s, box-shadow .15s;
+  transition: border-color 120ms, box-shadow 120ms;
 }
 
 .select-trigger:focus-visible,
@@ -948,7 +1108,7 @@
 .select-chevron .icon {
   width: 16px;
   height: 16px;
-  transition: transform .15s;
+  transition: transform .2s;
 }
 
 .select-trigger[aria-expanded="true"] .select-chevron .icon {
@@ -962,7 +1122,7 @@
   border: 1px solid var(--line-2);
   border-radius: var(--r-lg);
   box-shadow: var(--elevation-popover);
-  animation: popover-in .15s ease-out;
+  animation: popover-in .2s cubic-bezier(0, 0, 0.2, 1);
 }
 
 .select-popover {
@@ -1146,7 +1306,7 @@
 
 .date-picker-day.selected {
   background: var(--accent);
-  color: #fff;
+  color: var(--neutral-white);
 }
 
 .date-picker-day.today {
@@ -1299,22 +1459,6 @@
   text-align: left;
 }
 
-.brand-icon {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  flex: none;
-  background: var(--accent);
-  color: #fff;
-  border-radius: var(--r-sm);
-}
-
-.brand-name {
-  font-size: var(--t-md);
-  font-weight: 700;
-}
-
 .sidebar-add {
   width: 100%;
   min-height: 42px;
@@ -1325,23 +1469,23 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--r-md);
   background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-  color: #fff;
+  color: var(--neutral-white);
   font-size: var(--t-sm);
   font-weight: 700;
-  box-shadow: 0 4px 14px -2px rgba(7, 95, 173, 0.4), 0 2px 4px -2px rgba(7, 95, 173, 0.25);
+  box-shadow: 0 4px 14px -2px color-mix(in srgb, var(--brand-primary) 40%, transparent), 0 2px 4px -2px color-mix(in srgb, var(--brand-primary) 25%, transparent);
   cursor: pointer;
-  transition: all .15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-add:hover {
   background: linear-gradient(135deg, var(--accent-hover), var(--accent));
-  box-shadow: 0 6px 18px -2px rgba(7, 95, 173, 0.5), 0 3px 6px -2px rgba(7, 95, 173, 0.3);
+  box-shadow: 0 6px 18px -2px color-mix(in srgb, var(--brand-primary) 50%, transparent), 0 3px 6px -2px color-mix(in srgb, var(--brand-primary) 30%, transparent);
   transform: translateY(-1px);
 }
 
 .sidebar-add:active {
   transform: translateY(1px);
-  box-shadow: 0 2px 6px -1px rgba(7, 95, 173, 0.3);
+  box-shadow: 0 2px 6px -1px color-mix(in srgb, var(--brand-primary) 30%, transparent);
 }
 
 .sidebar nav {
@@ -1361,7 +1505,7 @@
   color: var(--muted);
   text-align: left;
   font-weight: 400;
-  transition: background-color .15s, color .15s;
+  transition: background-color 120ms, color 120ms;
 }
 
 .sidebar nav button:hover {
@@ -1454,7 +1598,7 @@
   gap: 3px;
   font-size: var(--t-xs);
   font-weight: 400;
-  transition: color .15s;
+  transition: color 120ms;
 }
 
 .dock-tab.active {
@@ -1499,23 +1643,23 @@
   border: 3px solid var(--surface);
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-  color: #fff;
+  color: var(--neutral-white);
   display: grid;
   place-items: center;
-  box-shadow: 0 6px 16px rgba(7, 95, 173, 0.42), 0 2px 6px rgba(7, 95, 173, 0.25);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--brand-primary) 42%, transparent), 0 2px 6px color-mix(in srgb, var(--brand-primary) 25%, transparent);
   cursor: pointer;
-  transition: all .15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dock-hero-add-btn:hover {
   background: linear-gradient(135deg, var(--accent-hover), var(--accent));
   transform: scale(1.06);
-  box-shadow: 0 8px 20px rgba(7, 95, 173, 0.52);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--brand-primary) 52%, transparent);
 }
 
 .dock-hero-add-btn:active {
   transform: scale(0.94);
-  box-shadow: 0 3px 8px rgba(7, 95, 173, 0.35);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--brand-primary) 35%, transparent);
 }
 
 .dock-hero-label {
@@ -1525,7 +1669,7 @@
   color: var(--accent);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .app-shell {
     padding-left: var(--sidebar-w);
   }
@@ -1574,12 +1718,14 @@
 
 .page-header h1 {
   font-size: var(--t-xl);
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: var(--text-heading);
 }
 
 .page-header p {
   max-width: 680px;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--t-sm);
   line-height: 1.55;
 }
@@ -1608,7 +1754,7 @@
   background: var(--surface);
   color: var(--ink);
   text-align: left;
-  transition: background-color .15s;
+  transition: background-color 120ms;
 }
 
 .urgency-chip>span {
@@ -1682,7 +1828,7 @@
   font-size: var(--t-xs);
   font-weight: 500;
   cursor: pointer;
-  transition: all .15s ease;
+  transition: all 120ms ease;
 }
 
 .inventory-view-tab:hover {
@@ -1877,7 +2023,7 @@
 }
 
 .food-row:hover {
-  background: #fafbfc;
+  background: var(--neutral-50);
 }
 
 .food-card {
@@ -2007,7 +2153,7 @@
   font-weight: 600;
   cursor: pointer;
   user-select: none;
-  transition: all .15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .row-action:hover {
@@ -2029,8 +2175,8 @@
 .row-action.primary:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
-  box-shadow: 0 2px 6px -1px rgba(7, 95, 173, 0.35);
+  color: var(--neutral-white);
+  box-shadow: 0 2px 6px -1px color-mix(in srgb, var(--brand-primary) 35%, transparent);
 }
 
 .row-action.danger {
@@ -2043,8 +2189,8 @@
 .row-action.danger:hover {
   background: var(--danger);
   border-color: var(--danger);
-  color: #fff;
-  box-shadow: 0 2px 6px -1px rgba(180, 35, 24, 0.35);
+  color: var(--neutral-white);
+  box-shadow: 0 2px 6px -1px color-mix(in srgb, var(--danger) 35%, transparent);
 }
 
 .row-action .icon {
@@ -2177,7 +2323,7 @@
   border-radius: var(--r-md);
   background: var(--surface);
   font-size: var(--t-sm);
-  transition: background-color .15s;
+  transition: background-color 120ms;
 }
 
 .action-pill-btn:hover {
@@ -2503,20 +2649,20 @@
   background: transparent;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--muted, #64748b);
+  color: var(--muted, var(--neutral-500));
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 120ms ease;
 }
 
 .scan-tab-btn:hover {
-  color: var(--text, #0f172a);
+  color: var(--text, var(--neutral-900));
   background: var(--surface-hover, rgba(0, 0, 0, 0.04));
 }
 
 .scan-tab-btn.active {
-  color: var(--primary, #2563eb);
-  background: var(--primary-subtle, rgba(37, 99, 235, 0.1));
-  border-color: var(--primary-border, rgba(37, 99, 235, 0.2));
+  color: var(--primary, var(--brand-primary));
+  background: var(--primary-subtle, var(--alpha-brand-primary-10));
+  border-color: var(--primary-border, var(--alpha-brand-primary-20));
 }
 
 .barcode-viewport {
@@ -2525,7 +2671,7 @@
   max-width: 440px;
   margin: 0 auto 14px;
   aspect-ratio: 4 / 3;
-  background: #000;
+  background: var(--overlay-black);
   border-radius: var(--r-md, 8px);
   overflow: hidden;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
@@ -2560,8 +2706,8 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: #ef4444;
-  box-shadow: 0 0 10px 3px rgba(239, 68, 68, 0.85);
+  background: var(--danger);
+  box-shadow: 0 0 10px 3px color-mix(in srgb, var(--danger) 85%, transparent);
   animation: barcode-laser-scan 2s ease-in-out infinite;
 }
 
@@ -2585,9 +2731,9 @@
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: var(--accent-subtle, #f0fdf4);
-  border: 1px solid var(--accent-border, #bbf7d0);
-  color: var(--accent-text, #166534);
+  background: var(--accent-subtle, var(--teal-50));
+  border: 1px solid var(--accent-border, var(--teal-200));
+  color: var(--accent-text, var(--teal-800));
   border-radius: var(--r-sm, 6px);
   font-size: 0.875rem;
   margin-bottom: 12px;
@@ -2598,14 +2744,14 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--muted, #64748b);
+  color: var(--muted, var(--neutral-500));
   font-size: 1.1rem;
   line-height: 1;
   padding: 0 4px;
 }
 
 .barcode-remove-btn:hover {
-  color: var(--danger, #ef4444);
+  color: var(--danger, var(--danger));
 }
 
 .empty {
@@ -2643,10 +2789,10 @@
   border: 1px solid var(--line-2);
   border-radius: var(--r-lg);
   background: var(--ink);
-  color: #fff;
+  color: var(--neutral-white);
   font-size: var(--t-sm);
   box-shadow: var(--elevation-popover);
-  animation: popover-in .15s ease-out;
+  animation: popover-in .2s cubic-bezier(0, 0, 0.2, 1);
 }
 
 /* One modal primitive for entry, movement, history, and recovery. */
@@ -2657,8 +2803,7 @@
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgb(18 28 38 / .38);
-  animation: backdrop-in .18s ease-out;
+  background: color-mix(in srgb, var(--overlay-black) 38%, transparent);
 }
 
 .modal-backdrop.active {
@@ -2675,7 +2820,6 @@
   border-radius: var(--r-lg);
   background: var(--surface);
   box-shadow: var(--elevation-modal);
-  animation: modal-in .2s ease-out;
 }
 
 .modal.compact {
@@ -2801,7 +2945,7 @@
 .stepper button.active>span {
   border-color: var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--neutral-white);
 }
 
 .stepper button.done>span {
@@ -3040,19 +3184,6 @@
 @keyframes pulse {
   to {
     opacity: .4;
-  }
-}
-
-@keyframes backdrop-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(.98);
   }
 }
 
@@ -3565,8 +3696,9 @@
   }
 }
 
-/* Keyboard focus is an interaction state, not decoration. Shared by all controls. */
-:is(button, a, input, textarea, summary, [tabindex]):focus-visible {
+/* Keyboard focus is an interaction state, not decoration. Shared by all controls.
+   Dialog containers only take programmatic focus, so they get no ring. */
+:is(button, a, input, textarea, summary, [tabindex]:not([role="dialog"])):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -3620,7 +3752,7 @@ html {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   html {
     scroll-padding-bottom: 12px;
   }
@@ -3644,4 +3776,74 @@ html {
     transition: none !important;
     animation: none !important;
   }
+}
+
+/* Clean browser autofill styling for auth and form inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--neutral-white) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+
+/* Home: independent expiry groups with concrete food previews. */
+.home-attention { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 14px; border: 1px solid var(--color-border-primary); border-radius: 12px; background: var(--color-surface-bg); }
+.home-attention-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.home-attention-group { overflow: hidden; border: 1px solid var(--color-border-primary); border-radius: 10px; background: var(--color-surface-bg); }
+.home-attention-group-toggle { display: flex; width: 100%; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
+.home-attention-group-toggle:hover { background: var(--color-surface-hover); }
+.home-attention-group-toggle:focus-visible { outline: 2px solid var(--color-brand-primary); outline-offset: -2px; }
+.home-attention-foods { border-top: 1px solid var(--color-border-subtle); }
+.home-attention-foods .home-food-row { min-height: 64px; }
+.home-attention-review { grid-column: 1 / -1; }
+.home-attention-action { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
+.home-attention-action > svg { flex-shrink: 0; }
+.home-attention-action:hover { text-decoration: underline; }
+.home-attention-action:focus-visible { outline: 2px solid var(--color-brand-primary); outline-offset: 2px; border-radius: 4px; }
+.home-food-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-height: 68px; padding: 10px 12px; text-align: left; cursor: pointer; transition: background-color 120ms; }
+.home-food-row:hover { background: var(--color-surface-hover); }
+.home-food-row:focus-visible { outline: 2px solid var(--color-brand-primary); outline-offset: -2px; }
+.home-food-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: var(--color-surface-subtle); color: var(--color-text-secondary); }
+.home-food-expiry { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 359px) {
+  .home-food-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .home-food-icon { display: none; }
+}
+
+@media (min-width: 768px) {
+  .home-toolbar { display: grid; grid-template-columns: minmax(180px, 1fr) auto; align-items: center; }
+  .home-attention { padding-block: 10px; }
+  .home-attention-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Enter and exit motion is GSAP (src/lib/motion.ts); only popover-in remains for CSS-only select/date popovers. */
+
+/* Notification cards keep every action visible without relying on hover. */
+.notification-icon-action { position: relative; display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; min-width: 44px; min-height: 40px; border-radius: 8px; color: var(--color-text-secondary); cursor: pointer; }
+.notification-action-label { display: inline; white-space: nowrap; font-size: 12px; font-weight: 600; }
+.notification-row-action { gap: 5px; padding-inline: 7px; }
+.notification-icon-action:hover { background: var(--color-surface-hover); color: var(--color-text-heading); }
+.notification-icon-action:focus-visible { outline: 2px solid var(--color-brand-primary); outline-offset: -2px; }
+.notification-tooltip { position: absolute; right: 0; bottom: calc(100% + 2px); z-index: 1; width: max-content; max-width: 190px; padding: 5px 8px; border-radius: 6px; background: var(--color-text-heading); color: var(--color-surface-bg); font-size: 11px; font-weight: 500; pointer-events: none; visibility: hidden; }
+.notification-tooltip { display: none; }
+
+.storage-location-card { min-width: 0; min-height: 92px; }
+.storage-location-card:focus-visible { outline: 2px solid var(--color-brand-primary); outline-offset: 3px; }
+@media (max-width: 639px) {
+  .storage-view .storage-location-card { min-height: 76px; }
+  .storage-view > header { padding-block: 0; }
+  .shopping-view > header { padding-block: 0; }
+}
+
+.storage-view .storage-empty-state { padding-block: 20px; gap: 12px; }
+.storage-view .storage-empty-state h2 { font-size: 16px; }
+
+.shopping-entry-fields select { min-height: 44px; }
+
+@media (max-width: 767px) {
+  .shopping-entry-fields select { font-size: 16px; padding-inline: 8px 30px; }
+  .shopping-entry-fields select + span { right: 8px; }
 }

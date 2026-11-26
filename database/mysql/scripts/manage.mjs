@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {connect,rootSql,migrate,grants,base,run,containerId,environment} from '../src/connection.mjs';
+import {migrationChecksumMatches} from '../src/migration-checksum.mjs';
 const mode=process.argv[2];
 const dir=new URL('evidence/',base);
 await mkdir(dir,{recursive:true});
@@ -60,13 +61,13 @@ export async function seed() {
 }
 export async function devCounts() {
   const c=await connect('expiry_dev');
-  try { const [rows]=await c.query("SELECT 'users' t,COUNT(*) n FROM users UNION ALL SELECT 'food_entries',COUNT(*) FROM food_entries UNION ALL SELECT 'stock_movements',COUNT(*) FROM stock_movements UNION ALL SELECT 'api_requests',COUNT(*) FROM api_requests UNION ALL SELECT 'local_credentials',COUNT(*) FROM local_credentials UNION ALL SELECT 'user_sessions',COUNT(*) FROM user_sessions UNION ALL SELECT 'schema_migrations',COUNT(*) FROM schema_migrations"); return rows; } finally {await c.end();}
+  try { const [rows]=await c.query("SELECT 'users' t,COUNT(*) n FROM users UNION ALL SELECT 'food_entries',COUNT(*) FROM food_entries UNION ALL SELECT 'stock_movements',COUNT(*) FROM stock_movements UNION ALL SELECT 'api_requests',COUNT(*) FROM api_requests UNION ALL SELECT 'local_credentials',COUNT(*) FROM local_credentials UNION ALL SELECT 'user_sessions',COUNT(*) FROM user_sessions UNION ALL SELECT 'shopping_items',COUNT(*) FROM shopping_items UNION ALL SELECT 'schema_migrations',COUNT(*) FROM schema_migrations"); return rows; } finally {await c.end();}
 }
 async function devFingerprint() {
   const c=await connect('expiry_dev');
   try {
     const rows={};
-    for(const table of ['users','food_entries','stock_movements','api_requests','local_credentials','user_sessions','schema_migrations']) {
+    for(const table of ['users','food_entries','stock_movements','api_requests','local_credentials','user_sessions','shopping_items','schema_migrations']) {
       const order={api_requests:'user_id,idempotency_key',local_credentials:'user_id',user_sessions:'token_hash',schema_migrations:'version'}[table]??'id';
       [rows[table]]=await c.query(`SELECT * FROM ${table} ORDER BY ${order}`);
     }
@@ -90,7 +91,7 @@ if(mode==='migrate-dev') {
   try {
     [[identity]]=await c.query('SELECT DATABASE() db,VERSION() version,@@time_zone time_zone,@@transaction_isolation isolation,@@default_storage_engine engine,CURRENT_USER() authenticated_account');
     assert.equal(identity.db,'expiry_dev'); assert.match(identity.version,/^8\.4\./); assert.equal(identity.time_zone,'+00:00'); assert.equal(identity.engine,'InnoDB');
-    const [tables]=await c.query('SHOW TABLES'); tableNames=tables.map(r=>Object.values(r)[0]).sort(); assert.deepEqual(tableNames,['api_requests','food_entries','local_credentials','schema_migrations','stock_movements','user_sessions','users']);
+    const [tables]=await c.query('SHOW TABLES'); tableNames=tables.map(r=>Object.values(r)[0]).sort(); assert.deepEqual(tableNames,['api_requests','food_entries','inventory_batches','local_credentials','products','schema_migrations','shopping_items','stock_movements','user_sessions','users','workspace_invites','workspace_members','workspaces']);
     [migrationVersions]=await c.query('SELECT version,sha256 FROM schema_migrations ORDER BY version');
     const migration002=await readFile(new URL('../migrations/002_local_auth.sql',import.meta.url));
     const migration003=await readFile(new URL('../migrations/003_session_expiry_boundary.sql',import.meta.url));
@@ -102,8 +103,7 @@ if(mode==='migrate-dev') {
     assert.equal(actualVersions[1][0], 2);
     assert.equal(actualVersions[1][1], norm(migration002));
     assert.equal(actualVersions[2][0], 3);
-    const valid003 = ['a2cd2af6d22a4ec3a863600741176f26cfbae104406e06a1bac8ee9c286006e7', norm(migration003)];
-    assert.ok(valid003.includes(actualVersions[2][1]), `Unexpected migration 3 checksum: ${actualVersions[2][1]}`);
+    assert.ok(migrationChecksumMatches(3, actualVersions[2][1], norm(migration003)), `Unexpected migration 3 checksum: ${actualVersions[2][1]}`);
     if (actualVersions.length >= 4) {
       assert.equal(actualVersions[3][0], 4);
       assert.equal(actualVersions[3][1], norm(migration004));

@@ -1,6 +1,33 @@
 import { paginationQuery, queryInteger } from '../../shared/public-dto.mjs';
 import { DomainError, categories } from '../../shared/domain.mjs';
 
+const categorySlugMap = {
+  fresh_produce: 'fresh_produce',
+  'rau củ quả': 'fresh_produce',
+  'rau củ': 'fresh_produce',
+  'rau': 'fresh_produce',
+  meat_seafood: 'meat_seafood',
+  'thịt, cá, hải sản': 'meat_seafood',
+  'thịt & cá': 'meat_seafood',
+  'thịt': 'meat_seafood',
+  'cá': 'meat_seafood',
+  dairy_eggs: 'dairy_eggs',
+  'trứng & sữa': 'dairy_eggs',
+  'trứng và sữa': 'dairy_eggs',
+  'trứng': 'dairy_eggs',
+  'sữa': 'dairy_eggs',
+  prepared_food: 'prepared_food',
+  'món nấu sẵn': 'prepared_food',
+  'đồ ăn sẵn': 'prepared_food',
+  dry_pantry: 'dry_pantry',
+  'gia vị & đồ khô': 'dry_pantry',
+  'đồ khô': 'dry_pantry',
+  beverage: 'beverage',
+  'đồ uống': 'beverage',
+  other: 'other',
+  'khác': 'other'
+};
+
 export class InventoryController {
   constructor(inventoryService) {
     this.service = inventoryService;
@@ -14,6 +41,10 @@ export class InventoryController {
       if (typeof body.quantity === 'number') body.quantity = String(body.quantity);
       if (body.quantity === undefined && body.initial_quantity !== undefined) {
         body.quantity = String(body.initial_quantity);
+      }
+      if (body.category && typeof body.category === 'string') {
+        const mapped = categorySlugMap[body.category.trim().toLowerCase()];
+        if (mapped) body.category = mapped;
       }
       const result = await this.service.createEntry(req.userId, req.idempotencyKey, body);
       if (result.replayed) {
@@ -30,17 +61,42 @@ export class InventoryController {
     try {
       const view = req.query.view ?? 'inventory';
       if (!['inventory', 'attention'].includes(view)) throw new DomainError(422, 'VALIDATION_ERROR');
-      if (req.query.category !== undefined && !categories.includes(req.query.category)) {
+
+      let category = req.query.category;
+      if (category === 'all' || category === '') {
+        category = undefined;
+      } else if (category !== undefined) {
+        const catLower = typeof category === 'string' ? category.trim().toLowerCase() : '';
+        const mapped = categorySlugMap[catLower];
+        if (mapped) category = mapped;
+      }
+      if (category !== undefined && !categories.includes(category)) {
         throw new DomainError(422, 'VALIDATION_ERROR');
       }
+
+      let attentionFilter = req.query.attention;
+      if (attentionFilter === 'all' || attentionFilter === '') {
+        attentionFilter = undefined;
+      } else if (attentionFilter !== undefined) {
+        const attLower = typeof attentionFilter === 'string' ? attentionFilter.trim().toLowerCase() : '';
+        if (attLower === 'past' || attLower === 'expired') attentionFilter = 'past_date';
+        else if (attLower === 'today' || attLower === 'due_today') attentionFilter = 'due_today';
+        else if (attLower === 'soon' || attLower === 'expiring' || attLower === 'expiring_soon') attentionFilter = 'soon';
+      }
+
+      let location = req.query.location;
+      if (location === 'all' || location === '') {
+        location = undefined;
+      }
+
       const query = {
         view,
         lifecycle: req.query.lifecycle ?? 'active',
-        attention: req.query.attention,
+        attention: attentionFilter,
         ...paginationQuery(req.query),
         q: req.query.q ?? '',
-        location: req.query.location,
-        category: req.query.category
+        location,
+        category
       };
       const result = await this.service.listEntries(req.userId, query);
       return res.status(200).json(result);
@@ -64,6 +120,10 @@ export class InventoryController {
       if (body.version !== undefined && body.expected_version === undefined) {
         body.expected_version = body.version;
         delete body.version;
+      }
+      if (body.category && typeof body.category === 'string') {
+        const mapped = categorySlugMap[body.category.trim().toLowerCase()];
+        if (mapped) body.category = mapped;
       }
       const result = await this.service.editEntry(req.userId, req.idempotencyKey, req.params.id, body);
       if (result.replayed) {

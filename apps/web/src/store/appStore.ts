@@ -2,7 +2,7 @@ import { useCallback, useEffect, useReducer, useState } from "react"
 
 import { api } from "../api/client"
 
-export type Unit = "cái" | "hộp" | "gói" | "chai" | "kg" | "g" | "lít" | "ml" | "quả"
+export type Unit = "cái" | "hộp" | "gói" | "chai" | "kg" | "g" | "lít" | "ml" | "quả" | "bó"
 
 export const UNITS: Unit[] = [
   "cái",
@@ -14,6 +14,8 @@ export const UNITS: Unit[] = [
   "chai",
 
   "quả",
+
+  "bó",
 
   "kg",
 
@@ -89,6 +91,8 @@ export interface Food {
 
   barcode?: string
 
+  note?: string
+
   createdAt: string
 
   reviewAt?: string // later-check date; never overwrites expDate
@@ -130,6 +134,11 @@ export interface Settings {
   inApp: boolean
 
   push: boolean
+
+  homeAttentionExpanded: {
+    expired: boolean
+    soon: boolean
+  }
 }
 
 export interface State {
@@ -171,7 +180,12 @@ const initial: State = {
 
   snoozed: {},
 
-  settings: { remindDays: 3, inApp: true, push: false },
+  settings: {
+    remindDays: 3,
+    inApp: true,
+    push: false,
+    homeAttentionExpanded: { expired: false, soon: false },
+  },
 }
 
 export type Action = {
@@ -251,6 +265,10 @@ export type Action = {
 
   settings: Settings
 } | {
+  type: "remindDays"
+
+  days: number
+} | {
   type: "replace"
 
   state: State
@@ -324,6 +342,10 @@ export function reducer(s: State, a: Action): State {
 
       const userLocations = loadUserLocations(a.userId)
 
+      const inApp = loadUserInApp(a.userId || "")
+
+      const homeAttentionExpanded = loadUserHomeAttention(a.userId || "")
+
       return {
         ...initial,
 
@@ -340,6 +362,8 @@ export function reducer(s: State, a: Action): State {
         history: [],
 
         locations: userLocations,
+
+        settings: { ...initial.settings, inApp, homeAttentionExpanded },
 
         readNotifs: userNotifs.readNotifs,
 
@@ -573,18 +597,21 @@ export function reducer(s: State, a: Action): State {
         ...s,
 
         snoozed: { ...s.snoozed, [a.id]: a.until },
-
-        readNotifs: [...s.readNotifs, a.id],
       }
 
     case "settings":
       return { ...s, settings: a.settings }
+
+    case "remindDays":
+      return { ...s, settings: { ...s.settings, remindDays: a.days } }
   }
 }
 
 const KEY = "expiry-state-v1"
 
 const DEMO_KEY = "expiry-demo-v1"
+const DEMO_SEED_DATE_REVISION_KEY = "expiry-demo-seed-date-revision"
+const DEMO_SEED_DATE_REVISION = "2026-11-18-v1"
 
 export type StorageProblem = "read" | "write" | null
 
@@ -780,6 +807,41 @@ export function seedFoods(): Food[] {
   }))
 }
 
+function migrateDemoSeedDates(s: State): State {
+  if (
+    localStorage.getItem(DEMO_SEED_DATE_REVISION_KEY) ===
+    DEMO_SEED_DATE_REVISION
+  )
+    return s
+
+  const seedDays = new Map(SEED.map(({ id, days }) => [id, days]))
+  let changed = false
+  const foods = s.foods.map((food) => {
+    if (!seedDays.has(food.id)) return food
+
+    const days = seedDays.get(food.id)
+    const expDate =
+      days === null || days === undefined ? undefined : addDays(today(), days)
+    if (food.expDate === expDate) return food
+
+    changed = true
+    if (expDate === undefined) {
+      const { expDate: _previousDate, ...withoutExpiry } = food
+      return withoutExpiry
+    }
+    return { ...food, expDate }
+  })
+
+  const migrated = changed ? { ...s, foods } : s
+  try {
+    localStorage.setItem(DEMO_KEY, JSON.stringify(migrated))
+    localStorage.setItem(DEMO_SEED_DATE_REVISION_KEY, DEMO_SEED_DATE_REVISION)
+  } catch {
+    /* Keep the repaired in-memory demo state if storage is unavailable. */
+  }
+  return migrated
+}
+
 export function seedHistory(): HistoryEvent[] {
   const ago = (h: number) => new Date(Date.now() - h * 3600_000).toISOString()
 
@@ -969,6 +1031,15 @@ function parseState(raw: string | null): State | null {
 
   const s = { ...initial, ...JSON.parse(raw) } as State
 
+  s.settings = {
+    ...initial.settings,
+    ...s.settings,
+    homeAttentionExpanded: {
+      ...initial.settings.homeAttentionExpanded,
+      ...s.settings?.homeAttentionExpanded,
+    },
+  }
+
   if (!Array.isArray(s.foods) || !Array.isArray(s.history))
     throw new Error("invalid")
 
@@ -997,7 +1068,7 @@ function loadDemo(): State {
 
     if (s)
       return {
-        ...s,
+        ...migrateDemoSeedDates(s),
 
         mode: "demo",
 
@@ -1070,6 +1141,47 @@ function readStored(): StoredResult {
 }
 
 export const NOTIF_PREFIX = "expiry_notifs_"
+
+const IN_APP_PREFIX = "expiry_user_in_app_"
+const HOME_ATTENTION_PREFIX = "expiry_user_home_attention_"
+
+export function loadUserInApp(userId: string): boolean {
+  try {
+    const raw = localStorage.getItem(`${IN_APP_PREFIX}${userId}`)
+
+    return raw === null ? initial.settings.inApp : JSON.parse(raw) === true
+  } catch {
+    return initial.settings.inApp
+  }
+}
+
+export function saveUserInApp(userId: string, enabled: boolean): void {
+  localStorage.setItem(`${IN_APP_PREFIX}${userId}`, JSON.stringify(enabled))
+}
+
+export function loadUserHomeAttention(userId: string) {
+  try {
+    const raw = localStorage.getItem(`${HOME_ATTENTION_PREFIX}${userId}`)
+    if (!raw) return initial.settings.homeAttentionExpanded
+    const value = JSON.parse(raw) as Partial<Settings["homeAttentionExpanded"]>
+    return {
+      expired: value.expired === true,
+      soon: value.soon === true,
+    }
+  } catch {
+    return initial.settings.homeAttentionExpanded
+  }
+}
+
+export function saveUserHomeAttention(
+  userId: string,
+  preferences: Settings["homeAttentionExpanded"],
+): void {
+  localStorage.setItem(
+    `${HOME_ATTENTION_PREFIX}${userId}`,
+    JSON.stringify(preferences),
+  )
+}
 
 export function getNotifKey(userId?: string): string {
   return `${NOTIF_PREFIX}${userId || "guest"}`

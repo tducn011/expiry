@@ -98,7 +98,7 @@ DB FK không enforce parent bắt buộc có child initial movement. Service tra
 | food_entries.name | string | varchar(200) | Required | Trimmed 1…200; không UNIQUE | User |
 | food_entries.storage_location | string | varchar(100) | Required default unspecified | Value free text trimmed 1…100; không table location chưa có CRUD requirement | User |
 | food_entries.remaining_quantity | decimal string | numeric(12,3) | Required | 0…999999999.999; piece whole; operational source of truth | Quantity services |
-| food_entries.unit | enum string | varchar(10) | Required | piece/g/ml; fixed after create | User/create |
+| food_entries.unit | enum string | varchar(10) utf8mb4 | Required | piece, cái, hộp, gói, chai, quả, bó, kg, g, lít, ml; fixed after create; legacy piece/g/ml preserved | User/create |
 | food_entries.expiry_date | YYYY-MM-DD hoặc null | date | null | Calendar date; no timezone/UTC conversion; past date allowed | User |
 | food_entries.date_certainty | enum | varchar(12) | unknown | known/estimated/unknown; known=reported source known, không safe guarantee | User |
 | food_entries.date_source | enum | varchar(20) | unknown | printed_label/user_entered/user_estimate/unknown | User |
@@ -121,7 +121,7 @@ DB FK không enforce parent bắt buộc có child initial movement. Service tra
 | api_requests.response_status/body | Internal | int/jsonb | null while reserved, both nonnull completed | Original command result; owner privacy/retention applies | Tx executor |
 | api_requests.created_at | Internal instant | timestamptz | server now | Key lifetime; MVP không automatic prune | Persistence |
 
-Lượng dùng decimal string để tránh floating point/truncation giữa DB/JSON/JS. Unit piece cần số nguyên; `"1.500"` là invalid piece, valid g/ml. FE dùng decimal lib hoặc parse integer milliunits, không `parseFloat` rồi cộng/trừ nghiệp vụ.
+Lượng dùng decimal string để tránh floating point/truncation giữa DB/JSON/JS. Legacy unit piece cần số nguyên; `"1.500"` là invalid piece. Unit do người dùng chọn được lưu nguyên nhãn, không quy đổi; FE dùng decimal lib hoặc parse integer milliunits, không `parseFloat` rồi cộng/trừ nghiệp vụ.
 
 ## S3.19 Data shape ví dụ
 ```json

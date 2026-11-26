@@ -16,7 +16,7 @@ import {
   Plus,
   Trash2,
   X,
-} from "./Icon"
+} from "lucide-react"
 
 import InputField from "./InputField"
 
@@ -182,7 +182,6 @@ export default function LocationManagerModal({
         onClose()
       }}
       title="Quản lý nơi bảo quản"
-      description="Thêm, đổi tên hoặc xóa các vị trí lưu trữ thực phẩm. Dữ liệu sẽ đồng bộ theo tài khoản."
       size="regular"
     >
       <div className="flex flex-col gap-4 py-2">
@@ -197,9 +196,9 @@ export default function LocationManagerModal({
             <button
               type="button"
               onClick={() => setErrorMsg("")}
-              className="p-1 hover:bg-black/10 rounded-full"
+              className="p-3 -m-2 md:p-1 md:m-0 hover:bg-black/10 rounded-full"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           </div>
         )}
@@ -276,7 +275,7 @@ export default function LocationManagerModal({
                         type="button"
                         onClick={() => handleSaveRename(loc)}
                         title="Lưu tên mới"
-                        className="p-1.5 text-status-ok hover:bg-status-ok-bg rounded-corner-md transition-colors cursor-pointer"
+                        className="p-3.5 -m-2 md:p-1.5 md:m-0 text-status-ok hover:bg-status-ok-bg rounded-corner-md transition-colors cursor-pointer"
                       >
                         <CircleCheck size={16} />
                       </button>
@@ -284,7 +283,7 @@ export default function LocationManagerModal({
                         type="button"
                         onClick={() => setEditingLoc(null)}
                         title="Hủy"
-                        className="p-1.5 text-text-tertiary hover:bg-surface-subtle rounded-corner-md transition-colors cursor-pointer"
+                        className="p-3.5 -m-2 md:p-1.5 md:m-0 text-text-tertiary hover:bg-surface-subtle rounded-corner-md transition-colors cursor-pointer"
                       >
                         <X size={16} />
                       </button>
@@ -308,9 +307,9 @@ export default function LocationManagerModal({
                       type="button"
                       onClick={() => handleStartRename(loc)}
                       title={`Đổi tên vị trí "${loc}"`}
-                      className="p-1.5 text-text-secondary hover:text-brand-primary hover:bg-surface-subtle rounded-corner-md transition-colors cursor-pointer"
+                      className="p-3.5 -m-2 md:p-1.5 md:m-0 text-text-secondary hover:text-brand-primary hover:bg-surface-subtle rounded-corner-md transition-colors cursor-pointer"
                     >
-                      <Pencil size={15} />
+                      <Pencil size={16} />
                     </button>
                     <button
                       type="button"
@@ -325,7 +324,7 @@ export default function LocationManagerModal({
                       }
                       className="p-1.5 text-text-secondary hover:text-danger hover:bg-status-expired-bg rounded-corner-md transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 )}

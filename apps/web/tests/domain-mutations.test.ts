@@ -77,11 +77,24 @@ const mutationResponse: MutationResultDTO = {
 }
 
 describe("Domain Error Message Translations", () => {
+  it("maps transport error statuses to safe recovery guidance", () => {
+    expect(errorMessage(400, "UNKNOWN_ERROR")).toContain("thử lại")
+    expect(errorMessage(401, "UNKNOWN_ERROR")).toContain("Đăng nhập lại")
+    expect(errorMessage(403, "UNKNOWN_ERROR")).toContain("Đăng nhập")
+    expect(errorMessage(404, "UNKNOWN_ERROR")).toContain("quay lại kho")
+    expect(errorMessage(409, "UNKNOWN_ERROR")).toContain("thử lại")
+    expect(errorMessage(422, "UNKNOWN_ERROR")).toContain("Kiểm tra")
+    expect(errorMessage(429, "UNKNOWN_ERROR")).toContain("chờ")
+    expect(errorMessage(503, "PRIVATE_DATABASE_ERROR")).not.toContain(
+      "PRIVATE_DATABASE_ERROR",
+    )
+  })
+
   it("translates VERSION_CONFLICT to Vietnamese data changed advisory", () => {
     const msg = errorMessage(409, "VERSION_CONFLICT")
 
     expect(msg).toBe(
-      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+      "Dữ liệu vừa thay đổi. Xem lại số lượng và xác nhận một thao tác mới.",
     )
   })
 
@@ -89,7 +102,7 @@ describe("Domain Error Message Translations", () => {
     const msg = errorMessage(409, "CONCURRENT_MODIFICATION")
 
     expect(msg).toBe(
-      "Dữ liệu vừa thay đổi. Xem lại lượng và xác nhận một thao tác mới.",
+      "Dữ liệu vừa thay đổi. Xem lại số lượng và xác nhận một thao tác mới.",
     )
   })
 
@@ -171,6 +184,9 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
     expect(dto.date_source).toBe("printed_label")
 
     expect(dto.date_label_type).toBe("use_by")
+
+    const boxDto = createDTO({ ...payload, initial_quantity: 3, unit: "hộp" })
+    expect(boxDto).toMatchObject({ quantity: "3", unit: "hộp" })
   })
 
   it("formats draftDTO correctly for PATCH edit mutation", () => {
@@ -207,6 +223,36 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
     expect(dto.opened_on).toBe("2026-10-20")
 
     expect(dto.note).toBe("Đã mở 1 hộp")
+  })
+
+  it("omits an unchanged location and normalizes explicit empty locations", () => {
+    const base = {
+      name: "Sữa",
+      expiry_date: null,
+      expiry_date_certainty: "unknown" as const,
+      expiry_date_source: "unknown" as const,
+      expiry_date_label_type: "unknown" as const,
+      opened_on: null,
+      note: null,
+    }
+
+    const omitted = draftDTO(base as EntryDraft)
+    expect(Object.hasOwn(omitted, "storage_location")).toBe(false)
+    expect(Object.hasOwn(omitted, "category")).toBe(false)
+
+    expect(draftDTO({ ...base, storage_location: "" }).storage_location).toBe(
+      "unspecified",
+    )
+    expect(draftDTO({ ...base, storage_location: null }).storage_location).toBe(
+      "unspecified",
+    )
+
+    expect(
+      Object.hasOwn(
+        draftDTO({ ...base, category: null } as EntryDraft),
+        "category",
+      ),
+    ).toBe(false)
   })
 
   it("preserves canonical user_entered source in draftDTO", () => {
@@ -623,5 +669,143 @@ describe("Domain Mutation DTO and ApiClient Methods", () => {
     const afterDepleted = +(initialGrams - initialGrams).toFixed(3)
 
     expect(afterDepleted).toBe(0)
+  })
+
+  it("maps category and review_at in draftDTO and fromEntry", async () => {
+    const { fromEntry, api } = await import("../src/api/client")
+    const { mockApi } = await import("../src/mockApi")
+
+    const draft = draftDTO({
+      name: "Trứng gà ta",
+      category: "dairy_eggs",
+      expiry_date: "2026-11-20",
+      expiry_date_certainty: "exact",
+      expiry_date_source: "printed_label",
+      expiry_date_label_type: "use_by",
+      opened_on: null,
+      note: "Hộp 10 quả",
+      review_at: "2026-11-18",
+    })
+    expect(draft.category).toBe("dairy_eggs")
+    expect(draft.review_at).toBe("2026-11-18")
+
+    const food = fromEntry({
+      ...entryResponse,
+      category: "dairy_eggs",
+      review_at: "2026-11-18",
+    } as any)
+    expect(food.category).toBe("dairy_eggs")
+    expect(food.review_at).toBe("2026-11-18")
+
+    const boxEntry = fromEntry({
+      ...entryResponse,
+      unit: "hộp",
+      remaining_quantity: "3.000",
+    } as any)
+    expect(boxEntry).toMatchObject({
+      remaining_quantity: 3,
+      unit: "hộp",
+    })
+
+    // Test getAttentionSummary calculation
+    const summary = api.getAttentionSummary([
+      { ...food, attention: "past", remaining_quantity: 1, deleted_at: null },
+      { ...food, id: "2", attention: "today", remaining_quantity: 1, deleted_at: null },
+      { ...food, id: "3", attention: "soon", remaining_quantity: 1, deleted_at: null },
+      { ...food, id: "4", attention: "later", remaining_quantity: 1, review_at: "2026-10-01", deleted_at: null },
+      { ...food, id: "5", attention: "later", remaining_quantity: 1, review_at: null, deleted_at: null },
+    ], "2026-10-10")
+    expect(summary.expired).toBe(1)
+    expect(summary.soon).toBe(2)
+    expect(summary.reviewDue).toBe(1)
+    expect(summary.total).toBe(4)
+
+    // Test mockApi attention summary and filters
+    const mockSummary = mockApi.getAttentionSummary()
+    expect(mockSummary.total).toBeGreaterThan(0)
+    expect(mockSummary.expired).toBeGreaterThanOrEqual(0)
+    expect(mockSummary.soon).toBeGreaterThanOrEqual(0)
+
+    const filtered = mockApi.listEntries({ category: "dairy_eggs" })
+    expect(Array.isArray(filtered)).toBe(true)
+    for (const item of filtered) {
+      expect(item.category).toBe("dairy_eggs")
+    }
+  })
+
+  it("manages demo shopping list items in memory", async () => {
+    const { mockApi } = await import("../src/mockApi")
+    const {
+      getShoppingItems,
+      addShoppingItem,
+      toggleShoppingItem,
+      updateShoppingItem,
+      deleteShoppingItem,
+      clearCheckedShoppingItems,
+      suggestItemsFromInventory,
+    } = await import("../src/api/shoppingMemory")
+
+    // 1. mockApi shopping methods
+    const initialShopping = mockApi.listShoppingItems()
+    expect(initialShopping.length).toBeGreaterThan(0)
+
+    const added = mockApi.addShoppingItem({
+      name: "Táo Envy",
+      quantity: 5,
+      unit: "quả",
+      category: "fresh_produce",
+      checked: false,
+      addedFromInventory: false,
+      note: "Mua táo tươi",
+    })
+    expect(added.name).toBe("Táo Envy")
+    expect(added.id).toBeDefined()
+    expect(mockApi.listShoppingItems().some((i) => i.id === added.id)).toBe(true)
+
+    const toggled = mockApi.toggleShoppingItem(added.id)
+    expect(toggled.checked).toBe(true)
+
+    const updated = mockApi.updateShoppingItem(added.id, { quantity: 10 })
+    expect(updated.quantity).toBe(10)
+
+    mockApi.clearCheckedShoppingItems()
+    expect(mockApi.listShoppingItems().some((i) => i.id === added.id)).toBe(false)
+
+    // 2. Demo-only client-side memory helpers. Account state uses the API.
+    const items = getShoppingItems()
+    expect(Array.isArray(items)).toBe(true)
+
+    const clientAdded = addShoppingItem(
+      {
+        name: "Bánh mì sandwich",
+        quantity: 1,
+        unit: "gói",
+        category: "dry_pantry",
+        checked: false,
+      },
+    )
+    expect(clientAdded.name).toBe("Bánh mì sandwich")
+    expect(clientAdded.category).toBe("dry_pantry")
+
+    const toggledList = toggleShoppingItem(clientAdded.id)
+    expect(toggledList.find((i) => i.id === clientAdded.id)?.checked).toBe(true)
+
+    const updatedList = updateShoppingItem(
+      clientAdded.id,
+      { note: "Bánh mì đen" },
+    )
+    expect(updatedList.find((i) => i.id === clientAdded.id)?.note).toBe("Bánh mì đen")
+
+    const suggestions = suggestItemsFromInventory([
+      { name: "Cá hồi", remaining_quantity: 0, unit: "g" },
+      { name: "Sữa tươi", remaining_quantity: 2, unit: "hộp" },
+    ])
+    expect(suggestions.length).toBe(1)
+    expect(suggestions[0].name).toBe("Cá hồi")
+    expect(suggestions[0].addedFromInventory).toBe(true)
+
+    deleteShoppingItem(clientAdded.id)
+    const afterDelete = getShoppingItems()
+    expect(afterDelete.some((i) => i.id === clientAdded.id)).toBe(false)
   })
 })

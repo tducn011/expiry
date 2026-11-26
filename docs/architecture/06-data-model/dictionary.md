@@ -38,7 +38,7 @@ Define each currently persisted field using the applied MySQL schema, separating
 | `food_entries.name` | `VARCHAR(200)` | NOT NULL | Trimmed, nonblank display name; not unique; user-supplied |
 | `food_entries.storage_location` | `VARCHAR(100)` | NOT NULL; `unspecified` | Free-text storage context; blank UI input normalizes to `unspecified` |
 | `food_entries.remaining_quantity` | `DECIMAL(12,3)` | NOT NULL | Current amount, ≥0; max 999999999.999; `piece` must be integral. Changed through create/movement/recount, never metadata edit |
-| `food_entries.unit` | `VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin` | NOT NULL | Checked values `piece`, `g`, `ml`; fixed after create |
+| `food_entries.unit` | `VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin` | NOT NULL | Checked values `piece`, `cái`, `hộp`, `gói`, `chai`, `quả`, `bó`, `kg`, `g`, `lít`, `ml`; fixed after create; migration 012 |
 | `food_entries.expiry_date` | `DATE` | NULL | Reported calendar date; not timezone-converted and not a safety determination |
 | `food_entries.date_certainty` | `VARCHAR(12) CHARACTER SET ascii COLLATE ascii_bin` | NOT NULL; `unknown` | Checked values `known`, `estimated`, `unknown`; consistent with date/source state |
 | `food_entries.date_source` | `VARCHAR(20) CHARACTER SET ascii COLLATE ascii_bin` | NOT NULL; `unknown` | Checked values `printed_label`, `user_entered`, `user_estimate`, `unknown` |
@@ -91,7 +91,7 @@ Define each currently persisted field using the applied MySQL schema, separating
 | `expected_version` | Write request | Client supplies current integer version; server compares and increments on mutation |
 | `user_id`, IDs, versions, timestamps, audit/replay values | Request/response boundary | Server-owned identity/audit values, not client-authoritative fields |
 
-API quantity fields (`quantity`, `remaining_quantity`, movement before/after/delta) are JSON decimal strings, never floating JSON numbers. Dates are calendar-date strings; API timestamps are serialized by the adapter, not raw MySQL `DATETIME` strings. Relevant rules: quantity finite, max 999999999.999, at most three fractional digits, integral for `piece`; units are `piece`, `g`, and `ml`. Metadata edit excludes quantity and unit. The exact DTO/error envelope is in the OpenAPI contract.
+API quantity fields (`quantity`, `remaining_quantity`, movement before/after/delta) are JSON decimal strings, never floating JSON numbers. Dates are calendar-date strings; API timestamps are serialized by the adapter, not raw MySQL `DATETIME` strings. Relevant rules: quantity finite, max 999999999.999, at most three fractional digits, integral for legacy `piece`; new UI-selected units persist without conversion. Existing `piece`, `g`, and `ml` values remain valid. Metadata edit excludes quantity and unit. The exact DTO/error envelope is in the OpenAPI contract.
 
 No persisted attention/lifecycle/safety status exists. Date states are constrained: unknown means NULL/unknown/unspecified; estimated requires a date and `user_estimate`; known requires a date and `printed_label` or `user_entered`. A past date may be recorded; the interface communicates “Theo ngày bạn đã ghi, không phải đánh giá an toàn.”
 

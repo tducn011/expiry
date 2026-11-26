@@ -21,6 +21,6 @@ curl -s --max-time 5 "$TUNNEL_URL/health" || echo ""
 echo ""
 
 # Update vercel.json at root and apps/web
-sed -i -E "s|https://[-a-z0-9.]*\.trycloudflare\.com|$TUNNEL_URL|g" vercel.json apps/web/vercel.json
+sed -i -E "s#https://(homeserver\.tailc535bb\.ts\.net|[-a-z0-9.]*\.trycloudflare\.com)#$TUNNEL_URL#g" vercel.json apps/web/vercel.json
 
 echo "Updated vercel.json and apps/web/vercel.json successfully with $TUNNEL_URL"

@@ -1,6 +1,6 @@
-/** UI view types; canonical transport mapping lives in api/client.ts. */
+/** Transport and UI view types; legacy piece maps to the current label cái. */
 
-export type Unit = "piece" | "g" | "ml"
+export type Unit = "piece" | "cái" | "hộp" | "gói" | "chai" | "quả" | "bó" | "kg" | "g" | "lít" | "ml"
 
 export type DateCertainty = "exact" | "estimated" | "unknown"
 
@@ -40,6 +40,8 @@ export type FoodEntry = {
   opened_on: string | null
 
   manufactured_on?: string | null
+
+  review_at?: string | null
 
   note: string | null
 
@@ -128,4 +130,19 @@ export type Session = {
   csrf_token: string
 
   expires_at: string
+}
+
+export interface ShoppingItem {
+  id: string
+  version?: number
+  name: string
+  quantity: number | null
+  unit: Unit | string | null
+  category?: string | null
+  checked: boolean
+  addedFromInventory?: boolean
+  createdAt: string
+  note?: string | null
+  inventoryAddedAt?: string
+  matchedFoodId?: string | null
 }

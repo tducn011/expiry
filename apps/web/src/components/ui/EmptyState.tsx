@@ -40,7 +40,7 @@ export function EmptyState({
       className={`flex flex-col items-center justify-center gap-4 py-12 px-6 text-center ${className}`}
     >
       {icon && (
-        <div className="flex size-14 items-center justify-center rounded-corner-full bg-brand-accent/60 text-brand-primary shadow-xs">
+        <div className="flex size-14 items-center justify-center rounded-corner-full bg-brand-accent/10 text-brand-primary shadow-xs">
           {icon}
         </div>
       )}
@@ -49,7 +49,9 @@ export function EmptyState({
           {eyebrow}
         </span>
       )}
-      <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
+      <h2 className="text-lg font-semibold text-text-heading tracking-normal">
+        {title}
+      </h2>
       {description && (
         <p className="max-w-md text-sm text-text-secondary">{description}</p>
       )}

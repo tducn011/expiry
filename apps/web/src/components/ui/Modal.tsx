@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 
 import Button from "./Button"
 
-import { X } from "./Icon"
+import { X } from "lucide-react"
+
+import { DUR, EASE, gsap, reducedMotion, useGSAP } from "../../lib/motion"
 
 let foregroundModalCount = 0
 
@@ -50,8 +52,21 @@ export interface ModalProps {
   dismissible?: boolean
 }
 
-export function Modal({
-  isOpen = true,
+// Stays mounted while the exit tween plays; OpenModal calls onExited when done.
+export function Modal(props: ModalProps) {
+  const open = props.isOpen !== false
+  const [mounted, setMounted] = useState(open)
+  if (open && !mounted) setMounted(true)
+  if (!mounted) return null
+  return <OpenModal {...props} open={open} onExited={() => setMounted(false)} />
+}
+
+const openDialogs: HTMLElement[] = []
+
+function OpenModal({
+  open,
+
+  onExited,
 
   active = true,
 
@@ -72,10 +87,16 @@ export function Modal({
   layout = "flow",
 
   dismissible = true,
-}: ModalProps) {
-  if (!isOpen) return null
-
+}: ModalProps & {
+  open: boolean
+  onExited: () => void
+}) {
+  const titleId = useId()
   const dialogRef = useRef<HTMLElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const onExitedRef = useRef(onExited)
+  onExitedRef.current = onExited
+  const entered = useRef(false)
 
   const [opener] = useState(() =>
     typeof document !== "undefined" &&
@@ -84,33 +105,127 @@ export function Modal({
       : null,
   )
 
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
+  const dismissibleRef = useRef(dismissible)
+  dismissibleRef.current = dismissible
+
+  useGSAP(
+    () => {
+      const overlay = overlayRef.current
+      const dialog = dialogRef.current
+      if (!overlay || !dialog) return
+      if (open) {
+        entered.current = true
+        if (reducedMotion()) return
+        gsap.fromTo(overlay, { opacity: 0 }, {
+          opacity: 1,
+          duration: DUR.normal,
+          ease: EASE.enter,
+          overwrite: true,
+          clearProps: "opacity",
+        })
+        gsap.fromTo(dialog, { opacity: 0, y: 8, scale: 0.98 }, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: DUR.normal,
+          ease: EASE.enter,
+          overwrite: true,
+          clearProps: "opacity,transform",
+        })
+        return
+      }
+      if (!entered.current) return
+      if (reducedMotion()) {
+        onExitedRef.current()
+        return
+      }
+      gsap.to(dialog, {
+        opacity: 0,
+        scale: 0.96,
+        duration: DUR.normal,
+        ease: EASE.exit,
+        overwrite: true,
+      })
+      gsap.to(overlay, {
+        opacity: 0,
+        duration: DUR.normal,
+        ease: EASE.exit,
+        overwrite: true,
+        onComplete: () => onExitedRef.current(),
+      })
+    },
+    { scope: overlayRef, dependencies: [open] },
+  )
+
   useEffect(() => {
-    if (!active) return
+    if (!active || !open) return
 
     const dialog = dialogRef.current
 
     if (!dialog) return
 
     const releaseScrollLock = acquireModalScrollLock()
+    openDialogs.push(dialog)
+    const controls = () =>
+      [
+        ...dialog.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex="0"]',
+        ),
+      ].filter((element) => element.getClientRects().length > 0)
+    const first = controls()[0] ?? dialog
+    first.focus()
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && dismissible) {
+      if (openDialogs.at(-1) !== dialog) return
+      if (e.key === "Tab") {
+        const focusable = controls()
+        const target = document.activeElement
+        const first = focusable[0] ?? dialog
+        const last = focusable.at(-1) ?? dialog
+        if (
+          !focusable.length ||
+          target === dialog ||
+          !dialog.contains(target) ||
+          (e.shiftKey ? target === first : target === last)
+        ) {
+          e.preventDefault()
+          const next = e.shiftKey ? last : first
+          next.focus()
+        }
+      }
+      if (e.key === "Escape" && dismissibleRef.current) {
         e.stopPropagation()
 
-        onClose()
+        onCloseRef.current()
       }
     }
 
     window.addEventListener("keydown", onKeyDown)
 
     return () => {
+      const index = openDialogs.indexOf(dialog)
+      if (index >= 0) openDialogs.splice(index, 1)
       releaseScrollLock()
 
       window.removeEventListener("keydown", onKeyDown)
-
-      opener?.focus?.()
     }
-  }, [active, dismissible, onClose, opener])
+  }, [active, open])
+
+  // Return focus to opener ONLY when Modal unmounts
+  useEffect(() => {
+    return () => {
+      if (
+        opener &&
+        typeof document !== "undefined" &&
+        document.contains(opener)
+      ) {
+        opener.focus?.()
+      }
+    }
+  }, [opener])
 
   const maxWClass =
     size === "small" || size === "compact"
@@ -121,7 +236,9 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in"
+      ref={overlayRef}
+      inert={!open}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[var(--alpha-overlay-black-50)]"
       onClick={(e) => {
         if (e.target === e.currentTarget && dismissible) onClose()
       }}
@@ -130,10 +247,11 @@ export function Modal({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
-        className={`modal relative flex flex-col w-full ${maxWClass} max-h-[calc(100dvh-2rem)] rounded-corner-lg bg-surface-bg shadow-xl border border-border-primary/50 overflow-hidden text-text-primary`}
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className={`modal relative flex flex-col w-full outline-none ${maxWClass} max-h-[calc(100dvh-2rem)] rounded-corner-lg bg-surface-bg shadow-xl border border-border-primary/50 overflow-hidden text-text-primary`}
       >
-        <header className="flex items-start justify-between gap-3 px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border-primary/40">
+        <header className="flex shrink-0 items-start justify-between gap-3 px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border-primary/40">
           <div className="min-w-0 flex-1">
             {eyebrow && (
               <span className="block text-xs font-semibold uppercase tracking-wider text-text-tertiary">
@@ -141,8 +259,8 @@ export function Modal({
               </span>
             )}
             <h2
-              id="modal-title"
-              className="text-base sm:text-lg font-semibold text-text-primary break-words text-balance"
+              id={titleId}
+              className="text-base sm:text-lg font-semibold text-text-heading tracking-normal break-words text-balance"
             >
               {title}
             </h2>
@@ -157,23 +275,25 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="Đóng"
-              className="p-1.5 rounded-corner-md text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
+              className="grid size-11 shrink-0 place-items-center -my-2 -mr-2 rounded-corner-md text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
             >
               <X size={20} aria-hidden />
             </button>
           )}
         </header>
 
-        <div
-          className={`p-4 sm:p-6 overflow-y-auto max-h-[calc(100dvh-10rem)] ${
-            layout === "form" ? "flex flex-col gap-4" : ""
-          }`}
-        >
-          {children}
-        </div>
+        {children && (
+          <div
+            className={`min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 ${
+              layout === "form" ? "flex flex-col gap-4" : ""
+            }`}
+          >
+            {children}
+          </div>
+        )}
 
         {footer && (
-          <footer className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-bg-subtle/50 border-t border-border-primary/40">
+          <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-bg-subtle/50 border-t border-border-primary/40">
             {footer}
           </footer>
         )}

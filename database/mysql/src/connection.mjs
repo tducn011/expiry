@@ -2,6 +2,7 @@ import mysql from 'mysql2/promise';
 import { readFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { migrationChecksumMatches } from './migration-checksum.mjs';
 export const base = new URL('../', import.meta.url);
 export async function environment() {
   const content = await readFile(new URL('.env', base), 'utf8');
@@ -88,7 +89,7 @@ export async function rootSql(sql, database) {
   }
 
   try {
-    const args = ['exec','-i',await containerId(),'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --user=root --batch --skip-column-names "$@"','sh'];
+    const args = ['exec','-i',await containerId(),'sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --default-character-set=utf8mb4 --user=root --batch --skip-column-names "$@"','sh'];
     if (database) args.push('--database',database);
     return await run('docker',args, "SET SESSION time_zone='+00:00';\n" + sql);
   } catch {
@@ -102,6 +103,13 @@ export async function migrate(database) {
     { version: 3, file: 'migrations/003_session_expiry_boundary.sql' },
     { version: 4, file: 'migrations/004_add_barcode.sql' },
     { version: 5, file: 'migrations/005_add_category.sql' },
+    { version: 6, file: 'migrations/006_add_manufactured_on.sql' },
+    { version: 7, file: 'migrations/007_workspaces_and_members.sql' },
+    { version: 8, file: 'migrations/008_workspace_invites.sql' },
+    { version: 9, file: 'migrations/009_product_batches.sql' },
+    { version: 10, file: 'migrations/010_add_review_at.sql' },
+    { version: 11, file: 'migrations/011_shopping_items.sql' },
+    { version: 12, file: 'migrations/012_preserve_food_units.sql' },
   ];
   await rootSql('CREATE TABLE IF NOT EXISTS schema_migrations (version INT PRIMARY KEY, sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, applied_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)) ENGINE=InnoDB;', database);
   
@@ -113,7 +121,7 @@ export async function migrate(database) {
     const hash = createHash('sha256').update(normSql).digest('hex');
     const old = (await rootSql(`SELECT sha256 FROM schema_migrations WHERE version=${m.version};`, database)).trim();
     if (old) {
-      if (old !== hash) throw new Error(`Applied migration ${m.version} checksum drift: create a new version`);
+      if (!migrationChecksumMatches(m.version, old, hash)) throw new Error(`Applied migration ${m.version} checksum drift: create a new version`);
       lastHash = hash;
       continue;
     }
@@ -141,5 +149,5 @@ export async function grants(database) {
     }
   }
   const exact=database.replaceAll('_','\\_');
-  await rootSql(`GRANT SELECT ON \`${exact}\`.* TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.users TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.food_entries TO 'expiry_app'@'%';\nGRANT INSERT ON \`${database}\`.stock_movements TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.api_requests TO 'expiry_app'@'%';`);
+  await rootSql(`GRANT SELECT ON \`${exact}\`.* TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.users TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.food_entries TO 'expiry_app'@'%';\nGRANT INSERT ON \`${database}\`.stock_movements TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE ON \`${database}\`.api_requests TO 'expiry_app'@'%';\nGRANT INSERT, UPDATE, DELETE ON \`${database}\`.shopping_items TO 'expiry_app'@'%';`);
 }

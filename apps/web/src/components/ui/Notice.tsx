@@ -1,0 +1,61 @@
+import type { ReactNode } from "react"
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react"
+
+export interface NoticeProps {
+  title?: string
+  body?: ReactNode
+  tone?: "Error" | "Warning" | "Info" | "Success"
+  className?: string
+  children?: ReactNode
+  action?: ReactNode
+  icon?: ReactNode
+}
+
+export function Notice({
+  title = "Thông tin cần chú ý",
+  body,
+  tone = "Error",
+  className = "",
+  children,
+  action,
+  icon,
+}: NoticeProps) {
+  const content = body ?? children
+
+  const toneStyles = {
+    Error: "bg-danger-bg text-danger",
+    Warning:
+      "bg-feedback-warning-bg text-feedback-warning-text border border-feedback-warning-border/60",
+    Info: "bg-surface-soft text-brand-primary border border-brand-primary/20",
+    Success: "bg-feedback-success-bg text-feedback-success",
+  }[tone]
+
+  const DefaultIcon = {
+    Error: CircleAlert,
+    Warning: TriangleAlert,
+    Info: Info,
+    Success: CircleCheck,
+  }[tone]
+
+  return (
+    <div
+      role="alert"
+      className={`break-words content-stretch flex items-start gap-3 p-4 rounded-[16px] text-sm w-full ${toneStyles} ${className}`}
+    >
+      <div className="shrink-0 mt-0.5 text-current" aria-hidden="true">
+        {icon ?? <DefaultIcon size={20} />}
+      </div>
+      <div className="flex flex-col gap-1 min-w-0 flex-1">
+        {title && <p className="font-semibold leading-5 w-full">{title}</p>}
+        {content && (
+          <p className="font-normal leading-[22px] w-full text-sm opacity-95">
+            {content}
+          </p>
+        )}
+        {action && <div className="mt-2">{action}</div>}
+      </div>
+    </div>
+  )
+}
+
+export default Notice

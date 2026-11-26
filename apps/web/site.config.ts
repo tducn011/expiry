@@ -37,14 +37,16 @@ export interface SiteConfig {
 }
 
 export const siteConfig: SiteConfig = {
-  title: "Expiry Management System",
-
-  description: "Hệ thống quản lý hạn sử dụng và luồng chuyển kho",
+  title: "Expiry",
 
   language: "vi",
 
   robots: {
     index: true,
+  },
+
+  icons: {
+    icon: "favicon.svg",
   },
 
   accessibility: {

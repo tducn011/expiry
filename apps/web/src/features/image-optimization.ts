@@ -165,3 +165,15 @@ export async function optimizeScanImage(file: File): Promise<File> {
 }
 
 export const MAX_OPTIMIZED_IMAGE_BYTES = MAX_IMAGE_BYTES
+
+export async function prepareScanImage(file: File) {
+  const optimized = await optimizeScanImage(file)
+  const image = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = reader.onabort = () =>
+      reject(new Error("Không đọc được ảnh. Hãy thử chọn ảnh khác."))
+    reader.readAsDataURL(optimized)
+  })
+  return { file: optimized, image }
+}

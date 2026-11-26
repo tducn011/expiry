@@ -33,7 +33,10 @@ export function entryDTO(entry, projection) {
     date_label_type: entry.date_label_type,
     opened_on: entry.opened_on,
     manufactured_on: entry.manufactured_on ?? null,
+    review_at: entry.review_at ?? null,
     note: entry.note,
+    barcode: entry.barcode ?? null,
+    barcode_format: entry.barcode_format ?? null,
     version: entry.version,
     lifecycle: milli(entry.remaining_quantity, entry.unit) === 0n ? 'depleted' : 'active',
     attention: projection,
@@ -60,14 +63,12 @@ export function preferencesDTO(preferences) {
 export function commandDTO(result, preferences, instant) {
   if (result.body === null) return result;
   const project = entry => entryDTO(entry, publicAttention(entry, preferences, instant));
-  return {
-    ...result,
-    body: result.body.entry ? {
-      entry: project(result.body.entry),
-      movement: result.body.movement === null ? null : movementDTO(result.body.movement),
-      changed: result.body.changed
-    } : project(result.body)
-  };
+  if (!result.body.entry) return { ...result, body: project(result.body) };
+  const body = { ...result.body, entry: project(result.body.entry) };
+  if (Object.hasOwn(result.body,'movement')) {
+    body.movement = result.body.movement === null ? null : movementDTO(result.body.movement);
+  }
+  return { ...result, body };
 }
 
 export function queryInteger(value, fallback, maximum = Number.MAX_SAFE_INTEGER) {

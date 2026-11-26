@@ -6,7 +6,7 @@ import InputField from "../components/ui/InputField"
 
 import Modal from "../components/ui/Modal"
 
-import { Barcode, Lightbulb, Search, Sparkles } from "../components/ui/Icon"
+import { Barcode, Lightbulb, Search, Sparkles } from "lucide-react"
 
 import { lookupBarcode, validateBarcode } from "../lib/barcode"
 
@@ -167,7 +167,6 @@ export function ManualBarcodeModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Nhập mã số vạch thủ công"
-      description="Nhập chuỗi số GTIN/EAN in dưới vạch sản phẩm (ví dụ EAN-13 có 13 chữ số) khi bao bì bị mờ hoặc rách."
       size="compact"
       footer={
         <div className="flex flex-col-reverse sm:flex-row w-full justify-between gap-2">
@@ -230,7 +229,6 @@ export function ManualBarcodeModal({
                   handleLookup(code)
                 }
               }}
-              description="Các số từ 0-9 in rõ bên dưới các vạch đen trắng."
             />
           </div>
           <Button
@@ -244,7 +242,7 @@ export function ManualBarcodeModal({
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-corner-md text-red-700 dark:text-red-300 text-xs leading-relaxed">
+          <div className="p-3 bg-danger-bg border border-danger/20 rounded-corner-md text-danger text-xs leading-relaxed">
             {error}
           </div>
         )}
@@ -259,8 +257,8 @@ export function ManualBarcodeModal({
           </div>
         )}
 
-        <div className="flex items-start gap-2 text-[11px] text-text-tertiary leading-relaxed bg-bg-secondary p-3 rounded-corner-md">
-          <Lightbulb size={14} className="shrink-0 mt-0.5 text-amber-500" />
+        <div className="flex items-start gap-2 text-[12px] text-text-tertiary leading-relaxed bg-surface-subtle p-3 rounded-corner-md">
+          <Lightbulb size={16} className="shrink-0 mt-0.5 text-brand-primary" />
           <div>
             <strong>Mẹo:</strong> Nếu chữ số bị rách mất một phần, bạn không cần
             đoán số còn thiếu — hãy bấm nút{" "}

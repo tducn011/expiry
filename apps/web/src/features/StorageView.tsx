@@ -12,6 +12,7 @@ import EmptyState from "../components/ui/EmptyState"
 
 import {
   Archive,
+  Bell,
   Boxes,
   CircleAlert,
   Package,
@@ -21,7 +22,7 @@ import {
   SearchX,
   Snowflake,
   X,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 import InputField from "../components/ui/InputField"
 
@@ -32,13 +33,12 @@ import LocationManagerModal from "../components/ui/LocationManagerModal"
 import PageHeader from "../components/ui/PageHeader"
 
 import FoodCard from "./FoodCard"
+import { FilterDropdown } from "../components/ui/FilterChips"
 
 export interface LocationStatItem {
   total: number
 
   attention: number
-
-  expired: number
 }
 
 interface StorageCategoryFilter {
@@ -89,6 +89,8 @@ export interface StorageViewProps {
 
   initialCategory?: Category | "all"
 
+  onNavigateAttention?: () => void
+
   onFilterChange?: (location: string, category: Category | "all") => void
 
   isLive?: boolean
@@ -122,6 +124,8 @@ export default function StorageView({
   initialLocation,
 
   initialCategory,
+
+  onNavigateAttention,
 
   onFilterChange,
 
@@ -219,7 +223,9 @@ export default function StorageView({
 
   const [query, setQuery] = useState("")
 
-  const [onlyAttention, setOnlyAttention] = useState(false)
+  const [onlySoon, setOnlySoon] = useState(false)
+
+  const toggleOnlySoon = () => setOnlySoon((current) => !current)
 
   const [newLocModal, setNewLocModal] = useState(false)
 
@@ -237,99 +243,111 @@ export default function StorageView({
     [state.foods],
   )
 
+  const expiredFoods = useMemo(
+    () => activeFoods.filter((f) => statusOf(f, remindDays) === "expired"),
+    [activeFoods, remindDays],
+  )
+
+  const inventoryFoods = useMemo(
+    () => activeFoods.filter((f) => statusOf(f, remindDays) !== "expired"),
+    [activeFoods, remindDays],
+  )
+
+  const soonCount = useMemo(
+    () =>
+      inventoryFoods.filter((f) => statusOf(f, remindDays) === "soon").length,
+    [inventoryFoods, remindDays],
+  )
+
   // Metrics per location
 
   const locationStats = useMemo(() => {
     const stats: Record<string, LocationStatItem> = {}
 
     for (const loc of state.locations) {
-      stats[loc] = { total: 0, attention: 0, expired: 0 }
+      stats[loc] = { total: 0, attention: 0 }
     }
 
-    stats["Khác"] = { total: 0, attention: 0, expired: 0 }
+    stats["Khác"] = { total: 0, attention: 0 }
 
-    for (const f of activeFoods) {
+    for (const f of inventoryFoods) {
       const locKey =
         f.location && state.locations.includes(f.location) ? f.location : "Khác"
 
-      if (!stats[locKey]) stats[locKey] = { total: 0, attention: 0, expired: 0 }
+      if (!stats[locKey]) stats[locKey] = { total: 0, attention: 0 }
 
       stats[locKey].total++
 
       const st = statusOf(f, remindDays)
 
-      if (st === "expired") {
-        stats[locKey].expired++
-
-        stats[locKey].attention++
-      } else if (st === "soon") {
+      if (st === "soon") {
         stats[locKey].attention++
       }
     }
 
     return stats
-  }, [activeFoods, state.locations, remindDays])
-
-  // Total attention items
-
-  const totalAttentionCount = useMemo(() => {
-    return activeFoods.filter((f) => {
-      const st = statusOf(f, remindDays)
-
-      return st === "expired" || st === "soon"
-    }).length
-  }, [activeFoods, remindDays])
+  }, [inventoryFoods, state.locations, remindDays])
 
   // Filtered food list
 
   const filteredFoods = useMemo(() => {
-    return activeFoods.filter((f) => {
-      // Location filter
+    return inventoryFoods
+      .filter((f) => {
+        // Location filter
 
-      if (selectedLocation !== "all") {
-        if (selectedLocation === "Khác") {
-          if (f.location && state.locations.includes(f.location)) return false
-        } else if (f.location !== selectedLocation) {
+        if (selectedLocation !== "all") {
+          if (selectedLocation === "Khác") {
+            if (f.location && state.locations.includes(f.location)) return false
+          } else if (f.location !== selectedLocation) {
+            return false
+          }
+        }
+
+        // Category filter
+
+        if (selectedCategory !== "all") {
+          if (f.category !== selectedCategory) return false
+        }
+
+        // Only soon-to-expire toggle
+
+        if (onlySoon && statusOf(f, remindDays) !== "soon") {
           return false
         }
-      }
 
-      // Category filter
+        // Search query
 
-      if (selectedCategory !== "all") {
-        if (f.category !== selectedCategory) return false
-      }
+        if (query.trim()) {
+          const q = query.trim().toLowerCase()
 
-      // Only attention toggle
+          const matchName = f.name.toLowerCase().includes(q)
 
-      if (onlyAttention) {
-        const st = statusOf(f, remindDays)
+          const matchLoc = (f.location || "").toLowerCase().includes(q)
 
-        if (st !== "expired" && st !== "soon") return false
-      }
+          if (!matchName && !matchLoc) return false
+        }
 
-      // Search query
+        return true
+      })
+      .sort((a, b) => {
+        const priority = (food: typeof inventoryFoods[number]) => {
+          const status = statusOf(food, remindDays)
+          return status === "soon" ? 0 : status === "ok" ? 1 : 2
+        }
 
-      if (query.trim()) {
-        const q = query.trim().toLowerCase()
-
-        const matchName = f.name.toLowerCase().includes(q)
-
-        const matchLoc = (f.location || "").toLowerCase().includes(q)
-
-        if (!matchName && !matchLoc) return false
-      }
-
-      return true
-    })
+        return (
+          priority(a) - priority(b) ||
+          (a.expDate ?? "9999").localeCompare(b.expDate ?? "9999")
+        )
+      })
   }, [
-    activeFoods,
+    inventoryFoods,
 
     selectedLocation,
 
     selectedCategory,
 
-    onlyAttention,
+    onlySoon,
 
     query,
 
@@ -385,10 +403,9 @@ export default function StorageView({
   ]
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto pb-12">
+    <div className="storage-view flex flex-col gap-4 w-full">
       <PageHeader
         title="Nơi lưu trữ"
-        subtitle="Tìm duyệt nhanh theo không gian bảo quản & nhóm thực phẩm"
         actions={
           <div className="flex items-center gap-2">
             {isLive && (
@@ -401,12 +418,12 @@ export default function StorageView({
               </span>
             )}
             <Button
-              variant="primary"
+              variant="secondary"
               size="small"
-              iconStart={<Plus size={16} />}
-              onClick={() => setNewLocModal(true)}
+              iconStart={<Boxes size={16} />}
+              onClick={() => setManageLocModal(true)}
             >
-              Thêm vị trí
+              Quản lý vị trí
             </Button>
           </div>
         }
@@ -420,7 +437,7 @@ export default function StorageView({
             value={query}
             onChange={(val: string) => setQuery(val)}
             className="w-full"
-            prefix={<Search size={18} className="text-text-secondary" />}
+            prefix={<Search size={16} className="text-text-secondary" />}
           />
           {query && (
             <button
@@ -433,61 +450,75 @@ export default function StorageView({
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setOnlyAttention((v) => !v)}
-          className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-corner-md text-xs font-semibold border transition-all cursor-pointer shrink-0 ${
-            onlyAttention
-              ? "bg-danger-subtle border-danger text-danger shadow-xs"
-              : "bg-surface-bg border-border-primary text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-          }`}
-        >
-          <CircleAlert
-            size={16}
-            className={onlyAttention ? "text-danger" : "text-text-secondary"}
-          />
-          <span>Chỉ hiện cần chú ý</span>
-          {totalAttentionCount > 0 && (
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                onlyAttention
-                  ? "bg-danger text-white"
-                  : "bg-danger/20 text-danger"
-              }`}
+        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+          {expiredFoods.length > 0 && onNavigateAttention && (
+            <Button
+              variant="danger"
+              size="small"
+              iconStart={<Bell size={16} />}
+              onClick={onNavigateAttention}
+              aria-label={`Cần chú ý, ${expiredFoods.length} món quá hạn`}
             >
-              {totalAttentionCount}
-            </span>
+              Cần chú ý ({expiredFoods.length})
+            </Button>
           )}
-        </button>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={onlySoon}
+            aria-label="Chỉ hiện sắp hết hạn"
+            onClick={toggleOnlySoon}
+            className={`inline-flex min-h-11 items-center gap-2 px-3 sm:px-3.5 py-2.5 rounded-corner-md text-xs font-semibold border transition-[color,background-color,border-color,box-shadow] cursor-pointer shrink-0 ${
+              onlySoon
+                ? "bg-status-soon-bg border-status-soon text-status-soon shadow-xs ring-1 ring-status-soon/30"
+                : "bg-surface-bg border-border-primary text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+            }`}
+          >
+            <CircleAlert
+              size={16}
+              className={onlySoon ? "text-status-soon" : "text-text-secondary"}
+            />
+            <span className="sm:hidden">Sắp hết hạn</span>
+            <span className="hidden sm:inline">Chỉ hiện sắp hết hạn</span>
+            {onlySoon && (
+              <span className="size-1.5 rounded-full bg-status-soon" />
+            )}
+            {soonCount > 0 && (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[12px] font-semibold ${
+                  onlySoon
+                    ? "bg-status-soon text-white"
+                    : "bg-status-soon-bg text-status-soon"
+                }`}
+              >
+                {soonCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Storage Hub Bento Grid */}
       <div>
-        <div className="flex items-center justify-between mb-2.5">
-          <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
-            <Boxes size={18} className="text-brand-primary" />
-            <span>Khu vực bảo quản</span>
-          </h2>
-          <div className="flex items-center gap-2">
-            <Button
-              size="small"
-              variant="neutral"
-              onClick={() => setManageLocModal(true)}
-            >
-              Quản lý vị trí
-            </Button>
-            <span className="text-xs text-text-secondary">
-              {state.locations.length} vị trí
-            </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2.5">
+          <div>
+            <h2 className="text-sm font-semibold text-text-heading flex items-center gap-2 tracking-normal">
+              <Boxes size={16} className="text-brand-primary" />
+              <span>Khu vực bảo quản</span>
+            </h2>
           </div>
+          <span className="text-xs text-text-secondary">
+            {state.locations.length} vị trí
+          </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Card: Tất cả */}
           <button
             type="button"
+            aria-pressed={selectedLocation === "all"}
             onClick={() => handleLocationChange("all")}
-            className={`flex flex-col justify-between p-3.5 rounded-corner-md border text-left transition-all cursor-pointer ${
+            className={`storage-location-card flex flex-col justify-between p-3 rounded-corner-md border text-left transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
               selectedLocation === "all"
                 ? "border-brand-primary bg-brand-primary/5 shadow-xs ring-2 ring-brand-primary/20"
                 : "border-border-primary/80 bg-surface-bg hover:border-brand-primary/40 hover:bg-surface-hover"
@@ -495,20 +526,22 @@ export default function StorageView({
           >
             <div className="flex items-center justify-between w-full mb-2">
               <div className="w-8 h-8 rounded-corner-md flex items-center justify-center bg-brand-primary/10 text-brand-primary">
-                <Boxes size={18} />
+                <Boxes size={16} />
               </div>
-              {totalAttentionCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-danger text-white">
-                  {totalAttentionCount} cần ăn
-                </span>
-              )}
+              <div className="flex items-center gap-1">
+                {soonCount > 0 && (
+                  <span className="shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded-full text-[12px] font-semibold bg-status-soon-bg text-status-soon">
+                    {soonCount} sắp HSD
+                  </span>
+                )}
+              </div>
             </div>
             <div>
-              <p className="text-xs font-bold text-text-primary truncate">
+              <p className="text-xs font-semibold text-text-heading truncate">
                 Tất cả kho
               </p>
-              <p className="text-[11px] text-text-secondary mt-0.5">
-                {activeFoods.length} món đồ
+              <p className="text-[12px] text-text-secondary mt-0.5">
+                {inventoryFoods.length} món
               </p>
             </div>
           </button>
@@ -519,8 +552,6 @@ export default function StorageView({
               total: 0,
 
               attention: 0,
-
-              expired: 0,
             }
 
             const isSelected = selectedLocation === loc
@@ -530,20 +561,21 @@ export default function StorageView({
             const iconTone =
               loc.toLowerCase().includes("mát") ||
               loc.toLowerCase().includes("tủ lạnh")
-                ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                ? "bg-category-beverage-bg text-category-beverage"
                 : loc.toLowerCase().includes("đông")
-                  ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                  ? "bg-category-prepared-bg text-category-prepared"
                   : loc.toLowerCase().includes("bếp") ||
                       loc.toLowerCase().includes("kệ")
-                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                    ? "bg-category-dairy-bg text-category-dairy"
                     : "bg-surface-subtle text-text-secondary"
 
             return (
               <button
                 key={loc}
                 type="button"
+                aria-pressed={isSelected}
                 onClick={() => handleLocationChange(loc)}
-                className={`flex flex-col justify-between p-3.5 rounded-corner-md border text-left transition-all cursor-pointer ${
+                className={`storage-location-card flex flex-col justify-between p-3 rounded-corner-md border text-left transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
                   isSelected
                     ? "border-brand-primary bg-brand-primary/5 shadow-xs ring-2 ring-brand-primary/20"
                     : "border-border-primary/80 bg-surface-bg hover:border-brand-primary/40 hover:bg-surface-hover"
@@ -553,25 +585,21 @@ export default function StorageView({
                   <div
                     className={`w-8 h-8 rounded-corner-md flex items-center justify-center ${iconTone}`}
                   >
-                    <LocIcon size={18} />
+                    <LocIcon size={16} />
                   </div>
-                  {stats.attention > 0 && (
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        stats.expired > 0
-                          ? "bg-danger text-white"
-                          : "bg-warning text-black"
-                      }`}
-                    >
-                      {stats.attention} chú ý
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {stats.attention > 0 && (
+                      <span className="shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded-full border border-status-soon/30 bg-status-soon-bg text-[12px] font-medium text-status-soon">
+                        {stats.attention} sắp HSD
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-text-primary truncate">
+                  <p className="text-xs font-semibold text-text-heading truncate">
                     {loc}
                   </p>
-                  <p className="text-[11px] text-text-secondary mt-0.5">
+                  <p className="text-[12px] text-text-secondary mt-0.5">
                     {stats.total} món
                   </p>
                 </div>
@@ -582,7 +610,7 @@ export default function StorageView({
       </div>
 
       {/* Horizontal Category Filter Chips */}
-      <div>
+      <div className="hidden sm:block">
         <p className="text-xs font-semibold text-text-secondary mb-2">
           Phân loại theo nhóm:
         </p>
@@ -595,7 +623,7 @@ export default function StorageView({
                 key={cat.v}
                 type="button"
                 onClick={() => handleCategoryChange(cat.v)}
-                className={`min-h-8 shrink-0 rounded-corner-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
+                className={`min-h-11 md:min-h-8 shrink-0 rounded-corner-full px-3.5 py-1 text-xs font-semibold transition-[color,background-color,border-color,box-shadow] cursor-pointer select-none outline-none focus-visible:outline-2 focus-visible:outline-brand-primary ${
                   isActive
                     ? "bg-brand-primary text-white shadow-xs"
                     : "bg-surface-bg border border-border-primary text-text-secondary hover:text-text-primary hover:bg-surface-hover"
@@ -610,31 +638,72 @@ export default function StorageView({
 
       {/* Food Items List */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-text-primary">
-            Danh sách món (
-            {selectedLocation === "all" ? "Tất cả vị trí" : selectedLocation})
-            {selectedCategory !== "all" &&
-              ` · ${categoryOptions.find((c) => c.v === selectedCategory)?.label}`}
-          </h3>
-          <span className="text-xs text-text-secondary">
+        <div className="flex items-center justify-between gap-3 mb-3 sm:items-start">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-text-heading tracking-normal">
+              Danh sách món (
+              {selectedLocation === "all" ? "Tất cả vị trí" : selectedLocation})
+              {selectedCategory !== "all" &&
+                ` · ${categoryOptions.find((c) => c.v === selectedCategory)?.label}`}
+            </h3>
+            <span className="mt-0.5 block text-xs text-text-secondary sm:hidden">
+              {filteredFoods.length} kết quả
+            </span>
+          </div>
+          <div className="min-w-0 shrink-0 sm:hidden">
+            <FilterDropdown<Category | "all">
+              label="Danh mục"
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              options={categoryOptions}
+            />
+          </div>
+          <span className="hidden shrink-0 pt-0.5 text-xs text-text-secondary sm:inline">
             {filteredFoods.length} kết quả
           </span>
         </div>
 
         {filteredFoods.length === 0 ? (
           <EmptyState
-            icon={<SearchX size={36} />}
-            title="Không tìm thấy thực phẩm"
-            text={
-              query || onlyAttention || selectedCategory !== "all"
-                ? "Không có món nào khớp với bộ lọc hiện tại. Hãy thử chọn nhóm khác hoặc xóa tìm kiếm."
-                : `Vị trí "${selectedLocation}" hiện chưa có món nào.`
+            className="storage-empty-state"
+            icon={<SearchX size={32} />}
+            title={
+              query || onlySoon || selectedCategory !== "all"
+                ? "Không tìm thấy thực phẩm"
+                : selectedLocation === "all"
+                  ? inventoryFoods.length === 0 && expiredFoods.length > 0
+                    ? "Không có món còn hạn"
+                    : "Chưa có thực phẩm trong kho"
+                  : `Chưa có món tại ${selectedLocation}`
             }
             action={
-              <Button variant="primary" size="small" onClick={onAdd}>
-                + Thêm món vào vị trí này
-              </Button>
+              inventoryFoods.length === 0 &&
+              expiredFoods.length > 0 &&
+              onNavigateAttention ? (
+                <Button
+                  variant="danger"
+                  size="small"
+                  onClick={onNavigateAttention}
+                >
+                  Mở món cần chú ý
+                </Button>
+              ) : query || onlySoon || selectedCategory !== "all" ? (
+                <Button
+                  variant="secondary"
+                  size="small"
+                  onClick={() => {
+                    setQuery("")
+                    setOnlySoon(false)
+                    handleCategoryChange("all")
+                  }}
+                >
+                  Xóa bộ lọc
+                </Button>
+              ) : (
+                <Button variant="primary" size="small" onClick={onAdd}>
+                  Thêm thực phẩm
+                </Button>
+              )
             }
           />
         ) : (
@@ -644,6 +713,7 @@ export default function StorageView({
                 key={food.id}
                 food={food}
                 remindDays={remindDays}
+                variant="grouped"
                 onOpen={() => onOpenDetail(food.id)}
               />
             ))}
@@ -666,7 +736,6 @@ export default function StorageView({
       {newLocModal && (
         <Modal
           title="Thêm nơi bảo quản"
-          description="Đặt tên cho khu vực lưu trữ thực phẩm trong nhà (ví dụ: Tủ gia vị, Ngăn rau...)"
           onClose={() => {
             setNewLocName("")
 

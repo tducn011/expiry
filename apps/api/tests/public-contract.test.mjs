@@ -120,6 +120,12 @@ test('detail/list/trash project exact Entry and EntryList contracts, including o
   assert.equal(detail.attention.as_of_date, '2026-10-11');
   assert.equal(detail.created_at, '2026-10-10T11:00:00.123456Z');
   assert.ok(!Object.hasOwn(detail, 'user_id'));
+  assert.equal(detail.barcode, null);
+  assert.equal(detail.barcode_format, null);
+  const withBarcodeEntry = entryDTO({ ...row, barcode: '8936039681526', barcode_format: 'EAN_13' }, publicAttention(row, preferences, instant));
+  assert.equal(withBarcodeEntry.barcode, '8936039681526');
+  assert.equal(withBarcodeEntry.barcode_format, 'EAN_13');
+  validate(withBarcodeEntry, 'Entry');
   const list = await (await request('/food-entries?page=2&limit=5')).json();
   validate(list, 'EntryList'); assert.deepEqual(list.pagination, { page: 2, limit: 5, total: 1 });
   assert.equal(list.as_of_date, '2026-10-11');
@@ -149,8 +155,34 @@ test('detail/list/trash project exact Entry and EntryList contracts, including o
   validate(filteredCategory, 'EntryList');
   assert.equal(calls.at(-1)[1].category, 'dairy_eggs');
 
+  const vietnameseCategory = await (await request('/food-entries?category=' + encodeURIComponent('Trứng & Sữa'))).json();
+  validate(vietnameseCategory, 'EntryList');
+  assert.equal(calls.at(-1)[1].category, 'dairy_eggs');
+
+  const aliasAttention = await (await request('/food-entries?attention=expired')).json();
+  validate(aliasAttention, 'EntryList');
+  assert.equal(calls.at(-1)[1].attention, 'past_date');
+
+  const soonAttention = await (await request('/food-entries?attention=expiring_soon')).json();
+  validate(soonAttention, 'EntryList');
+  assert.equal(calls.at(-1)[1].attention, 'soon');
+
+  const allFiltersIgnored = await (await request('/food-entries?category=all&location=all&attention=all')).json();
+  validate(allFiltersIgnored, 'EntryList');
+  assert.equal(calls.at(-1)[1].category, undefined);
+  assert.equal(calls.at(-1)[1].location, undefined);
+  assert.equal(calls.at(-1)[1].attention, undefined);
+
   const invalidCategoryRes = await request('/food-entries?category=invalid_category');
   assert.equal(invalidCategoryRes.status, 422);
+});
+
+test('Entry contract and DTO preserve a localized selected unit', async t => {
+  const { projected } = await harness(t);
+  const entry = { ...projected(), unit: 'hộp' };
+  validate(entry, 'Entry');
+  assert.equal(entry.unit, 'hộp');
+  assert.ok(contract.components.schemas.EntryCreate.properties.unit.enum.includes('kg'));
 });
 
 test('empty EntryList retains its repository owner-local as_of_date', async t => {
@@ -195,6 +227,15 @@ test('public scan adapter output conforms to its explicit nested review contract
   conforms(result, schema, 'scan');
   assert.equal(result.requires_confirmation, true);
   assert.equal(result.candidates.expiry_date.requires_confirmation, true);
+  assert.equal(result.candidates.barcode, null);
+  const withBarcode = publicScanResult({ raw_text: 'NSX: 10/10/2026 HSD: 25/12/2026', candidates: {
+    food_name: 'Sữa chua',
+    barcode: '8936039681526',
+    expiry_date: { value: '2026-12-25', date_certainty: 'exact', date_label_type: 'expiry', source_text: '25/12/2026', alternatives: [], ambiguous: false },
+    manufactured_date: { value: '2026-10-10', source_text: '10/10/2026' }
+  }, warnings: [], errors: [] });
+  assert.equal(withBarcode.candidates.barcode, '8936039681526');
+  conforms(withBarcode, schema, 'scan');
   assert.throws(() => conforms({ ...result, requires_confirmation: false }, schema, 'scan'));
 });
 
@@ -383,6 +424,16 @@ test('CAP-01 manual capture create normalizes unit aliases, quantity and returns
   assert.ok(createCall);
   assert.equal(createCall[1].unit, 'g');
   assert.equal(createCall[1].quantity, '1.5');
+});
+
+test('SHOP-07 declares the atomic Shopping-to-inventory request and response contract', () => {
+  const operation = contract.paths['/shopping-items/{id}/import-to-inventory'].post;
+  assert.equal(operation.operationId, 'SHOP-07');
+  assert.equal(operation.responses['201'].content['application/json'].schema.$ref,
+    '#/components/schemas/ShoppingInventoryImportResult');
+  assert.equal(contract.components.schemas.ShoppingInventoryImportRequest.properties.entry.$ref,
+    '#/components/schemas/EntryCreate');
+  assert.deepEqual(contract.components.schemas.ShoppingInventoryImportResult.required, ['item', 'entry']);
 });
 
 

@@ -1,6 +1,12 @@
-import type { Food } from "../store/appStore"
+import type { Category, Food } from "../store/appStore"
 
-import { daysLeft, formatDate, statusOf } from "../store/appStore"
+import {
+  CATEGORY_LABELS,
+  daysLeft,
+  formatDate,
+  inferCategory,
+  statusOf,
+} from "../store/appStore"
 
 import {
   Apple,
@@ -15,7 +21,7 @@ import {
   Milk,
   Package,
   Wheat,
-} from "../components/ui/Icon"
+} from "lucide-react"
 
 export interface FoodKindPattern {
   re: RegExp
@@ -49,13 +55,30 @@ export const getFoodIcon = (name: string) =>
   foodKinds.find((k) => k.re.test(name))?.icon ?? Package
 
 const rowTone: Record<string, string> = {
-  expired: "text-status-expired font-medium",
+  expired: "text-status-expired font-semibold",
 
-  soon: "text-status-soon font-medium",
+  soon: "text-status-soon font-semibold",
 
-  ok: "text-text-secondary",
+  ok: "text-status-ok font-semibold",
 
-  unknown: "text-text-secondary",
+  unknown: "text-text-tertiary",
+}
+
+export const categoryTones: Record<Category, string> = {
+  fresh_produce:
+    "bg-category-fresh-bg text-category-fresh border border-category-fresh/20",
+  meat_seafood:
+    "bg-category-meat-bg text-category-meat border border-category-meat/20",
+  dairy_eggs:
+    "bg-category-dairy-bg text-category-dairy border border-category-dairy/20",
+  prepared_food:
+    "bg-category-prepared-bg text-category-prepared border border-category-prepared/20",
+  dry_pantry:
+    "bg-category-pantry-bg text-category-pantry border border-category-pantry/20",
+  beverage:
+    "bg-category-beverage-bg text-category-beverage border border-category-beverage/20",
+  other:
+    "bg-surface-subtle text-text-secondary border border-border-primary/50",
 }
 
 export interface FoodCardProps {
@@ -66,6 +89,8 @@ export interface FoodCardProps {
   onOpen: () => void
 
   className?: string
+
+  variant?: "card" | "grouped"
 }
 
 export function FoodCard({
@@ -76,6 +101,8 @@ export function FoodCard({
   onOpen,
 
   className = "",
+
+  variant = "card",
 }: FoodCardProps) {
   const st = statusOf(food, remindDays)
 
@@ -83,16 +110,54 @@ export function FoodCard({
 
   const d = daysLeft(food)
 
+  const category: Category = food.category || inferCategory(food.name)
+
   let statusLabel: string
 
   if (st === "expired") {
     statusLabel = `Quá hạn ${d !== null ? Math.abs(d) : 1} ngày`
   } else if (st === "soon") {
-    statusLabel = d === 0 ? "Hết hạn hôm nay" : `Còn ${d} ngày`
+    statusLabel = d === 0 ? "Đến hạn hôm nay" : `Còn ${d} ngày`
   } else if (st === "ok") {
-    statusLabel = "Còn hạn"
+    statusLabel = d !== null ? `Còn ${d} ngày` : "Còn hạn"
   } else {
     statusLabel = "Chưa rõ HSD"
+  }
+
+  if (variant === "grouped") {
+    return (
+      <button
+        type="button"
+        onClick={onOpen}
+        className={`home-food-row group ${className}`}
+      >
+        <span aria-hidden="true" className="home-food-icon">
+          <IconComponent size={16} strokeWidth={2} />
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-[16px] leading-[22px] font-semibold text-text-heading">
+            {food.name}
+          </span>
+          <span className="block truncate text-xs leading-5 text-text-secondary">
+            {food.quantity} {food.unit}
+            {food.location ? ` · ${food.location}` : ""} ·{" "}
+            {CATEGORY_LABELS[category] || "Khác"}
+          </span>
+        </span>
+        <span className="home-food-expiry">
+          <span
+            className={`block text-[13px] leading-5 font-semibold ${rowTone[st]}`}
+          >
+            {statusLabel}
+          </span>
+          {food.expDate && (
+            <span className="block text-[12px] leading-4 text-text-secondary">
+              HSD {formatDate(food.expDate)}
+            </span>
+          )}
+        </span>
+      </button>
+    )
   }
 
   return (
@@ -107,17 +172,21 @@ export function FoodCard({
     >
       <div
         aria-hidden="true"
-        className="flex size-11 shrink-0 items-center justify-center rounded-corner-md bg-brand-tertiary text-brand-primary transition-transform group-hover:scale-105 shadow-xs"
+        className={`flex size-11 shrink-0 items-center justify-center rounded-corner-md transition-transform group-hover:scale-105 shadow-xs ${categoryTones[category]}`}
       >
-        <IconComponent size={22} />
+        <IconComponent size={24} />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="truncate text-sm md:text-base font-semibold text-text-primary">
+        <p className="truncate text-sm md:text-base font-semibold text-text-heading">
           {food.name}
         </p>
         <p className="truncate text-xs text-text-secondary">
           {food.quantity} {food.unit}
           {food.location ? ` · ${food.location}` : ""}
+          <span className="text-text-tertiary"> · </span>
+          <span className="text-text-tertiary">
+            {CATEGORY_LABELS[category] || "Khác"}
+          </span>
         </p>
         <div className="flex flex-wrap items-center gap-x-2 text-xs">
           <span className={`whitespace-nowrap ${rowTone[st]}`}>
@@ -132,7 +201,7 @@ export function FoodCard({
       </div>
       <div className="flex shrink-0 items-center text-text-tertiary">
         <ChevronRight
-          size={18}
+          size={16}
           aria-hidden="true"
           className="transition-transform group-hover:translate-x-0.5"
         />

@@ -11,7 +11,7 @@ export function SectionTitle({
 }) {
   return (
     <h2
-      className={`text-base font-semibold text-text-primary tracking-tight ${className}`}
+      className={`text-base font-semibold text-text-heading tracking-normal ${className}`}
     >
       {children}
     </h2>
