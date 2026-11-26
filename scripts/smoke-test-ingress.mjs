@@ -1,7 +1,19 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
-const baseUrl = process.argv[2] || process.env.SMOKE_TEST_URL || 'https://homeserver.tailc535bb.ts.net';
+function resolveDefaultBaseUrl() {
+  if (process.argv[2]) return process.argv[2];
+  if (process.env.SMOKE_TEST_URL) return process.env.SMOKE_TEST_URL;
+  try {
+    const log = fs.readFileSync('/var/log/cloudflared-tunnel.log', 'utf8');
+    const matches = log.match(/https:\/\/[-a-z0-9.]*\.trycloudflare\.com/g);
+    if (matches && matches.length > 0) return matches[matches.length - 1];
+  } catch {}
+  return 'https://homeserver.tailc535bb.ts.net';
+}
+
+const baseUrl = resolveDefaultBaseUrl();
 console.log(`[Smoke Test] Target Ingress: ${baseUrl}`);
 console.log(`[Smoke Test] Timestamp: ${new Date().toISOString()}`);
 
